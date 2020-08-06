@@ -19,6 +19,8 @@
                         | total number of clips: {{item.videoClipCount}}
                         br
                         | total number of videos: {{item.videoCount}}
+                    column.showSamples
+                        | See Clips ▲
                 
 </template>
 <script>
@@ -72,6 +74,7 @@ export default {
 
 .search-card.good-column
     color: white 
+    position: relative
     margin: 0.5rem 
     padding: 1.2rem 
     border-radius: 0.7rem 
@@ -80,4 +83,25 @@ export default {
     flex-grow: 1
     transition: all 0.5ms ease-out
     
+    .showSamples
+        opacity: 0
+        transition: opacity 0.5ms ease-out
+        top: 0 
+        right: 0
+        height: 2rem
+        padding-left: 0.9rem
+        padding-right: 0.4rem
+        width: fit-content
+        background: white
+        border-bottom-left-radius: 0.6rem
+        position: absolute
+        color: gray
+        font-size: 10pt
+    
+    &:hover
+        .showSamples
+            transition: opacity 0.5ms ease-out
+            opacity: 1
+            cursor: pointer
+
 </style>

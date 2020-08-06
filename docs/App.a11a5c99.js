@@ -29383,6 +29383,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //
 //
 //
+//
+//
 var colors = ["#4fc3f7", "#e57373", "#ba68c8", "#9ccc65", "#fec355", "#04d895", "#4fc3f7", "#ff8a65", "#9575cd"];
 var colorCopy = [].concat(colors);
 Object.keys(_dummyData.default.labels).forEach(function (each) {
@@ -29501,7 +29503,10 @@ exports.default = _default;
                         "total number of videos: " + _vm._s(item.videoCount)
                       )
                     ]
-                  )
+                  ),
+                  _c("column", { staticClass: "showSamples" }, [
+                    _vm._v("See Clips ▲")
+                  ])
                 ],
                 1
               )
