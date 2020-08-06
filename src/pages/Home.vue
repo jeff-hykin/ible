@@ -26,7 +26,7 @@ import dummyData from "../dummyData"
 import Waterfall from 'vue-waterfall/lib/waterfall'
 import WaterfallSlot from 'vue-waterfall/lib/waterfall-slot'
 
-let colors = [ "#4fc3f7", "#e57373", "#ba68c8", "#9ccc65", "#9575cd", "#ff8a65", "#a1887f" ]
+let colors = [ "#4fc3f7", "#e57373", "#ba68c8", "#9ccc65", "#fec355", "#04d895", "#4fc3f7", "#ff8a65", "#9575cd",  ]
 let colorCopy = [...colors]
 Object.keys(dummyData.labels).forEach(each=> dummyData.labels[each].color = (colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())))
 export default {

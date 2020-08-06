@@ -28397,6 +28397,22 @@ var _default = {
     "disgust": {
       videoClipCount: (Math.random() * 100).toFixed(0),
       videoCount: (Math.random() * 100).toFixed(0)
+    },
+    "sad2": {
+      videoClipCount: (Math.random() * 100).toFixed(0),
+      videoCount: (Math.random() * 100).toFixed(0)
+    },
+    "angry2": {
+      videoClipCount: (Math.random() * 100).toFixed(0),
+      videoCount: (Math.random() * 100).toFixed(0)
+    },
+    "neutral2": {
+      videoClipCount: (Math.random() * 100).toFixed(0),
+      videoCount: (Math.random() * 100).toFixed(0)
+    },
+    "disgust2": {
+      videoClipCount: (Math.random() * 100).toFixed(0),
+      videoCount: (Math.random() * 100).toFixed(0)
     }
   }
 };
@@ -29367,7 +29383,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //
 //
 //
-var colors = ["#4fc3f7", "#e57373", "#ba68c8", "#9ccc65", "#9575cd", "#ff8a65", "#a1887f"];
+var colors = ["#4fc3f7", "#e57373", "#ba68c8", "#9ccc65", "#fec355", "#04d895", "#4fc3f7", "#ff8a65", "#9575cd"];
 var colorCopy = [].concat(colors);
 Object.keys(_dummyData.default.labels).forEach(function (each) {
   return _dummyData.default.labels[each].color = colorCopy.shift() || (colorCopy = [].concat(colors), colorCopy.shift());

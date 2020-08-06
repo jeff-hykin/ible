@@ -20,5 +20,21 @@ export default {
             videoClipCount: (Math.random()*100).toFixed(0),
             videoCount: (Math.random()*100).toFixed(0),
         },
+        "sad2": {
+            videoClipCount: (Math.random()*100).toFixed(0),
+            videoCount: (Math.random()*100).toFixed(0),
+        },
+        "angry2": {
+            videoClipCount: (Math.random()*100).toFixed(0),
+            videoCount: (Math.random()*100).toFixed(0),
+        },
+        "neutral2": {
+            videoClipCount: (Math.random()*100).toFixed(0),
+            videoCount: (Math.random()*100).toFixed(0),
+        },
+        "disgust2": {
+            videoClipCount: (Math.random()*100).toFixed(0),
+            videoCount: (Math.random()*100).toFixed(0),
+        },
     }
 }
