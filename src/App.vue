@@ -7,9 +7,10 @@
 <script>
     // libs and plugins
     import Vue from "vue"
-    import { Router } from './plugins/router-plugin'
     import './plugins/css-baseline-plugin'
     import './plugins/good-vue-plugin'
+    import './plugins/keen-ui-plugin'
+    import { Router } from './plugins/router-plugin'
     
     // Pages 
     import pages from "./pages/*.vue"
@@ -47,3 +48,8 @@
     }
     
 </script>
+<style >
+body {
+    background: radial-gradient(circle, rgb(245, 245, 245) 0%, rgb(218, 218, 218) 100%);
+}
+</style>
