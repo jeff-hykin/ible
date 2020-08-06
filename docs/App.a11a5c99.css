@@ -4890,11 +4890,11 @@ body[modality="keyboard"] .ui-tabs--background-color-primary .ui-tab-header-item
   width: fit-content;
   border: 3px solid white;
   flex-grow: 1;
-  transition: all 0.5ms ease-out;
+  transition: all 0.25s ease-out;
 }
 .search-card.good-column .showSamples {
   opacity: 0;
-  transition: opacity 0.5ms ease-out;
+  transition: opacity 0.25s ease-out;
   top: 0;
   right: 0;
   height: 2rem;
@@ -4907,8 +4907,11 @@ body[modality="keyboard"] .ui-tabs--background-color-primary .ui-tab-header-item
   color: gray;
   font-size: 10pt;
 }
+.search-card.good-column:hover {
+  box-shadow: rgba(0, 0, 0, 0.14) 0px 8px 17px 2px, rgba(0, 0, 0, 0.12) 0px 3px 14px 2px, rgba(0, 0, 0, 0.2) 0px 5px 5px -3px !important;
+}
 .search-card.good-column:hover .showSamples {
-  transition: opacity 0.5ms ease-out;
+  transition: opacity 0.25s ease-out;
   opacity: 1;
   cursor: pointer;
 }

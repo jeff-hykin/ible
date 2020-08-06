@@ -13,13 +13,13 @@
         //- waterfall style area
         div(style="padding: 2rem;")
             row(align-h="left" wrap)
-                column.search-card(v-for="(item, index) in items" shadow=1 align-h="left" :background-color="item.color")
+                column.search-card(v-for="(item, index) in it2es" shadow=1 align-h="left" :background-color="item.color")
                     h5(style="text-decoration: underline") {{index}}
                     column(width='max-content' padding='0.5rem')
                         | total number of clips: {{item.videoClipCount}}
                         br
                         | total number of videos: {{item.videoCount}}
-                    column.showSamples
+                    column.showSamples(@click="notYetImplemented")
                         | See Clips ▲
                 
 </template>
@@ -38,7 +38,7 @@ export default {
         WaterfallSlot: WaterfallSlot,
     },
     data: ()=>({
-        items: dummyData.labels,
+        it2es: dummyData.labels,
         itemNames: Object.keys(dummyData.labels),
         searchTerm: "",
     }),
@@ -46,17 +46,22 @@ export default {
         searchTerm(value) {
             if (typeof value == 'string') {
                 // TODO: improve this to be a fuzzy search
-                this.items = {}
+                this.it2es = {}
                 for (const key in dummyData.labels) {
                     let each = dummyData.labels[key]
                     
                     if (key.startsWith(value)) {
-                        this.items[key] = each
+                        this.it2es[key] = each
                     }
                 }
             } else {
-                this.items = dummyData.labels
+                this.it2es = dummyData.labels
             }
+        }
+    },
+    methods: {
+        notYetImplemented() {
+            this.$toasted.show(`Sadly this doesn't do anything yet`).goAway(2500)
         }
     }
 }
@@ -81,11 +86,11 @@ export default {
     width: fit-content
     border: 3px solid white
     flex-grow: 1
-    transition: all 0.5ms ease-out
+    transition: all 0.25s ease-out
     
     .showSamples
         opacity: 0
-        transition: opacity 0.5ms ease-out
+        transition: opacity 0.25s ease-out
         top: 0 
         right: 0
         height: 2rem
@@ -99,8 +104,10 @@ export default {
         font-size: 10pt
     
     &:hover
+        box-shadow: rgba(0, 0, 0, 0.14) 0px 8px 17px 2px, rgba(0, 0, 0, 0.12) 0px 3px 14px 2px, rgba(0, 0, 0, 0.2) 0px 5px 5px -3px !important
+        
         .showSamples
-            transition: opacity 0.5ms ease-out
+            transition: opacity 0.25s ease-out
             opacity: 1
             cursor: pointer
 
