@@ -13,7 +13,7 @@
         //- waterfall style area
         div(style="padding: 2rem;")
             row(align-h="left" wrap)
-                column.search-card(v-for="(item, index) in it2es" shadow=1 align-h="left" :background-color="item.color")
+                column.search-card(v-for="(item, index) in items" shadow=1 align-h="left" :background-color="item.color")
                     h5(style="text-decoration: underline") {{index}}
                     column(width='max-content' padding='0.5rem')
                         | total number of clips: {{item.videoClipCount}}
@@ -38,7 +38,7 @@ export default {
         WaterfallSlot: WaterfallSlot,
     },
     data: ()=>({
-        it2es: dummyData.labels,
+        items: dummyData.labels,
         itemNames: Object.keys(dummyData.labels),
         searchTerm: "",
     }),
@@ -46,16 +46,17 @@ export default {
         searchTerm(value) {
             if (typeof value == 'string') {
                 // TODO: improve this to be a fuzzy search
-                this.it2es = {}
+                this.items = {}
+                let term = value.toLowerCase()
                 for (const key in dummyData.labels) {
                     let each = dummyData.labels[key]
                     
-                    if (key.startsWith(value)) {
-                        this.it2es[key] = each
+                    if (key.startsWith(term)) {
+                        this.items[key] = each
                     }
                 }
             } else {
-                this.it2es = dummyData.labels
+                this.items = dummyData.labels
             }
         }
     },

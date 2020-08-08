@@ -5,8 +5,8 @@
     "main": "babel.config.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "start": "parcel index.html --open --out-dir docs",
-        "build": "parcel build index.html --out-dir docs",
+        "start": "parcel index.html --open --out-dir docs --no-source-maps",
+        "build": "parcel build index.html --out-dir docs --no-source-maps",
         "clean": "rm -rf .cache docs/"
     },
     "dependencies": {

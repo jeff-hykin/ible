@@ -1,7 +1,6 @@
 body {
     background: radial-gradient(circle, rgb(245, 245, 245) 0%, rgb(218, 218, 218) 100%);
-}
-@-ms-viewport {
+}@-ms-viewport {
   width: device-width;
 }
 article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section, main, summary {
@@ -316,7 +315,6 @@ button:focus, input[type=button]:focus, input[type=submit]:focus, input[type=res
 button:disabled, input[type=button]:disabled, input[type=submit]:disabled, input[type=reset]:disabled {
   color: gray;
 }
-
 /*!
  * Keen UI v1.3.0 (https://github.com/JosephusPaye/keen-ui)
  * (c) 2020 Josephus Paye II
@@ -4860,18 +4858,15 @@ body[modality="keyboard"] .ui-tabs--background-color-primary .ui-tab-header-item
 .ui-toolbar--progress-position-top .ui-toolbar__progress {
   top: 0;
 }
-
 .vue-waterfall {
   position: relative;
   /*overflow: hidden; cause clientWidth = 0 in IE if height not bigger than 0 */
-}
-.vue-waterfall-slot {
+}.vue-waterfall-slot {
   position: absolute;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
-.rounded-search {
+}.rounded-search {
   width: 25rem;
   padding: 0.7rem 2rem 1rem;
   background-color: white;
@@ -4915,5 +4910,3 @@ body[modality="keyboard"] .ui-tabs--background-color-primary .ui-tab-header-item
   opacity: 1;
   cursor: pointer;
 }
-
-/*# sourceMappingURL=/App.a11a5c99.css.map */
