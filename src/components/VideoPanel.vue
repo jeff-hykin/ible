@@ -78,13 +78,17 @@ export default {
             if (this.player && this.player.getPlayerState() == 1) {
                 // then pause
                 this.player.pauseVideo()
+                this.videoInitilized = true
                 // if there is a seek back time, go there
                 if (seekBackToStart) {
                     this.player.seekTo(this.segment.start)
                 }
             } else {
                 setTimeout(() => {
-                    this.player.playVideo()
+                    // init the video by pressing play
+                    if (!this.videoInitilized) {
+                        this.player.playVideo()
+                    }
                     this.waitThenPause(seekBackToStart)
                 }, 0)
             }
@@ -118,7 +122,7 @@ export default {
             const VIDEO_HASNT_STARTED_STATE = 5
             const VIDEO_PAUSED_STATE = 2
             let state = this.player.getPlayerState()
-            if (state == VIDEO_HASNT_STARTED_STATE || state == VIDEO_PAUSED_STATE) {
+            if (state == VIDEO_HASNT_STARTED_STATE || (state == VIDEO_PAUSED_STATE && !this.videoInitilized)) {
                 let seekBackToStart = true
                 // give it enough time to load the frame (otherwise it loads infinitely)
                 this.player.playVideo()
