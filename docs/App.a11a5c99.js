@@ -31694,6 +31694,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //
 //
 //
+//
+//
 var _default = {
   props: ['segments'],
   components: {
@@ -31812,8 +31814,9 @@ exports.default = _default;
     {
       staticClass: "video-panel",
       attrs: {
-        width: _vm.segments ? "70vw" : "0",
-        opacity: _vm.segments ? 1 : 0
+        width: _vm.segments ? "72vw" : "0",
+        opacity: _vm.segments ? 1 : 0,
+        "flex-grow": "1"
       }
     },
     [
@@ -31874,7 +31877,9 @@ exports.default = _default;
                 "margin-bottom": "1rem",
                 background: index == _vm.whichSegment ? "gray" : "transparent",
                 color: index == _vm.whichSegment ? "white" : "inherit",
-                opacity: index == _vm.whichSegment ? 1 : 0.7
+                opacity: index == _vm.whichSegment ? 1 : 0.7,
+                "max-width": "75vw",
+                wrap: "wrap"
               },
               on: {
                 click: function($event) {
@@ -31946,6 +31951,8 @@ var _fuse = _interopRequireDefault(require("fuse.js"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+//
+//
 //
 //
 //
@@ -32083,68 +32090,71 @@ exports.default = _default;
       _c(
         "row",
         {
-          attrs: { "max-width": "100vw", "align-v": "top", "align-h": "left" }
+          attrs: {
+            "max-width": "100vw",
+            "align-v": "top",
+            "align-h": "center",
+            padding: "1rem"
+          }
         },
         [
           _c(
-            "div",
-            { style: "padding: 2rem; flex-shrink: 1;" },
+            "row",
+            { attrs: { align: "center", wrap: true, "flex-grow": "1" } },
             [
-              _c(
-                "row",
-                { attrs: { "align-h": "left", wrap: true } },
-                _vm._l(_vm.items, function(label, labelName) {
-                  return _c(
-                    "column",
-                    {
-                      staticClass: "search-card",
-                      attrs: {
-                        shadow: "1",
-                        "align-h": "left",
-                        "background-color": label.color
-                      }
-                    },
-                    [
-                      _c(
-                        "h5",
-                        { staticStyle: { "text-decoration": "underline" } },
-                        [_vm._v(_vm._s(labelName))]
-                      ),
-                      _c(
-                        "column",
-                        { attrs: { width: "max-content", padding: "0.5rem" } },
-                        [
-                          _vm._v(
-                            "total number of clips: " +
-                              _vm._s(label.videoClipCount)
-                          ),
-                          _c("br"),
-                          _vm._v(
-                            "total number of videos: " +
-                              _vm._s(label.videoCount)
-                          )
-                        ]
-                      ),
-                      _c(
-                        "column",
-                        {
-                          staticClass: "showSamples",
-                          on: {
-                            click: function($event) {
-                              return _vm.selectLabel(labelName, label)
-                            }
+              _vm._l(_vm.items, function(label, labelName) {
+                return _c(
+                  "column",
+                  {
+                    staticClass: "search-card",
+                    attrs: {
+                      shadow: "1",
+                      "align-h": "left",
+                      "background-color": label.color
+                    }
+                  },
+                  [
+                    _c(
+                      "h5",
+                      { staticStyle: { "text-decoration": "underline" } },
+                      [_vm._v(_vm._s(labelName))]
+                    ),
+                    _c(
+                      "column",
+                      { attrs: { width: "max-content", padding: "0.5rem" } },
+                      [
+                        _vm._v(
+                          "total number of clips: " +
+                            _vm._s(label.videoClipCount)
+                        ),
+                        _c("br"),
+                        _vm._v(
+                          "total number of videos: " + _vm._s(label.videoCount)
+                        )
+                      ]
+                    ),
+                    _c(
+                      "column",
+                      {
+                        staticClass: "showSamples",
+                        on: {
+                          click: function($event) {
+                            return _vm.selectLabel(labelName, label)
                           }
-                        },
-                        [_vm._v("See Clips ▲")]
-                      )
-                    ],
-                    1
-                  )
-                }),
-                1
-              )
+                        }
+                      },
+                      [_vm._v("See Clips ▲")]
+                    )
+                  ],
+                  1
+                )
+              }),
+              _c("column", {
+                staticClass: "search-card",
+                attrs: { opacity: "0" }
+              })
             ],
-            1
+            2
           ),
           _c("VideoPanel", { attrs: { segments: this.selectedSegments } })
         ],

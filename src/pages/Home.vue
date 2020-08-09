@@ -10,18 +10,20 @@
                     :suggestions="suggestions"
                 )
         
-        row(max-width='100vw' align-v='top' align-h="left")
+        //- all the panel things
+        row(max-width='100vw' align-v='top' align-h="center" padding='1rem')
             //- waterfall style area
-            div(:style='`padding: 2rem; flex-shrink: 1;`')
-                row(align-h="left" :wrap="true")
-                    column.search-card(v-for="(label, labelName) in items" shadow=1 align-h="left" :background-color="label.color")
-                        h5(style="text-decoration: underline") {{labelName}}
-                        column(width='max-content' padding='0.5rem')
-                            | total number of clips: {{label.videoClipCount}}
-                            br
-                            | total number of videos: {{label.videoCount}}
-                        column.showSamples(@click="selectLabel(labelName, label)")
-                            | See Clips ▲
+            row(align="center" :wrap="true" flex-grow=1)
+                column.search-card(v-for="(label, labelName) in items" shadow=1 align-h="left" :background-color="label.color")
+                    h5(style="text-decoration: underline") {{labelName}}
+                    column(width='max-content' padding='0.5rem')
+                        | total number of clips: {{label.videoClipCount}}
+                        br
+                        | total number of videos: {{label.videoCount}}
+                    column.showSamples(@click="selectLabel(labelName, label)")
+                        | See Clips ▲
+                //- dud card to remove some strange behavior
+                column.search-card(opacity=0)
             
             VideoPanel(:segments='this.selectedSegments')
         
@@ -104,7 +106,8 @@ export default {
     margin: 0.5rem 
     padding: 1.2rem 
     border-radius: 0.7rem 
-    width: fit-content
+    width: 16rem
+    min-width: fit-content
     border: 3px solid white
     flex-grow: 1
     transition: all 0.25s ease-out

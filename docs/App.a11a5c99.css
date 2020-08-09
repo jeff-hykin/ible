@@ -4935,6 +4935,8 @@ body[modality="keyboard"] .ui-tabs--background-color-primary .ui-tab-header-item
 .json-tree-root {
   border-radius: 1rem;
   border: gray solid 2px;
+  max-width: 50vw;
+  min-width: 0;
 }.rounded-search {
   width: 25rem;
   padding: 0.7rem 2rem 1rem;
@@ -4951,7 +4953,8 @@ body[modality="keyboard"] .ui-tabs--background-color-primary .ui-tab-header-item
   margin: 0.5rem;
   padding: 1.2rem;
   border-radius: 0.7rem;
-  width: fit-content;
+  width: 16rem;
+  min-width: fit-content;
   border: 3px solid white;
   flex-grow: 1;
   transition: all 0.25s ease-out;

@@ -1,5 +1,5 @@
 <template lang="pug">
-    column.video-panel(:width="segments? '70vw' : '0' " :opacity='segments? 1 : 0')
+    column.video-panel(:width="segments? '72vw' : '0' " :opacity='segments? 1 : 0' flex-grow=1)
         column(height="40vw" width='100%')
             youtube(
                 v-if='segments'
@@ -28,6 +28,8 @@
                 :color="index==whichSegment ? 'white' : 'inherit' "
                 :opacity="index==whichSegment ? 1 : 0.7 "
                 @click="jumpSegment(index)"
+                max-width='75vw'
+                wrap
             )
                 h4 Segment
                 row(width="1rem") 
@@ -138,5 +140,7 @@ export default {
 .json-tree-root
     border-radius: 1rem
     border: gray solid 2px
+    max-width: 50vw
+    min-width: 0
     
 </style>
