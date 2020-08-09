@@ -1,5 +1,5 @@
 <template lang="pug">
-    column.video-panel(:width="segments? '72vw' : '0' " :opacity='segments? 1 : 0' flex-grow=1)
+    column.video-panel(v-if='segments' :opacity='segments? 1 : 0' flex-grow=1)
         column(height="40vw" width='100%')
             youtube(
                 v-if='segments'
@@ -140,6 +140,7 @@ export default {
     flex-shrink: 0
     min-height: 44vw
     transition: opacity ease 0.5s
+    width: 72vw
 .btn
     margin: 1rem
     margin-top: 2rem
