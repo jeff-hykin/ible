@@ -5,6 +5,7 @@
                 v-if='segments'
                 :video-id="segment.videoId"
                 :player-vars='{start: segment.start}'
+                host="https://www.youtube-nocookie.com"
                 @ready="ready"
                 @playing="playing"
                 player-width="100%"
