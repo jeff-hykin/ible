@@ -66,19 +66,19 @@ export default {
         playing() {
             console.log(`playing`)
         },
-        waitThenPause(seekBackTime=null) {
+        waitThenPause(seekBackToStart=null) {
             // if already playing
             if (this.player && this.player.getPlayerState() == 1) {
                 // then pause
                 this.player.pauseVideo()
                 // if there is a seek back time, go there
-                if (seekBackTime) {
-                    this.player.seekTo(seekBackTime)
+                if (seekBackToStart) {
+                    this.player.seekTo(this.segment.start)
                 }
             } else {
                 setTimeout(() => {
                     this.player.playVideo()
-                    this.waitThenPause(seekBackTime)
+                    this.waitThenPause(seekBackToStart)
                 }, 0)
             }
         },
@@ -114,11 +114,11 @@ export default {
             const VIDEO_PAUSED_STATE = 2
             let state = this.player.getPlayerState()
             if (state == VIDEO_HASNT_STARTED_STATE || state == VIDEO_PAUSED_STATE) {
-                let seekBackTime = this.segment.start
+                let seekBackToStart = true
                 // give it enough time to load the frame (otherwise it loads infinitely)
                 this.player.playVideo()
                 // tell the pause exactly where to jump back to after pausing
-                this.waitThenPause(seekBackTime)
+                this.waitThenPause(seekBackToStart)
             }
         }
     }
