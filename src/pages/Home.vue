@@ -11,7 +11,7 @@
                 )
         
         //- all the panel things
-        row(max-width='100vw' align-v='top' align-h="center" padding='1rem')
+        row(max-width='100vw' align-v='top' align-h="center" padding='1rem' overflow=auto)
             //- waterfall style area
             row(align="center" :wrap="true" flex-grow=1)
                 column.search-card(v-for="(label, labelName) in items" shadow=1 align-h="left" :background-color="label.color")
