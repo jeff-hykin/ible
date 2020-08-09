@@ -129,7 +129,6 @@ export default {
 
 <style lang='sass'>
 .video-panel
-    overflow: hidden
     border: 2.5rem solid transparent
     flex-shrink: 0
     min-height: 44vw

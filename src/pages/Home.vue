@@ -20,7 +20,7 @@
                         | total number of clips: {{label.videoClipCount}}
                         br
                         | total number of videos: {{label.videoCount}}
-                    column.showSamples(@click="selectLabel(labelName, label)")
+                    column.show-samples(@click="selectLabel(labelName, label)")
                         | See Clips ▲
                 //- dud card to remove some strange behavior
                 column.search-card(opacity=0)
@@ -101,28 +101,30 @@ export default {
     margin-top: 0.7rem
 
 .search-card.good-column
+    --card-radius: 0.7rem
     color: white 
     position: relative
     margin: 0.5rem 
     padding: 1.2rem 
-    border-radius: 0.7rem 
+    border-radius: var(--card-radius)
     width: 16rem
     min-width: fit-content
     border: 3px solid white
     flex-grow: 1
     transition: all 0.25s ease-out
     
-    .showSamples
+    .show-samples
         opacity: 0
         transition: opacity 0.25s ease-out
         top: 0 
-        right: 0
+        right: -0.5px  // fixes issue with clipping and showing 
         height: 2rem
         padding-left: 0.9rem
         padding-right: 0.4rem
         width: fit-content
         background: white
         border-bottom-left-radius: 0.6rem
+        border-top-right-radius: calc(0.2 * var(--card-radius))
         position: absolute
         color: gray
         font-size: 10pt
@@ -130,7 +132,7 @@ export default {
     &:hover
         box-shadow: rgba(0, 0, 0, 0.14) 0px 8px 17px 2px, rgba(0, 0, 0, 0.12) 0px 3px 14px 2px, rgba(0, 0, 0, 0.2) 0px 5px 5px -3px !important
         
-        .showSamples
+        .show-samples
             transition: opacity 0.25s ease-out
             opacity: 1
             cursor: pointer

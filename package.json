@@ -2,11 +2,11 @@
     "name": "vue-pages-quickstart",
     "version": "1.0.0",
     "description": "",
-    "main": "babel.config.js",
+    "main": "src/App.vue",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "start": "parcel serve index.html --open --out-dir docs --no-source-maps",
-        "build": "parcel build index.html --out-dir docs --no-source-maps",
+        "start": "parcel serve index.html --open --out-dir docs --no-source-maps --public-url './'",
+        "build": "parcel build index.html --out-dir docs --no-source-maps --public-url './'",
         "clean": "rm -rf .cache .parcel-cache docs/"
     },
     "dependencies": {
