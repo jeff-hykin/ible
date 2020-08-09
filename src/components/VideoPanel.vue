@@ -47,9 +47,13 @@ export default {
     data: ()=>({
         player: null,
         whichSegment: 0,
+        videoInitilized: false,
     }),
     watch: {
         segments(value, oldValue) {
+            // reset the segment count
+            this.whichSegment = 0
+            this.videoInitilized = false
             this.seekToSegmentStart()
         },
         whichSegment(value) {
@@ -107,9 +111,7 @@ export default {
                     this.seekToSegmentStart()
                 }, 0)
             }
-            // console.log(`seeking to segment start`)
             this.player.seekTo(this.segment.start)
-            // console.log(`this.player.getPlayerState() is:`,this.player.getPlayerState())
             
             // in this state the player (after seeking) will start playing
             // which isn't the best UX, so pause it immediately
