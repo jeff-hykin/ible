@@ -4858,14 +4858,83 @@ body[modality="keyboard"] .ui-tabs--background-color-primary .ui-tab-header-item
 .ui-toolbar--progress-position-top .ui-toolbar__progress {
   top: 0;
 }
-.vue-waterfall {
-  position: relative;
-  /*overflow: hidden; cause clientWidth = 0 in IE if height not bigger than 0 */
-}.vue-waterfall-slot {
-  position: absolute;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+.json-tree {
+  color: #394359;
+  display: flex;
+  flex-direction: column;
+  font-family: Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.json-tree-root {
+  background-color: #f7f8f9;
+  border-radius: 3px;
+  margin: 2px 0;
+  min-width: 560px;
+  padding: 10px;
+}
+
+.json-tree-ending,
+.json-tree-row {
+  border-radius: 2px;
+  display: flex;
+}
+
+.json-tree-paired,
+.json-tree-row:hover {
+  background-color: #bce2ff;
+}
+
+.json-tree-expando {
+  cursor: pointer;
+}
+
+.json-tree-sign {
+  font-weight: 700;
+}
+
+.json-tree-collapsed {
+  color: gray;
+  font-style: italic;
+}
+
+.json-tree-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.json-tree-value-string {
+  color: #9aab3a;
+}
+
+.json-tree-value-boolean {
+  color: #ff0080;
+}
+
+.json-tree-value-number {
+  color: #4f7096;
+}
+
+.json-tree-value-null {
+  color: #c7444a;
+}.video-panel {
+  overflow: hidden;
+  border: 2.5rem solid transparent;
+  flex-shrink: 0;
+  min-height: 44vw;
+  transition: opacity ease 0.5s;
+}
+
+.btn {
+  margin: 1rem;
+  margin-top: 2rem;
+}
+
+.json-tree-root {
+  border-radius: 1rem;
+  border: gray solid 2px;
 }.rounded-search {
   width: 25rem;
   padding: 0.7rem 2rem 1rem;

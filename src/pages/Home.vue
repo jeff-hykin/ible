@@ -7,41 +7,51 @@
                     name="name1"
                     placeholder="Search for a label, or a video"
                     v-model="searchTerm"
-                    :suggestions="itemNames"
+                    :suggestions="suggestions"
                 )
         
-        //- waterfall style area
-        div(style="padding: 2rem;")
-            row(align-h="left" wrap)
-                column.search-card(v-for="(item, index) in items" shadow=1 align-h="left" :background-color="item.color")
-                    h5(style="text-decoration: underline") {{index}}
-                    column(width='max-content' padding='0.5rem')
-                        | total number of clips: {{item.videoClipCount}}
-                        br
-                        | total number of videos: {{item.videoCount}}
-                    column.showSamples(@click="notYetImplemented")
-                        | See Clips ▲
+        row(max-width='100vw' align-v='top' align-h="left")
+            //- waterfall style area
+            div(:style='`padding: 2rem; flex-shrink: 1;`')
+                row(align-h="left" :wrap="true")
+                    column.search-card(v-for="(label, labelName) in items" shadow=1 align-h="left" :background-color="label.color")
+                        h5(style="text-decoration: underline") {{labelName}}
+                        column(width='max-content' padding='0.5rem')
+                            | total number of clips: {{label.videoClipCount}}
+                            br
+                            | total number of videos: {{label.videoCount}}
+                        column.showSamples(@click="selectLabel(labelName, label)")
+                            | See Clips ▲
+            
+            VideoPanel(:segments='this.selectedSegments')
+        
+        
                 
 </template>
 <script>
 import dummyData from "../dummyData"
-import Waterfall from 'vue-waterfall/lib/waterfall'
-import WaterfallSlot from 'vue-waterfall/lib/waterfall-slot'
+import Fuse from "fuse.js"
 
-let colors = [ "#4fc3f7", "#e57373", "#ba68c8", "#9ccc65", "#fec355", "#04d895", "#4fc3f7", "#ff8a65", "#9575cd",  ]
+const fuse = new Fuse( Object.keys(dummyData.labels), {includeScore: true,})
+
+let colors = [ "#4fc3f7", "#e57373", "#ba68c8", "#04d895", "#fec355",  "#9575cd", "#4fc3f7", "#ff8a65", "#9ccc65", ]
 let colorCopy = [...colors]
+
+// assign colors to all labels in a pretty (irrelevently) inefficient way
 Object.keys(dummyData.labels).forEach(each=> dummyData.labels[each].color = (colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())))
+
 export default {
     name: "HomePage",
     components: {
-        Waterfall: Waterfall,
-        WaterfallSlot: WaterfallSlot,
+        VideoPanel: require("../components/VideoPanel").default,
     },
     data: ()=>({
         items: dummyData.labels,
-        itemNames: Object.keys(dummyData.labels),
         searchTerm: "",
+        selectedSegments: null,
     }),
+    mounted() {
+    },
     watch: {
         searchTerm(value) {
             if (typeof value == 'string') {
@@ -51,7 +61,7 @@ export default {
                 for (const key in dummyData.labels) {
                     let each = dummyData.labels[key]
                     
-                    if (key.startsWith(term)) {
+                    if (this.suggestions.includes(key) || key.startsWith(term)) {
                         this.items[key] = each
                     }
                 }
@@ -60,7 +70,17 @@ export default {
             }
         }
     },
+    computed: {
+        suggestions() {
+            let suggestions = fuse.search(this.searchTerm)
+            return suggestions.map(each=>each.item)
+        }
+    },
     methods: {
+        selectLabel(labelName, label) {
+            this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500)
+            this.selectedSegments = [...label.segments]
+        },
         notYetImplemented() {
             this.$toasted.show(`Sadly this doesn't do anything yet`).goAway(2500)
         }

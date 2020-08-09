@@ -11,6 +11,7 @@
     import './plugins/good-vue-plugin'
     import './plugins/keen-ui-plugin'
     import './plugins/vue-toasted-plugin'
+    import './plugins/youtube-player-plugin'
     import { Router } from './plugins/router-plugin'
     
     // Pages 

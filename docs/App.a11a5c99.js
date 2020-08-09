@@ -25440,7 +25440,287 @@ var _vueToasted = _interopRequireDefault(require("vue-toasted"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_vueToasted.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-toasted":"node_modules/vue-toasted/dist/vue-toasted.min.js"}],"node_modules/vue-router/dist/vue-router.esm.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-toasted":"node_modules/vue-toasted/dist/vue-toasted.min.js"}],"node_modules/vue-youtube-embed/lib/vue-youtube-embed.js":[function(require,module,exports) {
+var global = arguments[3];
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getIdFromURL = getIdFromURL;
+exports.getTimeFromURL = getTimeFromURL;
+exports.YouTubePlayer = exports.default = void 0;
+
+/*!
+ * Vue YouTube Embed version 2.2.2
+ * under MIT License copyright 2019 kaorun343
+ */
+// fork from https://github.com/brandly/angular-youtube-embed
+if (!String.prototype.includes) {
+  String.prototype.includes = function () {
+    return String.prototype.indexOf.apply(this, arguments) !== -1;
+  };
+}
+
+var youtubeRegexp = /https?:\/\/(?:[0-9A-Z-]+\.)?(?:youtu\.be\/|youtube(?:-nocookie)?\.com\S*[^\w\s-])([\w-]{11})(?=[^\w-]|$)(?![?=&+%\w.-]*(?:['"][^<>]*>|<\/a>))[?=&+%\w.-]*/ig;
+var timeRegexp = /t=(\d+)[ms]?(\d+)?s?/;
+/**
+ * get id from url
+ * @param  {string} url url
+ * @return {string}     id
+ */
+
+function getIdFromURL(url) {
+  var id = url.replace(youtubeRegexp, '$1');
+
+  if (id.includes(';')) {
+    var pieces = id.split(';');
+
+    if (pieces[1].includes('%')) {
+      var uriComponent = decodeURIComponent(pieces[1]);
+      id = ("http://youtube.com" + uriComponent).replace(youtubeRegexp, '$1');
+    } else {
+      id = pieces[0];
+    }
+  } else if (id.includes('#')) {
+    id = id.split('#')[0];
+  }
+
+  return id;
+}
+/**
+ * get time from url
+ * @param  {string} url url
+ * @return {number}     time
+ */
+
+
+function getTimeFromURL(url) {
+  if (url === void 0) url = '';
+  var times = url.match(timeRegexp);
+
+  if (!times) {
+    return 0;
+  }
+
+  var full = times[0];
+  var minutes = times[1];
+  var seconds = times[2];
+
+  if (typeof seconds !== 'undefined') {
+    seconds = parseInt(seconds, 10);
+    minutes = parseInt(minutes, 10);
+  } else if (full.includes('m')) {
+    minutes = parseInt(minutes, 10);
+    seconds = 0;
+  } else {
+    seconds = parseInt(minutes, 10);
+    minutes = 0;
+  }
+
+  return seconds + minutes * 60;
+}
+
+var container = {
+  scripts: [],
+  events: {},
+  run: function run() {
+    var this$1 = this;
+    this.scripts.forEach(function (callback) {
+      callback(this$1.YT);
+    });
+    this.scripts = [];
+  },
+  register: function register(callback) {
+    var this$1 = this;
+
+    if (this.YT) {
+      this.Vue.nextTick(function () {
+        callback(this$1.YT);
+      });
+    } else {
+      this.scripts.push(callback);
+    }
+  }
+};
+var pid = 0;
+var YouTubePlayer = {
+  name: 'YoutubeEmbed',
+  props: {
+    playerHeight: {
+      type: [String, Number],
+      default: '360'
+    },
+    playerWidth: {
+      type: [String, Number],
+      default: '640'
+    },
+    playerVars: {
+      type: Object,
+      default: function () {
+        return {
+          autoplay: 0,
+          time: 0
+        };
+      }
+    },
+    videoId: {
+      type: String
+    },
+    mute: {
+      type: Boolean,
+      default: false
+    },
+    host: {
+      type: String,
+      default: 'https://www.youtube.com'
+    }
+  },
+  render: function render(h) {
+    return h('div', [h('div', {
+      attrs: {
+        id: this.elementId
+      }
+    })]);
+  },
+  template: '<div><div :id="elementId"></div></div>',
+  watch: {
+    playerWidth: 'setSize',
+    playerHeight: 'setSize',
+    videoId: 'update',
+    mute: 'setMute'
+  },
+  data: function data() {
+    pid += 1;
+    return {
+      elementId: "youtube-player-" + pid,
+      player: {}
+    };
+  },
+  methods: {
+    setSize: function setSize() {
+      this.player.setSize(this.playerWidth, this.playerHeight);
+    },
+    setMute: function setMute(value) {
+      if (value) {
+        this.player.mute();
+      } else {
+        this.player.unMute();
+      }
+    },
+    update: function update(videoId) {
+      var name = (this.playerVars.autoplay ? 'load' : 'cue') + "VideoById";
+
+      if (this.player.hasOwnProperty(name)) {
+        this.player[name](videoId);
+      } else {
+        setTimeout(function () {
+          this.update(videoId);
+        }.bind(this), 100);
+      }
+    }
+  },
+  mounted: function mounted() {
+    var this$1 = this;
+    container.register(function (YouTube) {
+      var ref = this$1;
+      var playerHeight = ref.playerHeight;
+      var playerWidth = ref.playerWidth;
+      var playerVars = ref.playerVars;
+      var videoId = ref.videoId;
+      var host = ref.host;
+      this$1.player = new YouTube.Player(this$1.elementId, {
+        height: playerHeight,
+        width: playerWidth,
+        playerVars: playerVars,
+        videoId: videoId,
+        host: host,
+        events: {
+          onReady: function (event) {
+            this$1.setMute(this$1.mute);
+            this$1.$emit('ready', event);
+          },
+          onStateChange: function (event) {
+            if (event.data !== -1) {
+              this$1.$emit(container.events[event.data], event);
+            }
+          },
+          onError: function (event) {
+            this$1.$emit('error', event);
+          }
+        }
+      });
+    });
+  },
+  beforeDestroy: function beforeDestroy() {
+    if (this.player !== null && this.player.destroy) {
+      this.player.destroy();
+    }
+
+    delete this.player;
+  }
+};
+exports.YouTubePlayer = YouTubePlayer;
+var index = {
+  install: function install(Vue, options) {
+    if (options === void 0) options = {};
+    container.Vue = Vue;
+    YouTubePlayer.ready = YouTubePlayer.mounted;
+    var global = options.global;
+    if (global === void 0) global = true;
+    var componentId = options.componentId;
+    if (componentId === void 0) componentId = 'youtube';
+
+    if (global) {
+      // if there is a global component with "youtube" identifier already taken
+      // then we should let user to pass a new identifier.
+      Vue.component(componentId, YouTubePlayer);
+    }
+
+    Vue.prototype.$youtube = {
+      getIdFromURL: getIdFromURL,
+      getTimeFromURL: getTimeFromURL
+    };
+
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      var tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/player_api';
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+      window.onYouTubeIframeAPIReady = function () {
+        container.YT = YT;
+        var PlayerState = YT.PlayerState;
+        container.events[PlayerState.ENDED] = 'ended';
+        container.events[PlayerState.PLAYING] = 'playing';
+        container.events[PlayerState.PAUSED] = 'paused';
+        container.events[PlayerState.BUFFERING] = 'buffering';
+        container.events[PlayerState.CUED] = 'cued';
+        container.Vue.nextTick(function () {
+          container.run();
+        });
+      };
+    }
+  }
+};
+var _default = index;
+exports.default = _default;
+},{}],"src/plugins/youtube-player-plugin.js":[function(require,module,exports) {
+"use strict";
+
+var _vue = _interopRequireDefault(require("vue"));
+
+var _vueYoutubeEmbed = _interopRequireDefault(require("vue-youtube-embed"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+_vue.default.use(_vueYoutubeEmbed.default); // if you don't want install the component globally
+
+
+_vue.default.use(_vueYoutubeEmbed.default, {
+  global: false
+});
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-youtube-embed":"node_modules/vue-youtube-embed/lib/vue-youtube-embed.js"}],"node_modules/vue-router/dist/vue-router.esm.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -25449,7 +25729,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 
 /*!
-  * vue-router v3.4.0
+  * vue-router v3.4.2
   * (c) 2020 Evan You
   * @license MIT
   */
@@ -25660,13 +25940,15 @@ function resolveQuery(query, extraQuery, _parseQuery) {
 
   for (var key in extraQuery) {
     var value = extraQuery[key];
-    parsedQuery[key] = Array.isArray(value) ? value.map(function (v) {
-      return '' + v;
-    }) : '' + value;
+    parsedQuery[key] = Array.isArray(value) ? value.map(castQueryParamValue) : castQueryParamValue(value);
   }
 
   return parsedQuery;
 }
+
+var castQueryParamValue = function (value) {
+  return value == null || typeof value === 'object' ? value : String(value);
+};
 
 function parseQuery(query) {
   var res = {};
@@ -25830,7 +26112,12 @@ function isObjectEqual(a, b) {
 
   return aKeys.every(function (key) {
     var aVal = a[key];
-    var bVal = b[key]; // check nested equality
+    var bVal = b[key]; // query values can be null and undefined
+
+    if (aVal == null || bVal == null) {
+      return aVal === bVal;
+    } // check nested equality
+
 
     if (typeof aVal === 'object' && typeof bVal === 'object') {
       return isObjectEqual(aVal, bVal);
@@ -26425,7 +26712,7 @@ function normalizeLocation(raw, current, append, router) {
   } // relative params
 
 
-  if (!next.path && next.params && current) {
+  if (!next.path && (next.params || next.query || next.hash) && current) {
     next = extend({}, next);
     next._normalized = true;
     var params$1 = extend(extend({}, current.params), next.params);
@@ -28359,7 +28646,7 @@ function createHref(base, fullPath, mode) {
 }
 
 VueRouter.install = install;
-VueRouter.version = '3.4.0';
+VueRouter.version = '3.4.2';
 VueRouter.isNavigationFailure = isNavigationFailure;
 VueRouter.NavigationFailureType = NavigationFailureType;
 
@@ -28401,59 +28688,2263 @@ var _default = {
   labels: {
     "happy": {
       videoClipCount: 235,
-      videoCount: 155
+      videoCount: 155,
+      segments: [// FIXME, the start/end of the actual data will be in frames, not seconds
+      {
+        videoId: "EsFheWkimsU",
+        clipIndex: 1,
+        start: 123,
+        end: 139
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 2,
+        start: 223,
+        end: 239
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 3,
+        start: 323,
+        end: 339
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 4,
+        start: 423,
+        end: 439
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 5,
+        start: 523,
+        end: 539
+      }],
+      videos: ["EsFheWkimsU"]
     },
     "sad": {
       videoClipCount: (Math.random() * 100).toFixed(0),
-      videoCount: (Math.random() * 100).toFixed(0)
+      videoCount: (Math.random() * 100).toFixed(0),
+      segments: [// FIXME, the start/end of the actual data will be in frames, not seconds
+      {
+        videoId: "EsFheWkimsU",
+        clipIndex: 1,
+        start: 123,
+        end: 139
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 2,
+        start: 223,
+        end: 239
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 3,
+        start: 323,
+        end: 339
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 4,
+        start: 423,
+        end: 439
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 5,
+        start: 523,
+        end: 539
+      }],
+      videos: ["EsFheWkimsU"]
     },
     "angry": {
       videoClipCount: (Math.random() * 100).toFixed(0),
-      videoCount: (Math.random() * 100).toFixed(0)
+      videoCount: (Math.random() * 100).toFixed(0),
+      segments: [// FIXME, the start/end of the actual data will be in frames, not seconds
+      {
+        videoId: "EsFheWkimsU",
+        clipIndex: 1,
+        start: 123,
+        end: 139
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 2,
+        start: 223,
+        end: 239
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 3,
+        start: 323,
+        end: 339
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 4,
+        start: 423,
+        end: 439
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 5,
+        start: 523,
+        end: 539
+      }],
+      videos: ["EsFheWkimsU"]
     },
     "neutral": {
       videoClipCount: (Math.random() * 100).toFixed(0),
-      videoCount: (Math.random() * 100).toFixed(0)
+      videoCount: (Math.random() * 100).toFixed(0),
+      segments: [// FIXME, the start/end of the actual data will be in frames, not seconds
+      {
+        videoId: "EsFheWkimsU",
+        clipIndex: 1,
+        start: 123,
+        end: 139
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 2,
+        start: 223,
+        end: 239
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 3,
+        start: 323,
+        end: 339
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 4,
+        start: 423,
+        end: 439
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 5,
+        start: 523,
+        end: 539
+      }],
+      videos: ["EsFheWkimsU"]
     },
     "disgust": {
       videoClipCount: (Math.random() * 100).toFixed(0),
-      videoCount: (Math.random() * 100).toFixed(0)
+      videoCount: (Math.random() * 100).toFixed(0),
+      segments: [// FIXME, the start/end of the actual data will be in frames, not seconds
+      {
+        videoId: "EsFheWkimsU",
+        clipIndex: 1,
+        start: 123,
+        end: 139
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 2,
+        start: 223,
+        end: 239
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 3,
+        start: 323,
+        end: 339
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 4,
+        start: 423,
+        end: 439
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 5,
+        start: 523,
+        end: 539
+      }],
+      videos: ["EsFheWkimsU"]
     },
     "sad2": {
       videoClipCount: (Math.random() * 100).toFixed(0),
-      videoCount: (Math.random() * 100).toFixed(0)
+      videoCount: (Math.random() * 100).toFixed(0),
+      segments: [// FIXME, the start/end of the actual data will be in frames, not seconds
+      {
+        videoId: "EsFheWkimsU",
+        clipIndex: 1,
+        start: 123,
+        end: 139
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 2,
+        start: 223,
+        end: 239
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 3,
+        start: 323,
+        end: 339
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 4,
+        start: 423,
+        end: 439
+      }, {
+        videoId: "EsFheWkimsU",
+        clipIndex: 5,
+        start: 523,
+        end: 539
+      }],
+      videos: ["u28EnyGxPCg"]
     },
     "angry2": {
       videoClipCount: (Math.random() * 100).toFixed(0),
-      videoCount: (Math.random() * 100).toFixed(0)
+      videoCount: (Math.random() * 100).toFixed(0),
+      segments: [// FIXME, the start/end of the actual data will be in frames, not seconds
+      {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 1,
+        start: 123,
+        end: 139
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 2,
+        start: 223,
+        end: 239
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 3,
+        start: 323,
+        end: 339
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 4,
+        start: 423,
+        end: 439
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 5,
+        start: 523,
+        end: 539
+      }],
+      videos: ["u28EnyGxPCg"]
     },
     "neutral2": {
       videoClipCount: (Math.random() * 100).toFixed(0),
-      videoCount: (Math.random() * 100).toFixed(0)
+      videoCount: (Math.random() * 100).toFixed(0),
+      segments: [// FIXME, the start/end of the actual data will be in frames, not seconds
+      {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 1,
+        start: 123,
+        end: 139
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 2,
+        start: 223,
+        end: 239
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 3,
+        start: 323,
+        end: 339
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 4,
+        start: 423,
+        end: 439
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 5,
+        start: 523,
+        end: 539
+      }],
+      videos: ["u28EnyGxPCg"]
     },
     "disgust2": {
       videoClipCount: (Math.random() * 100).toFixed(0),
-      videoCount: (Math.random() * 100).toFixed(0)
+      videoCount: (Math.random() * 100).toFixed(0),
+      segments: [// FIXME, the start/end of the actual data will be in frames, not seconds
+      {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 1,
+        start: 123,
+        end: 139
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 2,
+        start: 223,
+        end: 239
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 3,
+        start: 323,
+        end: 339
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 4,
+        start: 423,
+        end: 439
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 5,
+        start: 523,
+        end: 539
+      }],
+      videos: ["u28EnyGxPCg"]
     },
     "sad3": {
       videoClipCount: (Math.random() * 100).toFixed(0),
-      videoCount: (Math.random() * 100).toFixed(0)
+      videoCount: (Math.random() * 100).toFixed(0),
+      segments: [// FIXME, the start/end of the actual data will be in frames, not seconds
+      {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 1,
+        start: 123,
+        end: 139
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 2,
+        start: 223,
+        end: 239
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 3,
+        start: 323,
+        end: 339
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 4,
+        start: 423,
+        end: 439
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 5,
+        start: 523,
+        end: 539
+      }],
+      videos: ["u28EnyGxPCg"]
     },
     "angry3": {
       videoClipCount: (Math.random() * 100).toFixed(0),
-      videoCount: (Math.random() * 100).toFixed(0)
+      videoCount: (Math.random() * 100).toFixed(0),
+      segments: [// FIXME, the start/end of the actual data will be in frames, not seconds
+      {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 1,
+        start: 123,
+        end: 139
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 2,
+        start: 223,
+        end: 239
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 3,
+        start: 323,
+        end: 339
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 4,
+        start: 423,
+        end: 439
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 5,
+        start: 523,
+        end: 539
+      }],
+      videos: ["u28EnyGxPCg"]
     },
     "neutral3": {
       videoClipCount: (Math.random() * 100).toFixed(0),
-      videoCount: (Math.random() * 100).toFixed(0)
+      videoCount: (Math.random() * 100).toFixed(0),
+      segments: [// FIXME, the start/end of the actual data will be in frames, not seconds
+      {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 1,
+        start: 123,
+        end: 139
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 2,
+        start: 223,
+        end: 239
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 3,
+        start: 323,
+        end: 339
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 4,
+        start: 423,
+        end: 439
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 5,
+        start: 523,
+        end: 539
+      }],
+      videos: ["u28EnyGxPCg"]
     },
     "disgust3": {
       videoClipCount: (Math.random() * 100).toFixed(0),
-      videoCount: (Math.random() * 100).toFixed(0)
+      videoCount: (Math.random() * 100).toFixed(0),
+      segments: [// FIXME, the start/end of the actual data will be in frames, not seconds
+      {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 1,
+        start: 123,
+        end: 139
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 2,
+        start: 223,
+        end: 239
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 3,
+        start: 323,
+        end: 339
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 4,
+        start: 423,
+        end: 439
+      }, {
+        videoId: "u28EnyGxPCg",
+        clipIndex: 5,
+        start: 523,
+        end: 539
+      }],
+      videos: ["u28EnyGxPCg"]
     }
   }
 };
 exports.default = _default;
+},{}],"node_modules/fuse.js/dist/fuse.esm.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+/**
+ * Fuse.js v6.4.1 - Lightweight fuzzy-search (http://fusejs.io)
+ *
+ * Copyright (c) 2020 Kiro Risk (http://kiro.me)
+ * All Rights Reserved. Apache Software License 2.0
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+function isArray(value) {
+  return !Array.isArray ? getTag(value) === '[object Array]' : Array.isArray(value);
+} // Adapted from: https://github.com/lodash/lodash/blob/master/.internal/baseToString.js
+
+
+const INFINITY = 1 / 0;
+
+function baseToString(value) {
+  // Exit early for strings to avoid a performance hit in some environments.
+  if (typeof value == 'string') {
+    return value;
+  }
+
+  let result = value + '';
+  return result == '0' && 1 / value == -INFINITY ? '-0' : result;
+}
+
+function toString(value) {
+  return value == null ? '' : baseToString(value);
+}
+
+function isString(value) {
+  return typeof value === 'string';
+}
+
+function isNumber(value) {
+  return typeof value === 'number';
+} // Adapted from: https://github.com/lodash/lodash/blob/master/isBoolean.js
+
+
+function isBoolean(value) {
+  return value === true || value === false || isObjectLike(value) && getTag(value) == '[object Boolean]';
+}
+
+function isObject(value) {
+  return typeof value === 'object';
+} // Checks if `value` is object-like.
+
+
+function isObjectLike(value) {
+  return isObject(value) && value !== null;
+}
+
+function isDefined(value) {
+  return value !== undefined && value !== null;
+}
+
+function isBlank(value) {
+  return !value.trim().length;
+} // Gets the `toStringTag` of `value`.
+// Adapted from: https://github.com/lodash/lodash/blob/master/.internal/getTag.js
+
+
+function getTag(value) {
+  return value == null ? value === undefined ? '[object Undefined]' : '[object Null]' : Object.prototype.toString.call(value);
+}
+
+const EXTENDED_SEARCH_UNAVAILABLE = 'Extended search is not available';
+const INCORRECT_INDEX_TYPE = "Incorrect 'index' type";
+
+const LOGICAL_SEARCH_INVALID_QUERY_FOR_KEY = key => `Invalid value for key ${key}`;
+
+const PATTERN_LENGTH_TOO_LARGE = max => `Pattern length exceeds max of ${max}.`;
+
+const MISSING_KEY_PROPERTY = name => `Missing ${name} property in key`;
+
+const INVALID_KEY_WEIGHT_VALUE = key => `Property 'weight' in key '${key}' must be a positive integer`;
+
+const hasOwn = Object.prototype.hasOwnProperty;
+
+class KeyStore {
+  constructor(keys) {
+    this._keys = [];
+    this._keyMap = {};
+    let totalWeight = 0;
+    keys.forEach(key => {
+      let obj = createKey(key);
+      totalWeight += obj.weight;
+
+      this._keys.push(obj);
+
+      this._keyMap[obj.id] = obj;
+      totalWeight += obj.weight;
+    }); // Normalize weights so that their sum is equal to 1
+
+    this._keys.forEach(key => {
+      key.weight /= totalWeight;
+    });
+  }
+
+  get(keyId) {
+    return this._keyMap[keyId];
+  }
+
+  keys() {
+    return this._keys;
+  }
+
+  toJSON() {
+    return JSON.stringify(this._keys);
+  }
+
+}
+
+function createKey(key) {
+  let path = null;
+  let id = null;
+  let src = null;
+  let weight = 1;
+
+  if (isString(key) || isArray(key)) {
+    src = key;
+    path = createKeyPath(key);
+    id = createKeyId(key);
+  } else {
+    if (!hasOwn.call(key, 'name')) {
+      throw new Error(MISSING_KEY_PROPERTY('name'));
+    }
+
+    const name = key.name;
+    src = name;
+
+    if (hasOwn.call(key, 'weight')) {
+      weight = key.weight;
+
+      if (weight <= 0) {
+        throw new Error(INVALID_KEY_WEIGHT_VALUE(name));
+      }
+    }
+
+    path = createKeyPath(name);
+    id = createKeyId(name);
+  }
+
+  return {
+    path,
+    id,
+    weight,
+    src
+  };
+}
+
+function createKeyPath(key) {
+  return isArray(key) ? key : key.split('.');
+}
+
+function createKeyId(key) {
+  return isArray(key) ? key.join('.') : key;
+}
+
+function get(obj, path) {
+  let list = [];
+  let arr = false;
+
+  const deepGet = (obj, path, index) => {
+    if (!path[index]) {
+      // If there's no path left, we've arrived at the object we care about.
+      list.push(obj);
+    } else {
+      let key = path[index];
+      const value = obj[key];
+
+      if (!isDefined(value)) {
+        return;
+      } // If we're at the last value in the path, and if it's a string/number/bool,
+      // add it to the list
+
+
+      if (index === path.length - 1 && (isString(value) || isNumber(value) || isBoolean(value))) {
+        list.push(toString(value));
+      } else if (isArray(value)) {
+        arr = true; // Search each item in the array.
+
+        for (let i = 0, len = value.length; i < len; i += 1) {
+          deepGet(value[i], path, index + 1);
+        }
+      } else if (path.length) {
+        // An object. Recurse further.
+        deepGet(value, path, index + 1);
+      }
+    }
+  }; // Backwards compatibility (since path used to be a string)
+
+
+  deepGet(obj, isString(path) ? path.split('.') : path, 0);
+  return arr ? list : list[0];
+}
+
+const MatchOptions = {
+  // Whether the matches should be included in the result set. When `true`, each record in the result
+  // set will include the indices of the matched characters.
+  // These can consequently be used for highlighting purposes.
+  includeMatches: false,
+  // When `true`, the matching function will continue to the end of a search pattern even if
+  // a perfect match has already been located in the string.
+  findAllMatches: false,
+  // Minimum number of characters that must be matched before a result is considered a match
+  minMatchCharLength: 1
+};
+const BasicOptions = {
+  // When `true`, the algorithm continues searching to the end of the input even if a perfect
+  // match is found before the end of the same input.
+  isCaseSensitive: false,
+  // When true, the matching function will continue to the end of a search pattern even if
+  includeScore: false,
+  // List of properties that will be searched. This also supports nested properties.
+  keys: [],
+  // Whether to sort the result list, by score
+  shouldSort: true,
+  // Default sort function: sort by ascending score, ascending index
+  sortFn: (a, b) => a.score === b.score ? a.idx < b.idx ? -1 : 1 : a.score < b.score ? -1 : 1
+};
+const FuzzyOptions = {
+  // Approximately where in the text is the pattern expected to be found?
+  location: 0,
+  // At what point does the match algorithm give up. A threshold of '0.0' requires a perfect match
+  // (of both letters and location), a threshold of '1.0' would match anything.
+  threshold: 0.6,
+  // Determines how close the match must be to the fuzzy location (specified above).
+  // An exact letter match which is 'distance' characters away from the fuzzy location
+  // would score as a complete mismatch. A distance of '0' requires the match be at
+  // the exact location specified, a threshold of '1000' would require a perfect match
+  // to be within 800 characters of the fuzzy location to be found using a 0.8 threshold.
+  distance: 100
+};
+const AdvancedOptions = {
+  // When `true`, it enables the use of unix-like search commands
+  useExtendedSearch: false,
+  // The get function to use when fetching an object's properties.
+  // The default will search nested paths *ie foo.bar.baz*
+  getFn: get,
+  // When `true`, search will ignore `location` and `distance`, so it won't matter
+  // where in the string the pattern appears.
+  // More info: https://fusejs.io/concepts/scoring-theory.html#fuzziness-score
+  ignoreLocation: false,
+  // When `true`, the calculation for the relevance score (used for sorting) will
+  // ignore the field-length norm.
+  // More info: https://fusejs.io/concepts/scoring-theory.html#field-length-norm
+  ignoreFieldNorm: false
+};
+var Config = { ...BasicOptions,
+  ...MatchOptions,
+  ...FuzzyOptions,
+  ...AdvancedOptions
+};
+const SPACE = /[^ ]+/g; // Field-length norm: the shorter the field, the higher the weight.
+// Set to 3 decimals to reduce index size.
+
+function norm(mantissa = 3) {
+  const cache = new Map();
+  return {
+    get(value) {
+      const numTokens = value.match(SPACE).length;
+
+      if (cache.has(numTokens)) {
+        return cache.get(numTokens);
+      }
+
+      const n = parseFloat((1 / Math.sqrt(numTokens)).toFixed(mantissa));
+      cache.set(numTokens, n);
+      return n;
+    },
+
+    clear() {
+      cache.clear();
+    }
+
+  };
+}
+
+class FuseIndex {
+  constructor({
+    getFn = Config.getFn
+  } = {}) {
+    this.norm = norm(3);
+    this.getFn = getFn;
+    this.isCreated = false;
+    this.setIndexRecords();
+  }
+
+  setSources(docs = []) {
+    this.docs = docs;
+  }
+
+  setIndexRecords(records = []) {
+    this.records = records;
+  }
+
+  setKeys(keys = []) {
+    this.keys = keys;
+    this._keysMap = {};
+    keys.forEach((key, idx) => {
+      this._keysMap[key.id] = idx;
+    });
+  }
+
+  create() {
+    if (this.isCreated || !this.docs.length) {
+      return;
+    }
+
+    this.isCreated = true; // List is Array<String>
+
+    if (isString(this.docs[0])) {
+      this.docs.forEach((doc, docIndex) => {
+        this._addString(doc, docIndex);
+      });
+    } else {
+      // List is Array<Object>
+      this.docs.forEach((doc, docIndex) => {
+        this._addObject(doc, docIndex);
+      });
+    }
+
+    this.norm.clear();
+  } // Adds a doc to the end of the index
+
+
+  add(doc) {
+    const idx = this.size();
+
+    if (isString(doc)) {
+      this._addString(doc, idx);
+    } else {
+      this._addObject(doc, idx);
+    }
+  } // Removes the doc at the specified index of the index
+
+
+  removeAt(idx) {
+    this.records.splice(idx, 1); // Change ref index of every subsquent doc
+
+    for (let i = idx, len = this.size(); i < len; i += 1) {
+      this.records[i].i -= 1;
+    }
+  }
+
+  getValueForItemAtKeyId(item, keyId) {
+    return item[this._keysMap[keyId]];
+  }
+
+  size() {
+    return this.records.length;
+  }
+
+  _addString(doc, docIndex) {
+    if (!isDefined(doc) || isBlank(doc)) {
+      return;
+    }
+
+    let record = {
+      v: doc,
+      i: docIndex,
+      n: this.norm.get(doc)
+    };
+    this.records.push(record);
+  }
+
+  _addObject(doc, docIndex) {
+    let record = {
+      i: docIndex,
+      $: {}
+    }; // Iterate over every key (i.e, path), and fetch the value at that key
+
+    this.keys.forEach((key, keyIndex) => {
+      // console.log(key)
+      let value = this.getFn(doc, key.path);
+
+      if (!isDefined(value)) {
+        return;
+      }
+
+      if (isArray(value)) {
+        let subRecords = [];
+        const stack = [{
+          nestedArrIndex: -1,
+          value
+        }];
+
+        while (stack.length) {
+          const {
+            nestedArrIndex,
+            value
+          } = stack.pop();
+
+          if (!isDefined(value)) {
+            continue;
+          }
+
+          if (isString(value) && !isBlank(value)) {
+            let subRecord = {
+              v: value,
+              i: nestedArrIndex,
+              n: this.norm.get(value)
+            };
+            subRecords.push(subRecord);
+          } else if (isArray(value)) {
+            value.forEach((item, k) => {
+              stack.push({
+                nestedArrIndex: k,
+                value: item
+              });
+            });
+          }
+        }
+
+        record.$[keyIndex] = subRecords;
+      } else if (!isBlank(value)) {
+        let subRecord = {
+          v: value,
+          n: this.norm.get(value)
+        };
+        record.$[keyIndex] = subRecord;
+      }
+    });
+    this.records.push(record);
+  }
+
+  toJSON() {
+    return {
+      keys: this.keys,
+      records: this.records
+    };
+  }
+
+}
+
+function createIndex(keys, docs, {
+  getFn = Config.getFn
+} = {}) {
+  const myIndex = new FuseIndex({
+    getFn
+  });
+  myIndex.setKeys(keys.map(createKey));
+  myIndex.setSources(docs);
+  myIndex.create();
+  return myIndex;
+}
+
+function parseIndex(data, {
+  getFn = Config.getFn
+} = {}) {
+  const {
+    keys,
+    records
+  } = data;
+  const myIndex = new FuseIndex({
+    getFn
+  });
+  myIndex.setKeys(keys);
+  myIndex.setIndexRecords(records);
+  return myIndex;
+}
+
+function transformMatches(result, data) {
+  const matches = result.matches;
+  data.matches = [];
+
+  if (!isDefined(matches)) {
+    return;
+  }
+
+  matches.forEach(match => {
+    if (!isDefined(match.indices) || !match.indices.length) {
+      return;
+    }
+
+    const {
+      indices,
+      value
+    } = match;
+    let obj = {
+      indices,
+      value
+    };
+
+    if (match.key) {
+      obj.key = match.key.src;
+    }
+
+    if (match.idx > -1) {
+      obj.refIndex = match.idx;
+    }
+
+    data.matches.push(obj);
+  });
+}
+
+function transformScore(result, data) {
+  data.score = result.score;
+}
+
+function computeScore(pattern, {
+  errors = 0,
+  currentLocation = 0,
+  expectedLocation = 0,
+  distance = Config.distance,
+  ignoreLocation = Config.ignoreLocation
+} = {}) {
+  const accuracy = errors / pattern.length;
+
+  if (ignoreLocation) {
+    return accuracy;
+  }
+
+  const proximity = Math.abs(expectedLocation - currentLocation);
+
+  if (!distance) {
+    // Dodge divide by zero error.
+    return proximity ? 1.0 : accuracy;
+  }
+
+  return accuracy + proximity / distance;
+}
+
+function convertMaskToIndices(matchmask = [], minMatchCharLength = Config.minMatchCharLength) {
+  let indices = [];
+  let start = -1;
+  let end = -1;
+  let i = 0;
+
+  for (let len = matchmask.length; i < len; i += 1) {
+    let match = matchmask[i];
+
+    if (match && start === -1) {
+      start = i;
+    } else if (!match && start !== -1) {
+      end = i - 1;
+
+      if (end - start + 1 >= minMatchCharLength) {
+        indices.push([start, end]);
+      }
+
+      start = -1;
+    }
+  } // (i-1 - start) + 1 => i - start
+
+
+  if (matchmask[i - 1] && i - start >= minMatchCharLength) {
+    indices.push([start, i - 1]);
+  }
+
+  return indices;
+} // Machine word size
+
+
+const MAX_BITS = 32;
+
+function search(text, pattern, patternAlphabet, {
+  location = Config.location,
+  distance = Config.distance,
+  threshold = Config.threshold,
+  findAllMatches = Config.findAllMatches,
+  minMatchCharLength = Config.minMatchCharLength,
+  includeMatches = Config.includeMatches,
+  ignoreLocation = Config.ignoreLocation
+} = {}) {
+  if (pattern.length > MAX_BITS) {
+    throw new Error(PATTERN_LENGTH_TOO_LARGE(MAX_BITS));
+  }
+
+  const patternLen = pattern.length; // Set starting location at beginning text and initialize the alphabet.
+
+  const textLen = text.length; // Handle the case when location > text.length
+
+  const expectedLocation = Math.max(0, Math.min(location, textLen)); // Highest score beyond which we give up.
+
+  let currentThreshold = threshold; // Is there a nearby exact match? (speedup)
+
+  let bestLocation = expectedLocation; // Performance: only computer matches when the minMatchCharLength > 1
+  // OR if `includeMatches` is true.
+
+  const computeMatches = minMatchCharLength > 1 || includeMatches; // A mask of the matches, used for building the indices
+
+  const matchMask = computeMatches ? Array(textLen) : [];
+  let index; // Get all exact matches, here for speed up
+
+  while ((index = text.indexOf(pattern, bestLocation)) > -1) {
+    let score = computeScore(pattern, {
+      currentLocation: index,
+      expectedLocation,
+      distance,
+      ignoreLocation
+    });
+    currentThreshold = Math.min(score, currentThreshold);
+    bestLocation = index + patternLen;
+
+    if (computeMatches) {
+      let i = 0;
+
+      while (i < patternLen) {
+        matchMask[index + i] = 1;
+        i += 1;
+      }
+    }
+  } // Reset the best location
+
+
+  bestLocation = -1;
+  let lastBitArr = [];
+  let finalScore = 1;
+  let binMax = patternLen + textLen;
+  const mask = 1 << patternLen - 1;
+
+  for (let i = 0; i < patternLen; i += 1) {
+    // Scan for the best match; each iteration allows for one more error.
+    // Run a binary search to determine how far from the match location we can stray
+    // at this error level.
+    let binMin = 0;
+    let binMid = binMax;
+
+    while (binMin < binMid) {
+      const score = computeScore(pattern, {
+        errors: i,
+        currentLocation: expectedLocation + binMid,
+        expectedLocation,
+        distance,
+        ignoreLocation
+      });
+
+      if (score <= currentThreshold) {
+        binMin = binMid;
+      } else {
+        binMax = binMid;
+      }
+
+      binMid = Math.floor((binMax - binMin) / 2 + binMin);
+    } // Use the result from this iteration as the maximum for the next.
+
+
+    binMax = binMid;
+    let start = Math.max(1, expectedLocation - binMid + 1);
+    let finish = findAllMatches ? textLen : Math.min(expectedLocation + binMid, textLen) + patternLen; // Initialize the bit array
+
+    let bitArr = Array(finish + 2);
+    bitArr[finish + 1] = (1 << i) - 1;
+
+    for (let j = finish; j >= start; j -= 1) {
+      let currentLocation = j - 1;
+      let charMatch = patternAlphabet[text.charAt(currentLocation)];
+
+      if (computeMatches) {
+        // Speed up: quick bool to int conversion (i.e, `charMatch ? 1 : 0`)
+        matchMask[currentLocation] = +!!charMatch;
+      } // First pass: exact match
+
+
+      bitArr[j] = (bitArr[j + 1] << 1 | 1) & charMatch; // Subsequent passes: fuzzy match
+
+      if (i) {
+        bitArr[j] |= (lastBitArr[j + 1] | lastBitArr[j]) << 1 | 1 | lastBitArr[j + 1];
+      }
+
+      if (bitArr[j] & mask) {
+        finalScore = computeScore(pattern, {
+          errors: i,
+          currentLocation,
+          expectedLocation,
+          distance,
+          ignoreLocation
+        }); // This match will almost certainly be better than any existing match.
+        // But check anyway.
+
+        if (finalScore <= currentThreshold) {
+          // Indeed it is
+          currentThreshold = finalScore;
+          bestLocation = currentLocation; // Already passed `loc`, downhill from here on in.
+
+          if (bestLocation <= expectedLocation) {
+            break;
+          } // When passing `bestLocation`, don't exceed our current distance from `expectedLocation`.
+
+
+          start = Math.max(1, 2 * expectedLocation - bestLocation);
+        }
+      }
+    } // No hope for a (better) match at greater error levels.
+
+
+    const score = computeScore(pattern, {
+      errors: i + 1,
+      currentLocation: expectedLocation,
+      expectedLocation,
+      distance,
+      ignoreLocation
+    });
+
+    if (score > currentThreshold) {
+      break;
+    }
+
+    lastBitArr = bitArr;
+  }
+
+  const result = {
+    isMatch: bestLocation >= 0,
+    // Count exact matches (those with a score of 0) to be "almost" exact
+    score: Math.max(0.001, finalScore)
+  };
+
+  if (computeMatches) {
+    const indices = convertMaskToIndices(matchMask, minMatchCharLength);
+
+    if (!indices.length) {
+      result.isMatch = false;
+    } else if (includeMatches) {
+      result.indices = indices;
+    }
+  }
+
+  return result;
+}
+
+function createPatternAlphabet(pattern) {
+  let mask = {};
+
+  for (let i = 0, len = pattern.length; i < len; i += 1) {
+    const char = pattern.charAt(i);
+    mask[char] = (mask[char] || 0) | 1 << len - i - 1;
+  }
+
+  return mask;
+}
+
+class BitapSearch {
+  constructor(pattern, {
+    location = Config.location,
+    threshold = Config.threshold,
+    distance = Config.distance,
+    includeMatches = Config.includeMatches,
+    findAllMatches = Config.findAllMatches,
+    minMatchCharLength = Config.minMatchCharLength,
+    isCaseSensitive = Config.isCaseSensitive,
+    ignoreLocation = Config.ignoreLocation
+  } = {}) {
+    this.options = {
+      location,
+      threshold,
+      distance,
+      includeMatches,
+      findAllMatches,
+      minMatchCharLength,
+      isCaseSensitive,
+      ignoreLocation
+    };
+    this.pattern = isCaseSensitive ? pattern : pattern.toLowerCase();
+    this.chunks = [];
+
+    if (!this.pattern.length) {
+      return;
+    }
+
+    const addChunk = (pattern, startIndex) => {
+      this.chunks.push({
+        pattern,
+        alphabet: createPatternAlphabet(pattern),
+        startIndex
+      });
+    };
+
+    const len = this.pattern.length;
+
+    if (len > MAX_BITS) {
+      let i = 0;
+      const remainder = len % MAX_BITS;
+      const end = len - remainder;
+
+      while (i < end) {
+        addChunk(this.pattern.substr(i, MAX_BITS), i);
+        i += MAX_BITS;
+      }
+
+      if (remainder) {
+        const startIndex = len - MAX_BITS;
+        addChunk(this.pattern.substr(startIndex), startIndex);
+      }
+    } else {
+      addChunk(this.pattern, 0);
+    }
+  }
+
+  searchIn(text) {
+    const {
+      isCaseSensitive,
+      includeMatches
+    } = this.options;
+
+    if (!isCaseSensitive) {
+      text = text.toLowerCase();
+    } // Exact match
+
+
+    if (this.pattern === text) {
+      let result = {
+        isMatch: true,
+        score: 0
+      };
+
+      if (includeMatches) {
+        result.indices = [[0, text.length - 1]];
+      }
+
+      return result;
+    } // Otherwise, use Bitap algorithm
+
+
+    const {
+      location,
+      distance,
+      threshold,
+      findAllMatches,
+      minMatchCharLength,
+      ignoreLocation
+    } = this.options;
+    let allIndices = [];
+    let totalScore = 0;
+    let hasMatches = false;
+    this.chunks.forEach(({
+      pattern,
+      alphabet,
+      startIndex
+    }) => {
+      const {
+        isMatch,
+        score,
+        indices
+      } = search(text, pattern, alphabet, {
+        location: location + startIndex,
+        distance,
+        threshold,
+        findAllMatches,
+        minMatchCharLength,
+        includeMatches,
+        ignoreLocation
+      });
+
+      if (isMatch) {
+        hasMatches = true;
+      }
+
+      totalScore += score;
+
+      if (isMatch && indices) {
+        allIndices = [...allIndices, ...indices];
+      }
+    });
+    let result = {
+      isMatch: hasMatches,
+      score: hasMatches ? totalScore / this.chunks.length : 1
+    };
+
+    if (hasMatches && includeMatches) {
+      result.indices = allIndices;
+    }
+
+    return result;
+  }
+
+}
+
+class BaseMatch {
+  constructor(pattern) {
+    this.pattern = pattern;
+  }
+
+  static isMultiMatch(pattern) {
+    return getMatch(pattern, this.multiRegex);
+  }
+
+  static isSingleMatch(pattern) {
+    return getMatch(pattern, this.singleRegex);
+  }
+
+  search()
+  /*text*/
+  {}
+
+}
+
+function getMatch(pattern, exp) {
+  const matches = pattern.match(exp);
+  return matches ? matches[1] : null;
+} // Token: 'file
+
+
+class ExactMatch extends BaseMatch {
+  constructor(pattern) {
+    super(pattern);
+  }
+
+  static get type() {
+    return 'exact';
+  }
+
+  static get multiRegex() {
+    return /^="(.*)"$/;
+  }
+
+  static get singleRegex() {
+    return /^=(.*)$/;
+  }
+
+  search(text) {
+    const isMatch = text === this.pattern;
+    return {
+      isMatch,
+      score: isMatch ? 0 : 1,
+      indices: [0, this.pattern.length - 1]
+    };
+  }
+
+} // Token: !fire
+
+
+class InverseExactMatch extends BaseMatch {
+  constructor(pattern) {
+    super(pattern);
+  }
+
+  static get type() {
+    return 'inverse-exact';
+  }
+
+  static get multiRegex() {
+    return /^!"(.*)"$/;
+  }
+
+  static get singleRegex() {
+    return /^!(.*)$/;
+  }
+
+  search(text) {
+    const index = text.indexOf(this.pattern);
+    const isMatch = index === -1;
+    return {
+      isMatch,
+      score: isMatch ? 0 : 1,
+      indices: [0, text.length - 1]
+    };
+  }
+
+} // Token: ^file
+
+
+class PrefixExactMatch extends BaseMatch {
+  constructor(pattern) {
+    super(pattern);
+  }
+
+  static get type() {
+    return 'prefix-exact';
+  }
+
+  static get multiRegex() {
+    return /^\^"(.*)"$/;
+  }
+
+  static get singleRegex() {
+    return /^\^(.*)$/;
+  }
+
+  search(text) {
+    const isMatch = text.startsWith(this.pattern);
+    return {
+      isMatch,
+      score: isMatch ? 0 : 1,
+      indices: [0, this.pattern.length - 1]
+    };
+  }
+
+} // Token: !^fire
+
+
+class InversePrefixExactMatch extends BaseMatch {
+  constructor(pattern) {
+    super(pattern);
+  }
+
+  static get type() {
+    return 'inverse-prefix-exact';
+  }
+
+  static get multiRegex() {
+    return /^!\^"(.*)"$/;
+  }
+
+  static get singleRegex() {
+    return /^!\^(.*)$/;
+  }
+
+  search(text) {
+    const isMatch = !text.startsWith(this.pattern);
+    return {
+      isMatch,
+      score: isMatch ? 0 : 1,
+      indices: [0, text.length - 1]
+    };
+  }
+
+} // Token: .file$
+
+
+class SuffixExactMatch extends BaseMatch {
+  constructor(pattern) {
+    super(pattern);
+  }
+
+  static get type() {
+    return 'suffix-exact';
+  }
+
+  static get multiRegex() {
+    return /^"(.*)"\$$/;
+  }
+
+  static get singleRegex() {
+    return /^(.*)\$$/;
+  }
+
+  search(text) {
+    const isMatch = text.endsWith(this.pattern);
+    return {
+      isMatch,
+      score: isMatch ? 0 : 1,
+      indices: [text.length - this.pattern.length, text.length - 1]
+    };
+  }
+
+} // Token: !.file$
+
+
+class InverseSuffixExactMatch extends BaseMatch {
+  constructor(pattern) {
+    super(pattern);
+  }
+
+  static get type() {
+    return 'inverse-suffix-exact';
+  }
+
+  static get multiRegex() {
+    return /^!"(.*)"\$$/;
+  }
+
+  static get singleRegex() {
+    return /^!(.*)\$$/;
+  }
+
+  search(text) {
+    const isMatch = !text.endsWith(this.pattern);
+    return {
+      isMatch,
+      score: isMatch ? 0 : 1,
+      indices: [0, text.length - 1]
+    };
+  }
+
+}
+
+class FuzzyMatch extends BaseMatch {
+  constructor(pattern, {
+    location = Config.location,
+    threshold = Config.threshold,
+    distance = Config.distance,
+    includeMatches = Config.includeMatches,
+    findAllMatches = Config.findAllMatches,
+    minMatchCharLength = Config.minMatchCharLength,
+    isCaseSensitive = Config.isCaseSensitive
+  } = {}) {
+    super(pattern);
+    this._bitapSearch = new BitapSearch(pattern, {
+      location,
+      threshold,
+      distance,
+      includeMatches,
+      findAllMatches,
+      minMatchCharLength,
+      isCaseSensitive
+    });
+  }
+
+  static get type() {
+    return 'fuzzy';
+  }
+
+  static get multiRegex() {
+    return /^"(.*)"$/;
+  }
+
+  static get singleRegex() {
+    return /^(.*)$/;
+  }
+
+  search(text) {
+    return this._bitapSearch.searchIn(text);
+  }
+
+} // Token: 'file
+
+
+class IncludeMatch extends BaseMatch {
+  constructor(pattern) {
+    super(pattern);
+  }
+
+  static get type() {
+    return 'include';
+  }
+
+  static get multiRegex() {
+    return /^'"(.*)"$/;
+  }
+
+  static get singleRegex() {
+    return /^'(.*)$/;
+  }
+
+  search(text) {
+    let location = 0;
+    let index;
+    const indices = [];
+    const patternLen = this.pattern.length; // Get all exact matches
+
+    while ((index = text.indexOf(this.pattern, location)) > -1) {
+      location = index + patternLen;
+      indices.push([index, location - 1]);
+    }
+
+    const isMatch = !!indices.length;
+    return {
+      isMatch,
+      score: isMatch ? 1 : 0,
+      indices
+    };
+  }
+
+} // ❗Order is important. DO NOT CHANGE.
+
+
+const searchers = [ExactMatch, IncludeMatch, PrefixExactMatch, InversePrefixExactMatch, InverseSuffixExactMatch, SuffixExactMatch, InverseExactMatch, FuzzyMatch];
+const searchersLen = searchers.length; // Regex to split by spaces, but keep anything in quotes together
+
+const SPACE_RE = / +(?=([^\"]*\"[^\"]*\")*[^\"]*$)/;
+const OR_TOKEN = '|'; // Return a 2D array representation of the query, for simpler parsing.
+// Example:
+// "^core go$ | rb$ | py$ xy$" => [["^core", "go$"], ["rb$"], ["py$", "xy$"]]
+
+function parseQuery(pattern, options = {}) {
+  return pattern.split(OR_TOKEN).map(item => {
+    let query = item.trim().split(SPACE_RE).filter(item => item && !!item.trim());
+    let results = [];
+
+    for (let i = 0, len = query.length; i < len; i += 1) {
+      const queryItem = query[i]; // 1. Handle multiple query match (i.e, once that are quoted, like `"hello world"`)
+
+      let found = false;
+      let idx = -1;
+
+      while (!found && ++idx < searchersLen) {
+        const searcher = searchers[idx];
+        let token = searcher.isMultiMatch(queryItem);
+
+        if (token) {
+          results.push(new searcher(token, options));
+          found = true;
+        }
+      }
+
+      if (found) {
+        continue;
+      } // 2. Handle single query matches (i.e, once that are *not* quoted)
+
+
+      idx = -1;
+
+      while (++idx < searchersLen) {
+        const searcher = searchers[idx];
+        let token = searcher.isSingleMatch(queryItem);
+
+        if (token) {
+          results.push(new searcher(token, options));
+          break;
+        }
+      }
+    }
+
+    return results;
+  });
+} // These extended matchers can return an array of matches, as opposed
+// to a singl match
+
+
+const MultiMatchSet = new Set([FuzzyMatch.type, IncludeMatch.type]);
+/**
+ * Command-like searching
+ * ======================
+ *
+ * Given multiple search terms delimited by spaces.e.g. `^jscript .python$ ruby !java`,
+ * search in a given text.
+ *
+ * Search syntax:
+ *
+ * | Token       | Match type                 | Description                            |
+ * | ----------- | -------------------------- | -------------------------------------- |
+ * | `jscript`   | fuzzy-match                | Items that fuzzy match `jscript`       |
+ * | `=scheme`   | exact-match                | Items that are `scheme`                |
+ * | `'python`   | include-match              | Items that include `python`            |
+ * | `!ruby`     | inverse-exact-match        | Items that do not include `ruby`       |
+ * | `^java`     | prefix-exact-match         | Items that start with `java`           |
+ * | `!^earlang` | inverse-prefix-exact-match | Items that do not start with `earlang` |
+ * | `.js$`      | suffix-exact-match         | Items that end with `.js`              |
+ * | `!.go$`     | inverse-suffix-exact-match | Items that do not end with `.go`       |
+ *
+ * A single pipe character acts as an OR operator. For example, the following
+ * query matches entries that start with `core` and end with either`go`, `rb`,
+ * or`py`.
+ *
+ * ```
+ * ^core go$ | rb$ | py$
+ * ```
+ */
+
+class ExtendedSearch {
+  constructor(pattern, {
+    isCaseSensitive = Config.isCaseSensitive,
+    includeMatches = Config.includeMatches,
+    minMatchCharLength = Config.minMatchCharLength,
+    findAllMatches = Config.findAllMatches,
+    location = Config.location,
+    threshold = Config.threshold,
+    distance = Config.distance
+  } = {}) {
+    this.query = null;
+    this.options = {
+      isCaseSensitive,
+      includeMatches,
+      minMatchCharLength,
+      findAllMatches,
+      location,
+      threshold,
+      distance
+    };
+    this.pattern = isCaseSensitive ? pattern : pattern.toLowerCase();
+    this.query = parseQuery(this.pattern, this.options);
+  }
+
+  static condition(_, options) {
+    return options.useExtendedSearch;
+  }
+
+  searchIn(text) {
+    const query = this.query;
+
+    if (!query) {
+      return {
+        isMatch: false,
+        score: 1
+      };
+    }
+
+    const {
+      includeMatches,
+      isCaseSensitive
+    } = this.options;
+    text = isCaseSensitive ? text : text.toLowerCase();
+    let numMatches = 0;
+    let allIndices = [];
+    let totalScore = 0; // ORs
+
+    for (let i = 0, qLen = query.length; i < qLen; i += 1) {
+      const searchers = query[i]; // Reset indices
+
+      allIndices.length = 0;
+      numMatches = 0; // ANDs
+
+      for (let j = 0, pLen = searchers.length; j < pLen; j += 1) {
+        const searcher = searchers[j];
+        const {
+          isMatch,
+          indices,
+          score
+        } = searcher.search(text);
+
+        if (isMatch) {
+          numMatches += 1;
+          totalScore += score;
+
+          if (includeMatches) {
+            const type = searcher.constructor.type;
+
+            if (MultiMatchSet.has(type)) {
+              allIndices = [...allIndices, ...indices];
+            } else {
+              allIndices.push(indices);
+            }
+          }
+        } else {
+          totalScore = 0;
+          numMatches = 0;
+          allIndices.length = 0;
+          break;
+        }
+      } // OR condition, so if TRUE, return
+
+
+      if (numMatches) {
+        let result = {
+          isMatch: true,
+          score: totalScore / numMatches
+        };
+
+        if (includeMatches) {
+          result.indices = allIndices;
+        }
+
+        return result;
+      }
+    } // Nothing was matched
+
+
+    return {
+      isMatch: false,
+      score: 1
+    };
+  }
+
+}
+
+const registeredSearchers = [];
+
+function register(...args) {
+  registeredSearchers.push(...args);
+}
+
+function createSearcher(pattern, options) {
+  for (let i = 0, len = registeredSearchers.length; i < len; i += 1) {
+    let searcherClass = registeredSearchers[i];
+
+    if (searcherClass.condition(pattern, options)) {
+      return new searcherClass(pattern, options);
+    }
+  }
+
+  return new BitapSearch(pattern, options);
+}
+
+const LogicalOperator = {
+  AND: '$and',
+  OR: '$or'
+};
+const KeyType = {
+  PATH: '$path',
+  PATTERN: '$val'
+};
+
+const isExpression = query => !!(query[LogicalOperator.AND] || query[LogicalOperator.OR]);
+
+const isPath = query => !!query[KeyType.PATH];
+
+const isLeaf = query => !isArray(query) && isObject(query) && !isExpression(query);
+
+const convertToExplicit = query => ({
+  [LogicalOperator.AND]: Object.keys(query).map(key => ({
+    [key]: query[key]
+  }))
+}); // When `auto` is `true`, the parse function will infer and initialize and add
+// the appropriate `Searcher` instance
+
+
+function parse(query, options, {
+  auto = true
+} = {}) {
+  const next = query => {
+    let keys = Object.keys(query);
+    const isQueryPath = isPath(query);
+
+    if (!isQueryPath && keys.length > 1 && !isExpression(query)) {
+      return next(convertToExplicit(query));
+    }
+
+    if (isLeaf(query)) {
+      const key = isQueryPath ? query[KeyType.PATH] : keys[0];
+      const pattern = isQueryPath ? query[KeyType.PATTERN] : query[key];
+
+      if (!isString(pattern)) {
+        throw new Error(LOGICAL_SEARCH_INVALID_QUERY_FOR_KEY(key));
+      }
+
+      const obj = {
+        keyId: createKeyId(key),
+        pattern
+      };
+
+      if (auto) {
+        obj.searcher = createSearcher(pattern, options);
+      }
+
+      return obj;
+    }
+
+    let node = {
+      children: [],
+      operator: keys[0]
+    };
+    keys.forEach(key => {
+      const value = query[key];
+
+      if (isArray(value)) {
+        value.forEach(item => {
+          node.children.push(next(item));
+        });
+      }
+    });
+    return node;
+  };
+
+  if (!isExpression(query)) {
+    query = convertToExplicit(query);
+  }
+
+  return next(query);
+}
+
+class Fuse {
+  constructor(docs, options = {}, index) {
+    this.options = { ...Config,
+      ...options
+    };
+
+    if (this.options.useExtendedSearch && !true) {
+      throw new Error(EXTENDED_SEARCH_UNAVAILABLE);
+    }
+
+    this._keyStore = new KeyStore(this.options.keys);
+    this.setCollection(docs, index);
+  }
+
+  setCollection(docs, index) {
+    this._docs = docs;
+
+    if (index && !(index instanceof FuseIndex)) {
+      throw new Error(INCORRECT_INDEX_TYPE);
+    }
+
+    this._myIndex = index || createIndex(this.options.keys, this._docs, {
+      getFn: this.options.getFn
+    });
+  }
+
+  add(doc) {
+    if (!isDefined(doc)) {
+      return;
+    }
+
+    this._docs.push(doc);
+
+    this._myIndex.add(doc);
+  }
+
+  remove(predicate = () =>
+  /* doc, idx */
+  false) {
+    const results = [];
+
+    for (let i = 0, len = this._docs.length; i < len; i += 1) {
+      const doc = this._docs[i];
+
+      if (predicate(doc, i)) {
+        this.removeAt(i);
+        i -= 1;
+        results.push(doc);
+      }
+    }
+
+    return results;
+  }
+
+  removeAt(idx) {
+    this._docs.splice(idx, 1);
+
+    this._myIndex.removeAt(idx);
+  }
+
+  getIndex() {
+    return this._myIndex;
+  }
+
+  search(query, {
+    limit = -1
+  } = {}) {
+    const {
+      includeMatches,
+      includeScore,
+      shouldSort,
+      sortFn,
+      ignoreFieldNorm
+    } = this.options;
+    let results = isString(query) ? isString(this._docs[0]) ? this._searchStringList(query) : this._searchObjectList(query) : this._searchLogical(query);
+    computeScore$1(results, {
+      ignoreFieldNorm
+    });
+
+    if (shouldSort) {
+      results.sort(sortFn);
+    }
+
+    if (isNumber(limit) && limit > -1) {
+      results = results.slice(0, limit);
+    }
+
+    return format(results, this._docs, {
+      includeMatches,
+      includeScore
+    });
+  }
+
+  _searchStringList(query) {
+    const searcher = createSearcher(query, this.options);
+    const {
+      records
+    } = this._myIndex;
+    const results = []; // Iterate over every string in the index
+
+    records.forEach(({
+      v: text,
+      i: idx,
+      n: norm
+    }) => {
+      if (!isDefined(text)) {
+        return;
+      }
+
+      const {
+        isMatch,
+        score,
+        indices
+      } = searcher.searchIn(text);
+
+      if (isMatch) {
+        results.push({
+          item: text,
+          idx,
+          matches: [{
+            score,
+            value: text,
+            norm,
+            indices
+          }]
+        });
+      }
+    });
+    return results;
+  }
+
+  _searchLogical(query) {
+    const expression = parse(query, this.options);
+
+    const evaluate = (node, item, idx) => {
+      if (!node.children) {
+        const {
+          keyId,
+          searcher
+        } = node;
+
+        const matches = this._findMatches({
+          key: this._keyStore.get(keyId),
+          value: this._myIndex.getValueForItemAtKeyId(item, keyId),
+          searcher
+        });
+
+        if (matches && matches.length) {
+          return [{
+            idx,
+            item,
+            matches
+          }];
+        }
+
+        return [];
+      }
+      /*eslint indent: [2, 2, {"SwitchCase": 1}]*/
+
+
+      switch (node.operator) {
+        case LogicalOperator.AND:
+          {
+            const res = [];
+
+            for (let i = 0, len = node.children.length; i < len; i += 1) {
+              const child = node.children[i];
+              const result = evaluate(child, item, idx);
+
+              if (result.length) {
+                res.push(...result);
+              } else {
+                return [];
+              }
+            }
+
+            return res;
+          }
+
+        case LogicalOperator.OR:
+          {
+            const res = [];
+
+            for (let i = 0, len = node.children.length; i < len; i += 1) {
+              const child = node.children[i];
+              const result = evaluate(child, item, idx);
+
+              if (result.length) {
+                res.push(...result);
+                break;
+              }
+            }
+
+            return res;
+          }
+      }
+    };
+
+    const records = this._myIndex.records;
+    const resultMap = {};
+    const results = [];
+    records.forEach(({
+      $: item,
+      i: idx
+    }) => {
+      if (isDefined(item)) {
+        let expResults = evaluate(expression, item, idx);
+
+        if (expResults.length) {
+          // Dedupe when adding
+          if (!resultMap[idx]) {
+            resultMap[idx] = {
+              idx,
+              item,
+              matches: []
+            };
+            results.push(resultMap[idx]);
+          }
+
+          expResults.forEach(({
+            matches
+          }) => {
+            resultMap[idx].matches.push(...matches);
+          });
+        }
+      }
+    });
+    return results;
+  }
+
+  _searchObjectList(query) {
+    const searcher = createSearcher(query, this.options);
+    const {
+      keys,
+      records
+    } = this._myIndex;
+    const results = []; // List is Array<Object>
+
+    records.forEach(({
+      $: item,
+      i: idx
+    }) => {
+      if (!isDefined(item)) {
+        return;
+      }
+
+      let matches = []; // Iterate over every key (i.e, path), and fetch the value at that key
+
+      keys.forEach((key, keyIndex) => {
+        matches.push(...this._findMatches({
+          key,
+          value: item[keyIndex],
+          searcher
+        }));
+      });
+
+      if (matches.length) {
+        results.push({
+          idx,
+          item,
+          matches
+        });
+      }
+    });
+    return results;
+  }
+
+  _findMatches({
+    key,
+    value,
+    searcher
+  }) {
+    if (!isDefined(value)) {
+      return [];
+    }
+
+    let matches = [];
+
+    if (isArray(value)) {
+      value.forEach(({
+        v: text,
+        i: idx,
+        n: norm
+      }) => {
+        if (!isDefined(text)) {
+          return;
+        }
+
+        const {
+          isMatch,
+          score,
+          indices
+        } = searcher.searchIn(text);
+
+        if (isMatch) {
+          matches.push({
+            score,
+            key,
+            value: text,
+            idx,
+            norm,
+            indices
+          });
+        }
+      });
+    } else {
+      const {
+        v: text,
+        n: norm
+      } = value;
+      const {
+        isMatch,
+        score,
+        indices
+      } = searcher.searchIn(text);
+
+      if (isMatch) {
+        matches.push({
+          score,
+          key,
+          value: text,
+          norm,
+          indices
+        });
+      }
+    }
+
+    return matches;
+  }
+
+} // Practical scoring function
+
+
+function computeScore$1(results, {
+  ignoreFieldNorm = Config.ignoreFieldNorm
+}) {
+  results.forEach(result => {
+    let totalScore = 1;
+    result.matches.forEach(({
+      key,
+      norm,
+      score
+    }) => {
+      const weight = key ? key.weight : null;
+      totalScore *= Math.pow(score === 0 && weight ? Number.EPSILON : score, (weight || 1) * (ignoreFieldNorm ? 1 : norm));
+    });
+    result.score = totalScore;
+  });
+}
+
+function format(results, docs, {
+  includeMatches = Config.includeMatches,
+  includeScore = Config.includeScore
+} = {}) {
+  const transformers = [];
+  if (includeMatches) transformers.push(transformMatches);
+  if (includeScore) transformers.push(transformScore);
+  return results.map(result => {
+    const {
+      idx
+    } = result;
+    const data = {
+      item: docs[idx],
+      refIndex: idx
+    };
+
+    if (transformers.length) {
+      transformers.forEach(transformer => {
+        transformer(result, data);
+      });
+    }
+
+    return data;
+  });
+}
+
+Fuse.version = '6.4.1';
+Fuse.createIndex = createIndex;
+Fuse.parseIndex = parseIndex;
+Fuse.config = Config;
+{
+  Fuse.parseQuery = parse;
+}
+{
+  register(ExtendedSearch);
+}
+var _default = Fuse;
+exports.default = _default;
+},{}],"src/utils.js":[function(require,module,exports) {
+module.exports = {
+  wrapIndex(val, list) {
+    if (val >= list.length) {
+      return 0;
+    } else if (val < 0) {
+      return list.length - 1;
+    } else {
+      return val;
+    }
+  }
+
+};
 },{}],"node_modules/vue-hot-reload-api/dist/index.js":[function(require,module,exports) {
 var Vue // late bind
 var version
@@ -28729,13 +31220,14 @@ function patchScopedSlots (instance) {
   }
 }
 
-},{}],"node_modules/vue-waterfall/lib/waterfall.vue":[function(require,module,exports) {
+},{}],"node_modules/vue-json-tree/src/json-tree.vue":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+
 //
 //
 //
@@ -28749,603 +31241,374 @@ exports.default = void 0;
 //
 //
 //
-const MOVE_CLASS_PROP = '_wfMoveClass';
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+function parse(data, depth = 0, last = true, key = undefined) {
+  let kv = {
+    depth,
+    last,
+    primitive: true,
+    key: JSON.stringify(key)
+  };
+
+  if (typeof data !== 'object') {
+    return Object.assign(kv, {
+      type: typeof data,
+      value: JSON.stringify(data)
+    });
+  } else if (data === null) {
+    return Object.assign(kv, {
+      type: 'null',
+      value: 'null'
+    });
+  } else if (Array.isArray(data)) {
+    let value = data.map((item, index) => {
+      return parse(item, depth + 1, index === data.length - 1);
+    });
+    return Object.assign(kv, {
+      primitive: false,
+      type: 'array',
+      value
+    });
+  } else {
+    let keys = Object.keys(data);
+    let value = keys.map((key, index) => {
+      return parse(data[key], depth + 1, index === keys.length - 1, key);
+    });
+    return Object.assign(kv, {
+      primitive: false,
+      type: 'object',
+      value
+    });
+  }
+}
+
 var _default = {
+  name: 'json-tree',
   props: {
-    autoResize: {
-      default: true
+    level: {
+      type: Number,
+      default: Infinity
     },
-    interval: {
-      default: 200,
-      validator: val => val >= 0
+    kv: {
+      type: Object
     },
-    align: {
-      default: 'left',
-      validator: val => ~['left', 'right', 'center'].indexOf(val)
+    raw: {
+      type: String
     },
-    line: {
-      default: 'v',
-      validator: val => ~['v', 'h'].indexOf(val)
-    },
-    lineGap: {
-      required: true,
-      validator: val => val >= 0
-    },
-    minLineGap: {
-      validator: val => val >= 0
-    },
-    maxLineGap: {
-      validator: val => val >= 0
-    },
-    singleMaxWidth: {
-      validator: val => val >= 0
-    },
-    fixedHeight: {
-      default: false
-    },
-    grow: {
-      validator: val => val instanceof Array
-    },
-    watch: {
-      default: () => ({})
-    }
-  },
-  data: () => ({
-    style: {
-      height: '',
-      overflow: ''
-    },
-    token: null
-  }),
-  methods: {
-    reflowHandler,
-    autoResizeHandler,
-    reflow
+    data: {}
   },
 
-  created() {
-    this.virtualRects = [];
-    this.$on('reflow', () => {
-      this.reflowHandler();
-    });
-    this.$watch(() => (this.align, this.line, this.lineGap, this.minLineGap, this.maxLineGap, this.singleMaxWidth, this.fixedHeight, this.watch), this.reflowHandler);
-    this.$watch('grow', this.reflowHandler);
-  },
-
-  mounted() {
-    this.$watch('autoResize', this.autoResizeHandler);
-    on(this.$el, getTransitionEndEvent(), tidyUpAnimations, true);
-    this.autoResizeHandler(this.autoResize);
-  },
-
-  beforeDestroy() {
-    this.autoResizeHandler(false);
-    off(this.$el, getTransitionEndEvent(), tidyUpAnimations, true);
-  }
-
-};
-exports.default = _default;
-
-function autoResizeHandler(autoResize) {
-  if (autoResize === false || !this.autoResize) {
-    off(window, 'resize', this.reflowHandler, false);
-  } else {
-    on(window, 'resize', this.reflowHandler, false);
-  }
-}
-
-function tidyUpAnimations(event) {
-  let node = event.target;
-  let moveClass = node[MOVE_CLASS_PROP];
-
-  if (moveClass) {
-    removeClass(node, moveClass);
-  }
-}
-
-function reflowHandler() {
-  clearTimeout(this.token);
-  this.token = setTimeout(this.reflow, this.interval);
-}
-
-function reflow() {
-  if (!this.$el) {
-    return;
-  }
-
-  let width = this.$el.clientWidth;
-  let metas = this.$children.map(slot => slot.getMeta());
-  metas.sort((a, b) => a.order - b.order);
-  this.virtualRects = metas.map(() => ({}));
-  calculate(this, metas, this.virtualRects);
-  setTimeout(() => {
-    if (isScrollBarVisibilityChange(this.$el, width)) {
-      calculate(this, metas, this.virtualRects);
-    }
-
-    this.style.overflow = 'hidden';
-    render(this.virtualRects, metas);
-    this.$emit('reflowed', this);
-  }, 0);
-}
-
-function isScrollBarVisibilityChange(el, lastClientWidth) {
-  return lastClientWidth !== el.clientWidth;
-}
-
-function calculate(vm, metas, styles) {
-  let options = getOptions(vm);
-  let processor = vm.line === 'h' ? horizontalLineProcessor : verticalLineProcessor;
-  processor.calculate(vm, options, metas, styles);
-}
-
-function getOptions(vm) {
-  const maxLineGap = vm.maxLineGap ? +vm.maxLineGap : vm.lineGap;
-  return {
-    align: ~['left', 'right', 'center'].indexOf(vm.align) ? vm.align : 'left',
-    line: ~['v', 'h'].indexOf(vm.line) ? vm.line : 'v',
-    lineGap: +vm.lineGap,
-    minLineGap: vm.minLineGap ? +vm.minLineGap : vm.lineGap,
-    maxLineGap: maxLineGap,
-    singleMaxWidth: Math.max(vm.singleMaxWidth || 0, maxLineGap),
-    fixedHeight: !!vm.fixedHeight,
-    grow: vm.grow && vm.grow.map(val => +val)
-  };
-}
-
-var verticalLineProcessor = (() => {
-  function calculate(vm, options, metas, rects) {
-    let width = vm.$el.clientWidth;
-    let grow = options.grow;
-    let strategy = grow ? getRowStrategyWithGrow(width, grow) : getRowStrategy(width, options);
-    let tops = getArrayFillWith(0, strategy.count);
-    metas.forEach((meta, index) => {
-      let offset = tops.reduce((last, top, i) => top < tops[last] ? i : last, 0);
-      let width = strategy.width[offset % strategy.count];
-      let rect = rects[index];
-      rect.top = tops[offset];
-      rect.left = strategy.left + (offset ? sum(strategy.width.slice(0, offset)) : 0);
-      rect.width = width;
-      rect.height = meta.height * (options.fixedHeight ? 1 : width / meta.width);
-      tops[offset] = tops[offset] + rect.height;
-    });
-    vm.style.height = Math.max.apply(Math, tops) + 'px';
-  }
-
-  function getRowStrategy(width, options) {
-    let count = width / options.lineGap;
-    let slotWidth;
-
-    if (options.singleMaxWidth >= width) {
-      count = 1;
-      slotWidth = Math.max(width, options.minLineGap);
-    } else {
-      let maxContentWidth = options.maxLineGap * ~~count;
-      let minGreedyContentWidth = options.minLineGap * ~~(count + 1);
-      let canFit = maxContentWidth >= width;
-      let canFitGreedy = minGreedyContentWidth <= width;
-
-      if (canFit && canFitGreedy) {
-        count = Math.round(count);
-        slotWidth = width / count;
-      } else if (canFit) {
-        count = ~~count;
-        slotWidth = width / count;
-      } else if (canFitGreedy) {
-        count = ~~(count + 1);
-        slotWidth = width / count;
-      } else {
-        count = ~~count;
-        slotWidth = options.maxLineGap;
-      }
-
-      if (count === 1) {
-        slotWidth = Math.min(width, options.singleMaxWidth);
-        slotWidth = Math.max(slotWidth, options.minLineGap);
-      }
-    }
-
+  data() {
     return {
-      width: getArrayFillWith(slotWidth, count),
-      count: count,
-      left: getLeft(width, slotWidth * count, options.align)
+      expanded: true,
+      hovered: false
     };
-  }
+  },
 
-  function getRowStrategyWithGrow(width, grow) {
-    let total = sum(grow);
-    return {
-      width: grow.map(val => width * val / total),
-      count: grow.length,
-      left: 0
-    };
-  }
-
-  return {
-    calculate
-  };
-})();
-
-var horizontalLineProcessor = (() => {
-  function calculate(vm, options, metas, rects) {
-    let width = vm.$el.clientWidth;
-    let total = metas.length;
-    let top = 0;
-    let offset = 0;
-
-    while (offset < total) {
-      let strategy = getRowStrategy(width, options, metas, offset);
-
-      for (let i = 0, left = 0, meta, rect; i < strategy.count; i++) {
-        meta = metas[offset + i];
-        rect = rects[offset + i];
-        rect.top = top;
-        rect.left = strategy.left + left;
-        rect.width = meta.width * strategy.height / meta.height;
-        rect.height = strategy.height;
-        left += rect.width;
+  computed: {
+    parsed() {
+      if (this.kv) {
+        return this.kv;
       }
 
-      offset += strategy.count;
-      top += strategy.height;
-    }
+      let result;
 
-    vm.style.height = top + 'px';
-  }
-
-  function getRowStrategy(width, options, metas, offset) {
-    let greedyCount = getGreedyCount(width, options.lineGap, metas, offset);
-    let lazyCount = Math.max(greedyCount - 1, 1);
-    let greedySize = getContentSize(width, options, metas, offset, greedyCount);
-    let lazySize = getContentSize(width, options, metas, offset, lazyCount);
-    let finalSize = chooseFinalSize(lazySize, greedySize, width);
-    let height = finalSize.height;
-    let fitContentWidth = finalSize.width;
-
-    if (finalSize.count === 1) {
-      fitContentWidth = Math.min(options.singleMaxWidth, width);
-      height = metas[offset].height * fitContentWidth / metas[offset].width;
-    }
-
-    return {
-      left: getLeft(width, fitContentWidth, options.align),
-      count: finalSize.count,
-      height: height
-    };
-  }
-
-  function getGreedyCount(rowWidth, rowHeight, metas, offset) {
-    let count = 0;
-
-    for (let i = offset, width = 0; i < metas.length && width <= rowWidth; i++) {
-      width += metas[i].width * rowHeight / metas[i].height;
-      count++;
-    }
-
-    return count;
-  }
-
-  function getContentSize(rowWidth, options, metas, offset, count) {
-    let originWidth = 0;
-
-    for (let i = count - 1; i >= 0; i--) {
-      let meta = metas[offset + i];
-      originWidth += meta.width * options.lineGap / meta.height;
-    }
-
-    let fitHeight = options.lineGap * rowWidth / originWidth;
-    let canFit = fitHeight <= options.maxLineGap && fitHeight >= options.minLineGap;
-
-    if (canFit) {
-      return {
-        cost: Math.abs(options.lineGap - fitHeight),
-        count: count,
-        width: rowWidth,
-        height: fitHeight
-      };
-    } else {
-      let height = originWidth > rowWidth ? options.minLineGap : options.maxLineGap;
-      return {
-        cost: Infinity,
-        count: count,
-        width: originWidth * height / options.lineGap,
-        height: height
-      };
-    }
-  }
-
-  function chooseFinalSize(lazySize, greedySize, rowWidth) {
-    if (lazySize.cost === Infinity && greedySize.cost === Infinity) {
-      return greedySize.width < rowWidth ? greedySize : lazySize;
-    } else {
-      return greedySize.cost >= lazySize.cost ? lazySize : greedySize;
-    }
-  }
-
-  return {
-    calculate
-  };
-})();
-
-function getLeft(width, contentWidth, align) {
-  switch (align) {
-    case 'right':
-      return width - contentWidth;
-
-    case 'center':
-      return (width - contentWidth) / 2;
-
-    default:
-      return 0;
-  }
-}
-
-function sum(arr) {
-  return arr.reduce((sum, val) => sum + val);
-}
-
-function render(rects, metas) {
-  let metasNeedToMoveByTransform = metas.filter(meta => meta.moveClass);
-  let firstRects = getRects(metasNeedToMoveByTransform);
-  applyRects(rects, metas);
-  let lastRects = getRects(metasNeedToMoveByTransform);
-  metasNeedToMoveByTransform.forEach((meta, i) => {
-    meta.node[MOVE_CLASS_PROP] = meta.moveClass;
-    setTransform(meta.node, firstRects[i], lastRects[i]);
-  });
-  document.body.clientWidth; // forced reflow
-
-  metasNeedToMoveByTransform.forEach(meta => {
-    addClass(meta.node, meta.moveClass);
-    clearTransform(meta.node);
-  });
-}
-
-function getRects(metas) {
-  return metas.map(meta => meta.vm.rect);
-}
-
-function applyRects(rects, metas) {
-  rects.forEach((rect, i) => {
-    let style = metas[i].node.style;
-    metas[i].vm.rect = rect;
-
-    for (let prop in rect) {
-      style[prop] = rect[prop] + 'px';
-    }
-  });
-}
-
-function setTransform(node, firstRect, lastRect) {
-  let dx = firstRect.left - lastRect.left;
-  let dy = firstRect.top - lastRect.top;
-  let sw = firstRect.width / lastRect.width;
-  let sh = firstRect.height / lastRect.height;
-  node.style.transform = node.style.WebkitTransform = `translate(${dx}px,${dy}px) scale(${sw},${sh})`;
-  node.style.transitionDuration = '0s';
-}
-
-function clearTransform(node) {
-  node.style.transform = node.style.WebkitTransform = '';
-  node.style.transitionDuration = '';
-}
-
-function getTransitionEndEvent() {
-  let isWebkitTrans = window.ontransitionend === undefined && window.onwebkittransitionend !== undefined;
-  let transitionEndEvent = isWebkitTrans ? 'webkitTransitionEnd' : 'transitionend';
-  return transitionEndEvent;
-}
-/**
- * util
- */
-
-
-function getArrayFillWith(item, count) {
-  let getter = typeof item === 'function' ? () => item() : () => item;
-  let arr = [];
-
-  for (let i = 0; i < count; i++) {
-    arr[i] = getter();
-  }
-
-  return arr;
-}
-
-function addClass(elem, name) {
-  if (!hasClass(elem, name)) {
-    let cur = attr(elem, 'class').trim();
-    let res = (cur + ' ' + name).trim();
-    attr(elem, 'class', res);
-  }
-}
-
-function removeClass(elem, name) {
-  let reg = new RegExp('\\s*\\b' + name + '\\b\\s*', 'g');
-  let res = attr(elem, 'class').replace(reg, ' ').trim();
-  attr(elem, 'class', res);
-}
-
-function hasClass(elem, name) {
-  return new RegExp('\\b' + name + '\\b').test(attr(elem, 'class'));
-}
-
-function attr(elem, name, value) {
-  if (typeof value !== 'undefined') {
-    elem.setAttribute(name, value);
-  } else {
-    return elem.getAttribute(name) || '';
-  }
-}
-
-function on(elem, type, listener, useCapture = false) {
-  elem.addEventListener(type, listener, useCapture);
-}
-
-function off(elem, type, listener, useCapture = false) {
-  elem.removeEventListener(type, listener, useCapture);
-}
-        var $208de2 = exports.default || module.exports;
-      
-      if (typeof $208de2 === 'function') {
-        $208de2 = $208de2.options;
-      }
-    
-        /* template */
-        Object.assign($208de2, (function () {
-          var render = function() {
-  var _vm = this
-  var _h = _vm.$createElement
-  var _c = _vm._self._c || _h
-  return _c(
-    "div",
-    { staticClass: "vue-waterfall", style: _vm.style },
-    [_vm._t("default")],
-    2
-  )
-}
-var staticRenderFns = []
-render._withStripped = true
-
-          return {
-            render: render,
-            staticRenderFns: staticRenderFns,
-            _compiled: true,
-            _scopeId: null,
-            functional: undefined
-          };
-        })());
-      
-    /* hot reload */
-    (function () {
-      if (module.hot) {
-        var api = require('vue-hot-reload-api');
-        api.install(require('vue'));
-        if (api.compatible) {
-          module.hot.accept();
-          if (!module.hot.data) {
-            api.createRecord('$208de2', $208de2);
-          } else {
-            api.reload('$208de2', $208de2);
-          }
+      try {
+        if (this.raw) {
+          result = JSON.parse(this.raw);
+        } else if (typeof this.data !== 'undefined') {
+          result = this.data;
+        } else {
+          result = '[Vue JSON Tree] No data passed.';
+          console.warn(result);
         }
-
-        
-        var reloadCSS = require('_css_loader');
-        module.hot.dispose(reloadCSS);
-        module.hot.accept(reloadCSS);
-      
+      } catch (e) {
+        result = '[Vue JSON Tree] Invalid raw JSON.';
+        console.warn(result);
+      } finally {
+        return parse(result);
       }
-    })();
-},{"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"node_modules/vue-waterfall/lib/waterfall-slot.vue":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-var _default = {
-  data: () => ({
-    isShow: false
-  }),
-  props: {
-    width: {
-      required: true,
-      validator: val => val >= 0
-    },
-    height: {
-      required: true,
-      validator: val => val >= 0
-    },
-    order: {
-      default: 0
-    },
-    moveClass: {
-      default: ''
     }
+
   },
   methods: {
-    notify() {
-      this.$parent.$emit('reflow', this);
-    },
-
-    getMeta() {
-      return {
-        vm: this,
-        node: this.$el,
-        order: this.order,
-        width: this.width,
-        height: this.height,
-        moveClass: this.moveClass
-      };
+    format(n) {
+      if (n > 1) return `${n} items`;
+      return n ? '1 item' : 'no items';
     }
 
   },
 
   created() {
-    this.rect = {
-      top: 0,
-      left: 0,
-      width: 0,
-      height: 0
-    };
-    this.$watch(() => (this.width, this.height), this.notify);
-  },
-
-  mounted() {
-    this.$parent.$once('reflowed', () => {
-      this.isShow = true;
-    });
-    this.notify();
-  },
-
-  destroyed() {
-    this.notify();
+    this.expanded = this.parsed.depth < this.level;
   }
 
 };
 exports.default = _default;
-        var $f14922 = exports.default || module.exports;
+        var $164964 = exports.default || module.exports;
       
-      if (typeof $f14922 === 'function') {
-        $f14922 = $f14922.options;
+      if (typeof $164964 === 'function') {
+        $164964 = $164964.options;
       }
     
         /* template */
-        Object.assign($f14922, (function () {
+        Object.assign($164964, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c(
-    "div",
+    "span",
     {
-      directives: [
-        {
-          name: "show",
-          rawName: "v-show",
-          value: _vm.isShow,
-          expression: "isShow"
-        }
-      ],
-      staticClass: "vue-waterfall-slot"
+      staticClass: "json-tree",
+      class: { "json-tree-root": _vm.parsed.depth === 0 }
     },
-    [_vm._t("default")],
-    2
+    [
+      _vm.parsed.primitive
+        ? _c(
+            "span",
+            { staticClass: "json-tree-row" },
+            [
+              _vm._l(_vm.parsed.depth * 2 + 3, function(n) {
+                return _c("span", { key: n, staticClass: "json-tree-indent" }, [
+                  _vm._v(" ")
+                ])
+              }),
+              _vm._v(" "),
+              _vm.parsed.key
+                ? _c("span", { staticClass: "json-tree-key" }, [
+                    _vm._v(_vm._s(_vm.parsed.key))
+                  ])
+                : _vm._e(),
+              _vm._v(" "),
+              _vm.parsed.key
+                ? _c("span", { staticClass: "json-tree-colon" }, [_vm._v(": ")])
+                : _vm._e(),
+              _vm._v(" "),
+              _c(
+                "span",
+                {
+                  staticClass: "json-tree-value",
+                  class: "json-tree-value-" + _vm.parsed.type,
+                  attrs: { title: "" + _vm.parsed.value }
+                },
+                [_vm._v(_vm._s("" + _vm.parsed.value))]
+              ),
+              _vm._v(" "),
+              !_vm.parsed.last
+                ? _c("span", { staticClass: "json-tree-comma" }, [_vm._v(",")])
+                : _vm._e(),
+              _vm._v(" "),
+              _c("span", { staticClass: "json-tree-indent" }, [_vm._v(" ")])
+            ],
+            2
+          )
+        : _vm._e(),
+      _vm._v(" "),
+      !_vm.parsed.primitive
+        ? _c("span", { staticClass: "json-tree-deep" }, [
+            _c(
+              "span",
+              {
+                staticClass: "json-tree-row json-tree-expando",
+                on: {
+                  click: function($event) {
+                    _vm.expanded = !_vm.expanded
+                  },
+                  mouseover: function($event) {
+                    _vm.hovered = true
+                  },
+                  mouseout: function($event) {
+                    _vm.hovered = false
+                  }
+                }
+              },
+              [
+                _c("span", { staticClass: "json-tree-indent" }, [_vm._v(" ")]),
+                _vm._v(" "),
+                _c("span", { staticClass: "json-tree-sign" }, [
+                  _vm._v(_vm._s(_vm.expanded ? "-" : "+"))
+                ]),
+                _vm._v(" "),
+                _vm._l(_vm.parsed.depth * 2 + 1, function(n) {
+                  return _c(
+                    "span",
+                    { key: n, staticClass: "json-tree-indent" },
+                    [_vm._v(" ")]
+                  )
+                }),
+                _vm._v(" "),
+                _vm.parsed.key
+                  ? _c("span", { staticClass: "json-tree-key" }, [
+                      _vm._v(_vm._s(_vm.parsed.key))
+                    ])
+                  : _vm._e(),
+                _vm._v(" "),
+                _vm.parsed.key
+                  ? _c("span", { staticClass: "json-tree-colon" }, [
+                      _vm._v(": ")
+                    ])
+                  : _vm._e(),
+                _vm._v(" "),
+                _c("span", { staticClass: "json-tree-open" }, [
+                  _vm._v(_vm._s(_vm.parsed.type === "array" ? "[" : "{"))
+                ]),
+                _vm._v(" "),
+                _c(
+                  "span",
+                  {
+                    directives: [
+                      {
+                        name: "show",
+                        rawName: "v-show",
+                        value: !_vm.expanded,
+                        expression: "!expanded"
+                      }
+                    ],
+                    staticClass: "json-tree-collapsed"
+                  },
+                  [
+                    _vm._v(
+                      " /* " +
+                        _vm._s(_vm.format(_vm.parsed.value.length)) +
+                        " */ "
+                    )
+                  ]
+                ),
+                _vm._v(" "),
+                _c(
+                  "span",
+                  {
+                    directives: [
+                      {
+                        name: "show",
+                        rawName: "v-show",
+                        value: !_vm.expanded,
+                        expression: "!expanded"
+                      }
+                    ],
+                    staticClass: "json-tree-close"
+                  },
+                  [_vm._v(_vm._s(_vm.parsed.type === "array" ? "]" : "}"))]
+                ),
+                _vm._v(" "),
+                _c(
+                  "span",
+                  {
+                    directives: [
+                      {
+                        name: "show",
+                        rawName: "v-show",
+                        value: !_vm.expanded && !_vm.parsed.last,
+                        expression: "!expanded && !parsed.last"
+                      }
+                    ],
+                    staticClass: "json-tree-comma"
+                  },
+                  [_vm._v(",")]
+                ),
+                _vm._v(" "),
+                _c("span", { staticClass: "json-tree-indent" }, [_vm._v(" ")])
+              ],
+              2
+            ),
+            _vm._v(" "),
+            _c(
+              "span",
+              {
+                directives: [
+                  {
+                    name: "show",
+                    rawName: "v-show",
+                    value: _vm.expanded,
+                    expression: "expanded"
+                  }
+                ],
+                staticClass: "json-tree-deeper"
+              },
+              _vm._l(_vm.parsed.value, function(item, index) {
+                return _c("json-tree", {
+                  key: index,
+                  attrs: { kv: item, level: _vm.level }
+                })
+              }),
+              1
+            ),
+            _vm._v(" "),
+            _c(
+              "span",
+              {
+                directives: [
+                  {
+                    name: "show",
+                    rawName: "v-show",
+                    value: _vm.expanded,
+                    expression: "expanded"
+                  }
+                ],
+                staticClass: "json-tree-row"
+              },
+              [
+                _c(
+                  "span",
+                  {
+                    staticClass: "json-tree-ending",
+                    class: { "json-tree-paired": _vm.hovered }
+                  },
+                  [
+                    _vm._l(_vm.parsed.depth * 2 + 3, function(n) {
+                      return _c(
+                        "span",
+                        { key: n, staticClass: "json-tree-indent" },
+                        [_vm._v(" ")]
+                      )
+                    }),
+                    _vm._v(" "),
+                    _c("span", { staticClass: "json-tree-close" }, [
+                      _vm._v(_vm._s(_vm.parsed.type === "array" ? "]" : "}"))
+                    ]),
+                    _vm._v(" "),
+                    !_vm.parsed.last
+                      ? _c("span", { staticClass: "json-tree-comma" }, [
+                          _vm._v(",")
+                        ])
+                      : _vm._e(),
+                    _vm._v(" "),
+                    _c("span", { staticClass: "json-tree-indent" }, [
+                      _vm._v(" ")
+                    ])
+                  ],
+                  2
+                )
+              ]
+            )
+          ])
+        : _vm._e()
+    ]
   )
 }
 var staticRenderFns = []
@@ -29368,9 +31631,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$f14922', $f14922);
+            api.createRecord('$164964', $164964);
           } else {
-            api.reload('$f14922', $f14922);
+            api.reload('$164964', $164964);
           }
         }
 
@@ -29381,7 +31644,7 @@ render._withStripped = true
       
       }
     })();
-},{"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/pages/Home.vue":[function(require,module,exports) {
+},{"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/components/VideoPanel.vue":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29389,11 +31652,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _dummyData = _interopRequireDefault(require("../dummyData"));
+var _utils = require("../utils");
 
-var _waterfall = _interopRequireDefault(require("vue-waterfall/lib/waterfall"));
-
-var _waterfallSlot = _interopRequireDefault(require("vue-waterfall/lib/waterfall-slot"));
+var _vueJsonTree = _interopRequireDefault(require("vue-json-tree"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -29422,35 +31683,330 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //
 //
 //
-var colors = ["#4fc3f7", "#e57373", "#ba68c8", "#9ccc65", "#fec355", "#04d895", "#4fc3f7", "#ff8a65", "#9575cd"];
-var colorCopy = [].concat(colors);
-Object.keys(_dummyData.default.labels).forEach(function (each) {
-  return _dummyData.default.labels[each].color = colorCopy.shift() || (colorCopy = [].concat(colors), colorCopy.shift());
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+var _default = {
+  props: ['segments'],
+  components: {
+    JsonTree: _vueJsonTree.default
+  },
+  data: () => ({
+    player: null,
+    whichSegment: 0
+  }),
+  watch: {
+    segments(value, oldValue) {
+      this.seekToSegmentStart();
+    },
+
+    whichSegment(value) {
+      this.seekToSegmentStart();
+    }
+
+  },
+  computed: {
+    segment() {
+      return this.segments && this.segments[this.whichSegment];
+    }
+
+  },
+  methods: {
+    ready(event) {
+      this.player = event.target;
+      window.player = this.player;
+    },
+
+    playing() {
+      console.log(`playing`);
+    },
+
+    waitThenPause(seekBackTime = null) {
+      // if already playing
+      if (this.player && this.player.getPlayerState() == 1) {
+        // then pause
+        this.player.pauseVideo(); // if there is a seek back time, go there
+
+        if (seekBackTime) {
+          this.player.seekTo(seekBackTime);
+        }
+      } else {
+        setTimeout(() => {
+          this.player.playVideo();
+          this.waitThenPause(seekBackTime);
+        }, 0);
+      }
+    },
+
+    isPlaying() {
+      return this.player.getPlayerState() == 1;
+    },
+
+    incrementIndex() {
+      this.whichSegment = (0, _utils.wrapIndex)(++this.whichSegment, this.segments);
+    },
+
+    deincrementIndex() {
+      this.whichSegment = (0, _utils.wrapIndex)(--this.whichSegment, this.segments);
+    },
+
+    jumpSegment(index) {
+      this.whichSegment = (0, _utils.wrapIndex)(index, this.segments);
+    },
+
+    notYetImplemented() {
+      this.$toasted.show(`Sadly this doesn't do anything yet`).goAway(2500);
+    },
+
+    seekToSegmentStart() {
+      // if the player doesn't exist, reschedule the seek action
+      if (!this.player) {
+        return setTimeout(() => {
+          this.seekToSegmentStart();
+        }, 0);
+      } // console.log(`seeking to segment start`)
+
+
+      this.player.seekTo(this.segment.start); // console.log(`this.player.getPlayerState() is:`,this.player.getPlayerState())
+      // in this state the player (after seeking) will start playing
+      // which isn't the best UX, so pause it immediately
+
+      const VIDEO_HASNT_STARTED_STATE = 5;
+      const VIDEO_PAUSED_STATE = 2;
+      let state = this.player.getPlayerState();
+
+      if (state == VIDEO_HASNT_STARTED_STATE || state == VIDEO_PAUSED_STATE) {
+        let seekBackTime = this.segment.start; // give it enough time to load the frame (otherwise it loads infinitely)
+
+        this.player.playVideo(); // tell the pause exactly where to jump back to after pausing
+
+        this.waitThenPause(seekBackTime);
+      }
+    }
+
+  }
+};
+exports.default = _default;
+        var $5b47df = exports.default || module.exports;
+      
+      if (typeof $5b47df === 'function') {
+        $5b47df = $5b47df.options;
+      }
+    
+        /* template */
+        Object.assign($5b47df, (function () {
+          var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c(
+    "column",
+    {
+      staticClass: "video-panel",
+      attrs: {
+        width: _vm.segments ? "70vw" : "0",
+        opacity: _vm.segments ? 1 : 0
+      }
+    },
+    [
+      _c(
+        "column",
+        { attrs: { height: "40vw", width: "100%" } },
+        [
+          _vm.segments
+            ? _c("youtube", {
+                staticStyle: { height: "100%", width: "100%" },
+                attrs: {
+                  "video-id": _vm.segment.videoId,
+                  "player-vars": { start: _vm.segment.start },
+                  "player-width": "100%",
+                  "player-height": "100%"
+                },
+                on: { ready: _vm.ready, playing: _vm.playing }
+              })
+            : _vm._e()
+        ],
+        1
+      ),
+      _c(
+        "row",
+        { attrs: { "align-h": "space-between", width: "100%" } },
+        [
+          _c(
+            "ui-button",
+            {
+              staticClass: "btn",
+              attrs: { color: "primary" },
+              on: { click: _vm.deincrementIndex }
+            },
+            [_vm._v("Prevous")]
+          ),
+          _c(
+            "ui-button",
+            {
+              staticClass: "btn",
+              attrs: { color: "primary" },
+              on: { click: _vm.incrementIndex }
+            },
+            [_vm._v("Next")]
+          )
+        ],
+        1
+      ),
+      _c(
+        "column",
+        _vm._l(_vm.segments, function(each, index) {
+          return _c(
+            "row",
+            {
+              attrs: {
+                shadow: "2",
+                padding: "1pc 2rem",
+                "border-radius": "1rem",
+                "margin-bottom": "1rem",
+                background: index == _vm.whichSegment ? "gray" : "transparent",
+                color: index == _vm.whichSegment ? "white" : "inherit",
+                opacity: index == _vm.whichSegment ? 1 : 0.7
+              },
+              on: {
+                click: function($event) {
+                  return _vm.jumpSegment(index)
+                }
+              }
+            },
+            [
+              _c("h4", [_vm._v("Segment")]),
+              _c("row", { attrs: { width: "1rem" } }),
+              _c("JsonTree", {
+                staticClass: "json-tree-root",
+                attrs: { data: each }
+              })
+            ],
+            1
+          )
+        }),
+        1
+      )
+    ],
+    1
+  )
+}
+var staticRenderFns = []
+render._withStripped = true
+
+          return {
+            render: render,
+            staticRenderFns: staticRenderFns,
+            _compiled: true,
+            _scopeId: null,
+            functional: undefined
+          };
+        })());
+      
+    /* hot reload */
+    (function () {
+      if (module.hot) {
+        var api = require('vue-hot-reload-api');
+        api.install(require('vue'));
+        if (api.compatible) {
+          module.hot.accept();
+          if (!module.hot.data) {
+            api.createRecord('$5b47df', $5b47df);
+          } else {
+            api.reload('$5b47df', $5b47df);
+          }
+        }
+
+        
+        var reloadCSS = require('_css_loader');
+        module.hot.dispose(reloadCSS);
+        module.hot.accept(reloadCSS);
+      
+      }
+    })();
+},{"../utils":"src/utils.js","vue-json-tree":"node_modules/vue-json-tree/src/json-tree.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/pages/Home.vue":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
 });
+exports.default = void 0;
+
+var _dummyData = _interopRequireDefault(require("../dummyData"));
+
+var _fuse = _interopRequireDefault(require("fuse.js"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+const fuse = new _fuse.default(Object.keys(_dummyData.default.labels), {
+  includeScore: true
+});
+let colors = ["#4fc3f7", "#e57373", "#ba68c8", "#04d895", "#fec355", "#9575cd", "#4fc3f7", "#ff8a65", "#9ccc65"];
+let colorCopy = [...colors]; // assign colors to all labels in a pretty (irrelevently) inefficient way
+
+Object.keys(_dummyData.default.labels).forEach(each => _dummyData.default.labels[each].color = colorCopy.shift() || (colorCopy = [...colors], colorCopy.shift()));
 var _default = {
   name: "HomePage",
   components: {
-    Waterfall: _waterfall.default,
-    WaterfallSlot: _waterfallSlot.default
+    VideoPanel: require("../components/VideoPanel").default
   },
-  data: function data() {
-    return {
-      items: _dummyData.default.labels,
-      itemNames: Object.keys(_dummyData.default.labels),
-      searchTerm: ""
-    };
-  },
+  data: () => ({
+    items: _dummyData.default.labels,
+    searchTerm: "",
+    selectedSegments: null
+  }),
+
+  mounted() {},
+
   watch: {
-    searchTerm: function searchTerm(value) {
+    searchTerm(value) {
       if (typeof value == 'string') {
         // TODO: improve this to be a fuzzy search
         this.items = {};
-        var term = value.toLowerCase();
+        let term = value.toLowerCase();
 
-        for (var key in _dummyData.default.labels) {
-          var each = _dummyData.default.labels[key];
+        for (const key in _dummyData.default.labels) {
+          let each = _dummyData.default.labels[key];
 
-          if (key.startsWith(term)) {
+          if (this.suggestions.includes(key) || key.startsWith(term)) {
             this.items[key] = each;
           }
         }
@@ -29458,11 +32014,25 @@ var _default = {
         this.items = _dummyData.default.labels;
       }
     }
+
+  },
+  computed: {
+    suggestions() {
+      let suggestions = fuse.search(this.searchTerm);
+      return suggestions.map(each => each.item);
+    }
+
   },
   methods: {
-    notYetImplemented: function notYetImplemented() {
-      this.$toasted.show("Sadly this doesn't do anything yet").goAway(2500);
+    selectLabel(labelName, label) {
+      this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500);
+      this.selectedSegments = [...label.segments];
+    },
+
+    notYetImplemented() {
+      this.$toasted.show(`Sadly this doesn't do anything yet`).goAway(2500);
     }
+
   }
 };
 exports.default = _default;
@@ -29494,7 +32064,7 @@ exports.default = _default;
                 attrs: {
                   name: "name1",
                   placeholder: "Search for a label, or a video",
-                  suggestions: _vm.itemNames
+                  suggestions: _vm.suggestions
                 },
                 model: {
                   value: _vm.searchTerm,
@@ -29511,56 +32081,72 @@ exports.default = _default;
         1
       ),
       _c(
-        "div",
-        { staticStyle: { padding: "2rem" } },
+        "row",
+        {
+          attrs: { "max-width": "100vw", "align-v": "top", "align-h": "left" }
+        },
         [
           _c(
-            "row",
-            { attrs: { "align-h": "left", wrap: "wrap" } },
-            _vm._l(_vm.items, function(item, index) {
-              return _c(
-                "column",
-                {
-                  staticClass: "search-card",
-                  attrs: {
-                    shadow: "1",
-                    "align-h": "left",
-                    "background-color": item.color
-                  }
-                },
-                [
-                  _c(
-                    "h5",
-                    { staticStyle: { "text-decoration": "underline" } },
-                    [_vm._v(_vm._s(index))]
-                  ),
-                  _c(
-                    "column",
-                    { attrs: { width: "max-content", padding: "0.5rem" } },
-                    [
-                      _vm._v(
-                        "total number of clips: " + _vm._s(item.videoClipCount)
-                      ),
-                      _c("br"),
-                      _vm._v(
-                        "total number of videos: " + _vm._s(item.videoCount)
-                      )
-                    ]
-                  ),
-                  _c(
+            "div",
+            { style: "padding: 2rem; flex-shrink: 1;" },
+            [
+              _c(
+                "row",
+                { attrs: { "align-h": "left", wrap: true } },
+                _vm._l(_vm.items, function(label, labelName) {
+                  return _c(
                     "column",
                     {
-                      staticClass: "showSamples",
-                      on: { click: _vm.notYetImplemented }
+                      staticClass: "search-card",
+                      attrs: {
+                        shadow: "1",
+                        "align-h": "left",
+                        "background-color": label.color
+                      }
                     },
-                    [_vm._v("See Clips ▲")]
+                    [
+                      _c(
+                        "h5",
+                        { staticStyle: { "text-decoration": "underline" } },
+                        [_vm._v(_vm._s(labelName))]
+                      ),
+                      _c(
+                        "column",
+                        { attrs: { width: "max-content", padding: "0.5rem" } },
+                        [
+                          _vm._v(
+                            "total number of clips: " +
+                              _vm._s(label.videoClipCount)
+                          ),
+                          _c("br"),
+                          _vm._v(
+                            "total number of videos: " +
+                              _vm._s(label.videoCount)
+                          )
+                        ]
+                      ),
+                      _c(
+                        "column",
+                        {
+                          staticClass: "showSamples",
+                          on: {
+                            click: function($event) {
+                              return _vm.selectLabel(labelName, label)
+                            }
+                          }
+                        },
+                        [_vm._v("See Clips ▲")]
+                      )
+                    ],
+                    1
                   )
-                ],
+                }),
                 1
               )
-            }),
+            ],
             1
-          )
+          ),
+          _c("VideoPanel", { attrs: { segments: this.selectedSegments } })
         ],
         1
       )
@@ -29601,7 +32187,7 @@ render._withStripped = true
       
       }
     })();
-},{"../dummyData":"src/dummyData.js","vue-waterfall/lib/waterfall":"node_modules/vue-waterfall/lib/waterfall.vue","vue-waterfall/lib/waterfall-slot":"node_modules/vue-waterfall/lib/waterfall-slot.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/pages/*.vue":[function(require,module,exports) {
+},{"../dummyData":"src/dummyData.js","fuse.js":"node_modules/fuse.js/dist/fuse.esm.js","../components/VideoPanel":"src/components/VideoPanel.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/pages/*.vue":[function(require,module,exports) {
 module.exports = {
   "Home": require("./Home.vue")
 };
@@ -29623,34 +32209,30 @@ require("./plugins/keen-ui-plugin");
 
 require("./plugins/vue-toasted-plugin");
 
+require("./plugins/youtube-player-plugin");
+
 var _routerPlugin = require("./plugins/router-plugin");
 
 var _ = _interopRequireDefault(require("./pages/*.vue"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
+//
+//
+//
+//
+//
+//
+// libs and plugins
+// Pages 
 // make sure home page exists
 if (!("Home" in _.default)) {
   throw Error("Hey, this template expects there to be a 'Home.vue' page.\nIf you don't want one that's fine. Just change the router in the App.vue file so it doesn't expect/need one");
 }
 
-var App; // create App instance and attach it (executed after this file)
+let App; // create App instance and attach it (executed after this file)
 
-setTimeout(function () {
-  return new (_vue.default.extend(App))().$mount('#app');
-}, 0); // actually create the App, user router to pick main pages
+setTimeout(() => new (_vue.default.extend(App))().$mount('#app'), 0); // actually create the App, user router to pick main pages
 
 var _default = App = {
   name: 'App',
@@ -29659,18 +32241,17 @@ var _default = App = {
   // routes
   // 
   router: new _routerPlugin.Router({
-    routes: [].concat(_toConsumableArray(Object.keys(_.default).map(function (eachPageName) {
-      return {
-        path: "/" + eachPageName.toLowerCase(),
-        name: eachPageName,
-        component: _.default[eachPageName].default
-      };
-    })), [// all other routes redirect to the home page
+    routes: [// load up anything in the pages section
+    ...Object.keys(_.default).map(eachPageName => ({
+      path: "/" + eachPageName.toLowerCase(),
+      name: eachPageName,
+      component: _.default[eachPageName].default
+    })), // all other routes redirect to the home page
     // You can change this to a 404 page if you want
     {
       path: "*",
       redirect: "/home"
-    }])
+    }]
   })
 };
 
@@ -29722,7 +32303,7 @@ render._withStripped = true
       
       }
     })();
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","./plugins/css-baseline-plugin":"src/plugins/css-baseline-plugin.js","./plugins/good-vue-plugin":"src/plugins/good-vue-plugin.js","./plugins/keen-ui-plugin":"src/plugins/keen-ui-plugin.js","./plugins/vue-toasted-plugin":"src/plugins/vue-toasted-plugin.js","./plugins/router-plugin":"src/plugins/router-plugin.js","./pages/*.vue":"src/pages/*.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","./plugins/css-baseline-plugin":"src/plugins/css-baseline-plugin.js","./plugins/good-vue-plugin":"src/plugins/good-vue-plugin.js","./plugins/keen-ui-plugin":"src/plugins/keen-ui-plugin.js","./plugins/vue-toasted-plugin":"src/plugins/vue-toasted-plugin.js","./plugins/youtube-player-plugin":"src/plugins/youtube-player-plugin.js","./plugins/router-plugin":"src/plugins/router-plugin.js","./pages/*.vue":"src/pages/*.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -29750,7 +32331,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51660" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52535" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
