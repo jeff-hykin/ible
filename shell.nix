@@ -12,7 +12,7 @@ in
         
         # inside that shell, make sure to use these packages
         buildInputs = [
-            normalPackages.nodejs-14_x
+            normalPackages.nodejs-12_x
             normalPackages.bashInteractive
         ];
         
