@@ -1,7 +1,7 @@
 <template lang="pug">
-    div 
+    column(align-v='top' width='fit-content')
         //- top bar search area
-        column(width="100vw")
+        column.top-bar-container(width="100%")
             column(padding='1.2rem' align-h="left")
                 ui-autocomplete.rounded-search(
                     name="name1"
@@ -11,7 +11,7 @@
                 )
         
         //- all the panel things
-        row(max-width='100vw' align-v='top' align-h="space-between" padding='1rem' overflow=auto)
+        row.below-search-container(align-v='top' align-h="space-between" padding='1rem' overflow=auto)
             //- waterfall style area
             row(align-v="space-between" :wrap="true" flex-grow=1)
                 column.search-card(v-for="(label, labelName) in items" shadow=1 align-h="left" :background-color="label.color")

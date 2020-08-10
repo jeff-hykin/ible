@@ -1,6 +1,6 @@
 <template lang="pug">
     column.video-panel(v-if='segments' :opacity='segments? 1 : 0' flex-grow=1)
-        column(height="40vw" width='100%')
+        column.video-sizer(height="calc(var(--vw) * 0.40)" width='100%')
             youtube(
                 v-if='segments'
                 :video-id="segment.videoId"
@@ -19,20 +19,16 @@
             ui-button.btn(color="primary" @click='incrementIndex')
                 | Next
         column
-            row(
+            row.segment(
                 v-for="(each, index) in segments"
                 shadow=2
-                padding='1pc 2rem'
-                border-radius='1rem'
-                margin-bottom='1rem'
                 :background="index==whichSegment ? 'gray' : 'transparent' "
                 :color="index==whichSegment ? 'white' : 'inherit' "
                 :opacity="index==whichSegment ? 1 : 0.7 "
                 @click="jumpSegment(index)"
-                max-width='75vw'
                 wrap
             )
-                h4 Segment
+                h5 Segment
                 row(width="1rem") 
                 JsonTree.json-tree-root(:data='each')
 </template>
@@ -138,16 +134,27 @@ export default {
 .video-panel
     border: 2.5rem solid transparent
     flex-shrink: 0
-    min-height: 44vw
+    min-height: calc(var(--vw) * 0.44)
     transition: opacity ease 0.5s
-    width: 72vw
+    width: calc(var(--vw) * 0.72)
+    min-width: fit-content
+    .video-sizer
+        min-width: 18rem
+        
 .btn
     margin: 1rem
     margin-top: 2rem
 .json-tree-root
     border-radius: 1rem
     border: gray solid 2px
-    max-width: 50vw
+    max-width: calc(var(--vw) * 0.50)
     min-width: 0
-    
+
+[unique-add1e7fa].segment
+    padding: 1pc 2rem
+    border-radius: 1rem
+    margin-bottom: 1rem
+    max-width: calc(var(--vw) * 0.75)
+    width: min-content
+
 </style>
