@@ -5,11 +5,6 @@
         router-view
 </template>
 <script>
-let setViewWidth = () => {
-    window.document.documentElement.style.setProperty('--vw', `${window.innerWidth}px`)
-}
-window.addEventListener('resize', setViewWidth)
-setViewWidth()
 
 // libs and plugins
 import Vue from "vue"
