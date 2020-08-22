@@ -18,7 +18,7 @@
                 //- )
                 column
                     h5 Search Options
-                    jsonRoot.where(:initValue="{from: 'video'}" @changeValue="newJsonValue")
+                    jsonRoot.where(:initValue="{from: 'video', limit: 10}" @changeValue="newJsonValue")
             
             column
                 h5 Search Results
@@ -70,9 +70,10 @@ export default {
             this.searchOptions = value
         },
         async submitSearch() {
-            console.debug(`this.searchOptions is:`,this.searchOptions)
+            this.$toasted.show(`Searching`).goAway(2500)
+            this.searchResult = {}
             this.searchResult = await this.endpoints.raw.all(this.searchOptions)
-            console.debug(`this.searchResult is:`,this.searchResult)
+            this.$toasted.show(`Search results returned`).goAway(2500)
         }
     }
 }
