@@ -21,7 +21,6 @@ module.exports = {
                 }
             })
             // check all of them
-            console.log(`this.$data is:`,JSON.stringify(this.$data, 0, 4))
             for (let each in this.$data.needToLoad$) {
                 await this.$data.needToLoad$[each]
             }

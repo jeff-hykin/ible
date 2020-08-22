@@ -1,4 +1,4 @@
-let { network, set } = require("good-js")
+let { network, set, get } = require("good-js")
 
 window.network = network
 
@@ -20,9 +20,14 @@ let databaseApiCall = async (methodName, args=[])=> {
 let endpoints = new Promise(async (resolve, reject)=>{
     let actualEndpoints = {}
     for (let each of await databaseApiCall("smartEndpoints")) {
-        set({ keyList: each.split("/"), to: (...args)=>{ databaseApiCall(each, args) }, on: actualEndpoints })
+        set({
+            keyList: each.split("/"),
+            to: (...args) => { return databaseApiCall(each, args) },
+            on: actualEndpoints
+        })
     }
     resolve(actualEndpoints)
+    window.endpoints = await endpoints
 })
 window.endpoints = endpoints
 
