@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+echo running install check
 # ensure package.json exits
 if [[ -f "./package.json" ]]; then
     false;
