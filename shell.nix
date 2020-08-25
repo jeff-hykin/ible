@@ -78,6 +78,7 @@ in
         alias help="./commands/help" # overrides default bash "help"
         echo ""
         
+        
         '';
         
         # Environment variables
