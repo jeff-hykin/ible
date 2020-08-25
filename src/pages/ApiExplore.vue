@@ -9,7 +9,7 @@
         //-             v-model="searchTerm"
         //-             :suggestions="suggestions"
         //-         )
-        column(padding="1.2rem")
+        column(v-if="loadedAll$" padding="1.2rem")
             row
                 //- ui-autocomplete.rounded-search(
                 //-     placeholder="Which collection"
