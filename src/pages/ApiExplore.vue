@@ -28,9 +28,6 @@
 </template>
 
 <script>
-let databaseApi = require("../iilvd-api")
-let windowListeners = require("../mixins/window-listeners")
-
 export default {
     name: "ApiExplore",
     components: {
@@ -42,7 +39,7 @@ export default {
     mixins: [
         require("../mixins/loader"),
         require("../mixins/window-listeners"),
-        databaseApi.mixin,
+        require("../iilvd-api").mixin,
     ],
     data: ()=>({
         needToLoad$: {},

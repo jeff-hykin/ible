@@ -3,7 +3,7 @@
         column.video-sizer(height="calc(var(--vw) * 0.40)" width='100%')
             youtube(
                 v-if='segments'
-                :video-id="segment.videoId"
+                :video-id="segment.video_id"
                 :player-vars='{start: segment.start}'
                 host="https://www.youtube-nocookie.com"
                 @ready="ready"

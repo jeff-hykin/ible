@@ -1,5 +1,5 @@
 <template lang="pug">
-    column(align-v='top' width='fit-content')
+    column(align-v='top' width='fit-content' min-width="100vw")
         //- top bar search area
         column.top-bar-container(width="100%")
             column(padding='1.2rem' align-h="left")
@@ -10,14 +10,15 @@
                     :suggestions="suggestions"
                 )
         
+        Loader(v-if="!loadedAll$")
         //- all the panel things
-        row.below-search-container(align-v='top' align-h="space-between" padding='1rem' overflow=auto)
+        row.below-search-container(v-if="loadedAll$" align-v='top' align-h="space-between" padding='1rem' overflow=auto)
             //- waterfall style area
             row(align-v="space-between" :wrap="true" flex-grow=1)
                 column.search-card(v-for="(label, labelName) in items" shadow=1 align-h="left" :background-color="label.color")
                     h5(style="text-decoration: underline") {{labelName}}
                     column(width='max-content' padding='0.5rem')
-                        | total number of clips: {{label.videoClipCount}}
+                        | total number of clips: {{label.segments.length}}
                         br
                         | total number of videos: {{label.videoCount}}
                     column.show-samples(@click="selectLabel(labelName, label)")
@@ -32,26 +33,43 @@
 </template>
 <script>
 import dummyData from "../dummyData"
-import Fuse from "fuse.js"
-
-const fuse = new Fuse( Object.keys(dummyData.labels), {includeScore: true,})
+let Fuse = require("fuse.js").default
 
 let colors = [ "#4fc3f7", "#e57373", "#ba68c8", "#04d895", "#fec355",  "#9575cd", "#4fc3f7", "#ff8a65", "#9ccc65", ]
 let colorCopy = [...colors]
-
-// assign colors to all labels in a pretty (irrelevently) inefficient way
-Object.keys(dummyData.labels).forEach(each=> dummyData.labels[each].color = (colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())))
 
 export default {
     name: "HomePage",
     components: {
         VideoPanel: require("../components/VideoPanel").default,
+        Loader: require('../components/Loader').default,
     },
+    mixins: [
+        require("../mixins/loader"),
+        require("../mixins/window-listeners"),
+        require("../iilvd-api").mixin,
+    ],
     data: ()=>({
-        items: dummyData.labels,
+        items: {},
         searchTerm: "",
         selectedSegments: null,
+        fuseSuggestor: null,
+        labelData: {},
     }),
+    created() {
+        // start asking for the labels
+        setTimeout(async () => {
+            if (this.endpoints instanceof Promise) {
+                this.endpoints = await this.endpoints
+            }
+            this.labelData = await this.endpoints.summary.labels()
+            this.fuseSuggestor = new Fuse(Object.keys(this.labelData), {includeScore: true,})
+            // assign colors to all labels in a pretty (irrelevently) inefficient way
+            Object.keys(this.labelData).forEach(each=> this.labelData[each].color = (colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())))
+            // put them on the UI as soon as they load
+            this.items = this.labelData
+        }, 0)
+    },
     mounted() {
     },
     watch: {
@@ -60,21 +78,24 @@ export default {
                 // TODO: improve this to be a fuzzy search
                 this.items = {}
                 let term = value.toLowerCase()
-                for (const key in dummyData.labels) {
-                    let each = dummyData.labels[key]
+                for (const key in this.labelData) {
+                    let each = this.labelData[key]
                     
                     if (this.suggestions.includes(key) || key.startsWith(term)) {
                         this.items[key] = each
                     }
                 }
             } else {
-                this.items = dummyData.labels
+                this.items = this.labelData
             }
         }
     },
     computed: {
         suggestions() {
-            let suggestions = fuse.search(this.searchTerm)
+            if (!this.fuseSuggestor) {
+                return []
+            }
+            let suggestions = this.fuseSuggestor.search(this.searchTerm)
             return suggestions.map(each=>each.item)
         }
     },
