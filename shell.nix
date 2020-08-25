@@ -68,6 +68,8 @@ in
         chmod -R u+x "./commands"
         # override the default bash "help"
         alias help="./commands/help" 
+        # set the default git behavior
+        git config pull.rebase false
         
         # install node modules if needed
         ./commands/install
