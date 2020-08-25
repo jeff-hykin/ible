@@ -61,23 +61,23 @@ in
         #
         echo "checking node modules"
         # add the git hook
-        echo "install" >> .git/hooks/post-merge
+        echo "./commands/install" >> .git/hooks/post-merge
         chmod u+x .git/hooks/post-merge
 
         # make sure commands are executable
         chmod -R u+x "./commands"
+        # override the default bash "help"
+        alias help="./commands/help" 
         
         # install node modules if needed
-        install
+        ./commands/install
         
         # display the commands
         echo ""
         echo ""
         echo "available commands:"
         commands
-        alias help="./commands/help" # overrides default bash "help"
         echo ""
-        
         '';
         
         # Environment variables
