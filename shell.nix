@@ -62,9 +62,10 @@ in
         echo "checking node modules"
         # add the git hook
         echo "./install" >> .git/hooks/post-merge
+        chmod u+x .git/hooks/post-merge
 
         # make sure commands are executable
-        chmod -R 777 "./commands"
+        chmod -R u+x "./commands"
         
         # install node modules if needed
         install
