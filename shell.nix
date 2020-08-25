@@ -63,7 +63,10 @@ in
         # add the git hook
         echo "./commands/install" >> .git/hooks/post-merge
         chmod u+x .git/hooks/post-merge
-
+        
+        #
+        # finish setting up commands
+        #
         # make sure commands are executable
         chmod -R u+x "./commands"
         # override the default bash "help"
