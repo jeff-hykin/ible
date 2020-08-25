@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+ls -1 ./commands | sed 's/^/    /'
+# print the node commands too
+node -e 'try { Object.keys(require("./package.json").scripts).forEach(each=>console.log(`    npm run ${each}`))}catch(e){}'    

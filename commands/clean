@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+rm -rf node_modules .cache dist .nosync.node_modules_hash
