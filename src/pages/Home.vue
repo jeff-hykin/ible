@@ -14,7 +14,7 @@
         //- all the panel things
         row.below-search-container(v-if="loadedAll$" align-v='top' align-h="space-between" padding='1rem' overflow=auto)
             //- waterfall style area
-            row(align-v="space-between" :wrap="true" flex-grow=1)
+            row(:wrap="true" flex-grow=1)
                 column.search-card(v-for="(label, labelName) in items" shadow=1 align-h="left" :background-color="label.color")
                     h5(style="text-decoration: underline") {{labelName}}
                     column(width='max-content' padding='0.5rem')
