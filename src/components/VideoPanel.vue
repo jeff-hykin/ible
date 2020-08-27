@@ -1,6 +1,6 @@
 <template lang="pug">
     column.video-panel(v-if='segments' :opacity='segments? 1 : 0' flex-grow=1)
-        column.video-sizer(height="calc(var(--vw) * 0.40)" width='100%')
+        column.video-sizer(height="40vw" width='100%')
             youtube(
                 v-if='segments'
                 :video-id="segment.video_id"
@@ -18,24 +18,17 @@
             
             ui-button.btn(color="primary" @click='incrementIndex')
                 | Next
-        column
-            row.segment(
-                v-for="(each, index) in segments"
-                shadow=2
-                :background="index==whichSegment ? 'gray' : 'transparent' "
-                :color="index==whichSegment ? 'white' : 'inherit' "
-                :opacity="index==whichSegment ? 1 : 0.7 "
-                @click="jumpSegment(index)"
-                wrap
-            )
-                h5 Segment
-                row(width="1rem") 
-                JsonTree.json-tree-root(:data='each')
+
 </template>
 
 <script>
-import { wrapIndex } from '../utils'
+import { wrapIndex, EventEmitter } from '../utils'
 import JsonTree from 'vue-json-tree'
+
+export let videoEvents = new EventEmitter()
+
+import { segmentEvents } from "./Segments"
+
 
 export default {
     props: [ 'segments' ],
@@ -45,6 +38,16 @@ export default {
         whichSegment: 0,
         videoInitilized: false,
     }),
+    mounted() {
+        console.log(`attaching listener`)
+        segmentEvents.on('whichSegment:update', (data)=>{
+            console.debug(`data is:`,data)
+            console.debug(`this is:`,this)
+            if (JSON.stringify(this.whichSegment) != JSON.stringify(data.whichSegment)) {
+                this.whichSegment = data.whichSegment
+            }
+        })
+    },
     watch: {
         segments(value, oldValue) {
             // reset the segment count
@@ -53,6 +56,7 @@ export default {
             this.seekToSegmentStart()
         },
         whichSegment(value) {
+            videoEvents.emit("whichSegment:update", { whichSegment: this.whichSegment })
             this.seekToSegmentStart()
         }
     },
@@ -134,9 +138,9 @@ export default {
 .video-panel
     border: 2.5rem solid transparent
     flex-shrink: 0
-    min-height: calc(var(--vw) * 0.44)
+    min-height: 44vw
     transition: opacity ease 0.5s
-    width: calc(var(--vw) * 0.72)
+    width: 72vw
     min-width: fit-content
     .video-sizer
         min-width: 18rem
@@ -144,17 +148,5 @@ export default {
 .btn
     margin: 1rem
     margin-top: 2rem
-.json-tree-root
-    border-radius: 1rem
-    border: gray solid 2px
-    max-width: calc(var(--vw) * 0.50)
-    min-width: 0
-
-[unique-add1e7fa].segment
-    padding: 1pc 2rem
-    border-radius: 1rem
-    margin-bottom: 1rem
-    max-width: calc(var(--vw) * 0.75)
-    width: min-content
 
 </style>
