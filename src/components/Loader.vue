@@ -13,7 +13,7 @@ export default {
 }
 </script>
 
-<style local lang="sass">
+<style scoped lang="sass">
 h5
     padding: 1rem
     color: black

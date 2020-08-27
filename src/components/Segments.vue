@@ -7,7 +7,7 @@
             @click="jumpSegment(index)"
             :wrap="true"
         )
-            h5 Moments
+            h5 Moment
             JsonTree.json-tree-root(:data='each')
 </template>
 
