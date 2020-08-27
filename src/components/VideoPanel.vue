@@ -39,10 +39,7 @@ export default {
         videoInitilized: false,
     }),
     mounted() {
-        console.log(`attaching listener`)
         segmentEvents.on('whichSegment:update', (data)=>{
-            console.debug(`data is:`,data)
-            console.debug(`this is:`,this)
             if (JSON.stringify(this.whichSegment) != JSON.stringify(data.whichSegment)) {
                 this.whichSegment = data.whichSegment
             }
