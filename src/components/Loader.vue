@@ -16,4 +16,5 @@ export default {
 <style local lang="sass">
 h5
     padding: 1rem
+    color: black
 </style>
