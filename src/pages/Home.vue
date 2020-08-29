@@ -4,8 +4,8 @@
         //- Pick a Label
         SidePanel(leftSide :open="!labelSelected()")
             template(v-slot:nub-content="")
-                column(align-v="top" position="absolute" top="1.5rem" left="5rem" width="max-content")
-                    | ← Labels
+                row.side-label
+                    | Labels
             template(v-slot:panel-content="")
                 //- | hi
                 column.label-search(align-v='top' width='100%' min-width="100%")
@@ -41,8 +41,8 @@
         //- Show the segments
         SidePanel(rightSide v-if="labelSelected()")
             template(v-slot:nub-content="")
-                column(align-v="top" position="absolute" top="1.5rem" right="5rem" width="max-content")
-                    | Moments →
+                row.side-label
+                    | Moments
             template(v-slot:panel-content="")
                 column(align-v="top" height="100vh" overflow='auto' padding-top="2rem")
                     Segments(:segments='selectedSegments')
@@ -135,15 +135,38 @@ export default {
 <style lang="sass">
 
 .main-container
+    --nub-size: 10rem
+    
     .side-panel-nub
-        color: gray
+        color: white
         font-size: 14pt
+        width: var(--nub-size)
+        max-width: 50vw
+        height: var(--nub-size)
+        max-height: 50vw
+        justify-content: flex-start
+    
+    .side-label
+        padding: 1rem
+        font-size: 1.6rem
+        border-radius: 1rem
+        position: relative
+        background-color: inherit
+        top: 19%
+        
+    .side-panel-nub.leftSide
+        align-items: flex-start
+        border-bottom-right-radius: var(--nub-size)
+    .side-panel-nub.rightSide
+        align-items: flex-end
+        border-bottom-left-radius: var(--nub-size)
     
     &:not(.labelSelected)
         .side-panel-nub.leftSide
             color: transparent
             background-color: transparent
             box-shadow: none
+            
             .panel
                 background-color: transparent
                 box-shadow: var(--shadow-1)
@@ -169,7 +192,7 @@ export default {
     
     .side-panel-nub.rightSide
         z-index: 0
-        background-color: var(--material-blue)
+        background-color: var(--blue)
         box-shadow: var(--shadow-1)
         &:hover
             z-index: 999

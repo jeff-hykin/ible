@@ -55,8 +55,9 @@ export default App = {
 :root {
     --shadow-1: rgba(0, 0, 0, 0.14) 0px 4px 5px 0px, rgba(0, 0, 0, 0.12) 0px 1px 10px 0px, rgba(0, 0, 0, 0.3) 0px 2px 4px -1px;
     --shadow-3: rgba(0, 0, 0, 0.14) 0px 8px 17px 2px, rgba(0, 0, 0, 0.12) 0px 3px 14px 2px, rgba(0, 0, 0, 0.2) 0px 5px 5px -3px;
-    --vue-green: #4fc08d85;
-    --material-blue: #2195f37e;
+    --vue-green: #4fc08d;
+    --material-blue: #2195f3;
+    --blue: #60a5de;
 }
 body {
     background: radial-gradient(circle, rgb(245, 245, 245) 0%, rgb(218, 218, 218) 100%);

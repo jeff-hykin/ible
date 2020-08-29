@@ -29,8 +29,6 @@ export default {
     },
     mounted() {
         videoEvents.on('whichSegment:update', (data)=>{
-            console.debug(`data is:`,data)
-            console.debug(`this is:`,this)
             if (JSON.stringify(this.whichSegment) != JSON.stringify(data.whichSegment)) {
                 this.whichSegment = data.whichSegment
             }
@@ -39,7 +37,6 @@ export default {
     methods: {
         jumpSegment(index) {
             this.whichSegment = wrapIndex(index, this.segments)
-            console.log(`calling update on`, segmentEvents)
             segmentEvents.emit("whichSegment:update", { whichSegment: this.whichSegment })
         },
     }

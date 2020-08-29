@@ -38,7 +38,7 @@ export default {
             transform: translateX(0)
     
     .panel
-        height: 100%
+        height: 100vh
         width: 25rem
         min-width: 25vw
         max-width: calc(100vw - calc(var(--nub-width) * 2))
