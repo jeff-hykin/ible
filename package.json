@@ -1,12 +1,13 @@
 {
-    "name": "vue-pages-quickstart",
+    "name": "iilvd-online",
     "version": "1.0.0",
     "description": "",
     "main": "src/App.vue",
     "scripts": {
         "start": "npx parcel serve index.html --open --no-source-maps",
         "build": "npx parcel build index.html --out-dir docs --no-source-maps --public-url './'",
-        "clean": "rm -rf .cache .parcel-cache docs/"
+        "clean": "rm -rf .cache .parcel-cache docs/",
+        "serve": "npx http-server ./docs/"
     },
     "dependencies": {
         "css-baseline": "^1.1.10",
@@ -14,6 +15,7 @@
         "fuse.js": "^6.4.1",
         "good-js": "^1.5.3",
         "good-vue": "^1.3.1",
+        "http-server": "^0.12.3",
         "keen-ui": "^1.3.0",
         "underscore": "^1.10.2",
         "vue": "^2.6.11",
