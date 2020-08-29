@@ -1,4 +1,6 @@
+
 #!/usr/bin/env bash
-ls -1 ./commands | sed 's/^/    /'
-# print the node commands too
+# print the node commands
 node -e 'try { Object.keys(require("./package.json").scripts).forEach(each=>console.log(`    npm run ${each}`))}catch(e){}'    
+# print the files in the command dir
+ls -1 ./commands | sed 's/^/    /'

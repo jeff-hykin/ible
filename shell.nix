@@ -80,7 +80,7 @@ in
         # display the commands
         echo ""
         echo ""
-        echo "available commands:"
+        echo "project commands:"
         commands
         echo ""
         '';
