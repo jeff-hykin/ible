@@ -7,6 +7,7 @@
         "start": "npx parcel serve index.html --open --no-source-maps",
         "build": "npx parcel build index.html --out-dir docs --no-source-maps --public-url './'",
         "clean": "rm -rf .cache .parcel-cache docs/",
+        "install-nix": "sh <(curl -L https://nixos.org/nix/install) --daemon",
         "serve": "npx http-server ./docs/"
     },
     "dependencies": {
