@@ -153,12 +153,12 @@ export default {
                 
     &.labelSelected
         .side-panel-nub.leftSide
-            box-shadow: var(--shadow-3)
+            box-shadow: var(--shadow-1)
             background-color: var(--vue-green)
             .panel
                 transition: transform 0.15s ease-in-out, width 1.15s ease-in, color 1.15s ease-in
                 background-color: whitesmoke
-                box-shadow: var(--shadow-1)
+                box-shadow: var(--shadow-3)
                 --animation-duration: 2s
                 animation-name: wait-then-slide-shut
                 animation-duration: var(--animation-duration)
