@@ -25,8 +25,10 @@
                     | →
         
         //- Segments
-        row.segments
-            
+        column.segments
+            row.level(v-for="(eachLevel, index) in organizedSegments")
+                row.segment(v-for="(eachSegment, index) in eachLevel")
+                    | {{eachSegment.start}}
         
 </template>
 
@@ -37,8 +39,11 @@ import JsonTree from 'vue-json-tree'
 export let videoEvents = new EventEmitter()
 
 import { segmentEvents } from "./Segments"
+import index from 'vue-youtube-embed'
 
+let { dynamicSort } = require("good-js")
 let windowListenerMixin = require("../mixins/window-listeners")
+
 
 
 export default {
@@ -49,7 +54,7 @@ export default {
     ],
     data: ()=>({
         player: null,
-        segmentsOrganized: false,
+        organizedSegments: [],
         whichSegment: 0,
         videoInitilized: false,
         windowListeners$: {
@@ -97,10 +102,33 @@ export default {
     },
     methods: {
         organizeSegments() {
-            
+            let whichVideo = this.segment.video_id
+            let videoSegments = []
+            if (whichVideo) {
+                videoSegments = this.segments.filter(each=>each.video_id == whichVideo)
+            }
+            let levels = []
+            for (let eachSegment of videoSegments.sort(dynamicSort("start"))) {
+                // find the smallest viable level
+                let level = 0
+                while (levels[level] != undefined && eachSegment.start <= levels[level][ levels[level].length-1 ].end) {
+                    ++level
+                }
+                // create level if it didn't exist
+                if (levels[level] == undefined) {
+                    levels[level] = [ eachSegment ]
+                // otherwise add it to the end of the level
+                } else {
+                    levels.push(eachSegment)
+                }
+            }
+            console.debug(`levels is:`, levels)
+            this.organizedSegments = levels
         },
         ready(event) {
             this.player = event.target
+            this.duration = this.player.duration
+            console.debug(`this.duration is:`,this.duration)
             window.player = this.player
         },
         playing() {
@@ -167,7 +195,7 @@ export default {
 }
 </script>
 
-<style lang='sass'>
+<style lang='sass' scoped>
 .main-container
     flex-shrink: 0
     min-height: 44vw
