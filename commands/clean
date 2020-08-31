@@ -6,7 +6,5 @@
 # the usual things
 rm -rfv ./settings/.cache **/*.cleanable **/*.cleanable.*
 
-# node
-rm -rfv "node_modules"
 # parcel.js
 rm -rfv ".cache" "dist"
