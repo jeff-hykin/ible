@@ -2,11 +2,8 @@
 let
     # niv should pin your current thing inside ./nix/sources
     # here we go and get that pinned version so we can pull packages out of it
-    sources = import ./nix/sources.nix;
+    sources = import ./settings/nix/sources.nix;
     normalPackages = import sources.nixpkgs {};
-    
-    # niv init
-    # niv update nixpkgs -b nixpkgs-unstable
     
 # using those definitions
 in
@@ -20,74 +17,40 @@ in
             normalPackages.ripgrep
             normalPackages.which
             normalPackages.git
-            normalPackages.less
-            normalPackages.tree
             normalPackages.colorls
+            normalPackages.tree
+            normalPackages.less
             normalPackages.niv
-            # seach: nix -qA your-package-name
-            # show all packages: nix-env -qa -P
+            normalPackages.cacert # needed for niv
+            normalPackages.nix    # needed for niv
+            # 
+            # how to add packages?
+            # 
+            # to find package verisons use:
+            #     nix-env -qP --available PACKAGE_NAME_HERE | cat
+            # ex:
+            #     nix-env -qP --available opencv
+            # to add those specific versions find the nixpkgs.STUFF 
+            # and add it here^ as normalPackages.STUFF
+            # ex find:
+            #     nixpkgs.python38Packages.opencv3  opencv-3.4.8
+            # ex add:
+            #     normalPackages.python38Packages.opencv3
+            # 
+            # NOTE: some things (like setuptools) just don't show up in the 
+            # search results for some reason, and you just have to guess and check 🙃 
         ];
         
-        
         shellHook = ''
-        echo "Loading up the shell!"
-        
-        # asthetics
-        PS1="∫ "
-        alias ls="ls --color"
-        
-        #
-        # setup local commands
-        #
-        # add commands to path
-        PATH="$PWD/commands:$PATH"
-        # ensure commands folder exists
-        if [[ -d "./commands" ]]; then
-            false;
-        else
-            mkdir ./commands
-        fi
-        # create the "commands" command if it doesnt exist
-        if [[ -f "./commands/commands" ]]; then
-            false;
-        else
-            echo "#!/usr/bin/env bash
-            ls -1 ./commands | sed 's/^/    /'
-            " > "./commands/commands"
-        fi
-        
-        #
-        # setup node modules
-        #
-        echo "checking node modules"
-        # add the git hook
-        echo "./commands/install" >> .git/hooks/post-merge
-        chmod u+x .git/hooks/post-merge
-        
-        #
-        # finish setting up commands
-        #
-        # make sure commands are executable
-        chmod -R u+x "./commands"
-        # override the default bash "help"
-        alias help="./commands/help" 
-        # set the default git behavior
-        git config pull.rebase false
-        
-        # install node modules if needed
-        ./commands/install
-        
-        # display the commands
-        echo ""
-        echo ""
-        echo "project commands:"
-        commands
-        echo ""
+        # 
+        # find and run all the startup scripts in alphabetical order
+        # 
+        for file in ./settings/shell_startup/*
+        do
+            # make sure its a file
+            if [[ -f $file ]]; then
+                source $file
+            fi
+        done
         '';
-        
-        # Environment variables
-        # HELLO="world";
-        
-        # # note the ./. acts like $PWD
-        # FOO = toString ./. + "/foobar";
     }

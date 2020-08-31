@@ -1,6 +1,7 @@
-
 #!/usr/bin/env bash
+
+echo "project commands:"
 # print the node commands
 node -e 'try { Object.keys(require("./package.json").scripts).forEach(each=>console.log(`    npm run ${each}`))}catch(e){}'    
 # print the files in the command dir
-ls -1 ./commands | sed 's/^/    /'
+ls -1 --color ./commands | sed 's/^/    /'

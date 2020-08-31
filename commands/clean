@@ -1,2 +1,6 @@
 #!/usr/bin/env bash
-rm -rf node_modules .cache dist .nosync.node_modules_hash
+# summary
+#   this just removes all of the can-be deleted files
+#   can be useful for fixing corrupted setups
+
+rm -rf "node_modules" ".cache" "dist" ".nosync.node_modules_hash" "./settings/.cache"
