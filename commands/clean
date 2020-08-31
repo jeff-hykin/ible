@@ -7,4 +7,4 @@
 rm -rfv ./settings/.cache **/*.cleanable **/*.cleanable.*
 
 # parcel.js
-rm -rfv ".cache" "dist"
+rm -rfv ".cache" "dist" ".parcel-cache" "docs"
