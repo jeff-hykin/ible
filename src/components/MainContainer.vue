@@ -2,7 +2,7 @@
     column.main-container(v-if='segments' :opacity='segments? 1 : 0' flex-grow=1)
         row.video-container(flex-basis="100%")
             //- BACK
-            div.circle-button.left(@click='deincrementIndex')
+            div.circle-button.left(@click='decrementIndex')
                 span
                     | ←
             //- VIDEO
@@ -33,14 +33,37 @@ export let videoEvents = new EventEmitter()
 
 import { segmentEvents } from "./Segments"
 
+let windowListenerMixin = require("../mixins/window-listeners")
+
 
 export default {
     props: [ 'segments' ],
     components: { JsonTree },
+    mixins: [
+        windowListenerMixin
+    ],
     data: ()=>({
         player: null,
         whichSegment: 0,
         videoInitilized: false,
+        windowListeners$: {
+            keydown(eventObj) {
+                // 
+                // arrow key controls
+                // 
+                switch (eventObj.key) {
+                    case "ArrowRight":
+                        this.incrementIndex()
+                        break
+                    case "ArrowLeft":
+                        this.decrementIndex()
+                        break
+                    default:
+                        // we dont care about other keys
+                        break
+                }
+            }
+        }
     }),
     mounted() {
         segmentEvents.on('whichSegment:update', (data)=>{
@@ -100,7 +123,7 @@ export default {
         incrementIndex() {
             this.whichSegment = wrapIndex(++this.whichSegment, this.segments)
         },
-        deincrementIndex() {
+        decrementIndex() {
             this.whichSegment = wrapIndex(--this.whichSegment, this.segments)
         },
         jumpSegment(index) {
