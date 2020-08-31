@@ -36,7 +36,7 @@
                     
         //- Show the video
         column.main-container(:visibility="labelSelected()? 'visible' : 'hidden' " align-v="top" flex-grow="1" height="100vh" overflow="auto")
-            VideoPanel(:segments='selectedSegments')
+            MainContainer(:segments='selectedSegments')
             
         //- Show the segments
         SidePanel(rightSide v-if="labelSelected()")
@@ -58,7 +58,7 @@ let colorCopy = [...colors]
 export default {
     name: "HomePage",
     components: {
-        VideoPanel: require("../components/VideoPanel").default,
+        MainContainer: require("../components/MainContainer").default,
         Segments: require("../components/Segments").default,
         Loader: require('../components/Loader').default,
         SidePanel: require('../components/SidePanel').default,

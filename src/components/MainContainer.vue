@@ -1,5 +1,6 @@
 <template lang="pug">
     column.video-panel(v-if='segments' :opacity='segments? 1 : 0' flex-grow=1)
+        row.next
         column.video-sizer(height="40vw" width='100%')
             youtube(
                 v-if='segments'

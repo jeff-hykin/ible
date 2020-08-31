@@ -17,7 +17,7 @@ import JsonTree from 'vue-json-tree'
 
 export let segmentEvents = new EventEmitter()
 
-import { videoEvents } from "./VideoPanel"
+import { videoEvents } from "./MainContainer"
 
 export default {
     props: [ 'segments' ],
