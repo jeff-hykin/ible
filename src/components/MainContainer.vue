@@ -1,5 +1,6 @@
 <template lang="pug">
     column.main-container(v-if='segments' :opacity='segments? 1 : 0' flex-grow=1)
+        //- Video area
         row.video-container(flex-basis="100%")
             //- BACK
             div.circle-button.left(@click='decrementIndex')
@@ -22,7 +23,11 @@
             div.circle-button.right(@click='incrementIndex')
                 span
                     | →
-
+        
+        //- Segments
+        row.segments
+            
+        
 </template>
 
 <script>
@@ -44,6 +49,7 @@ export default {
     ],
     data: ()=>({
         player: null,
+        segmentsOrganized: false,
         whichSegment: 0,
         videoInitilized: false,
         windowListeners$: {
@@ -90,6 +96,9 @@ export default {
         }
     },
     methods: {
+        organizeSegments() {
+            
+        },
         ready(event) {
             this.player = event.target
             window.player = this.player
