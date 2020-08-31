@@ -5,7 +5,7 @@
     "main": "src/App.vue",
     "scripts": {
         "start": "npx parcel serve index.html --open --no-source-maps",
-        "build": "npx parcel build index.html --out-dir docs --no-source-maps --public-url './'",
+        "build": "rm -rf .cache .parcel-cache docs && npx parcel build index.html --out-dir docs --no-source-maps --public-url './'",
         "clean": "rm -rf .cache .parcel-cache docs/",
         "serve": "npx http-server ./docs/"
     },
