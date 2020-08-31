@@ -1,24 +1,27 @@
 <template lang="pug">
-    column.video-panel(v-if='segments' :opacity='segments? 1 : 0' flex-grow=1)
-        row.next
-        column.video-sizer(height="40vw" width='100%')
-            youtube(
-                v-if='segments'
-                :video-id="segment.video_id"
-                :player-vars='{start: segment.start}'
-                host="https://www.youtube-nocookie.com"
-                @ready="ready"
-                @playing="playing"
-                player-width="100%"
-                player-height="100%"
-                style="height: 100%;width: 100%;"
-            )
-        row(align-h="space-between" width="100%")
-            ui-button.btn(color="primary" @click='deincrementIndex')
-                | Prevous
-            
-            ui-button.btn(color="primary" @click='incrementIndex')
-                | Next
+    column.main-container(v-if='segments' :opacity='segments? 1 : 0' flex-grow=1)
+        row.video-container(flex-basis="100%")
+            //- BACK
+            div.circle-button.left(@click='deincrementIndex')
+                span
+                    | ←
+            //- VIDEO
+            column.video-sizer
+                youtube(
+                    v-if='segments'
+                    :video-id="segment.video_id"
+                    :player-vars='{start: segment.start}'
+                    host="https://www.youtube-nocookie.com"
+                    @ready="ready"
+                    @playing="playing"
+                    player-width="100%"
+                    player-height="100%"
+                    style="height: 100%;width: 100%;"
+                )
+            //- NEXT
+            div.circle-button.right(@click='incrementIndex')
+                span
+                    | →
 
 </template>
 
@@ -133,18 +136,47 @@ export default {
 </script>
 
 <style lang='sass'>
-.video-panel
-    border: 2.5rem solid transparent
+.main-container
     flex-shrink: 0
     min-height: 44vw
     transition: opacity ease 0.5s
-    width: 72vw
+    width: 100%
     min-width: fit-content
-    .video-sizer
-        min-width: 18rem
+
+    .video-container
+        width: 100%
         
-.btn
-    margin: 1rem
-    margin-top: 2rem
+        .video-sizer
+            width: 100%
+            height: 50%
+            min-width: 18rem
+            min-height: 40vw
+            --max-width: calc(40rem + 30vw)
+            max-width: var(--max-width)
+            max-height: calc(var(--max-width) / 2)
+
+.circle-button
+    background: var(--red)
+    color: white
+    padding: 2rem
+    --radius: 5rem
+    cursor: pointer
+    
+    &.left
+        padding-right: 0
+        margin-right: -10px
+        border-top-left-radius: var(--radius)
+        border-bottom-left-radius: var(--radius)
+        span
+            position: relative
+            left: -100%
+    &.right
+        padding-left: 0
+        margin-left: -10px
+        border-top-right-radius: var(--radius)
+        border-bottom-right-radius: var(--radius)
+        span
+            position: relative
+            right: -100%
 
 </style>

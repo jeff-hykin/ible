@@ -58,6 +58,7 @@ export default App = {
     --vue-green: #4fc08d;
     --material-blue: #2195f3;
     --blue: #60a5de;
+    --red: #e57373;
 }
 body {
     background: radial-gradient(circle, rgb(245, 245, 245) 0%, rgb(218, 218, 218) 100%);

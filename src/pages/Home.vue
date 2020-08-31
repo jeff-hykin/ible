@@ -1,5 +1,5 @@
 <template lang="pug">
-    row.main-container(align-v='top' align-h="left" position="relative" width='fit-content' min-width="100vw" height="100vh" overflow="hidden" :class="{labelSelected: labelSelected()}")
+    row.home-container(align-v='top' align-h="left" position="relative" width='fit-content' min-width="100vw" height="100vh" overflow="hidden" :class="{labelSelected: labelSelected()}")
         
         //- Pick a Label
         SidePanel(leftSide :open="!labelSelected()")
@@ -35,7 +35,7 @@
                             column.search-card(opacity=0)
                     
         //- Show the video
-        column.main-container(:visibility="labelSelected()? 'visible' : 'hidden' " align-v="top" flex-grow="1" height="100vh" overflow="auto")
+        column.home-container(:visibility="labelSelected()? 'visible' : 'hidden' " align-v="top" flex-grow="1" height="100vh" overflow="auto")
             MainContainer(:segments='selectedSegments')
             
         //- Show the segments
@@ -134,7 +134,7 @@ export default {
 </script>
 <style lang="sass">
 
-.main-container
+.home-container
     --nub-size: 10rem
     
     .side-panel-nub
