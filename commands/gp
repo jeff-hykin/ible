@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-args="$@" 
-git add -A && git commit -m "- $args"
-git pull --no-edit
-git push
