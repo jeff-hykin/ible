@@ -306,9 +306,7 @@ export default {
 .circle-button
     background: var(--red)
     color: white
-    padding: 2rem
-    transform: scale(1.2)
-    z-index: -1
+    padding: 2.3rem
     --radius: 5rem
     cursor: pointer
     
