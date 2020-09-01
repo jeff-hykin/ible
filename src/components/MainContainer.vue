@@ -107,7 +107,6 @@ export default {
         whichSegment(value) {
             videoEvents.emit("whichSegment:update", { whichSegment: this.whichSegment })
             this.seekToSegmentStart()
-            this.organizeSegments()
         }
     },
     computed: {
@@ -118,7 +117,6 @@ export default {
     methods: {
         organizeSegments() {
             let whichVideo = this.segment.video_id
-            console.debug(`whichVideo is:`,whichVideo)
             let videoSegments = []
             // 2 percent of the width of the video
             let minWidth = this.duration / 50
@@ -199,8 +197,6 @@ export default {
             this.whichSegment = wrapIndex(--this.whichSegment, this.segments)
         },
         jumpSegment(index) {
-            console.debug(`index is:`,index)
-            console.debug(`this.segments is:`,this.segments)
             this.whichSegment = wrapIndex(index, this.segments)
         },
         notYetImplemented() {
