@@ -19,16 +19,28 @@
                     player-height="100%"
                     style="height: 100%;width: 100%;"
                 )
+                
+                //- Segments
+                column.segments(align-h="left")
+                    h5
+                        | Moments
+                    row.level(v-for="(eachLevel, index) in organizedSegments" align-h="space-between" position="relative")
+                        row.segment(
+                            v-for="(eachSegment, index) in eachLevel"
+                            @click="jumpSegment(eachSegment.index)"
+                            :left="`${(eachSegment.effectiveStart/duration)*100}%`"
+                            :width="`${(eachSegment.effectiveEnd - eachSegment.effectiveStart)*100/duration}%`"
+                        )
+                            ui-tooltip(position="left" animation="fade")
+                                | label: {{ eachSegment.label }}
+                                br
+                                | length: {{ eachSegment.end - eachSegment.start }} sec
+                                br
+                                | start: {{ eachSegment.start }} sec
             //- NEXT
             div.circle-button.right(@click='incrementIndex')
                 span
                     | →
-        
-        //- Segments
-        column.segments
-            row.level(v-for="(eachLevel, index) in organizedSegments")
-                row.segment(v-for="(eachSegment, index) in eachLevel")
-                    | {{eachSegment.start}}
         
 </template>
 
@@ -104,14 +116,34 @@ export default {
         organizeSegments() {
             let whichVideo = this.segment.video_id
             let videoSegments = []
+            // 2 percent of the width of the video
+            let minWidth = this.duration / 50
             if (whichVideo) {
-                videoSegments = this.segments.filter(each=>each.video_id == whichVideo)
+                videoSegments = this.segments.filter(each=>each.video_id == whichVideo).map((each, index)=>{
+                    let effectiveStart = each.start
+                    let effectiveEnd = each.end
+                    let segmentDuration = each.end - each.start
+                    // if segment is too small artificially make it bigger
+                    if (segmentDuration < minWidth) {
+                        let additionalAmount = (minWidth - segmentDuration)/2
+                        // sometimes this will result in a negative amount, but thats okay
+                        // the UI can handle it, the user just needs to be able to see it
+                        effectiveStart -= additionalAmount
+                        effectiveEnd += additionalAmount
+                    }
+                    return {
+                        ...each,
+                        index,
+                        effectiveStart,
+                        effectiveEnd,
+                    }
+                })
             }
             let levels = []
-            for (let eachSegment of videoSegments.sort(dynamicSort("start"))) {
+            for (let eachSegment of videoSegments.sort(dynamicSort("effectiveStart"))) {
                 // find the smallest viable level
                 let level = 0
-                while (levels[level] != undefined && eachSegment.start <= levels[level][ levels[level].length-1 ].end) {
+                while (levels[level] != undefined && eachSegment.effectiveStart <= levels[level][ levels[level].length-1 ].effectiveEnd) {
                     ++level
                 }
                 // create level if it didn't exist
@@ -119,16 +151,15 @@ export default {
                     levels[level] = [ eachSegment ]
                 // otherwise add it to the end of the level
                 } else {
-                    levels.push(eachSegment)
+                    levels[level].push(eachSegment)
                 }
             }
-            console.debug(`levels is:`, levels)
             this.organizedSegments = levels
         },
         ready(event) {
             this.player = event.target
-            this.duration = this.player.duration
-            console.debug(`this.duration is:`,this.duration)
+            this.duration = this.player.getDuration()
+            this.organizeSegments()
             window.player = this.player
         },
         playing() {
@@ -205,15 +236,70 @@ export default {
 
     .video-container
         width: 100%
+        max-width: 100vw
+        --height: 80vh
+        height: var(--height)
+        max-height: var(--height)
+        min-height: var(--height)
         
         .video-sizer
+            position: relative
             width: 100%
-            height: 50%
+            height: 100%
             min-width: 18rem
-            min-height: 40vw
+            min-height: 40vh
             --max-width: calc(40rem + 30vw)
             max-width: var(--max-width)
-            max-height: calc(var(--max-width) / 2)
+            max-height: calc(var(--max-width) * 0.55)
+    
+    
+    .segments
+        h5
+            color: gray
+            margin-bottom: 5px
+            margin-left: 10px
+            font-weight: 100
+            
+        position: absolute
+        transform: translateY(100%)
+        bottom: 0
+        width: 103%
+        align-items: flex-start
+        text-align: left
+        padding: 1rem
+        background: white
+        border-radius: 1rem
+        box-shadow: var(--shadow-1)
+        
+        .level
+            width: 100%
+            height: 2.2rem
+            border-bottom: #e0e0e0 1px solid
+            .segment
+                position: absolute
+                min-height: 1.4rem
+                background-color: var(--blue)
+                padding: 2px
+                border-radius: 2px
+                transition: all ease 0.5s
+                &:hover
+                    box-shadow: var(--shadow-1)
+                    opacity: 0.9
+                // border: 2px white solid
+                
+                // border-top-left-radius: 1rem
+                // border-top-right-radius: 1rem
+                // border-bottom-left-radius: 1rem
+                // border-bottom-right-radius: 1rem
+                // border-bottom: 4px var(--red) solid
+                // border-left: 4px var(--red) solid
+                // border-right: 4px var(--red) solid
+                    
+                // background-color: var(--blue)
+                // min-height: 1rem
+                // position: absolute
+                // border: 1px solid white
+                // border-radius: 4px
 
 .circle-button
     background: var(--red)

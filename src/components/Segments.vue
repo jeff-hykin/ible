@@ -43,10 +43,10 @@ export default {
 }
 </script>
 
-<style lang='sass'>
+<style lang='sass' scoped>
 
 
-[unique-add1e7fa].segment
+.segment
     border-top: gray solid 2px
     background: #f7f8f9
     padding-top: 1pc
