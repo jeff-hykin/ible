@@ -68,6 +68,7 @@ export default {
         player: null,
         organizedSegments: [],
         whichSegment: 0,
+        duration: null,
         videoInitilized: false,
         windowListeners$: {
             keydown(eventObj) {
@@ -101,10 +102,12 @@ export default {
             this.whichSegment = 0
             this.videoInitilized = false
             this.seekToSegmentStart()
+            this.organizeSegments()
         },
         whichSegment(value) {
             videoEvents.emit("whichSegment:update", { whichSegment: this.whichSegment })
             this.seekToSegmentStart()
+            this.organizeSegments()
         }
     },
     computed: {
@@ -115,11 +118,12 @@ export default {
     methods: {
         organizeSegments() {
             let whichVideo = this.segment.video_id
+            console.debug(`whichVideo is:`,whichVideo)
             let videoSegments = []
             // 2 percent of the width of the video
             let minWidth = this.duration / 50
             if (whichVideo) {
-                videoSegments = this.segments.filter(each=>each.video_id == whichVideo).map((each, index)=>{
+                videoSegments = this.segments.map((each, index)=>{
                     let effectiveStart = each.start
                     let effectiveEnd = each.end
                     let segmentDuration = each.end - each.start
@@ -137,7 +141,7 @@ export default {
                         effectiveStart,
                         effectiveEnd,
                     }
-                })
+                }).filter(each=>each.video_id == whichVideo)
             }
             let levels = []
             for (let eachSegment of videoSegments.sort(dynamicSort("effectiveStart"))) {
@@ -195,6 +199,8 @@ export default {
             this.whichSegment = wrapIndex(--this.whichSegment, this.segments)
         },
         jumpSegment(index) {
+            console.debug(`index is:`,index)
+            console.debug(`this.segments is:`,this.segments)
             this.whichSegment = wrapIndex(index, this.segments)
         },
         notYetImplemented() {
