@@ -1,7 +1,7 @@
 <template lang="pug">
     column.main-container(v-if='segments' :opacity='segments? 1 : 0' flex-grow=1)
         //- Video area
-        row.video-container(flex-basis="100%")
+        row.video-container(flex-basis="100%" margin-top="-8rem")
             //- BACK
             div.circle-button.left(@click='decrementIndex')
                 span
@@ -307,6 +307,8 @@ export default {
     background: var(--red)
     color: white
     padding: 2rem
+    transform: scale(1.2)
+    z-index: -1
     --radius: 5rem
     cursor: pointer
     
