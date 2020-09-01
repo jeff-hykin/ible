@@ -230,6 +230,7 @@ export default {
             height: 2rem
             padding-left: 0.9rem
             padding-right: 0.4rem
+            min-width: 6rem
             width: fit-content
             background: white
             border-bottom-left-radius: 0.6rem
