@@ -82,7 +82,6 @@ export default {
         scheduledToggle: {},
         windowListeners$: {
             keydown(eventObj) {
-                console.debug(`eventObj.key is:`,eventObj.key)
                 // 
                 // key controls
                 // 
@@ -94,7 +93,7 @@ export default {
                         this.decrementIndex()
                         break
                     case " ":
-                        this.player.pauseVideo()
+                        this.togglePlayPause()
                         break
                     default:
                         // we dont care about other keys
@@ -333,6 +332,13 @@ export default {
                 case video.IS_PAUSED:
                     return true
             }
+        },
+        togglePlayPause() {
+            if (this.videoIsPaused()) {
+                this.playVideo()
+            } else {
+                this.pauseVideo()
+            }
         }
     }
 }
@@ -394,6 +400,7 @@ export default {
                 padding: 2px
                 border-radius: 2px
                 transition: all ease 0.5s
+                cursor: pointer
                 &:hover
                     box-shadow: var(--shadow-1)
                     opacity: 0.9

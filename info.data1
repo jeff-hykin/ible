@@ -1,0 +1,9 @@
+todo:
+    - highlight the selected moment
+    - display the selected label
+    - add a video search feature
+    - change the segments tab to show videos instead of segments
+        - sort videos by number of segments
+    - "add a legend with toggles for showing segments for the video":
+        - fix the colors to specific labels
+    - show JSON data of selected moment
