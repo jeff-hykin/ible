@@ -34,7 +34,7 @@
                             ui-tooltip(position="left" animation="fade")
                                 | label: {{ eachSegment.label }}
                                 br
-                                | length: {{ eachSegment.end - eachSegment.start }} sec
+                                | length: {{  (eachSegment.end - eachSegment.start).toFixed(2) }} sec
                                 br
                                 | start: {{ eachSegment.start }} sec
             //- NEXT
