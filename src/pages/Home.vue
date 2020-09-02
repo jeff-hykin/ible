@@ -4,6 +4,8 @@
         //- Pick a Label
         SidePanel(leftSide :open="!labelSelected()")
             template(v-slot:nub-content="")
+                .label(v-if="selectedLabel")
+                    | Selected: {{selectedLabel.name}}
                 row.side-label
                     | Labels
             template(v-slot:panel-content="")
@@ -36,7 +38,7 @@
                     
         //- Show the video
         column.home-container(:visibility="labelSelected()? 'visible' : 'hidden' " align-v="top" flex-grow="1" height="100vh" overflow="auto")
-            MainContainer(:segments='selectedSegments')
+            MainContainer(:segments='selectedSegments' :label='selectedLabel')
             
         //- Show the segments
         SidePanel(rightSide v-if="labelSelected()")
@@ -73,6 +75,7 @@ export default {
         searchTerm: "",
         selectedSegments: null,
         fuseSuggestor: null,
+        selectedLabel: null,
         labelData: {},
     }),
     created() {
@@ -123,6 +126,8 @@ export default {
             return this.selectedSegments && this.selectedSegments.length > 0
         },
         selectLabel(labelName, label) {
+            this.selectedLabel = {...label}
+            this.selectedLabel.name = labelName
             this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500)
             this.selectedSegments = [...label.segments].sort(dynamicSort(["video_id"]))
         },
@@ -137,6 +142,16 @@ export default {
 .home-container
     --nub-size: 10rem
     
+    .label
+        position: absolute
+        right: 0
+        transform: translateX(100%)
+        padding-left: 2rem
+        font-size: 1.5rem
+        padding-top: 0.4rem
+        width: max-content
+        color: gray
+        
     .side-panel-nub
         color: white
         font-size: 14pt
