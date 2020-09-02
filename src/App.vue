@@ -48,6 +48,17 @@ export default App = {
             },
         ]
     }),
+    data: ()=>({
+        selectedVideo: null,
+        selectedLabel: null,
+        segments: [],
+        labels: [],
+    }),
+    watch: {
+        selectedLabel(value) {
+            value.selected = true
+        }
+    },
 }
 
 </script>

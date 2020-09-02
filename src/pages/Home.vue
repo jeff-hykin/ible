@@ -1,11 +1,11 @@
 <template lang="pug">
-    row.home-container(align-v='top' align-h="left" position="relative" width='fit-content' min-width="100vw" height="100vh" overflow="hidden" :class="{labelSelected: labelSelected()}")
+    row.home-container(align-v='top' align-h="left" position="relative" width='fit-content' min-width="100vw" height="100vh" overflow="hidden" :class="{labelSelected: !!$root.selectedLabel}")
         
         //- Pick a Label
-        SidePanel(leftSide :open="!labelSelected()")
+        SidePanel(leftSide :open="!$root.selectedLabel")
             template(v-slot:nub-content="")
-                .label(v-if="selectedLabel")
-                    | Selected: {{selectedLabel.name}}
+                .label(v-if="$root.selectedLabel")
+                    | Selected: {{$root.selectedLabel.name}}
                 row.side-label
                     | Labels
             template(v-slot:panel-content="")
@@ -37,11 +37,11 @@
                             column.search-card(opacity=0)
                     
         //- Show the video
-        column.home-container(:visibility="labelSelected()? 'visible' : 'hidden' " align-v="top" flex-grow="1" height="100vh" overflow="auto")
-            MainContainer(:segments='selectedSegments' :label='selectedLabel')
+        column.home-container(:visibility="$root.selectedLabel? 'visible' : 'hidden' " align-v="top" flex-grow="1" height="100vh" overflow="auto")
+            MainContainer(:segments='selectedSegments')
             
         //- Show the segments
-        SidePanel(rightSide v-if="labelSelected()")
+        SidePanel(rightSide v-if="$root.selectedLabel")
             template(v-slot:nub-content="")
                 row.side-label
                     | Moments
@@ -75,8 +75,6 @@ export default {
         searchTerm: "",
         selectedSegments: null,
         fuseSuggestor: null,
-        selectedLabel: null,
-        labelData: {},
     }),
     created() {
         // start asking for the labels
@@ -84,12 +82,12 @@ export default {
             if (this.endpoints instanceof Promise) {
                 this.endpoints = await this.endpoints
             }
-            this.labelData = await this.endpoints.summary.labels()
-            this.fuseSuggestor = new Fuse(Object.keys(this.labelData), {includeScore: true,})
+            this.$root.labels = await this.endpoints.summary.labels()
+            this.fuseSuggestor = new Fuse(Object.keys(this.$root.labels), {includeScore: true,})
             // assign colors to all labels in a pretty (irrelevently) inefficient way
-            Object.keys(this.labelData).forEach(each=> this.labelData[each].color = (colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())))
+            Object.keys(this.$root.labels).forEach(each=> this.$root.labels[each].color = (colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())))
             // put them on the UI as soon as they load
-            this.items = this.labelData
+            this.items = this.$root.labels
         }, 0)
     },
     mounted() {
@@ -100,15 +98,15 @@ export default {
                 // TODO: improve this to be a fuzzy search
                 this.items = {}
                 let term = value.toLowerCase()
-                for (const key in this.labelData) {
-                    let each = this.labelData[key]
+                for (const key in this.$root.labels) {
+                    let each = this.$root.labels[key]
                     
                     if (this.suggestions.includes(key) || key.startsWith(term)) {
                         this.items[key] = each
                     }
                 }
             } else {
-                this.items = this.labelData
+                this.items = this.$root.labels
             }
         }
     },
@@ -122,12 +120,9 @@ export default {
         }
     },
     methods: {
-        labelSelected() {
-            return this.selectedSegments && this.selectedSegments.length > 0
-        },
         selectLabel(labelName, label) {
-            this.selectedLabel = {...label}
-            this.selectedLabel.name = labelName
+            this.$root.selectedLabel = label
+            this.$root.selectedLabel.name = labelName
             this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500)
             this.selectedSegments = [...label.segments].sort(dynamicSort(["video_id"]))
         },

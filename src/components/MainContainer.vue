@@ -1,27 +1,38 @@
 <template lang="pug">
     column.main-container(v-if='segments' :opacity='segments? 1 : 0' flex-grow=1)
         //- Video area
-        row.video-container(flex-basis="100%" margin-top="-8rem")
-            //- BACK
-            div.circle-button.left(@click='decrementIndex')
-                span
-                    | ←
-            //- VIDEO
-            column.video-sizer
-                youtube(
-                    v-if='segments'
-                    :video-id="segment.video_id"
-                    :player-vars='{start: segment.start}'
-                    host="https://www.youtube-nocookie.com"
-                    @ready="ready"
-                    @playing="playing"
-                    player-width="100%"
-                    player-height="100%"
-                    style="height: 100%;width: 100%;"
-                )
+        row.video-container(flex-basis="100%" padding-top="8rem" align-v="top")
+            column(align-v="top").video-width-sizer
+                //- VIDEO
+                row.video-sizer
+                    //- BACK
+                    div.circle-button.left(@click='decrementIndex')
+                        span
+                            | ←
+                    youtube(
+                        v-if='segments'
+                        :video-id="segment.video_id"
+                        :player-vars='{start: segment.start}'
+                        host="https://www.youtube-nocookie.com"
+                        @ready="ready"
+                        @playing="playing"
+                        player-width="100%"
+                        player-height="100%"
+                        style="height: 100%;width: 100%;"
+                    )
+                    //- NEXT
+                    div.circle-button.right(@click='incrementIndex')
+                        span
+                            | →
                 
                 //- Segments
                 column.segments(align-h="left")
+                    h5
+                        | Labels
+                    row.labels
+                        container(v-for="(eachLevel, eachLabelName) in $root.labels")
+                            ui-checkbox(v-model="$root.labels[eachLabelName].selected")
+                                | {{eachLabelName}}
                     h5
                         | Moments
                     row.level(v-for="(eachLevel, index) in organizedSegments" align-h="space-between" position="relative")
@@ -29,6 +40,7 @@
                             v-for="(eachSegment, index) in eachLevel"
                             :left="eachSegment.leftPercent"
                             :width="eachSegment.widthPercent"
+                            :background-color="$root.labels[eachSegment.label].color"
                             @click="jumpSegment(eachSegment.index)"
                         )
                             ui-tooltip(position="left" animation="fade")
@@ -37,10 +49,7 @@
                                 | length: {{  (eachSegment.end - eachSegment.start).toFixed(2) }} sec
                                 br
                                 | start: {{ eachSegment.start }} sec
-            //- NEXT
-            div.circle-button.right(@click='incrementIndex')
-                span
-                    | →
+
         
 </template>
 
@@ -77,6 +86,7 @@ export default {
         organizedSegments: [],
         whichVideo: null,
         whichSegment: 0,
+        enabledLabels: [],
         duration: null,
         videoInitilized: false,
         scheduledToggle: {},
@@ -355,32 +365,42 @@ export default {
     .video-container
         width: 100%
         max-width: 100vw
-        --height: 80vh
-        height: var(--height)
-        max-height: var(--height)
-        min-height: var(--height)
         
-        .video-sizer
-            position: relative
-            width: 100%
-            height: 100%
-            min-width: 18rem
-            min-height: 40vh
+        .video-width-sizer
             --max-width: calc(40rem + 30vw)
+            width: 100%
+            min-width: 18rem
             max-width: var(--max-width)
-            max-height: calc(var(--max-width) * 0.55)
-    
-    
-    .segments
-        h5
-            color: gray
-            margin-bottom: 5px
-            margin-left: 10px
-            font-weight: 100
+            height: fit-content
             
-        position: absolute
-        transform: translateY(100%)
-        bottom: 0
+            .video-sizer
+                position: relative
+                // width
+                width: inherit
+                max-width: inherit
+                min-width: inherit
+                // height
+                --height: 80vh
+                height: var(--height)
+                max-height: var(--height)
+                min-height: 40vh
+                max-height: calc(var(--max-width) * 0.55)
+    
+    .labels 
+        margin-bottom: 1rem
+        
+        & > *
+            background: whitesmoke
+            padding: 6px 11px
+            border-radius: 1rem
+            margin-left: 12px
+            border: lightgray 1px solid
+            color: gray
+            
+            .ui-checkbox
+                margin: 0
+        
+    .segments
         width: 103%
         align-items: flex-start
         text-align: left
@@ -388,6 +408,13 @@ export default {
         background: white
         border-radius: 1rem
         box-shadow: var(--shadow-1)
+
+        h5
+            color: gray
+            margin-bottom: 5px
+            margin-left: 10px
+            font-weight: 100
+            
         
         .level
             width: 100%
