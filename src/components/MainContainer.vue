@@ -10,7 +10,7 @@
                         span
                             | ←
                     youtube(
-                        v-if='segments'
+                        v-if='$root.selectedVideo'
                         :video-id="segment.video_id"
                         :player-vars='{start: segment.start}'
                         host="https://www.youtube-nocookie.com"
@@ -30,7 +30,7 @@
                     h5
                         | Labels
                     row.labels
-                        container(v-for="(eachLevel, eachLabelName) in $root.labels")
+                        container(v-for="(eachLevel, eachLabelName) in $root.labels" :background-color="$root.labels[eachLabelName].color")
                             ui-checkbox(v-model="$root.labels[eachLabelName].selected")
                                 | {{eachLabelName}}
                     h5
@@ -84,11 +84,11 @@ export default {
     data: ()=>({
         player: null,
         organizedSegments: [],
-        whichVideo: null,
         whichSegment: 0,
         enabledLabels: [],
         duration: null,
         videoInitilized: false,
+        unwatchers: [],
         scheduledToggle: {},
         windowListeners$: {
             keydown(eventObj) {
@@ -97,12 +97,15 @@ export default {
                 // 
                 switch (eventObj.key) {
                     case "ArrowRight":
+                        eventObj.preventDefault()
                         this.incrementIndex()
                         break
                     case "ArrowLeft":
+                        eventObj.preventDefault()
                         this.decrementIndex()
                         break
                     case " ":
+                        eventObj.preventDefault()
                         this.togglePlayPause()
                         break
                     default:
@@ -112,11 +115,18 @@ export default {
             }
         }
     }),
+    beforeDestroy() {
+        // unwatch everything
+        this.unwatchers.forEach(each=>each())
+    },
     mounted() {
+        this.unwatchers.push(this.$root.$watch("labels", (newValue)=>{
+            this.organizeSegments()
+        }, {deep: true}))
         // watch selectedVideo
-        this.$root.$on("updated:selectedVideo", ()=>{
+        this.unwatchers.push(this.$root.$watch("selectedVideo", ()=>{
             logBlock({name: "MainContainer updated:selectedVideo"}, ()=>{
-                console.debug(`this.whichVideo is:`, this.whichVideo)
+                console.debug(`this.$root.selectedVideo.id is:`, this.$root.selectedVideo.id)
                 // it hasn't been initilized
                 this.videoInitilized = false
                 // manually wipe the info (otherwise old video info will still be there)
@@ -129,7 +139,7 @@ export default {
                 // the duration changed so the segments need to be recalculated
                 this.organizeSegments()
             })
-        })
+        }))
         
         // 
         segmentEvents.on('whichSegment:update', (data)=>{
@@ -159,30 +169,35 @@ export default {
         }
     },
     methods: {
-        theSegments() {
+        getSegments() {
             let selectedLabels = Object.entries(this.$root.labels).filter(([eachKey, eachValue])=>(eachValue.selected)).map(([eachKey, eachValue])=>(eachKey))
-            let segments = this.$root.segments.filter(each=>selectedLabels.includes(each.label) && each.video_id==this.$root.selectedVideo.id)
+            let segments = this.$root.segments.filter(each=>(selectedLabels.includes(each.label) && each.video_id==this.$root.selectedVideo.id))
             return segments
         },
         checkIfVideoChanged() {
-            if (this.segment.video_id != this.whichVideo) {
+            if (this.segment.video_id != this.$root.selectedVideo.id) {
                 this.$root.selectedVideo = { id: this.segment.video_id }
-                this.whichVideo = this.segment.video_id
             }
         },
-        organizeSegments() {
+        organizeSegments(segments) {
             logBlock({name: "organizeSegments"}, ()=>{
+                segments = this.getSegments()
+                console.debug(`segments is:`,segments)
                 // wait until player is initilized
                 if (!this.videoInitilized) {
-                    return setTimeout(() => this.organizeSegments(), 100)
+                    if (this.$root.selectedVideo) {
+                        return setTimeout(() => this.organizeSegments(), 1000)
+                    } else {
+                        return
+                    }
                 }
                 let videoSegments = []
                 // 2 percent of the width of the video
-                if (this.whichVideo) {
+                if (this.$root.selectedVideo.id) {
                     let duration = this.player.getDuration()
                     console.debug(`duration is:`,duration)
                     let minWidth = duration / 50
-                    videoSegments = this.segments.map((each, index)=>{
+                    videoSegments = segments.map((each, index)=>{
                         let effectiveStart = each.start
                         let effectiveEnd = each.end
                         let segmentDuration = each.end - each.start
@@ -204,7 +219,7 @@ export default {
                             // how close to the left the element should be
                             leftPercent: `${(effectiveStart/duration)*100}%`,
                         }
-                    }).filter(each=>each.video_id == this.whichVideo)
+                    }).filter(each=>each.video_id == this.$root.selectedVideo.id)
                 }
                 let levels = []
                 for (let eachSegment of videoSegments.sort(dynamicSort("effectiveStart"))) {
@@ -227,7 +242,8 @@ export default {
         ready(event) {
             console.log(`video is ready`)
             this.player = event.target
-            window.player = this.player
+            this.player.setVolume(0)
+            window.player = this.player // for debugging
             this.organizeSegments()
         },
         playing() {
@@ -362,7 +378,8 @@ export default {
 }
 </script>
 
-<style lang='sass' scoped>
+<style lang='sass'>
+        
 .main-container
     flex-shrink: 0
     min-height: 44vw
@@ -397,25 +414,39 @@ export default {
     .labels 
         margin-bottom: 1rem
         
+        .ui-checkbox__checkmark::after
+            color: black
+            border-bottom: 0.125rem solid black
+            border-right: 0.125rem solid black
+            
         & > *
-            background: whitesmoke
+            // background: whitesmoke
             padding: 6px 11px
             border-radius: 1rem
             margin-left: 12px
-            border: lightgray 1px solid
-            color: gray
+            border: white 1px solid
+            color: white
             
-            .ui-checkbox
-                margin: 0
+        .ui-checkbox--color-primary
+            .ui-checkbox__checkmark-background
+                border-color: white
+            &.is-checked
+                .ui-checkbox__checkmark-background
+                    border-color: white
+                    background-color: white
         
+        .ui-checkbox
+            margin: 0
+    
     .segments
-        width: 103%
+        width: 100%
         align-items: flex-start
         text-align: left
         padding: 1rem
         background: white
         border-radius: 1rem
         box-shadow: var(--shadow-1)
+        margin-bottom: 5rem
 
         h5
             color: gray
