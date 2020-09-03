@@ -4,8 +4,6 @@
         //- Pick a Label
         SidePanel(leftSide :open="!$root.selectedLabel")
             template(v-slot:nub-content="")
-                .label(v-if="$root.selectedLabel")
-                    | Selected: {{$root.selectedLabel.name}}
                 row.side-label
                     | Labels
             template(v-slot:panel-content="")
@@ -83,6 +81,10 @@ export default {
                 this.endpoints = await this.endpoints
             }
             this.$root.labels = await this.endpoints.summary.labels()
+            this.$root.segments = []
+            for (const [eachKey, eachValue] of Object.entries(this.$root.labels)) {
+                this.$root.segments = [...this.$root.segments, ...eachValue.segments]
+            }
             this.fuseSuggestor = new Fuse(Object.keys(this.$root.labels), {includeScore: true,})
             // assign colors to all labels in a pretty (irrelevently) inefficient way
             Object.keys(this.$root.labels).forEach(each=> this.$root.labels[each].color = (colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())))
@@ -91,6 +93,7 @@ export default {
         }, 0)
     },
     mounted() {
+        window.home = this
     },
     watch: {
         searchTerm(value) {
@@ -125,6 +128,7 @@ export default {
             this.$root.selectedLabel.name = labelName
             this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500)
             this.selectedSegments = [...label.segments].sort(dynamicSort(["video_id"]))
+            this.$root.selectedVideo = { id: this.selectedSegments[0].video_id }
         },
         notYetImplemented() {
             this.$toasted.show(`Sadly this doesn't do anything yet`).goAway(2500)
@@ -136,16 +140,6 @@ export default {
 
 .home-container
     --nub-size: 10rem
-    
-    .label
-        position: absolute
-        right: 0
-        transform: translateX(100%)
-        padding-left: 2rem
-        font-size: 1.5rem
-        padding-top: 0.4rem
-        width: max-content
-        color: gray
         
     .side-panel-nub
         color: white

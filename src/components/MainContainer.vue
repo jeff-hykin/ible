@@ -113,6 +113,25 @@ export default {
         }
     }),
     mounted() {
+        // watch selectedVideo
+        this.$root.$on("updated:selectedVideo", ()=>{
+            logBlock({name: "MainContainer updated:selectedVideo"}, ()=>{
+                console.debug(`this.whichVideo is:`, this.whichVideo)
+                // it hasn't been initilized
+                this.videoInitilized = false
+                // manually wipe the info (otherwise old video info will still be there)
+                if (this.player) {
+                    this.player.playerInfo.duration = null
+                    console.debug(`this.player.getDuration() is:`,this.player.getDuration())
+                }
+                // load / init the video
+                this.seekToSegmentStart()
+                // the duration changed so the segments need to be recalculated
+                this.organizeSegments()
+            })
+        })
+        
+        // 
         segmentEvents.on('whichSegment:update', (data)=>{
             if (JSON.stringify(this.whichSegment) != JSON.stringify(data.whichSegment)) {
                 this.whichSegment = data.whichSegment
@@ -133,23 +152,6 @@ export default {
             this.seekToSegmentStart()
             this.organizeSegments()
         },
-        // when the video changes
-        whichVideo(value) {
-            logBlock({name: "whichVideo"}, ()=>{
-                console.debug(`this.whichVideo is:`, this.whichVideo)
-                // it hasn't been initilized
-                this.videoInitilized = false
-                // manually wipe the info (otherwise old video info will still be there)
-                if (this.player) {
-                    this.player.playerInfo.duration = null
-                    console.debug(`this.player.getDuration() is:`,this.player.getDuration())
-                }
-                // load / init the video
-                this.seekToSegmentStart()
-                // the duration changed so the segments need to be recalculated
-                this.organizeSegments()
-            })
-        }
     },
     computed: {
         segment() {
@@ -157,8 +159,14 @@ export default {
         }
     },
     methods: {
+        theSegments() {
+            let selectedLabels = Object.entries(this.$root.labels).filter(([eachKey, eachValue])=>(eachValue.selected)).map(([eachKey, eachValue])=>(eachKey))
+            let segments = this.$root.segments.filter(each=>selectedLabels.includes(each.label) && each.video_id==this.$root.selectedVideo.id)
+            return segments
+        },
         checkIfVideoChanged() {
             if (this.segment.video_id != this.whichVideo) {
+                this.$root.selectedVideo = { id: this.segment.video_id }
                 this.whichVideo = this.segment.video_id
             }
         },

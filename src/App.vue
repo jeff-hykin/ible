@@ -57,6 +57,9 @@ export default App = {
     watch: {
         selectedLabel(value) {
             value.selected = true
+        },
+        selectedVideo(value) {
+            this.$emit("updated:selectedVideo", value)
         }
     },
 }
