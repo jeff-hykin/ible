@@ -11,7 +11,7 @@
                             | ←
                     youtube(
                         v-if='$root.selectedVideo'
-                        :video-id="segment.video_id"
+                        :video-id="segment.videoId"
                         :player-vars='{start: segment.start}'
                         host="https://www.youtube-nocookie.com"
                         @ready="ready"
@@ -40,11 +40,11 @@
                             v-for="(eachSegment, index) in eachLevel"
                             :left="eachSegment.leftPercent"
                             :width="eachSegment.widthPercent"
-                            :background-color="$root.labels[eachSegment.label].color"
+                            :background-color="$root.labels[eachSegment.data.label].color"
                             @click="jumpSegment(eachSegment.index)"
                         )
                             ui-tooltip(position="left" animation="fade")
-                                | label: {{ eachSegment.label }}
+                                | label: {{ eachSegment.data.label }}
                                 br
                                 | length: {{  (eachSegment.end - eachSegment.start).toFixed(2) }} sec
                                 br
@@ -63,9 +63,6 @@ import { segmentEvents } from "./Segments"
 import index from 'vue-youtube-embed'
 
 let { dynamicSort, logBlock } = require("good-js")
-let windowListenerMixin = require("../mixins/window-listeners")
-
-
 
 let video = {
     IS_LOADING: -1,
@@ -75,11 +72,34 @@ let video = {
     HASNT_STARTED_STATE: 5,
 }
 
+// 
+// summary
+//
+    // set:
+    //     this.$root.labels[].selected
+    //     this.$root.selectedVideo.id
+    //     this.whichSegment
+    // 
+    // get:
+    //     this.$root.labels
+    //     this.$root.segments
+    // 
+    // retreives:
+    // 
+    // listeners:
+    //     this.$root.$watch.labels
+    //     this.$root.$watch.selectedVideo
+    //     whichSegment:update
+    // 
+    // emits:
+    // 
+
 export default {
     props: [ 'segments' ],
     components: { JsonTree },
     mixins: [
-        windowListenerMixin
+        require("../mixins/window-listeners"),
+        require("../mixins/rootHooks"),
     ],
     data: ()=>({
         player: null,
@@ -88,7 +108,6 @@ export default {
         enabledLabels: [],
         duration: null,
         videoInitilized: false,
-        unwatchers: [],
         scheduledToggle: {},
         windowListeners$: {
             keydown(eventObj) {
@@ -113,35 +132,32 @@ export default {
                         break
                 }
             }
+        },
+        root$: {
+            watch: {
+                labels(newValue) {
+                    this.organizeSegments()
+                },
+                selectedVideo(newValue) {
+                    logBlock({name: "MainContainer watch:selectedVideo"}, ()=>{
+                        console.debug(`this.$root.selectedVideo.id is:`, this.$root.selectedVideo.id)
+                        // it hasn't been initilized
+                        this.videoInitilized = false
+                        // manually wipe the info (otherwise old video info will still be there)
+                        if (this.player) {
+                            this.player.playerInfo.duration = null
+                            console.debug(`this.player.getDuration() is:`,this.player.getDuration())
+                        }
+                        // load / init the video
+                        this.seekToSegmentStart()
+                        // the duration changed so the segments need to be recalculated
+                        this.organizeSegments()
+                    })
+                }
+            }
         }
     }),
-    beforeDestroy() {
-        // unwatch everything
-        this.unwatchers.forEach(each=>each())
-    },
     mounted() {
-        this.unwatchers.push(this.$root.$watch("labels", (newValue)=>{
-            this.organizeSegments()
-        }, {deep: true}))
-        // watch selectedVideo
-        this.unwatchers.push(this.$root.$watch("selectedVideo", ()=>{
-            logBlock({name: "MainContainer updated:selectedVideo"}, ()=>{
-                console.debug(`this.$root.selectedVideo.id is:`, this.$root.selectedVideo.id)
-                // it hasn't been initilized
-                this.videoInitilized = false
-                // manually wipe the info (otherwise old video info will still be there)
-                if (this.player) {
-                    this.player.playerInfo.duration = null
-                    console.debug(`this.player.getDuration() is:`,this.player.getDuration())
-                }
-                // load / init the video
-                this.seekToSegmentStart()
-                // the duration changed so the segments need to be recalculated
-                this.organizeSegments()
-            })
-        }))
-        
-        // 
         segmentEvents.on('whichSegment:update', (data)=>{
             if (JSON.stringify(this.whichSegment) != JSON.stringify(data.whichSegment)) {
                 this.whichSegment = data.whichSegment
@@ -169,19 +185,21 @@ export default {
         }
     },
     methods: {
-        getSegments() {
+        segmentsToDisplay() {
             let selectedLabels = Object.entries(this.$root.labels).filter(([eachKey, eachValue])=>(eachValue.selected)).map(([eachKey, eachValue])=>(eachKey))
-            let segments = this.$root.segments.filter(each=>(selectedLabels.includes(each.label) && each.video_id==this.$root.selectedVideo.id))
+            let segments = this.$root.segments.filter(eachSegment=>{
+                (selectedLabels.includes(eachSegment.data.label) && eachSegment.videoId==this.$root.selectedVideo.id)
+            })
             return segments
         },
         checkIfVideoChanged() {
-            if (this.segment.video_id != this.$root.selectedVideo.id) {
-                this.$root.selectedVideo = { id: this.segment.video_id }
+            if (this.segment.videoId != this.$root.selectedVideo.id) {
+                this.$root.selectedVideo = { id: this.segment.videoId }
             }
         },
         organizeSegments(segments) {
             logBlock({name: "organizeSegments"}, ()=>{
-                segments = this.getSegments()
+                segments = this.segmentsToDisplay()
                 console.debug(`segments is:`,segments)
                 // wait until player is initilized
                 if (!this.videoInitilized) {
@@ -219,7 +237,7 @@ export default {
                             // how close to the left the element should be
                             leftPercent: `${(effectiveStart/duration)*100}%`,
                         }
-                    }).filter(each=>each.video_id == this.$root.selectedVideo.id)
+                    }).filter(each=>each.videoId == this.$root.selectedVideo.id)
                 }
                 let levels = []
                 for (let eachSegment of videoSegments.sort(dynamicSort("effectiveStart"))) {

@@ -14,6 +14,7 @@ import './plugins/keen-ui-plugin'
 import './plugins/vue-toasted-plugin'
 import './plugins/youtube-player-plugin'
 import { Router } from './plugins/router-plugin'
+const endpoints = require("./iilvd-api").endpoints
 
 // Pages 
 import pages from "./pages/*.vue"
@@ -21,6 +22,30 @@ import pages from "./pages/*.vue"
 if (!("Home" in pages)) {
     throw Error("Hey, this template expects there to be a 'Home.vue' page.\nIf you don't want one that's fine. Just change the router in the App.vue file so it doesn't expect/need one")
 }
+
+let colors = [ "#4fc3f7", "#e57373", "#ba68c8", "#04d895", "#fec355",  "#9575cd", "#4fc3f7", "#ff8a65", "#9ccc65", ]
+let colorCopy = [...colors]
+
+// 
+// summary
+//
+    // set:
+    //      this.labels
+    //      this.labels[].selected
+    //      this.labels[].color
+    //      this.segments
+    //      this.segments[].data
+    //      this.selectedLabel
+    //      this.selectedVideo
+    // 
+    // retreives:
+    //      endpoints.summary.labels()
+    // 
+    // listeners:
+    // 
+    // emits:
+    //     
+
 
 let App
 // create App instance and attach it (executed after this file)
@@ -48,6 +73,9 @@ export default App = {
             },
         ]
     }),
+    mixin: [
+        
+    ],
     data: ()=>({
         selectedVideo: null,
         selectedLabel: null,
@@ -60,8 +88,39 @@ export default App = {
         },
         selectedVideo(value) {
             this.$emit("updated:selectedVideo", value)
-        }
+        },
     },
+    created() {
+        // get the labels ASAP
+        this.retrieveLabels()
+    },
+    methods: {
+        async retrieveLabels() {
+            let realEndpoints = await endpoints
+            // 
+            // get labels
+            // 
+            this.labels = await realEndpoints.summary.labels()
+            // assign colors to all labels in a pretty (irrelevently) inefficient way
+            Object.keys(this.labels).forEach(each=> this.labels[each].color = (colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())))
+            
+            // 
+            // get segements from labels
+            // 
+            this.segments = []
+            for (const [eachLabelName, eachLabel] of Object.entries(this.labels)) {
+                for (let eachSegment of eachLabel.segments) {    
+                    let combinedData = {}
+                    // basically ignore who said what and just grab the data
+                    for (const [eachUsername, eachObservation] of Object.entries(eachSegment.observations)) {
+                        combinedData = { ...combinedData, ...eachObservation }
+                    }
+                    eachSegment.data = combinedData
+                    this.segments.push(eachSegment)
+                }
+            }
+        }
+    }
 }
 
 </script>

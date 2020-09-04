@@ -52,8 +52,24 @@
 const { dynamicSort } = require("good-js")
 let Fuse = require("fuse.js").default
 
-let colors = [ "#4fc3f7", "#e57373", "#ba68c8", "#04d895", "#fec355",  "#9575cd", "#4fc3f7", "#ff8a65", "#9ccc65", ]
-let colorCopy = [...colors]
+// 
+// summary
+//
+    // set:
+    //     this.$root.selectedLabel
+    //     this.$root.selectedVideo
+    // 
+    // get:
+    //     this.$root.labels
+    //     this.$root.segments
+    // 
+    // retreives:
+    // 
+    // listeners:
+    //     this.$root.$watch("labels")
+    // 
+    // emits:
+    // 
 
 export default {
     name: "HomePage",
@@ -66,7 +82,6 @@ export default {
     mixins: [
         require("../mixins/loader"),
         require("../mixins/window-listeners"),
-        require("../iilvd-api").mixin,
     ],
     data: ()=>({
         items: {},
@@ -75,49 +90,42 @@ export default {
         fuseSuggestor: null,
     }),
     created() {
-        // start asking for the labels
-        setTimeout(async () => {
-            if (this.endpoints instanceof Promise) {
-                this.endpoints = await this.endpoints
-            }
-            this.$root.labels = await this.endpoints.summary.labels()
-            this.$root.segments = []
-            for (const [eachKey, eachValue] of Object.entries(this.$root.labels)) {
-                this.$root.segments = [...this.$root.segments, ...eachValue.segments]
-            }
-            this.fuseSuggestor = new Fuse(Object.keys(this.$root.labels), {includeScore: true,})
-            // assign colors to all labels in a pretty (irrelevently) inefficient way
-            Object.keys(this.$root.labels).forEach(each=> this.$root.labels[each].color = (colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())))
-            // put them on the UI as soon as they load
-            this.items = this.$root.labels
-        }, 0)
-    },
-    mounted() {
         window.home = this
+        // as soon as there are labels
+        this.$root.$watch("labels", ()=>{
+            if (this.$root.labels instanceof Object) {
+                // put them on the UI
+                this.items = this.$root.labels
+                // build a suggestion system for the labels
+                this.fuseSuggestor = new Fuse(Object.keys(this.$root.labels), {includeScore: true,})
+            }
+        })
     },
     watch: {
+        // when the search term changes
         searchTerm(value) {
-            if (typeof value == 'string') {
-                // TODO: improve this to be a fuzzy search
+            // if no search term
+            if (typeof value != 'string' || value.trim().length == 0) {
+                // show all the labels
+                this.items = this.$root.labels
+            } else {
+                // figure out which labels to show
                 this.items = {}
-                let term = value.toLowerCase()
-                for (const key in this.$root.labels) {
-                    let each = this.$root.labels[key]
-                    
-                    if (this.suggestions.includes(key) || key.startsWith(term)) {
-                        this.items[key] = each
+                const theSearchTerm = value.toLowerCase()
+                for (const [eachLabelName, eachLabel] of Object.entries(this.$root.labels)) {
+                    // if it matches suggestions or the start of a label
+                    if (this.suggestions.includes(eachLabelName) || eachLabelName.startsWith(theSearchTerm)) {
+                        // then display it (add it to the list)
+                        this.items[eachLabelName] = eachLabel
                     }
                 }
-            } else {
-                this.items = this.$root.labels
             }
         }
     },
     computed: {
         suggestions() {
-            if (!this.fuseSuggestor) {
-                return []
-            }
+            // if the labels havent been generated yet, dont show anything
+            if (!this.fuseSuggestor) { return [] }
             let suggestions = this.fuseSuggestor.search(this.searchTerm)
             return suggestions.map(each=>each.item)
         }
@@ -127,11 +135,8 @@ export default {
             this.$root.selectedLabel = label
             this.$root.selectedLabel.name = labelName
             this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500)
-            this.selectedSegments = [...label.segments].sort(dynamicSort(["video_id"]))
-            this.$root.selectedVideo = { id: this.selectedSegments[0].video_id }
-        },
-        notYetImplemented() {
-            this.$toasted.show(`Sadly this doesn't do anything yet`).goAway(2500)
+            this.selectedSegments = [...label.segments].sort(dynamicSort(["videoId"]))
+            this.$root.selectedVideo = { id: this.selectedSegments[0].videoId }
         }
     }
 }

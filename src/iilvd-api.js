@@ -39,7 +39,6 @@ module.exports = {
     mixin: {
         data: ()=>({
             endpoints,
-            needToLoad$: { endpoints },
         }),
     },
 }
