@@ -13,6 +13,8 @@ import './plugins/good-vue-plugin'
 import './plugins/keen-ui-plugin'
 import './plugins/vue-toasted-plugin'
 import './plugins/youtube-player-plugin'
+import './plugins/root-hooks-plugin'
+import './plugins/window-listeners-plugin'
 import { Router } from './plugins/router-plugin'
 const endpoints = require("./iilvd-api").endpoints
 
@@ -73,9 +75,6 @@ export default App = {
             },
         ]
     }),
-    mixin: [
-        
-    ],
     data: ()=>({
         selectedVideo: null,
         selectedLabel: null,

@@ -81,7 +81,6 @@ export default {
     },
     mixins: [
         require("../mixins/loader"),
-        require("../mixins/window-listeners"),
     ],
     data: ()=>({
         items: {},
@@ -91,15 +90,23 @@ export default {
     }),
     created() {
         window.home = this
-        // as soon as there are labels
-        this.$root.$watch("labels", ()=>{
-            if (this.$root.labels instanceof Object) {
-                // put them on the UI
-                this.items = this.$root.labels
-                // build a suggestion system for the labels
-                this.fuseSuggestor = new Fuse(Object.keys(this.$root.labels), {includeScore: true,})
+    },
+    mounted() {
+        this.$rootHooks.watch.labels()
+    },
+    rootHooks: {
+        watch: {
+            // as soon as there are labels
+            labels(newValue) {
+                if (this.$root.labels instanceof Object) {
+                    console.debug(`this.$root.labels is:`,this.$root.labels)
+                    // put them on the UI
+                    this.items = this.$root.labels
+                    // build a suggestion system for the labels
+                    this.fuseSuggestor = new Fuse(Object.keys(this.$root.labels), {includeScore: true,})
+                }
             }
-        })
+        }
     },
     watch: {
         // when the search term changes

@@ -97,10 +97,6 @@ let video = {
 export default {
     props: [ 'segments' ],
     components: { JsonTree },
-    mixins: [
-        require("../mixins/window-listeners"),
-        require("../mixins/rootHooks"),
-    ],
     data: ()=>({
         player: null,
         organizedSegments: [],
@@ -109,53 +105,6 @@ export default {
         duration: null,
         videoInitilized: false,
         scheduledToggle: {},
-        windowListeners$: {
-            keydown(eventObj) {
-                // 
-                // key controls
-                // 
-                switch (eventObj.key) {
-                    case "ArrowRight":
-                        eventObj.preventDefault()
-                        this.incrementIndex()
-                        break
-                    case "ArrowLeft":
-                        eventObj.preventDefault()
-                        this.decrementIndex()
-                        break
-                    case " ":
-                        eventObj.preventDefault()
-                        this.togglePlayPause()
-                        break
-                    default:
-                        // we dont care about other keys
-                        break
-                }
-            }
-        },
-        root$: {
-            watch: {
-                labels(newValue) {
-                    this.organizeSegments()
-                },
-                selectedVideo(newValue) {
-                    logBlock({name: "MainContainer watch:selectedVideo"}, ()=>{
-                        console.debug(`this.$root.selectedVideo.id is:`, this.$root.selectedVideo.id)
-                        // it hasn't been initilized
-                        this.videoInitilized = false
-                        // manually wipe the info (otherwise old video info will still be there)
-                        if (this.player) {
-                            this.player.playerInfo.duration = null
-                            console.debug(`this.player.getDuration() is:`,this.player.getDuration())
-                        }
-                        // load / init the video
-                        this.seekToSegmentStart()
-                        // the duration changed so the segments need to be recalculated
-                        this.organizeSegments()
-                    })
-                }
-            }
-        }
     }),
     mounted() {
         segmentEvents.on('whichSegment:update', (data)=>{
@@ -163,6 +112,54 @@ export default {
                 this.whichSegment = data.whichSegment
             }
         })
+    },
+    windowListeners: {
+        keydown(eventObj) {
+            console.debug(`eventObj is:`,eventObj)
+            // 
+            // key controls
+            // 
+            switch (eventObj.key) {
+                case "ArrowRight":
+                    eventObj.preventDefault()
+                    this.incrementIndex()
+                    break
+                case "ArrowLeft":
+                    eventObj.preventDefault()
+                    this.decrementIndex()
+                    break
+                case " ":
+                    eventObj.preventDefault()
+                    this.togglePlayPause()
+                    break
+                default:
+                    // we dont care about other keys
+                    break
+            }
+        }
+    },
+    rootHooks: {
+        watch: {
+            labels(newValue) {
+                this.organizeSegments()
+            },
+            selectedVideo(newValue) {
+                logBlock({name: "MainContainer watch:selectedVideo"}, ()=>{
+                    console.debug(`this.$root.selectedVideo.id is:`, this.$root.selectedVideo.id)
+                    // it hasn't been initilized
+                    this.videoInitilized = false
+                    // manually wipe the info (otherwise old video info will still be there)
+                    if (this.player) {
+                        this.player.playerInfo.duration = null
+                        console.debug(`this.player.getDuration() is:`,this.player.getDuration())
+                    }
+                    // load / init the video
+                    this.seekToSegmentStart()
+                    // the duration changed so the segments need to be recalculated
+                    this.organizeSegments()
+                })
+            }
+        }
     },
     watch: {
         segments(value, oldValue) {

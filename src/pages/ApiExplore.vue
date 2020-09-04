@@ -38,7 +38,6 @@ export default {
     },
     mixins: [
         require("../mixins/loader"),
-        require("../mixins/window-listeners"),
         require("../iilvd-api").mixin,
     ],
     data: ()=>({
@@ -49,14 +48,14 @@ export default {
         collections: [],
         suggestions: [],
         searchResult: null,
-        windowListeners$: {
-            keydown({key}) {
-                if (key == "Enter") {
-                    this.submitSearch()
-                }
+    }),
+    windowListeners: {
+        keydown({key}) {
+            if (key == "Enter") {
+                this.submitSearch()
             }
         }
-    }),
+    },
     created() {
         this.$once("loadedAll$",async ()=>{
             this.collections = await this.endpoints.collections()
