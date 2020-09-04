@@ -115,7 +115,6 @@ export default {
     },
     windowListeners: {
         keydown(eventObj) {
-            console.debug(`eventObj is:`,eventObj)
             // 
             // key controls
             // 
@@ -194,7 +193,7 @@ export default {
                 this.$root.selectedVideo = { id: this.segment.videoId }
             }
         },
-        organizeSegments(segments) {
+        organizeSegments() {
             logBlock({name: "organizeSegments"}, ()=>{
                 segments = this.segmentsToDisplay()
                 console.debug(`segments is:`,segments)
