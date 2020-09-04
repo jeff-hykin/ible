@@ -195,7 +195,7 @@ export default {
         },
         organizeSegments() {
             logBlock({name: "organizeSegments"}, ()=>{
-                segments = this.segmentsToDisplay()
+                let segments = this.segmentsToDisplay()
                 console.debug(`segments is:`,segments)
                 // wait until player is initilized
                 if (!this.videoInitilized) {
