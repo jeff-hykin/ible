@@ -27,8 +27,34 @@ class EventEmitter {
     }
 }
 
+window.storageObject = new Proxy(window.localStorage, {
+    get: function(target, key) {
+        let item = target.getItem(key)
+        if (!item) {
+            return undefined
+        // if it exists, parse it first
+        } else {
+            return JSON.parse(target.getItem(key))
+        }
+    },
+    set: function (target, key, value) {
+        target.setItem(key, JSON.stringify(value))
+        return true
+    },
+    deleteProperty: function(target, key){
+        return target.removeItem(key)
+    },
+    ownKeys: function (target) {
+        return Object.keys(target)
+    },
+    has: function (target, key) {
+        return key in target
+    },
+})
+
 module.exports = {
     EventEmitter,
+    storageObject,
     wrapIndex(val, list) {
         if (val >= list.length) {
             return 0

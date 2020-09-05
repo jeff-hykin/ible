@@ -78,6 +78,7 @@ export default App = {
     data: ()=>({
         selectedVideo: null,
         selectedLabel: null,
+        selectedSegment: null,
         segments: [],
         labels: [],
     }),

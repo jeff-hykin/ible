@@ -3,7 +3,7 @@
         row.segment(
             align-h="left"
             v-for="(each, index) in segments"
-            :class="{selected:(index==whichSegment)}"
+            :class="{selected:(index==$root.selectedSegment)}"
             @click="jumpSegment(index)"
             :wrap="true"
         )
@@ -12,32 +12,24 @@
 </template>
 
 <script>
-import { wrapIndex, EventEmitter } from '../utils'
-import JsonTree from 'vue-json-tree'
-
-export let segmentEvents = new EventEmitter()
-
-import { videoEvents } from "./MainContainer"
+const { wrapIndex } = require('../utils')
+const { dynamicSort, logBlock } = require("good-js")
 
 export default {
     props: [ 'segments' ],
-    components: { JsonTree },
+    components: { 
+        JsonTree: require('vue-json-tree').default,
+    },
     data: ()=>({
-        whichSegment: 0,
     }),
     watch: {
+        // FIXME: change whenever the selected label changes
     },
     mounted() {
-        videoEvents.on('whichSegment:update', (data)=>{
-            if (JSON.stringify(this.whichSegment) != JSON.stringify(data.whichSegment)) {
-                this.whichSegment = data.whichSegment
-            }
-        })
     },
     methods: {
         jumpSegment(index) {
-            this.whichSegment = wrapIndex(index, this.segments)
-            segmentEvents.emit("whichSegment:update", { whichSegment: this.whichSegment })
+            this.$root.selectedSegment = wrapIndex(index, this.segments)
         },
     }
 }

@@ -12,8 +12,7 @@
                     //- top bar search area
                     column.top-bar-container(width="100%" padding="1rem")
                         ui-autocomplete.rounded-search(
-                            name="name1"
-                            placeholder="Search for a label, or a video"
+                            placeholder="Search for a label"
                             v-model="searchTerm"
                             :suggestions="suggestions"
                         )
@@ -99,7 +98,6 @@ export default {
             // as soon as there are labels
             labels(newValue) {
                 if (this.$root.labels instanceof Object) {
-                    console.debug(`this.$root.labels is:`,this.$root.labels)
                     // put them on the UI
                     this.items = this.$root.labels
                     // build a suggestion system for the labels

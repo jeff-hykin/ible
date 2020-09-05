@@ -1,7 +1,15 @@
 <template lang="pug">
     column.main-container(v-if='segments' :opacity='segments? 1 : 0' flex-grow=1)
+        //- search for video
+        column.top-bar-container(width="100%" padding="1rem")
+            ui-autocomplete.rounded-search(
+                placeholder="Search for a video id"
+                @select="videoSelect"
+                v-model="searchTerm"
+                :suggestions="suggestions"
+            )
         //- Video area
-        row.video-container(flex-basis="100%" padding-top="8rem" align-v="top")
+        row.video-container(flex-basis="100%" padding-top="1rem" align-v="top")
             column(align-v="top").video-width-sizer
                 //- VIDEO
                 row.video-sizer
@@ -11,7 +19,7 @@
                             | ←
                     youtube(
                         v-if='$root.selectedVideo'
-                        :video-id="segment.videoId"
+                        :video-id="$root.selectedVideo.id"
                         :player-vars='{start: segment.start}'
                         host="https://www.youtube-nocookie.com"
                         @ready="ready"
@@ -54,17 +62,12 @@
 </template>
 
 <script>
-import { wrapIndex, EventEmitter } from '../utils'
-import JsonTree from 'vue-json-tree'
+const { endpoints } = require("../iilvd-api")
+const { wrapIndex, storageObject } = require('../utils')
+const { dynamicSort, logBlock } = require("good-js")
+const Fuse = require("fuse.js").default
 
-export let videoEvents = new EventEmitter()
-
-import { segmentEvents } from "./Segments"
-import index from 'vue-youtube-embed'
-
-let { dynamicSort, logBlock } = require("good-js")
-
-let video = {
+const video = {
     IS_LOADING: -1,
     IS_PLAYING: 1,
     IS_PAUSED: 2,
@@ -78,7 +81,7 @@ let video = {
     // set:
     //     this.$root.labels[].selected
     //     this.$root.selectedVideo.id
-    //     this.whichSegment
+    //     this.$root.selectedSegment
     // 
     // get:
     //     this.$root.labels
@@ -89,29 +92,31 @@ let video = {
     // listeners:
     //     this.$root.$watch.labels
     //     this.$root.$watch.selectedVideo
-    //     whichSegment:update
+    //     this.$root.$watch.selectedSegment
     // 
     // emits:
     // 
 
+// make sure cachedVideoIds exists as an Array
+storageObject.cachedVideoIds || (storageObject.cachedVideoIds = [])
+
 export default {
     props: [ 'segments' ],
-    components: { JsonTree },
+    components: { 
+    },
     data: ()=>({
-        player: null,
         organizedSegments: [],
-        whichSegment: 0,
-        enabledLabels: [],
-        duration: null,
+        
+        searchTerm: null,
+        suggestions: [],
+        
+        player: null,
         videoInitilized: false,
         scheduledToggle: {},
     }),
     mounted() {
-        segmentEvents.on('whichSegment:update', (data)=>{
-            if (JSON.stringify(this.whichSegment) != JSON.stringify(data.whichSegment)) {
-                this.whichSegment = data.whichSegment
-            }
-        })
+        // add some default suggestions
+        this.suggestions = storageObject.cachedVideoIds
     },
     windowListeners: {
         keydown(eventObj) {
@@ -143,6 +148,7 @@ export default {
                 this.organizeSegments()
             },
             selectedVideo(newValue) {
+                console.debug(`$root.selectedVideo.id is:`,this.$root.selectedVideo.id)
                 logBlock({name: "MainContainer watch:selectedVideo"}, ()=>{
                     console.debug(`this.$root.selectedVideo.id is:`, this.$root.selectedVideo.id)
                     // it hasn't been initilized
@@ -157,30 +163,62 @@ export default {
                     // the duration changed so the segments need to be recalculated
                     this.organizeSegments()
                 })
-            }
+            },
+            selectedSegment(newValue) {
+                this.checkIfVideoChanged()
+                this.seekToSegmentStart()
+                this.organizeSegments()
+            },
         }
     },
     watch: {
         segments(value, oldValue) {
             // reset the segment count
-            this.whichSegment = 0
+            this.$root.selectedSegment = 0
             this.checkIfVideoChanged()
             this.seekToSegmentStart()
             this.organizeSegments()
         },
-        whichSegment(value) {
-            videoEvents.emit("whichSegment:update", { whichSegment: this.whichSegment })
-            this.checkIfVideoChanged()
-            this.seekToSegmentStart()
-            this.organizeSegments()
+        suggestions(newValue) {
+            // save suggestions to local storage
+            storageObject.cachedVideoIds = newValue
         },
+        // when the search term changes
+        async searchTerm(value) {
+            const minNumberOfCharactersBeforeSearch = 1
+            // if no search term
+            if (typeof value != 'string' || value.trim().length <= minNumberOfCharactersBeforeSearch) {
+                // load all suggestions from storage if search isn't long enough
+                this.suggestions = storageObject.cachedVideoIds
+            } else {
+                // add results from the database
+                let realEndpoints = await endpoints
+                let possibleVideoIds = await realEndpoints.raw.all({
+                    from: "videos",
+                    where: [
+                        {
+                            hiddenValueOf: ["_id"],
+                            matches: `^${value.trim()}`,
+                        }
+                    ],
+                    forEach:{
+                        extractHidden: [ '_id']
+                    },
+                })
+                console.log(`setting suggestions`)
+                this.suggestions = [...new Set(possibleVideoIds.concat(this.suggestions))]
+            }
+        }
     },
     computed: {
         segment() {
-            return this.segments && this.segments[this.whichSegment]
+            return this.segments && this.segments[this.$root.selectedSegment]
         }
     },
     methods: {
+        videoSelect() {
+            this.$root.selectedVideo = { id: this.searchTerm.trim() }
+        },
         segmentsToDisplay() {
             let selectedLabels = Object.entries(this.$root.labels).filter(([eachKey, eachValue])=>(eachValue.selected)).map(([eachKey, eachValue])=>(eachKey))
             let segments = this.$root.segments.filter(eachSegment=>{
@@ -288,13 +326,13 @@ export default {
             return this.player.getPlayerState() == 1
         },
         incrementIndex() {
-            this.whichSegment = wrapIndex(++this.whichSegment, this.segments)
+            this.$root.selectedSegment = wrapIndex(++this.$root.selectedSegment, this.segments)
         },
         decrementIndex() {
-            this.whichSegment = wrapIndex(--this.whichSegment, this.segments)
+            this.$root.selectedSegment = wrapIndex(--this.$root.selectedSegment, this.segments)
         },
         jumpSegment(index) {
-            this.whichSegment = wrapIndex(index, this.segments)
+            this.$root.selectedSegment = wrapIndex(index, this.segments)
         },
         notYetImplemented() {
             this.$toasted.show(`Sadly this doesn't do anything yet`).goAway(2500)
