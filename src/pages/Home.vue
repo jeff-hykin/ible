@@ -26,7 +26,7 @@
                             column.search-card(v-for="(label, labelName) in items" shadow=1 align-h="left" :background-color="label.color")
                                 h5(style="text-decoration: underline") {{labelName}}
                                 column(width='max-content' padding='0.5rem')
-                                    | total number of clips: {{label.segments.length}}
+                                    | total number of clips: {{label.segmentCount}}
                                     br
                                     | total number of videos: {{label.videoCount}}
                                 column.show-samples(@click="selectLabel(labelName, label)")

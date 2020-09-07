@@ -20,7 +20,7 @@
                     youtube(
                         v-if='$root.selectedVideo'
                         :video-id="$root.selectedVideo.$id"
-                        :player-vars='{start: segment.start}'
+                        :player-vars='{start: (segment && segment.start) || 0}'
                         host="https://www.youtube-nocookie.com"
                         @ready="ready"
                         @playing="playing"
@@ -194,7 +194,6 @@ export default {
                 })
             },
             selectedSegment(newValue) {
-                this.checkIfVideoChanged()
                 this.seekToSegmentStart()
                 this.organizeSegments()
             },
@@ -312,11 +311,6 @@ export default {
             // only return segments that match the selected labels
             return this.segments.filter(eachSegment=>namesOfSelectedLabels.includes(eachSegment.$data.label))
         },
-        checkIfVideoChanged() {
-            if (this.segment.videoId != this.$root.selectedVideo.id) {
-                this.$root.selectedVideo = { id: this.segment.videoId }
-            }
-        },
         async organizeSegments() {
             logBlock({name: "organizeSegments"}, async ()=>{
                 // wait until player is initilized
@@ -329,13 +323,13 @@ export default {
                     }
                 }
                 await this.ensureVideoHasSegments()
-                let segmentsToDisplay = this.segmentsToDisplay()
-                for (let each of segmentsToDisplay) {
+                // let segmentsToDisplay = this.segmentsToDisplay()
+                // for (let each of segmentsToDisplay) {
                     
-                }
+                // }
                 let videoSegments = []
                 // 2 percent of the width of the video
-                if (this.$root.selectedVideo.id) {
+                if (this.$root.selectedVideo.$id) {
                     let duration = this.player.getDuration()
                     console.debug(`duration is:`,duration)
                     let minWidth = duration / 50
@@ -361,7 +355,7 @@ export default {
                             // how close to the left the element should be
                             leftPercent: `${(effectiveStart/duration)*100}%`,
                         }
-                    }).filter(each=>each.videoId == this.$root.selectedVideo.id)
+                    }).filter(each=>each.videoId == this.$root.selectedVideo.$id)
                 }
                 let levels = []
                 for (let eachSegment of videoSegments.sort(dynamicSort("effectiveStart"))) {
