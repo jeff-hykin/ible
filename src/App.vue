@@ -15,6 +15,7 @@ import './plugins/vue-toasted-plugin'
 import './plugins/youtube-player-plugin'
 import './plugins/root-hooks-plugin'
 import './plugins/window-listeners-plugin'
+import './plugins/resolvables-plugin'
 import { Router } from './plugins/router-plugin'
 const endpoints = require("./iilvd-api").endpoints
 
@@ -77,6 +78,7 @@ export default App = {
         selectedLabel: null,
         selectedSegment: null,
         labels: {},
+        videos: {},
     }),
     watch: {
         selectedLabel(value) {
@@ -90,6 +92,20 @@ export default App = {
         this.retrieveLabels()
     },
     methods: {
+        getCachedVideoObject(id) {
+            // if video isn't cached
+            if (!(this.$root.videos[id] instanceof Object)) {
+                // then cache it
+                this.$root.videos[id] = {}
+            }
+            // ensure the id didn't get messed up
+            this.$root.videos[id].$id = id
+            // return the cached video
+            return this.$root.videos[id]
+        },
+        getNamesOfSelectedLabels() {
+            return Object.entries(this.$root.labels).filter(([eachKey, eachValue])=>(eachValue.selected)).map(([eachKey, eachValue])=>(eachKey))
+        },
         async retrieveLabels() {
             let realEndpoints = await endpoints
             // 
@@ -98,7 +114,7 @@ export default App = {
             this.labels = await realEndpoints.summary.labels()
             // assign colors to all labels in a pretty (irrelevently) inefficient way
             Object.keys(this.labels).forEach(each=> this.labels[each].color = (colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())))
-        }
+        },
     }
 }
 

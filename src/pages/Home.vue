@@ -37,7 +37,7 @@
         //- Show the video
         //- 
         column.home-container(:visibility="$root.selectedLabel? 'visible' : 'hidden' " align-v="top" flex-grow="1" height="100vh" overflow="auto")
-            MainContainer(:segments='selectedSegments')
+            MainContainer
         
         //- 
         //- Show the Videos
@@ -60,6 +60,7 @@ let Fuse = require("fuse.js").default
 //
     // set:
     //     this.$root.selectedLabel
+    //     this.$root.videos
     //     this.$root.selectedVideo
     // 
     // get:
@@ -145,7 +146,8 @@ export default {
             this.$root.selectedLabel.name = labelName
             // (there must be at least one video with the label, unless the database is corrupt)
             let selectedVideoId = Object.keys(this.$root.selectedLabel.videos)[0]
-            this.$root.selectedVideo = { id: selectedVideoId }
+            // get it from the cache (auto-adds to cache if needed)
+            this.$root.selectedVideo = this.$root.getCachedVideoObject(selectedVideoId)
             
             this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500)
         }

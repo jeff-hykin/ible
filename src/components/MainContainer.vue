@@ -1,5 +1,5 @@
 <template lang="pug">
-    column.main-container(v-if='segments' :opacity='segments? 1 : 0' flex-grow=1)
+    column.main-container(v-if='$root.selectedVideo' :opacity='$root.selectedVideo? 1 : 0' flex-grow=1)
         //- search for video
         column.top-bar-container(width="100%" padding="1rem")
             ui-autocomplete.rounded-search(
@@ -19,7 +19,7 @@
                             | ←
                     youtube(
                         v-if='$root.selectedVideo'
-                        :video-id="$root.selectedVideo.id"
+                        :video-id="$root.selectedVideo.$id"
                         :player-vars='{start: segment.start}'
                         host="https://www.youtube-nocookie.com"
                         @ready="ready"
@@ -66,7 +66,6 @@ const { endpoints } = require("../iilvd-api")
 const { wrapIndex, storageObject } = require('../utils')
 const { dynamicSort, logBlock, checkIf } = require("good-js")
 const Fuse = require("fuse.js").default
-const endpoints = require("../iilvd-api").endpoints
 
 const video = {
     IS_LOADING: -1,
@@ -75,13 +74,14 @@ const video = {
     HASNT_EVEN_INITILIZED: null,
     HASNT_STARTED_STATE: 5,
 }
-
+let renderData = Symbol.for("renderData")
 // 
 // summary
 //
     // set:
     //     this.$root.labels[].selected
-    //     this.$root.selectedVideo.id
+    //     this.$root.selectedVideo
+    //     this.$root.selectedVideo.duration
     //     this.$root.selectedSegment
     // 
     // get:
@@ -102,7 +102,7 @@ const video = {
 storageObject.cachedVideoIds || (storageObject.cachedVideoIds = [])
 
 export default {
-    props: [ 'segments' ],
+    props: [],
     components: { 
     },
     data: ()=>({
@@ -113,8 +113,17 @@ export default {
         
         player: null,
         videoPlayerInitilized: false,
+        playerPromise: null,
+        playerPromiseResolver: ()=>{},
         scheduledToggle: {},
     }),
+    resolvables: {
+        // hasVideoPlayer(resolve, reject) {
+        //     if (this.player instanceof Object) {
+        //         resolve(this.player)
+        //     }
+        // }
+    },
     mounted() {
         // add some default suggestions
         this.suggestions = storageObject.cachedVideoIds
@@ -153,6 +162,19 @@ export default {
                 logBlock({name: "MainContainer watch:selectedVideo"}, ()=>{
                     // it hasn't been initilized
                     this.videoPlayerInitilized = false
+                    this.playerPromise = new Promise(async (resolve)=>{
+                        // create a wrapper around the resolve so it can be checked
+                        let resolver
+                        resolver = ()=> {
+                            resolver.resolved = true
+                            return resolve()
+                        }
+                        resolver.resolved = false
+                        this.playerPromiseResolver = resolver
+                        
+                        // start playing the video
+                        this.playVideo()
+                    })
                     // if video doesn't exist, then stop short
                     if (!this.doesVideoExist()) {
                         this.player = null
@@ -165,10 +187,10 @@ export default {
                         console.debug(`this.player.getDuration() is:`,this.player.getDuration())
                     }
                     this.ensureVideoHasSegments()
-                    // load / init the video
-                    this.seekToSegmentStart()
                     // the duration changed so the segments need to be recalculated
                     this.organizeSegments()
+                    // load / init the video
+                    this.seekToSegmentStart()
                 })
             },
             selectedSegment(newValue) {
@@ -179,15 +201,8 @@ export default {
         }
     },
     watch: {
-        segments(value, oldValue) {
-            // reset the segment count
-            this.$root.selectedSegment = 0
-            this.checkIfVideoChanged()
-            this.seekToSegmentStart()
-            this.organizeSegments()
-        },
         suggestions(newValue) {
-            // save suggestions to local storage
+            // save video id suggestions to local storage
             storageObject.cachedVideoIds = newValue
         },
         // when the search term changes
@@ -218,70 +233,105 @@ export default {
         }
     },
     computed: {
-        segment() {
-            return this.segments && this.segments[this.$root.selectedSegment]
-        }
+        // just shortcuts to this.$root
+        segments: { get() { return this.$root.selectedVideo.keySegments }, set(newValue) { this.$root.selectedVideo.keySegments = newValue }, },
+        segment:  { get() { return this.$root.selectedSegment           }, set(newValue) { this.$root.selectedSegment           = newValue }, },
+        video:    { get() { return this.$root.selectedVideo             }, set(newValue) { this.$root.selectedVideo             = newValue }, },
     },
     methods: {
         doesVideoExist() {
-            return this.$root.selectedVideo && checkIf({ value: this.$root.selectedVideo.id, is: String })
+            return this.video instanceof Object && checkIf({ value: this.video.$id, is: String })
         },
         async ensureVideoHasSegments() {
             if (this.doesVideoExist()) {
                 // if they already exist do nothing
-                if (this.$root.selectedVideo.segments instanceof Array) {
+                if (this.segments instanceof Array) {
                     return true
                 // retrive them from the backend
                 } else {
                     let realEndpoints = await endpoints
-                    let segments = await realEndpoints.raw.all({
+                    let keySegments = await realEndpoints.raw.all({
                         from: 'moments',
                         where: [
                             // FIXME: also add the fixedSegments (the computer generated ones)
                             { keyList: ['type']     , is: "keySegment" },
-                            { keyList: [ 'videoId' ], is: this.$root.selectedVideo.id },
+                            { keyList: [ 'videoId' ], is: this.video.$id },
                         ]
                     })
-                    // create the .data on each segment
-                    this.$root.selectedVideo.segments =  segments.map(eachSegment=>{
+                    if (!this.video.duration) {
+                        this.video.duration = await realEndpoints.videos.get({keyList: [ this.video.$id, "duration" ]})
+                    }
+                    let minWidth = duration / 50
+                    this.video.keySegments = keySegments.map(eachSegment=>{
+                        // 
+                        // create the .$data on each segment
+                        // 
                         let combinedData = {}
                         // basically ignore who said what and just grab the data
                         // TODO: this should be changed because it ignores who said what and doesn't do any conflict resolution
                         for (const [eachUsername, eachObservation] of Object.entries(eachSegment.observations)) {
                             combinedData = { ...combinedData, ...eachObservation }
                         }
-                        eachSegment.data = combinedData
+                        eachSegment.$data = combinedData
+                        
+                        // 
+                        // add render info
+                        // 
+                        // create the display info for each segment
+                        let effectiveStart  = eachSegment.start
+                        let effectiveEnd    = eachSegment.end
+                        let segmentDuration = eachSegment.end - eachSegment.start
+                        // if segment is too small artificially make it bigger
+                        if (segmentDuration < minWidth) {
+                            let additionalAmount = (minWidth - segmentDuration)/2
+                            // sometimes this will result in a negative amount, but thats okay
+                            // the UI can handle it, the user just needs to be able to see it
+                            effectiveStart -= additionalAmount
+                            effectiveEnd += additionalAmount
+                        }
+                        eachSegment[renderData] = {
+                            effectiveEnd,
+                            effectiveStart,
+                            // how wide the element should be
+                            widthPercent: `${(effectiveEnd - effectiveStart)*100/duration}%`,
+                            // how close to the left the element should be
+                            leftPercent: `${(effectiveStart/duration)*100}%`,
+                        }
+                        return eachSegment
                     })
+                    
                     return false
                 }
             }
         },
         videoSelect() {
-            this.$root.selectedVideo = { id: this.searchTerm.trim() }
+            this.$root.selectedVideo = this.$root.getCachedVideoObject(this.searchTerm.trim())
         },
         segmentsToDisplay() {
-            let selectedLabels = Object.entries(this.$root.labels).filter(([eachKey, eachValue])=>(eachValue.selected)).map(([eachKey, eachValue])=>(eachKey))
-            let segments = this.$root.segments.filter(eachSegment=>{
-                (selectedLabels.includes(eachSegment.data.label) && eachSegment.videoId==this.$root.selectedVideo.id)
-            })
-            return segments
+            let namesOfSelectedLabels = this.getNamesOfSelectedLabels()
+            // only return segments that match the selected labels
+            return this.segments.filter(eachSegment=>namesOfSelectedLabels.includes(eachSegment.$data.label))
         },
         checkIfVideoChanged() {
             if (this.segment.videoId != this.$root.selectedVideo.id) {
                 this.$root.selectedVideo = { id: this.segment.videoId }
             }
         },
-        organizeSegments() {
-            logBlock({name: "organizeSegments"}, ()=>{
-                let segments = this.segmentsToDisplay()
-                console.debug(`segments is:`,segments)
+        async organizeSegments() {
+            logBlock({name: "organizeSegments"}, async ()=>{
                 // wait until player is initilized
                 if (!this.videoPlayerInitilized) {
                     if (this.$root.selectedVideo) {
+                        // wait one sec before retrying
                         return setTimeout(() => this.organizeSegments(), 1000)
                     } else {
                         return
                     }
+                }
+                await this.ensureVideoHasSegments()
+                let segmentsToDisplay = this.segmentsToDisplay()
+                for (let each of segmentsToDisplay) {
+                    
                 }
                 let videoSegments = []
                 // 2 percent of the width of the video
@@ -290,8 +340,8 @@ export default {
                     console.debug(`duration is:`,duration)
                     let minWidth = duration / 50
                     videoSegments = segments.map((each, index)=>{
-                        let effectiveStart = each.start
-                        let effectiveEnd = each.end
+                        let effectiveStart  = each.start
+                        let effectiveEnd    = each.end
                         let segmentDuration = each.end - each.start
                         // if segment is too small artificially make it bigger
                         if (segmentDuration < minWidth) {
@@ -348,6 +398,8 @@ export default {
                 // then pause
                 this.player.pauseVideo()
                 this.videoPlayerInitilized = true
+                // resolve the promise
+                this.playerPromiseResolver(this.player)
                 // if there is a seek back time, go there
                 if (seekBackToStart) {
                     this.player.seekTo(this.segment.start)
@@ -417,28 +469,30 @@ export default {
                 this.scheduledToggle.id = setTimeout(()=>this.pauseVideo(), 50)
             }
         },
-        playVideo() {
-            // TODO: check me
-            
-            // cancel scheduled pause
-            if (this.scheduledToggle.type == "pause") {
-                clearTimeout(this.scheduledToggle.id)
-            }
-            // reset the schedule
-            this.scheduledToggle = {}
-            
-            if (!this.player) {
-                return
-            }
-            // try to play
-            this.player.playVideo()
-            
-            // if video isn't playing
-            if (this.player.playerInfo.playerState != video.IS_PLAYING) {
-                // schedule another play for good measure
-                this.scheduledToggle.type = "play"
-                this.scheduledToggle.id = setTimeout(()=>this.playVideo(), 50)
-            }
+        async playVideo() {
+            return new Promise((resolve, reject)=>{
+                // TODO: check me
+                
+                // cancel scheduled pause
+                if (this.scheduledToggle.type == "pause") {
+                    clearTimeout(this.scheduledToggle.id)
+                }
+                // reset the schedule
+                this.scheduledToggle = {}
+                
+                if (!this.player) {
+                    reject("failed to play because player doesn't exist")
+                }
+                // try to play
+                this.player.playVideo()
+                
+                // if video isn't playing
+                if (this.player.playerInfo.playerState != video.IS_PLAYING) {
+                    // schedule another play for good measure
+                    this.scheduledToggle.type = "play"
+                    this.scheduledToggle.id = setTimeout(()=>this.playVideo(), 50)
+                }
+            })
         },
         videoIsPaused() {
             // TODO: check me

@@ -21,7 +21,14 @@ let databaseApiCall = async (methodName, args=[])=> {
 //
 let endpoints = new Promise(async (resolve, reject)=>{
     let actualEndpoints = {}
-    for (let each of await databaseApiCall("smartEndpoints")) {
+    let endpointPaths
+    try {
+        endpointPaths = await databaseApiCall("smartEndpoints")
+    } catch (error) {
+        console.error("couldn't get the endpoints from the database")
+        endpointPaths = []
+    }
+    for (let each of endpointPaths) {
         set({
             keyList: each.split("/"),
             to: (...args) => { return databaseApiCall(each, args) },
