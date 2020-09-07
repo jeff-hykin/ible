@@ -64,8 +64,9 @@
 <script>
 const { endpoints } = require("../iilvd-api")
 const { wrapIndex, storageObject } = require('../utils')
-const { dynamicSort, logBlock } = require("good-js")
+const { dynamicSort, logBlock, checkIf } = require("good-js")
 const Fuse = require("fuse.js").default
+const endpoints = require("../iilvd-api").endpoints
 
 const video = {
     IS_LOADING: -1,
@@ -111,7 +112,7 @@ export default {
         suggestions: [],
         
         player: null,
-        videoInitilized: false,
+        videoPlayerInitilized: false,
         scheduledToggle: {},
     }),
     mounted() {
@@ -147,17 +148,23 @@ export default {
             labels(newValue) {
                 this.organizeSegments()
             },
+            // when the selected video changes
             selectedVideo(newValue) {
-                console.debug(`$root.selectedVideo.id is:`,this.$root.selectedVideo.id)
                 logBlock({name: "MainContainer watch:selectedVideo"}, ()=>{
-                    console.debug(`this.$root.selectedVideo.id is:`, this.$root.selectedVideo.id)
                     // it hasn't been initilized
-                    this.videoInitilized = false
+                    this.videoPlayerInitilized = false
+                    // if video doesn't exist, then stop short
+                    if (!this.doesVideoExist()) {
+                        this.player = null
+                        return
+                    }
+                    // if changing videos
                     // manually wipe the info (otherwise old video info will still be there)
                     if (this.player) {
                         this.player.playerInfo.duration = null
                         console.debug(`this.player.getDuration() is:`,this.player.getDuration())
                     }
+                    this.ensureVideoHasSegments()
                     // load / init the video
                     this.seekToSegmentStart()
                     // the duration changed so the segments need to be recalculated
@@ -216,6 +223,39 @@ export default {
         }
     },
     methods: {
+        doesVideoExist() {
+            return this.$root.selectedVideo && checkIf({ value: this.$root.selectedVideo.id, is: String })
+        },
+        async ensureVideoHasSegments() {
+            if (this.doesVideoExist()) {
+                // if they already exist do nothing
+                if (this.$root.selectedVideo.segments instanceof Array) {
+                    return true
+                // retrive them from the backend
+                } else {
+                    let realEndpoints = await endpoints
+                    let segments = await realEndpoints.raw.all({
+                        from: 'moments',
+                        where: [
+                            // FIXME: also add the fixedSegments (the computer generated ones)
+                            { keyList: ['type']     , is: "keySegment" },
+                            { keyList: [ 'videoId' ], is: this.$root.selectedVideo.id },
+                        ]
+                    })
+                    // create the .data on each segment
+                    this.$root.selectedVideo.segments =  segments.map(eachSegment=>{
+                        let combinedData = {}
+                        // basically ignore who said what and just grab the data
+                        // TODO: this should be changed because it ignores who said what and doesn't do any conflict resolution
+                        for (const [eachUsername, eachObservation] of Object.entries(eachSegment.observations)) {
+                            combinedData = { ...combinedData, ...eachObservation }
+                        }
+                        eachSegment.data = combinedData
+                    })
+                    return false
+                }
+            }
+        },
         videoSelect() {
             this.$root.selectedVideo = { id: this.searchTerm.trim() }
         },
@@ -236,7 +276,7 @@ export default {
                 let segments = this.segmentsToDisplay()
                 console.debug(`segments is:`,segments)
                 // wait until player is initilized
-                if (!this.videoInitilized) {
+                if (!this.videoPlayerInitilized) {
                     if (this.$root.selectedVideo) {
                         return setTimeout(() => this.organizeSegments(), 1000)
                     } else {
@@ -307,7 +347,7 @@ export default {
             if (this.player && this.player.getPlayerState() == 1) {
                 // then pause
                 this.player.pauseVideo()
-                this.videoInitilized = true
+                this.videoPlayerInitilized = true
                 // if there is a seek back time, go there
                 if (seekBackToStart) {
                     this.player.seekTo(this.segment.start)
@@ -315,7 +355,7 @@ export default {
             } else {
                 setTimeout(() => {
                     // init the video by pressing play
-                    if (!this.videoInitilized) {
+                    if (!this.videoPlayerInitilized) {
                         this.player.playVideo()
                     }
                     this.waitThenPause(seekBackToStart)
@@ -347,7 +387,7 @@ export default {
             // in this state the player (after seeking) will start playing
             // which isn't the best UX, so pause it immediately
             let state = this.player.playerInfo.playerState
-            if (state == video.HASNT_STARTED_STATE || (state == video.IS_PAUSED && !this.videoInitilized)) {
+            if (state == video.HASNT_STARTED_STATE || (state == video.IS_PAUSED && !this.videoPlayerInitilized)) {
                 let seekBackToStart = true
                 // give it enough time to load the frame (otherwise it loads infinitely)
                 this.player.playVideo()

@@ -1,7 +1,8 @@
 <template lang="pug">
     row.home-container(align-v='top' align-h="left" position="relative" width='fit-content' min-width="100vw" height="100vh" overflow="hidden" :class="{labelSelected: !!$root.selectedLabel}")
-        
+        //- 
         //- Pick a Label
+        //- 
         SidePanel(leftSide :open="!$root.selectedLabel")
             template(v-slot:nub-content="")
                 row.side-label
@@ -32,19 +33,22 @@
                                     | See Clips ▲
                             //- dud card to remove some strange behavior
                             column.search-card(opacity=0)
-                    
+        //- 
         //- Show the video
+        //- 
         column.home-container(:visibility="$root.selectedLabel? 'visible' : 'hidden' " align-v="top" flex-grow="1" height="100vh" overflow="auto")
             MainContainer(:segments='selectedSegments')
-            
-        //- Show the segments
-        SidePanel(rightSide v-if="$root.selectedLabel")
-            template(v-slot:nub-content="")
-                row.side-label
-                    | Moments
-            template(v-slot:panel-content="")
-                column(align-v="top" height="100vh" overflow='auto' padding-top="2rem")
-                    Segments(:segments='selectedSegments')
+        
+        //- 
+        //- Show the Videos
+        //- 
+            //- SidePanel(rightSide v-if="$root.selectedLabel")
+            //-     template(v-slot:nub-content="")
+            //-         row.side-label
+            //-             | Moments
+            //-     template(v-slot:panel-content="")
+            //-         column(align-v="top" height="100vh" overflow='auto' padding-top="2rem")
+            //-             Segments(:segments='selectedSegments')
                 
 </template>
 <script>
@@ -84,13 +88,13 @@ export default {
     data: ()=>({
         items: {},
         searchTerm: "",
-        selectedSegments: null,
         fuseSuggestor: null,
     }),
     created() {
         window.home = this
     },
     mounted() {
+        // generate the UI for the labels right after mounting
         this.$rootHooks.watch.labels()
     },
     rootHooks: {
@@ -139,9 +143,11 @@ export default {
         selectLabel(labelName, label) {
             this.$root.selectedLabel = label
             this.$root.selectedLabel.name = labelName
+            // (there must be at least one video with the label, unless the database is corrupt)
+            let selectedVideoId = Object.keys(this.$root.selectedLabel.videos)[0]
+            this.$root.selectedVideo = { id: selectedVideoId }
+            
             this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500)
-            this.selectedSegments = [...label.segments].sort(dynamicSort(["videoId"]))
-            this.$root.selectedVideo = { id: this.selectedSegments[0].videoId }
         }
     }
 }

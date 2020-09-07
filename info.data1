@@ -1,5 +1,6 @@
 todo:
-    - fix the moments section
+    - "fix the moments section":
+        - Create a segments on $root
     - highlight the selected moment
     - "[DONE] display the selected label"
     - "[DONE] add a video search feature"
@@ -8,3 +9,29 @@ todo:
     - "[DONE] add a legend with toggles for showing segments for the video":
         - fix the colors to specific labels
     - show JSON data of selected moment
+
+logic:
+    "@start":
+        - retrive endpoints
+        - retrive labels
+    
+    "@pick a label":
+        - => select top video for that label
+            - => retrive segments for that video
+            - => organize segments into rows
+            - => set the selected segment
+        - => retrive metadata for other videos with label
+    
+    "@change selected label"
+        - => ensure segments exist (retrive)
+        - => organize segments into rows, filter segments
+        - => ensure a segment is selected
+    
+    "@select segment"
+        - => change video
+    
+    "@video search"
+        - => change selected video
+            - => ensure segments exist (retrive)
+            - => organize segments into rows
+            - => select the segment

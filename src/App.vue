@@ -35,15 +35,12 @@ let colorCopy = [...colors]
     //      this.labels
     //      this.labels[].selected
     //      this.labels[].color
-    //      this.segments
-    //      this.segments[].data
-    //      this.selectedLabel
-    //      this.selectedVideo
     // 
     // retreives:
     //      endpoints.summary.labels()
     // 
     // listeners:
+    //      watch: this.selectedLabel
     // 
     // emits:
     //     
@@ -79,15 +76,13 @@ export default App = {
         selectedVideo: null,
         selectedLabel: null,
         selectedSegment: null,
-        segments: [],
-        labels: [],
+        labels: {},
     }),
     watch: {
         selectedLabel(value) {
-            value.selected = true
-        },
-        selectedVideo(value) {
-            this.$emit("updated:selectedVideo", value)
+            if (this.selectedLabel instanceof Object) {
+                value.selected = true
+            }
         },
     },
     created() {
@@ -103,22 +98,6 @@ export default App = {
             this.labels = await realEndpoints.summary.labels()
             // assign colors to all labels in a pretty (irrelevently) inefficient way
             Object.keys(this.labels).forEach(each=> this.labels[each].color = (colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())))
-            
-            // 
-            // get segements from labels
-            // 
-            this.segments = []
-            for (const [eachLabelName, eachLabel] of Object.entries(this.labels)) {
-                for (let eachSegment of eachLabel.segments) {    
-                    let combinedData = {}
-                    // basically ignore who said what and just grab the data
-                    for (const [eachUsername, eachObservation] of Object.entries(eachSegment.observations)) {
-                        combinedData = { ...combinedData, ...eachObservation }
-                    }
-                    eachSegment.data = combinedData
-                    this.segments.push(eachSegment)
-                }
-            }
         }
     }
 }
