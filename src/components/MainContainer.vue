@@ -43,16 +43,17 @@
                                 | {{eachLabelName}}
                     h5(v-if="organizedSegments.length > 0")
                         | Moments
-                    row.level(v-if="organizedSegments.length > 0" v-for="(eachLevel, index) in organizedSegments" align-h="space-between" position="relative")
+                    row.level(v-if="organizedSegments.length > 0" align-h="space-between" position="relative" :height="`${maxLevel*2.2}rem`")
                         row.segment(
-                            v-for="(eachSegment, index) in eachLevel"
-                            :left="eachSegment.leftPercent"
-                            :width="eachSegment.widthPercent"
-                            :background-color="$root.labels[eachSegment.data.label].color"
-                            @click="jumpSegment(eachSegment.index)"
+                            v-for="(eachSegment, index) in organizedSegments"
+                            :left="eachSegment.$renderData.leftPercent"
+                            :width="eachSegment.$renderData.widthPercent"
+                            :top="eachSegment.$renderData.topAmount"
+                            :background-color="$root.labels[eachSegment.$data.label].color"
+                            @click="jumpSegment(eachSegment.listIndex)"
                         )
                             ui-tooltip(position="left" animation="fade")
-                                | label: {{ eachSegment.data.label }}
+                                | label: {{ eachSegment.$data.label }}
                                 br
                                 | length: {{  (eachSegment.end - eachSegment.start).toFixed(2) }} sec
                                 br
@@ -74,7 +75,6 @@ const video = {
     HASNT_EVEN_INITILIZED: null,
     HASNT_STARTED_STATE: 5,
 }
-let renderData = Symbol.for("renderData")
 // 
 // summary
 //
@@ -106,6 +106,7 @@ export default {
     components: { 
     },
     data: ()=>({
+        maxLevel: 1,
         organizedSegments: [],
         
         searchTerm: null,
@@ -150,11 +151,9 @@ export default {
             const possibleDuration1 = get(this, ["video", "summary", "duration"     ], NaN)-0
             const possibleDuration2 = get(this, ["player", "playerInfo", "duration" ], NaN)-0
             if (checkIf({value: possibleDuration1, is: Number })) {
-                console.debug(`possibleDuration1 is:`,possibleDuration1)
                 resolve(possibleDuration1)
             // if the video player exists
             } else if (checkIf({value: possibleDuration2, is: Number }) && possibleDuration2 > 0) {
-                console.debug(`possibleDuration2 is:`,possibleDuration2)
                 resolve(possibleDuration2)
             } else {
                 // start two different requests for the same data
@@ -163,8 +162,11 @@ export default {
                 // 1. request the data from the backend
                 endpoints.then(async (realEndpoints)=>{
                     let video = await this.hasVideo.promise
-                    this.video.duration = await realEndpoints.videos.get({keyList: [ this.video.$id, "duration" ]})
-                    resolve(this.video.duration)
+                    let result = await realEndpoints.videos.get({keyList: [ this.video.$id, "summary",  "duration" ]})
+                    if (checkIf({value: result, is: Number}) && result > 0) {
+                        this.video.duration = result
+                        resolve(this.video.duration)
+                    }
                 })
                 
                 // 2. wait until there is a video player loaded with duration
@@ -341,7 +343,7 @@ export default {
                     effectiveStart -= additionalAmount
                     effectiveEnd += additionalAmount
                 }
-                eachSegment[renderData] = {
+                eachSegment.$renderData = {
                     effectiveEnd,
                     effectiveStart,
                     // how wide the element should be
@@ -350,7 +352,7 @@ export default {
                     leftPercent: `${(effectiveStart/duration)*100}%`,
                 }
                 return eachSegment
-            })
+            }).sort(dynamicSort(["$renderData","effectiveStart"])).map((each, index)=>((each.$displayIndex = index),each))
             
             return keySegments
         },
@@ -363,15 +365,16 @@ export default {
                 
                 // only return segments that match the selected labels
                 let namesOfSelectedLabels = this.$root.getNamesOfSelectedLabels()
-                return this.segments.filter(eachSegment=>namesOfSelectedLabels.includes(eachSegment.$data.label))
-                let displaySegments = this.segmentsToDisplay().sort(dynamicSort("effectiveStart"))
+                console.log(`hi`)
+                let displaySegments = this.segments.filter(eachSegment=>(eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.$data.label)))
+                console.log(`hi2`)
             
                 // 2 percent of the width of the video
                 let levels = []
                 for (let eachSegment of displaySegments) {
                     // find the smallest viable level
                     let level = 0
-                    while (levels[level] != undefined && eachSegment.effectiveStart <= levels[level][ levels[level].length-1 ].effectiveEnd) {
+                    while (levels[level] != undefined && eachSegment.$renderData.effectiveStart <= levels[level][ levels[level].length-1 ].$renderData.effectiveEnd) {
                         ++level
                     }
                     // create level if it didn't exist
@@ -381,14 +384,16 @@ export default {
                     } else {
                         levels[level].push(eachSegment)
                     }
+                    eachSegment.$renderData.level = level 
+                    eachSegment.$renderData.topAmount = `${level*2.2}rem`
                 }
-                this.organizedSegments = levels
+                this.maxLevel = levels.length
+                this.organizedSegments = levels.flat()
             })
         },
         async seekToSegmentStart() {
             // wait for the player to exist
             let player = await this.hasVideoPlayer.promise
-            console.debug(`player is:`,player)
             // make sure there is segment data 
             await this.videoHasSegmentData.promise
             // if there's at least one segment
@@ -399,8 +404,6 @@ export default {
                 }
             }
             if (this.segment instanceof Object && this.segment.start) {
-                console.debug(`this.segment is:`,this.segment)
-                console.debug(`seeking to:`,this.segment.start)
                 player.seekTo(this.segment.start)
             }
         },
@@ -444,14 +447,55 @@ export default {
             return this.player.getPlayerState() == 1
         },
         incrementIndex() {
-            this.jumpSegment(this.$root.selectedSegment.listIndex+1)
+            this.jumpSegment(this.$root.selectedSegment.$displayIndex+1)
         },
         decrementIndex() {
-            this.jumpSegment(this.$root.selectedSegment.listIndex-1)
+            this.jumpSegment(this.$root.selectedSegment.$displayIndex-1)
         },
-        jumpSegment(index) {
+        jumpSegment(newIndex) {
+            // basic saftey check
+            if (!(this.segments instanceof Array) || this.segments.length == 0) {
+                return 
+            }
+            const startingPoint = newIndex
+            let start = 0
             if (this.segment) {
-                this.segment = this.segments[ wrapIndex(index, this.segments) ]
+                start = this.segment.$displayIndex
+            }
+            if (newIndex == start) {
+                this.segment = this.segments[newIndex]
+                return
+            }
+            // if going in the relatively negative direction
+            if (start > newIndex) {
+                while (1) {
+                    let newSegment = this.segments[ wrapIndex(newIndex, this.segments) ]
+                    // if its a displayable segment then good, were done
+                    if (newSegment.$shouldDisplay) {
+                        this.segment = newSegment
+                        return
+                    }
+                    --newIndex // because this was a jump in the negative direction
+                                // relative to where the old segement was
+                    if (wrapIndex(newIndex, this.segments) == wrapIndex(startingPoint, this.segments)) {
+                        return
+                    }
+                }
+            // if going in the positive direction
+            } else {
+                while (1) {
+                    let newSegment = this.segments[ wrapIndex(newIndex, this.segments) ]
+                    // if its a displayable segment then good, were done
+                    if (newSegment.$shouldDisplay) {
+                        this.segment = newSegment
+                        return
+                    }
+                    ++newIndex // because this was a jump in the not-negative direction
+                               // relative to where the old segement was
+                    if (wrapIndex(newIndex, this.segments) == wrapIndex(startingPoint, this.segments)) {
+                        return
+                    }
+                }
             }
         },
         pauseVideo() {
@@ -609,7 +653,9 @@ export default {
         .level
             width: 100%
             height: 2.2rem
-            border-bottom: #e0e0e0 1px solid
+            // border-bottom: #e0e0e0 1px solid
+            overflow: hidden
+            transition: all ease 0.5s
             .segment
                 position: absolute
                 min-height: 1.4rem
@@ -621,22 +667,7 @@ export default {
                 &:hover
                     box-shadow: var(--shadow-1)
                     opacity: 0.9
-                // border: 2px white solid
                 
-                // border-top-left-radius: 1rem
-                // border-top-right-radius: 1rem
-                // border-bottom-left-radius: 1rem
-                // border-bottom-right-radius: 1rem
-                // border-bottom: 4px var(--red) solid
-                // border-left: 4px var(--red) solid
-                // border-right: 4px var(--red) solid
-                    
-                // background-color: var(--blue)
-                // min-height: 1rem
-                // position: absolute
-                // border: 1px solid white
-                // border-radius: 4px
-
 .circle-button
     background: var(--red)
     color: white

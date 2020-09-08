@@ -1,4 +1,6 @@
 todo:
+    - fix incrementing and decrementing to only work on the visible segments
+    - fix the auto video playing
     - "fix the moments section":
         - Create a segments on $root
     - highlight the selected moment

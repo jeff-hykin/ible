@@ -51,17 +51,15 @@ window.storageObject = new Proxy(window.localStorage, {
         return key in target
     },
 })
+a = (a,b)=>(a<0)*((b.length-a)%b.length) + (!(a<0))*(a%b.length)
 
 module.exports = {
     EventEmitter,
     storageObject,
     wrapIndex(val, list) {
-        if (val >= list.length) {
-            return 0
-        } else if (val < 0) {
-            return list.length - 1
-        } else {
-            return val
+        if (val < 0) {
+            val = list.length + val
         }
+        return val % list.length
     },
 }
