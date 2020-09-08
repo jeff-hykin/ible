@@ -82,6 +82,9 @@ export default App = {
     }),
     watch: {
         selectedLabel(value) {
+            for (const [eachKey, eachValue] of Object.entries(this.labels)) {
+                eachValue.selected = false
+            }
             if (this.selectedLabel instanceof Object) {
                 value.selected = true
             }

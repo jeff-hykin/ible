@@ -236,12 +236,14 @@ export default {
             labels(newValue) {
                 this.reorganizeSegments()
             },
+            selectedLabel(newValue) {
+                this.reorganizeSegments()
+            },
             // when the selected video changes
             selectedVideo(newValue, oldValue) {
                 logBlock({name: "selectedVideo changed [MainContainer:watch]"}, ()=>{
                     // if we know the video exists, go ahead and mark it as resolved
                     if (newValue instanceof Object && newValue.$id) {
-                        console.log(`this.hasVideo.resolve() called`)
                         this.hasVideo.resolve(newValue)
                     }
                     // resets
@@ -254,10 +256,6 @@ export default {
                     // basically look to reorganize them and jump to the begining of the segment
                     this.attemptToSetupSegments()
                 })
-            },
-            selectedSegment(newValue) {
-                this.seekToSegmentStart()
-                this.reorganizeSegments()
             },
         }
     },
@@ -361,13 +359,12 @@ export default {
                 // confirm or wait on a video to exist
                 await this.hasVideo.promise
                 // ensure that all the video segments are here
-                await this.videoHasSegmentData.promise
+                this.segments = await this.videoHasSegmentData.promise
                 
                 // only return segments that match the selected labels
                 let namesOfSelectedLabels = this.$root.getNamesOfSelectedLabels()
-                console.log(`hi`)
+                console.debug(`this.segments is:`,this.segments)
                 let displaySegments = this.segments.filter(eachSegment=>(eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.$data.label)))
-                console.log(`hi2`)
             
                 // 2 percent of the width of the video
                 let levels = []
@@ -447,10 +444,10 @@ export default {
             return this.player.getPlayerState() == 1
         },
         incrementIndex() {
-            this.jumpSegment(this.$root.selectedSegment.$displayIndex+1)
+            this.jumpSegment(this.segment.$displayIndex+1)
         },
         decrementIndex() {
-            this.jumpSegment(this.$root.selectedSegment.$displayIndex-1)
+            this.jumpSegment(this.segment.$displayIndex-1)
         },
         jumpSegment(newIndex) {
             // basic saftey check
@@ -531,7 +528,7 @@ export default {
             this.scheduledToggle = {}
             
             if (!this.player) {
-                reject("failed to play because player doesn't exist")
+                return
             }
             // try to play
             this.player.playVideo()
