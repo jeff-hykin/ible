@@ -39,7 +39,7 @@
                         | Labels
                     row.labels
                         container(v-for="(eachLevel, eachLabelName) in $root.labels" :background-color="$root.labels[eachLabelName].color")
-                            ui-checkbox(v-model="$root.labels[eachLabelName].selected")
+                            ui-checkbox(v-model="$root.labels[eachLabelName].selected" @change="toggleLabel(eachLabelName)")
                                 | {{eachLabelName}}
                     h5(v-if="organizedSegments.length > 0")
                         | Moments
@@ -50,6 +50,7 @@
                             :width="eachSegment.$renderData.widthPercent"
                             :top="eachSegment.$renderData.topAmount"
                             :background-color="$root.labels[eachSegment.$data.label].color"
+                            :key="eachSegment.listIndex"
                             @click="jumpSegment(eachSegment.listIndex)"
                         )
                             ui-tooltip(position="left" animation="fade")
@@ -233,7 +234,9 @@ export default {
     rootHooks: {
         watch: {
             // when different labels are selected
-            labels(newValue) {
+            labels(newValue, oldValue) {
+                console.debug(`newValue is:`,newValue)
+                console.debug(`oldValue is:`,oldValue)
                 this.reorganizeSegments()
             },
             selectedLabel(newValue) {
@@ -565,6 +568,15 @@ export default {
             } else {
                 this.pauseVideo()
             }
+        },
+        toggleLabel(labelName) {
+            // this is a dumb hack that only exists because sometimes the ui-checkbox doens't display the change
+            // even though the change has been made
+            const actualValue = this.$root.labels[labelName]
+            this.$root.labels[labelName] = {}
+            setTimeout(() => {
+                this.$root.labels[labelName] = actualValue
+            }, 0)
         }
     }
 }

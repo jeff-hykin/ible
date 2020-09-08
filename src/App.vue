@@ -81,13 +81,9 @@ export default App = {
         videos: {},
     }),
     watch: {
-        selectedLabel(value) {
-            for (const [eachKey, eachValue] of Object.entries(this.labels)) {
-                eachValue.selected = false
-            }
-            if (this.selectedLabel instanceof Object) {
-                value.selected = true
-            }
+        selectedLabel(newValue, oldValue) {
+            oldValue && (oldValue.selected = false)
+            newValue && (newValue.selected = true)
         },
     },
     created() {
@@ -116,7 +112,7 @@ export default App = {
             // 
             this.labels = await realEndpoints.summary.labels()
             // assign colors to all labels in a pretty (irrelevently) inefficient way
-            Object.keys(this.labels).forEach(each=> this.labels[each].color = (colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())))
+            Object.keys(this.labels).forEach(each=> this.labels[each] = {color: (colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())), ...this.labels[each]})
         },
     }
 }
