@@ -36,7 +36,7 @@
                 //- Segments
                 column.segments(align-h="left")
                     h5
-                        | Labels ({{video.duration}})
+                        | Labels
                     row.labels
                         container(v-for="(eachLevel, eachLabelName) in $root.labels" :background-color="$root.labels[eachLabelName].color")
                             ui-checkbox(v-model="$root.labels[eachLabelName].selected" @change="toggleLabel(eachLabelName)")
