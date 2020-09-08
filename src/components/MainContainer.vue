@@ -41,9 +41,9 @@
                         container(v-for="(eachLevel, eachLabelName) in $root.labels" :background-color="$root.labels[eachLabelName].color")
                             ui-checkbox(v-model="$root.labels[eachLabelName].selected")
                                 | {{eachLabelName}}
-                    h5
+                    h5(v-if="organizedSegments.length > 0")
                         | Moments
-                    row.level(v-for="(eachLevel, index) in organizedSegments" align-h="space-between" position="relative")
+                    row.level(v-if="organizedSegments.length > 0" v-for="(eachLevel, index) in organizedSegments" align-h="space-between" position="relative")
                         row.segment(
                             v-for="(eachSegment, index) in eachLevel"
                             :left="eachSegment.leftPercent"
@@ -64,7 +64,7 @@
 <script>
 const { endpoints } = require("../iilvd-api")
 const { wrapIndex, storageObject } = require('../utils')
-const { dynamicSort, logBlock, checkIf } = require("good-js")
+const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
 const Fuse = require("fuse.js").default
 
 const video = {
@@ -80,7 +80,7 @@ let renderData = Symbol.for("renderData")
 //
     // set:
     //     this.$root.labels[].selected
-    //     this.$root.selectedVideo
+    //     this.$root.selectedVideo.keySegments
     //     this.$root.selectedVideo.duration
     //     this.$root.selectedSegment
     // 
@@ -113,16 +113,92 @@ export default {
         
         player: null,
         videoPlayerInitilized: false,
-        playerPromise: null,
-        playerPromiseResolver: ()=>{},
         scheduledToggle: {},
     }),
     resolvables: {
-        // hasVideoPlayer(resolve, reject) {
-        //     if (this.player instanceof Object) {
-        //         resolve(this.player)
-        //     }
-        // }
+        // these are used for loading data in a very dynamic way,
+        // such as loading from two seperate sources and allowing for either of them
+        // to complete the request for missing data
+        // this allows any part of the component to say
+        // "okay I found/calculated that data that another function(s) depended on"
+        // the alternative to this method is often busywaiting or complex callbacks
+        // 
+        // 
+        // can use:
+        //     [resolvable].promise
+        //     [resolvable].resolve()
+        //     [resolvable].reject()
+        //     [resolvable].done
+        //     [resolvable].check()
+        
+        hasVideo(resolve, reject) {
+            if (get(this, ["$root", "selectedVideo", "$id"], null)) {
+                resolve(this.video)
+            }
+        },
+        async hasVideoPlayer(resolve, reject) {
+            // wait until a video exists
+            await this.hasVideo.promise
+            if (this.player instanceof Object) {
+                resolve(this.player)
+            }
+        },
+        async hasDurationData(resolve, reject) {
+            // wait until a video exists
+            await this.hasVideo.promise
+            // try getting the duration in a few ways
+            const possibleDuration1 = get(this, ["video", "summary", "duration"     ], NaN)-0
+            const possibleDuration2 = get(this, ["player", "playerInfo", "duration" ], NaN)-0
+            if (checkIf({value: possibleDuration1, is: Number })) {
+                console.debug(`possibleDuration1 is:`,possibleDuration1)
+                resolve(possibleDuration1)
+            // if the video player exists
+            } else if (checkIf({value: possibleDuration2, is: Number }) && possibleDuration2 > 0) {
+                console.debug(`possibleDuration2 is:`,possibleDuration2)
+                resolve(possibleDuration2)
+            } else {
+                // start two different requests for the same data
+                // we don't care which finishes first
+                
+                // 1. request the data from the backend
+                endpoints.then(async (realEndpoints)=>{
+                    let video = await this.hasVideo.promise
+                    this.video.duration = await realEndpoints.videos.get({keyList: [ this.video.$id, "duration" ]})
+                    resolve(this.video.duration)
+                })
+                
+                // 2. wait until there is a video player loaded with duration
+                this.hasVideoPlayer.promise.then(()=>{
+                    // this is a form of recursion, but it won't recurse if the data is already resolved
+                    this.hasDurationData.check()
+                })
+            }
+        },
+        async videoHasSegmentData(resolve, reject) {
+            // make sure the video exists
+            await this.hasVideo.promise
+            // check and see if there are segments
+            if (this.video.keySegments instanceof Array) {
+                resolve(this.video.keySegments)
+            // if the segments don't exist, try getting them from the backend
+            } else {
+                // wait for duration data to exist
+                let duration = await this.hasDurationData.promise
+                // then get the segments from backend
+                let realEndpoints = await endpoints
+                let keySegments = await realEndpoints.raw.all({
+                    from: 'moments',
+                    where: [
+                        // FIXME: also add the fixedSegments (the computer generated ones)
+                        { valueOf: ['type']     , is: "keySegment" },
+                        { valueOf: [ 'videoId' ], is: this.video.$id },
+                    ]
+                })
+                // process the segments
+                this.video.keySegments = this.processNewSegments({ duration, keySegments })
+                resolve(this.video.keySegments)
+            }
+        }
     },
     mounted() {
         // add some default suggestions
@@ -154,48 +230,32 @@ export default {
     },
     rootHooks: {
         watch: {
+            // when different labels are selected
             labels(newValue) {
-                this.organizeSegments()
+                this.reorganizeSegments()
             },
             // when the selected video changes
-            selectedVideo(newValue) {
-                logBlock({name: "MainContainer watch:selectedVideo"}, ()=>{
-                    // it hasn't been initilized
-                    this.videoPlayerInitilized = false
-                    this.playerPromise = new Promise(async (resolve)=>{
-                        // create a wrapper around the resolve so it can be checked
-                        let resolver
-                        resolver = ()=> {
-                            resolver.resolved = true
-                            return resolve()
-                        }
-                        resolver.resolved = false
-                        this.playerPromiseResolver = resolver
-                        
-                        // start playing the video
-                        this.playVideo()
-                    })
-                    // if video doesn't exist, then stop short
-                    if (!this.doesVideoExist()) {
-                        this.player = null
-                        return
+            selectedVideo(newValue, oldValue) {
+                logBlock({name: "selectedVideo changed [MainContainer:watch]"}, ()=>{
+                    // if we know the video exists, go ahead and mark it as resolved
+                    if (newValue instanceof Object && newValue.$id) {
+                        console.log(`this.hasVideo.resolve() called`)
+                        this.hasVideo.resolve(newValue)
                     }
-                    // if changing videos
-                    // manually wipe the info (otherwise old video info will still be there)
-                    if (this.player) {
-                        this.player.playerInfo.duration = null
-                        console.debug(`this.player.getDuration() is:`,this.player.getDuration())
+                    // resets
+                    this.segment = null // no selected segment
+                    // make sure the duration is reset (otherwise duration of old video will be used)
+                    if (get(this, ["player", "playerInfo", "duration" ], null)) {
+                        set(this, ["player", "playerInfo", "duration" ], null)
                     }
-                    this.ensureVideoHasSegments()
-                    // the duration changed so the segments need to be recalculated
-                    this.organizeSegments()
-                    // load / init the video
-                    this.seekToSegmentStart()
+                    
+                    // basically look to reorganize them and jump to the begining of the segment
+                    this.attemptToSetupSegments()
                 })
             },
             selectedSegment(newValue) {
                 this.seekToSegmentStart()
-                this.organizeSegments()
+                this.reorganizeSegments()
             },
         }
     },
@@ -238,127 +298,77 @@ export default {
         video:    { get() { return this.$root.selectedVideo             }, set(newValue) { this.$root.selectedVideo             = newValue }, },
     },
     methods: {
-        doesVideoExist() {
-            return this.video instanceof Object && checkIf({ value: this.video.$id, is: String })
+        async attemptToSetupSegments() {
+            // confirm or wait on a video to exist
+            await this.hasVideo.promise
+            // ensure that all the video segments are here
+            await this.videoHasSegmentData.promise
+            // then get the segments that are going to be displayed
+            this.reorganizeSegments()
+            // load / init the first segment
+            this.seekToSegmentStart()
+            
         },
-        async ensureVideoHasSegments() {
-            if (this.doesVideoExist()) {
-                // if they already exist do nothing
-                if (this.segments instanceof Array) {
-                    return true
-                // retrive them from the backend
-                } else {
-                    let realEndpoints = await endpoints
-                    let keySegments = await realEndpoints.raw.all({
-                        from: 'moments',
-                        where: [
-                            // FIXME: also add the fixedSegments (the computer generated ones)
-                            { keyList: ['type']     , is: "keySegment" },
-                            { keyList: [ 'videoId' ], is: this.video.$id },
-                        ]
-                    })
-                    if (!this.video.duration) {
-                        this.video.duration = await realEndpoints.videos.get({keyList: [ this.video.$id, "duration" ]})
-                    }
-                    let minWidth = duration / 50
-                    this.video.keySegments = keySegments.map(eachSegment=>{
-                        // 
-                        // create the .$data on each segment
-                        // 
-                        let combinedData = {}
-                        // basically ignore who said what and just grab the data
-                        // TODO: this should be changed because it ignores who said what and doesn't do any conflict resolution
-                        for (const [eachUsername, eachObservation] of Object.entries(eachSegment.observations)) {
-                            combinedData = { ...combinedData, ...eachObservation }
-                        }
-                        eachSegment.$data = combinedData
-                        
-                        // 
-                        // add render info
-                        // 
-                        // create the display info for each segment
-                        let effectiveStart  = eachSegment.start
-                        let effectiveEnd    = eachSegment.end
-                        let segmentDuration = eachSegment.end - eachSegment.start
-                        // if segment is too small artificially make it bigger
-                        if (segmentDuration < minWidth) {
-                            let additionalAmount = (minWidth - segmentDuration)/2
-                            // sometimes this will result in a negative amount, but thats okay
-                            // the UI can handle it, the user just needs to be able to see it
-                            effectiveStart -= additionalAmount
-                            effectiveEnd += additionalAmount
-                        }
-                        eachSegment[renderData] = {
-                            effectiveEnd,
-                            effectiveStart,
-                            // how wide the element should be
-                            widthPercent: `${(effectiveEnd - effectiveStart)*100/duration}%`,
-                            // how close to the left the element should be
-                            leftPercent: `${(effectiveStart/duration)*100}%`,
-                        }
-                        return eachSegment
-                    })
-                    
-                    return false
+        processNewSegments({duration, keySegments}) {
+            let minWidth = duration / 50
+            keySegments = keySegments.map(eachSegment=>{
+                // 
+                // create the .$data on each segment
+                // 
+                let combinedData = {}
+                // basically ignore who said what and just grab the data
+                // TODO: this should be changed because it ignores who said what and doesn't do any conflict resolution
+                for (const [eachUsername, eachObservation] of Object.entries(eachSegment.observations)) {
+                    combinedData = { ...combinedData, ...eachObservation }
                 }
-            }
-        },
-        videoSelect() {
-            this.$root.selectedVideo = this.$root.getCachedVideoObject(this.searchTerm.trim())
-        },
-        segmentsToDisplay() {
-            let namesOfSelectedLabels = this.getNamesOfSelectedLabels()
-            // only return segments that match the selected labels
-            return this.segments.filter(eachSegment=>namesOfSelectedLabels.includes(eachSegment.$data.label))
-        },
-        async organizeSegments() {
-            logBlock({name: "organizeSegments"}, async ()=>{
-                // wait until player is initilized
-                if (!this.videoPlayerInitilized) {
-                    if (this.$root.selectedVideo) {
-                        // wait one sec before retrying
-                        return setTimeout(() => this.organizeSegments(), 1000)
-                    } else {
-                        return
-                    }
+                eachSegment.$data = combinedData
+                // convert from miliseconds to seconds
+                eachSegment.start = eachSegment.start / 1000
+                eachSegment.end = eachSegment.end / 1000
+                
+                // 
+                // add render info
+                // 
+                // create the display info for each segment
+                let effectiveStart  = eachSegment.start
+                let effectiveEnd    = eachSegment.end
+                let segmentDuration = eachSegment.end - eachSegment.start
+                // if segment is too small artificially make it bigger
+                if (segmentDuration < minWidth) {
+                    let additionalAmount = (minWidth - segmentDuration)/2
+                    // sometimes this will result in a negative amount, but thats okay
+                    // the UI can handle it, the user just needs to be able to see it
+                    effectiveStart -= additionalAmount
+                    effectiveEnd += additionalAmount
                 }
-                await this.ensureVideoHasSegments()
-                // let segmentsToDisplay = this.segmentsToDisplay()
-                // for (let each of segmentsToDisplay) {
-                    
-                // }
-                let videoSegments = []
+                eachSegment[renderData] = {
+                    effectiveEnd,
+                    effectiveStart,
+                    // how wide the element should be
+                    widthPercent: `${(effectiveEnd - effectiveStart)*100/duration}%`,
+                    // how close to the left the element should be
+                    leftPercent: `${(effectiveStart/duration)*100}%`,
+                }
+                return eachSegment
+            })
+            
+            return keySegments
+        },
+        async reorganizeSegments() {
+            logBlock({name: "reorganizeSegments"}, async ()=>{
+                // confirm or wait on a video to exist
+                await this.hasVideo.promise
+                // ensure that all the video segments are here
+                await this.videoHasSegmentData.promise
+                
+                // only return segments that match the selected labels
+                let namesOfSelectedLabels = this.$root.getNamesOfSelectedLabels()
+                return this.segments.filter(eachSegment=>namesOfSelectedLabels.includes(eachSegment.$data.label))
+                let displaySegments = this.segmentsToDisplay().sort(dynamicSort("effectiveStart"))
+            
                 // 2 percent of the width of the video
-                if (this.$root.selectedVideo.$id) {
-                    let duration = this.player.getDuration()
-                    console.debug(`duration is:`,duration)
-                    let minWidth = duration / 50
-                    videoSegments = segments.map((each, index)=>{
-                        let effectiveStart  = each.start
-                        let effectiveEnd    = each.end
-                        let segmentDuration = each.end - each.start
-                        // if segment is too small artificially make it bigger
-                        if (segmentDuration < minWidth) {
-                            let additionalAmount = (minWidth - segmentDuration)/2
-                            // sometimes this will result in a negative amount, but thats okay
-                            // the UI can handle it, the user just needs to be able to see it
-                            effectiveStart -= additionalAmount
-                            effectiveEnd += additionalAmount
-                        }
-                        return {
-                            ...each,
-                            index,
-                            effectiveEnd,
-                            effectiveStart,
-                            // how wide the element should be
-                            widthPercent: `${(effectiveEnd - effectiveStart)*100/duration}%`,
-                            // how close to the left the element should be
-                            leftPercent: `${(effectiveStart/duration)*100}%`,
-                        }
-                    }).filter(each=>each.videoId == this.$root.selectedVideo.$id)
-                }
                 let levels = []
-                for (let eachSegment of videoSegments.sort(dynamicSort("effectiveStart"))) {
+                for (let eachSegment of displaySegments) {
                     // find the smallest viable level
                     let level = 0
                     while (levels[level] != undefined && eachSegment.effectiveStart <= levels[level][ levels[level].length-1 ].effectiveEnd) {
@@ -375,12 +385,34 @@ export default {
                 this.organizedSegments = levels
             })
         },
+        async seekToSegmentStart() {
+            // wait for the player to exist
+            let player = await this.hasVideoPlayer.promise
+            console.debug(`player is:`,player)
+            // make sure there is segment data 
+            await this.videoHasSegmentData.promise
+            // if there's at least one segment
+            if (this.segments.length > 0) {
+                // if no segment is selected then select the first one
+                if (!this.segment) {
+                    this.segment = this.segments[0]
+                }
+            }
+            if (this.segment instanceof Object && this.segment.start) {
+                console.debug(`this.segment is:`,this.segment)
+                console.debug(`seeking to:`,this.segment.start)
+                player.seekTo(this.segment.start)
+            }
+        },
         ready(event) {
             console.log(`video is ready`)
             this.player = event.target
+            this.hasVideoPlayer.resolve(this.player)
             this.player.setVolume(0)
             window.player = this.player // for debugging
-            this.organizeSegments()
+        },
+        videoSelect() {
+            this.$root.selectedVideo = this.$root.getCachedVideoObject(this.searchTerm.trim())
         },
         playing() {
             console.log(`video is playing`)
@@ -412,33 +444,14 @@ export default {
             return this.player.getPlayerState() == 1
         },
         incrementIndex() {
-            this.$root.selectedSegment = wrapIndex(++this.$root.selectedSegment, this.segments)
+            this.jumpSegment(this.$root.selectedSegment.listIndex+1)
         },
         decrementIndex() {
-            this.$root.selectedSegment = wrapIndex(--this.$root.selectedSegment, this.segments)
+            this.jumpSegment(this.$root.selectedSegment.listIndex-1)
         },
         jumpSegment(index) {
-            this.$root.selectedSegment = wrapIndex(index, this.segments)
-        },
-        notYetImplemented() {
-            this.$toasted.show(`Sadly this doesn't do anything yet`).goAway(2500)
-        },
-        seekToSegmentStart() {
-            // if the player doesn't exist, reschedule the seek action
-            if (!this.player) {
-                return setTimeout(()=>this.seekToSegmentStart(), 0)
-            }
-            this.player.seekTo(this.segment.start)
-            
-            // in this state the player (after seeking) will start playing
-            // which isn't the best UX, so pause it immediately
-            let state = this.player.playerInfo.playerState
-            if (state == video.HASNT_STARTED_STATE || (state == video.IS_PAUSED && !this.videoPlayerInitilized)) {
-                let seekBackToStart = true
-                // give it enough time to load the frame (otherwise it loads infinitely)
-                this.player.playVideo()
-                // tell the pause exactly where to jump back to after pausing
-                this.waitThenPause(seekBackToStart)
+            if (this.segment) {
+                this.segment = this.segments[ wrapIndex(index, this.segments) ]
             }
         },
         pauseVideo() {
@@ -464,29 +477,27 @@ export default {
             }
         },
         async playVideo() {
-            return new Promise((resolve, reject)=>{
-                // TODO: check me
-                
-                // cancel scheduled pause
-                if (this.scheduledToggle.type == "pause") {
-                    clearTimeout(this.scheduledToggle.id)
-                }
-                // reset the schedule
-                this.scheduledToggle = {}
-                
-                if (!this.player) {
-                    reject("failed to play because player doesn't exist")
-                }
-                // try to play
-                this.player.playVideo()
-                
-                // if video isn't playing
-                if (this.player.playerInfo.playerState != video.IS_PLAYING) {
-                    // schedule another play for good measure
-                    this.scheduledToggle.type = "play"
-                    this.scheduledToggle.id = setTimeout(()=>this.playVideo(), 50)
-                }
-            })
+            // TODO: check me
+            
+            // cancel scheduled pause
+            if (this.scheduledToggle.type == "pause") {
+                clearTimeout(this.scheduledToggle.id)
+            }
+            // reset the schedule
+            this.scheduledToggle = {}
+            
+            if (!this.player) {
+                reject("failed to play because player doesn't exist")
+            }
+            // try to play
+            this.player.playVideo()
+            
+            // if video isn't playing
+            if (this.player.playerInfo.playerState != video.IS_PLAYING) {
+                // schedule another play for good measure
+                this.scheduledToggle.type = "play"
+                this.scheduledToggle.id = setTimeout(()=>this.playVideo(), 50)
+            }
         },
         videoIsPaused() {
             // TODO: check me

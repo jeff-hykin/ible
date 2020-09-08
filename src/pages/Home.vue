@@ -59,9 +59,9 @@ let Fuse = require("fuse.js").default
 // summary
 //
     // set:
+    //     this.$root.selectedVideo
     //     this.$root.selectedLabel
     //     this.$root.videos
-    //     this.$root.selectedVideo
     // 
     // get:
     //     this.$root.labels
@@ -100,7 +100,7 @@ export default {
     },
     rootHooks: {
         watch: {
-            // as soon as there are labels
+            // generate UI whenever labels changes (not often)
             labels(newValue) {
                 if (this.$root.labels instanceof Object) {
                     // put them on the UI

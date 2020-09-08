@@ -1,6 +1,11 @@
 // api
-//     resolvables:{}
+//     [resolvable].promise
+//     [resolvable].resolve()
+//     [resolvable].reject()
+//     [resolvable].done
 let Vue = require("vue").default
+
+let {logBlock } = require("good-js")
 
 Vue.prototype.$resolvables = {}
 const resolvablesSymbol = Symbol("resolvables")
@@ -22,6 +27,8 @@ Vue.mixin(module.exports = {
         this[resolvablesSymbol] = {}
         if (this.$resolvables instanceof Object) {
             for (let [eachKey, eachValue] of Object.entries(this.$resolvables)) {
+                    
+                this[resolvablesSymbol][eachKey] = []
                 let checkerFunction = eachValue
                 if (checkerFunction.bind instanceof Function) {
                     checkerFunction = checkerFunction.bind(this)
@@ -40,15 +47,16 @@ Vue.mixin(module.exports = {
                 const beforeInitActionArg = Symbol()
                 const beforeInitResolveCalled = Symbol()
                 const beforeInitRejectCalled = Symbol()
+                const promiseKey = Symbol("promiseKey")
                 const resolveKey = Symbol("resolveKey")
                 const rejectKey = Symbol("rejectKey")
                 const checkerRunningKey = Symbol("checkerRunningKey")
                 let resetSyncCallbackData = ()=> {
                     checkerFunction.done = false
-                    this[beforeInitActionArg] = undefined
-                    this[beforeInitResolveCalled] = false
-                    this[beforeInitRejectCalled] = false
-                    this[checkerRunningKey] = false
+                    this[resolvablesSymbol][eachKey][beforeInitActionArg] = undefined
+                    this[resolvablesSymbol][eachKey][beforeInitResolveCalled] = false
+                    this[resolvablesSymbol][eachKey][beforeInitRejectCalled] = false
+                    this[resolvablesSymbol][eachKey][checkerRunningKey] = false
                 }
                 // 
                 // init the check
@@ -56,63 +64,66 @@ Vue.mixin(module.exports = {
                 resetSyncCallbackData()
                 checkerFunction.resolve = (arg)=>{
                     // find and use the latest resolver if it exists
-                    if (checkerFunction.promise[resolveKey]) {
-                        checkerFunction.promise[resolveKey](arg)
+                    if (checkerFunction[promiseKey][resolveKey]) {
+                        // call the low level resolver
+                        checkerFunction[promiseKey][resolveKey](arg)
                     // otherwise this function was called before any resolver was setup
                     // and it needs to fallback on the sync method
                     // the promise setup will look for (and cleanup) these values
                     } else {
-                        this[beforeInitResolveCalled] = true
-                        this[beforeInitActionArg] = arg
+                        this[resolvablesSymbol][eachKey][beforeInitResolveCalled] = true
+                        this[resolvablesSymbol][eachKey][beforeInitActionArg] = arg
                     }
                 }
                 checkerFunction.reject = (arg)=>{
                     // find and use the latest rejector if it exists
-                    if (checkerFunction.promise[rejectKey]) {
-                        checkerFunction.promise[rejectKey](arg)
+                    if (checkerFunction[promiseKey][rejectKey]) {
+                        checkerFunction[promiseKey][rejectKey](arg)
                     // otherwise this function was called before any resolver was setup
                     // and it needs to fallback on the sync method
                     // the promise setup will look for (and cleanup) these values
                     } else {
-                        this[beforeInitRejectCalled] = true
-                        this[beforeInitActionArg] = arg
+                        this[resolvablesSymbol][eachKey][beforeInitRejectCalled] = true
+                        this[resolvablesSymbol][eachKey][beforeInitActionArg] = arg
                     }
                 }
                 checkerFunction.check = async ()=>{
                     // basically don't schedule a bunch of checks if the first one never finished
-                    if (!this[checkerRunningKey] && !checkerFunction.done) {
-                        this[checkerRunningKey] = true
+                    if (!this[resolvablesSymbol][eachKey][checkerRunningKey] && !checkerFunction.done) {
+                        this[resolvablesSymbol][eachKey][checkerRunningKey] = true
                         // not sure if func will be async or not so wrap it inside async
                         let result = await (async ()=>checkerFunction(checkerFunction.resolve, checkerFunction.reject))()
-                        this[checkerRunningKey] = false
+                        this[resolvablesSymbol][eachKey][checkerRunningKey] = false
                     }
                 }
                 
                 // calling this mutliple times would
                 let synclyRefreshCheckerFunctionPromise = ()=>{
                     // create a new checking promise
-                    const aPromise = new Promise((resolve, reject)=>{
+                    let promiseData = {}
+                    promiseData.id = Math.random()
+                    const aPromise = new Promise((resolve, reject)=> setTimeout(() => {
                         // check if it was synchronously resolved first
-                        if (this[beforeInitResolveCalled]) {
+                        if (this[resolvablesSymbol][eachKey][beforeInitResolveCalled]) {
                             // resolve the promise
-                            resolve(this[beforeInitActionArg])
+                            resolve(this[resolvablesSymbol][eachKey][beforeInitActionArg])
                             resetSyncCallbackData()
                             return
-                        } else if (this[beforeInitRejectCalled]) {
-                            reject(this[beforeInitActionArg])
+                        } else if (this[resolvablesSymbol][eachKey][beforeInitRejectCalled]) {
+                            reject(this[resolvablesSymbol][eachKey][beforeInitActionArg])
                             resetSyncCallbackData()
                             return
                         }
                         // then do the normal checking
-                        aPromise.done = false
-                        aPromise[rejectKey] = (...args)=>{
-                            (!aPromise.done) && reject(...args)
+                        promiseData[rejectKey] = (...args)=>{
+                            (!checkerFunction.done) && reject(...args)
                             resetSyncCallbackData()
                         }
-                        aPromise[resolveKey] = (...args)=>{
-                            (!aPromise.done) && resolve(...args)
+                        promiseData[resolveKey] = (...args)=>{
+                            (!checkerFunction.done) && resolve(...args)
                             resetSyncCallbackData()
                         }
+                        Object.assign(aPromise, promiseData)
                         
                         // immediately run the check
                         checkerFunction.check()
@@ -125,31 +136,38 @@ Vue.mixin(module.exports = {
 
                         // if the promise isn't resolved after those checks
                         // then something else from somewhere else needs to call the resolve
-                    })
+                    }, 0))
                     // attach the new promise
-                    checkerFunction.promise = aPromise
+                    checkerFunction[promiseKey] = Object.assign(aPromise, promiseData)
                     // synchronously reset the resolved status
                     checkerFunction.done = false
                 }
+                // init the first promise
+                synclyRefreshCheckerFunctionPromise()
                 
-                // create
-                Object.defineProperty(this, eachKey, {
-                    async get() {
-                        return ()=>{
-                            // if not yet resolved, check it, then return the existing promise
-                            if (!checkerFunction.done) {
-                                // run the check again, if the other checks are complete
-                                checkerFunction.check()
-                                // return the promise
-                                return checkerFunction.promise
-                            // if already resolved, then create a new promise
-                            // so that the re-check can run
-                            } else {
-                                // this will call the check function as soon as the promise loads
-                                synclyRefreshCheckerFunctionPromise()
-                                return checkerFunction.promise
-                            }
+                // add promise getter 
+                Object.defineProperty(checkerFunction, "promise", {
+                    get() {
+                        // if not yet resolved, check it, then return the existing promise
+                        if (!checkerFunction.done) {
+                            // run the check again, if the other checks are complete
+                            checkerFunction.check()
+                            // return the promise
+                            return checkerFunction[promiseKey]
+                        // if already resolved, then create a new promise
+                        // so that the re-check can run
+                        } else {
+                            // this will call the check function as soon as the promise loads
+                            synclyRefreshCheckerFunctionPromise()
+                            return checkerFunction[promiseKey]
                         }
+                    }
+                })
+                
+                // create the property on the component
+                Object.defineProperty(this, eachKey, {
+                    get() {
+                        return checkerFunction
                     }
                 })
             }
