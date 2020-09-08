@@ -52,7 +52,6 @@ Vue.mixin(module.exports = {
                 const rejectKey = Symbol("rejectKey")
                 const checkerRunningKey = Symbol("checkerRunningKey")
                 let resetSyncCallbackData = ()=> {
-                    checkerFunction.done = false
                     this[resolvablesSymbol][eachKey][beforeInitActionArg] = undefined
                     this[resolvablesSymbol][eachKey][beforeInitResolveCalled] = false
                     this[resolvablesSymbol][eachKey][beforeInitRejectCalled] = false
@@ -67,6 +66,8 @@ Vue.mixin(module.exports = {
                     if (checkerFunction[promiseKey][resolveKey]) {
                         // call the low level resolver
                         checkerFunction[promiseKey][resolveKey](arg)
+                        if (arg instanceof Array && arg.length == 12) {
+                        }
                     // otherwise this function was called before any resolver was setup
                     // and it needs to fallback on the sync method
                     // the promise setup will look for (and cleanup) these values
@@ -107,21 +108,29 @@ Vue.mixin(module.exports = {
                         if (this[resolvablesSymbol][eachKey][beforeInitResolveCalled]) {
                             // resolve the promise
                             resolve(this[resolvablesSymbol][eachKey][beforeInitActionArg])
+                            checkerFunction.done = true
                             resetSyncCallbackData()
                             return
                         } else if (this[resolvablesSymbol][eachKey][beforeInitRejectCalled]) {
                             reject(this[resolvablesSymbol][eachKey][beforeInitActionArg])
+                            checkerFunction.done = true
                             resetSyncCallbackData()
                             return
                         }
                         // then do the normal checking
                         promiseData[rejectKey] = (...args)=>{
-                            (!checkerFunction.done) && reject(...args)
-                            resetSyncCallbackData()
+                            if (!checkerFunction.done) {
+                                checkerFunction.done = true
+                                reject(...args)
+                                resetSyncCallbackData()
+                            }
                         }
                         promiseData[resolveKey] = (...args)=>{
-                            (!checkerFunction.done) && resolve(...args)
-                            resetSyncCallbackData()
+                            if (!checkerFunction.done) {
+                                checkerFunction.done = true
+                                resolve(...args)
+                                resetSyncCallbackData()
+                            }
                         }
                         Object.assign(aPromise, promiseData)
                         
@@ -141,6 +150,7 @@ Vue.mixin(module.exports = {
                     checkerFunction[promiseKey] = Object.assign(aPromise, promiseData)
                     // synchronously reset the resolved status
                     checkerFunction.done = false
+                    checkerFunction.id = promiseData.id
                 }
                 // init the first promise
                 synclyRefreshCheckerFunctionPromise()

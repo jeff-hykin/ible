@@ -36,7 +36,7 @@
                 //- Segments
                 column.segments(align-h="left")
                     h5
-                        | Labels
+                        | Labels ({{video.duration}})
                     row.labels
                         container(v-for="(eachLevel, eachLabelName) in $root.labels" :background-color="$root.labels[eachLabelName].color")
                             ui-checkbox(v-model="$root.labels[eachLabelName].selected" @change="toggleLabel(eachLabelName)")
@@ -51,7 +51,7 @@
                             :top="eachSegment.$renderData.topAmount"
                             :background-color="$root.labels[eachSegment.$data.label].color"
                             :key="eachSegment.listIndex"
-                            @click="jumpSegment(eachSegment.listIndex)"
+                            @click="jumpSegment(eachSegment.$displayIndex)"
                         )
                             ui-tooltip(position="left" animation="fade")
                                 | label: {{ eachSegment.$data.label }}
@@ -135,7 +135,7 @@ export default {
         
         hasVideo(resolve, reject) {
             if (get(this, ["$root", "selectedVideo", "$id"], null)) {
-                resolve(this.video)
+                resolve(this.$root.selectedVideo)
             }
         },
         async hasVideoPlayer(resolve, reject) {
@@ -155,6 +155,7 @@ export default {
                 resolve(possibleDuration1)
             // if the video player exists
             } else if (checkIf({value: possibleDuration2, is: Number }) && possibleDuration2 > 0) {
+                this.$root.selectedVideo.duration = possibleDuration2
                 resolve(possibleDuration2)
             } else {
                 // start two different requests for the same data
@@ -163,10 +164,11 @@ export default {
                 // 1. request the data from the backend
                 endpoints.then(async (realEndpoints)=>{
                     let video = await this.hasVideo.promise
-                    let result = await realEndpoints.videos.get({keyList: [ this.video.$id, "summary",  "duration" ]})
+                    let result = await realEndpoints.videos.get({keyList: [ this.$root.selectedVideo.$id, "summary",  "duration" ]})
                     if (checkIf({value: result, is: Number}) && result > 0) {
-                        this.video.duration = result
-                        resolve(this.video.duration)
+                        this.$root.selectedVideo.duration = result
+                        this.$forceUpdate() // for some reason vue doens't dectect the change in duration
+                        resolve(this.$root.selectedVideo.duration)
                     }
                 })
                 
@@ -178,29 +180,35 @@ export default {
             }
         },
         async videoHasSegmentData(resolve, reject) {
-            // make sure the video exists
-            await this.hasVideo.promise
-            // check and see if there are segments
-            if (this.video.keySegments instanceof Array) {
-                resolve(this.video.keySegments)
-            // if the segments don't exist, try getting them from the backend
-            } else {
-                // wait for duration data to exist
-                let duration = await this.hasDurationData.promise
-                // then get the segments from backend
-                let realEndpoints = await endpoints
-                let keySegments = await realEndpoints.raw.all({
-                    from: 'moments',
-                    where: [
-                        // FIXME: also add the fixedSegments (the computer generated ones)
-                        { valueOf: ['type']     , is: "keySegment" },
-                        { valueOf: [ 'videoId' ], is: this.video.$id },
-                    ]
-                })
-                // process the segments
-                this.video.keySegments = this.processNewSegments({ duration, keySegments })
-                resolve(this.video.keySegments)
-            }
+            logBlock({name: "videoHasSegmentData"}, async ()=>{
+                // make sure the video exists
+                await this.hasVideo.promise
+                // check and see if there are segments
+                if (this.$root.selectedVideo.keySegments instanceof Array) {
+                    resolve(this.$root.selectedVideo.keySegments)
+                // if the segments don't exist, try getting them from the backend
+                } else {
+                    const videoId = this.$root.selectedVideo.$id
+                    // wait for duration data to exist
+                    let duration = await this.hasDurationData.promise
+                    // then get the segments from backend
+                    let realEndpoints = await endpoints
+                    let keySegments = await realEndpoints.raw.all({
+                        from: 'moments',
+                        where: [
+                            // FIXME: also add the fixedSegments (the computer generated ones)
+                            { valueOf: ['type']     , is: "keySegment" },
+                            { valueOf: [ 'videoId' ], is: this.$root.selectedVideo.$id },
+                        ]
+                    })
+                    // process the segments
+                    let segments = this.processNewSegments({ duration, keySegments })
+                    if (videoId == this.$root.selectedVideo.$id) {
+                        this.$root.selectedVideo.keySegments = segments
+                        resolve(this.$root.selectedVideo.keySegments)
+                    }
+                }
+            })
         }
     },
     mounted() {
@@ -235,8 +243,6 @@ export default {
         watch: {
             // when different labels are selected
             labels(newValue, oldValue) {
-                console.debug(`newValue is:`,newValue)
-                console.debug(`oldValue is:`,oldValue)
                 this.reorganizeSegments()
             },
             selectedLabel(newValue) {
@@ -244,6 +250,8 @@ export default {
             },
             // when the selected video changes
             selectedVideo(newValue, oldValue) {
+                // this shouldn't need to be done, but for some reason it doesn't update properly
+                this.$root.selectedVideo = newValue
                 logBlock({name: "selectedVideo changed [MainContainer:watch]"}, ()=>{
                     // if we know the video exists, go ahead and mark it as resolved
                     if (newValue instanceof Object && newValue.$id) {
@@ -305,7 +313,8 @@ export default {
             // confirm or wait on a video to exist
             await this.hasVideo.promise
             // ensure that all the video segments are here
-            await this.videoHasSegmentData.promise
+            let segments = await this.videoHasSegmentData.promise
+            
             // then get the segments that are going to be displayed
             this.reorganizeSegments()
             // load / init the first segment
@@ -366,7 +375,6 @@ export default {
                 
                 // only return segments that match the selected labels
                 let namesOfSelectedLabels = this.$root.getNamesOfSelectedLabels()
-                console.debug(`this.segments is:`,this.segments)
                 let displaySegments = this.segments.filter(eachSegment=>(eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.$data.label)))
             
                 // 2 percent of the width of the video
@@ -453,50 +461,54 @@ export default {
             this.jumpSegment(this.segment.$displayIndex-1)
         },
         jumpSegment(newIndex) {
-            // basic saftey check
-            if (!(this.segments instanceof Array) || this.segments.length == 0) {
-                return 
-            }
-            const startingPoint = newIndex
-            let start = 0
-            if (this.segment) {
-                start = this.segment.$displayIndex
-            }
-            if (newIndex == start) {
-                this.segment = this.segments[newIndex]
-                return
-            }
-            // if going in the relatively negative direction
-            if (start > newIndex) {
-                while (1) {
-                    let newSegment = this.segments[ wrapIndex(newIndex, this.segments) ]
-                    // if its a displayable segment then good, were done
-                    if (newSegment.$shouldDisplay) {
-                        this.segment = newSegment
-                        return
+            // TODO: this is messy, clean it up
+            (()=>{
+                // basic saftey check
+                if (!(this.segments instanceof Array) || this.segments.length == 0) {
+                    return 
+                }
+                const startingPoint = newIndex
+                let start = 0
+                if (this.segment) {
+                    start = this.segment.$displayIndex
+                }
+                if (newIndex == start) {
+                    this.segment = this.segments[newIndex]
+                    return
+                }
+                // if going in the relatively negative direction
+                if (start > newIndex) {
+                    while (1) {
+                        let newSegment = this.segments[ wrapIndex(newIndex, this.segments) ]
+                        // if its a displayable segment then good, were done
+                        if (newSegment.$shouldDisplay) {
+                            this.segment = newSegment
+                            return
+                        }
+                        --newIndex // because this was a jump in the negative direction
+                                    // relative to where the old segement was
+                        if (wrapIndex(newIndex, this.segments) == wrapIndex(startingPoint, this.segments)) {
+                            return
+                        }
                     }
-                    --newIndex // because this was a jump in the negative direction
+                // if going in the positive direction
+                } else {
+                    while (1) {
+                        let newSegment = this.segments[ wrapIndex(newIndex, this.segments) ]
+                        // if its a displayable segment then good, were done
+                        if (newSegment.$shouldDisplay) {
+                            this.segment = newSegment
+                            return
+                        }
+                        ++newIndex // because this was a jump in the not-negative direction
                                 // relative to where the old segement was
-                    if (wrapIndex(newIndex, this.segments) == wrapIndex(startingPoint, this.segments)) {
-                        return
+                        if (wrapIndex(newIndex, this.segments) == wrapIndex(startingPoint, this.segments)) {
+                            return
+                        }
                     }
                 }
-            // if going in the positive direction
-            } else {
-                while (1) {
-                    let newSegment = this.segments[ wrapIndex(newIndex, this.segments) ]
-                    // if its a displayable segment then good, were done
-                    if (newSegment.$shouldDisplay) {
-                        this.segment = newSegment
-                        return
-                    }
-                    ++newIndex // because this was a jump in the not-negative direction
-                               // relative to where the old segement was
-                    if (wrapIndex(newIndex, this.segments) == wrapIndex(startingPoint, this.segments)) {
-                        return
-                    }
-                }
-            }
+            })()
+            this.seekToSegmentStart()
         },
         pauseVideo() {
             // TODO: check me

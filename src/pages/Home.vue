@@ -146,8 +146,10 @@ export default {
             this.$root.selectedLabel.name = labelName
             // (there must be at least one video with the label, unless the database is corrupt)
             let selectedVideoId = Object.keys(this.$root.selectedLabel.videos)[0]
+            console.debug(`selectedVideoId is:`,selectedVideoId)
             // get it from the cache (auto-adds to cache if needed)
             this.$root.selectedVideo = this.$root.getCachedVideoObject(selectedVideoId)
+            console.debug(`this.$root.selectedVideo is:`,JSON.stringify(this.$root.selectedVideo))
             
             this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500)
         }

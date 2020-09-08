@@ -1,13 +1,11 @@
 todo:
-    - fix incrementing and decrementing to only work on the visible segments
+    - fix the duration not updating issue
     - fix the auto video playing
-    - "fix the moments section":
-        - Create a segments on $root
     - highlight the selected moment
     - "[DONE] display the selected label"
     - "[DONE] add a video search feature"
     - change the segments tab to show videos instead of segments
-        - sort videos by number of segments
+        - "[DONE] sort videos by number of segments"
     - "[DONE] add a legend with toggles for showing segments for the video":
         - fix the colors to specific labels
     - show JSON data of selected moment

@@ -97,8 +97,10 @@ export default App = {
                 // then cache it
                 this.$root.videos[id] = {}
             }
+            console.debug(`this.$root.videos[id] is:`,JSON.stringify(this.$root.videos[id],0,4))
             // ensure the id didn't get messed up
             this.$root.videos[id].$id = id
+            console.debug(`this.$root.videos[id] is:`,JSON.stringify(this.$root.videos[id]))
             // return the cached video
             return this.$root.videos[id]
         },
