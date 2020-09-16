@@ -24,6 +24,7 @@
                         host="https://www.youtube-nocookie.com"
                         @ready="ready"
                         @playing="playing"
+                        playerVars="{ autoplay: false }"
                         player-width="100%"
                         player-height="100%"
                         style="height: 100%;width: 100%;"
@@ -221,11 +222,11 @@ export default {
             // key controls
             // 
             switch (eventObj.key) {
-                case "ArrowRight":
+                case "ArrowUp":
                     eventObj.preventDefault()
                     this.incrementIndex()
                     break
-                case "ArrowLeft":
+                case "ArrowDown":
                     eventObj.preventDefault()
                     this.decrementIndex()
                     break
@@ -252,7 +253,7 @@ export default {
             selectedVideo(newValue, oldValue) {
                 // this shouldn't need to be done, but for some reason it doesn't update properly
                 this.$root.selectedVideo = newValue
-                logBlock({name: "selectedVideo changed [MainContainer:watch]"}, ()=>{
+                logBlock({name: "selectedVideo changed [CenterStage:watch]"}, ()=>{
                     // if we know the video exists, go ahead and mark it as resolved
                     if (newValue instanceof Object && newValue.$id) {
                         this.hasVideo.resolve(newValue)

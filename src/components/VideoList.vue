@@ -1,14 +1,14 @@
 <template lang="pug">
-    column
-        row.segment(
-            align-h="left"
-            v-for="(each, index) in segments"
-            :class="{selected:(index==$root.selectedSegment)}"
-            @click="jumpSegment(index)"
-            :wrap="true"
-        )
-            h5 Moment
-            JsonTree.json-tree-root(:data='each')
+    column.video-list-container(width="100%" padding="1rem")
+        column.video-list-element(v-for="each in $root.relatedVideos()")
+            div.overlay(@click="selectVideo($event, each)")
+            youtube(
+                :video-id="each"
+                host="https://www.youtube-nocookie.com"
+                player-width="100%"
+                player-height="100%"
+                style="height: 100%;width: 100%;"
+            )
 </template>
 
 <script>
@@ -16,18 +16,23 @@ const { wrapIndex } = require('../utils')
 const { dynamicSort, logBlock } = require("good-js")
 
 export default {
-    props: [ 'segments' ],
+    props: [],
     components: { 
         JsonTree: require('vue-json-tree').default,
     },
     data: ()=>({
     }),
     watch: {
-        // FIXME: change whenever the selected label changes
     },
     mounted() {
     },
     methods: {
+        selectVideo(eventObj, videoId) {
+            console.debug(`eventObj is:`,eventObj)
+            // get it from the cache (auto-adds to cache if needed)
+            this.$root.selectedVideo = this.$root.getCachedVideoObject(videoId)
+            console.debug(`this.$root.selectedVideo is:`,JSON.stringify(this.$root.selectedVideo))
+        },
         jumpSegment(index) {
             this.$root.selectedSegment = wrapIndex(index, this.segments)
         },
@@ -37,7 +42,17 @@ export default {
 
 <style lang='sass' scoped>
 
-
+    
+.video-list-element
+    height: 18vh 
+    width: 100%  
+    margin-bottom: 1.5rem 
+    position: relative
+    .overlay
+        width: 100%
+        height: 100%
+        position: absolute
+    
 .segment
     border-top: gray solid 2px
     background: #f7f8f9

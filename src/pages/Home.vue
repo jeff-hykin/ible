@@ -37,18 +37,21 @@
         //- Show the video
         //- 
         column.home-container(:visibility="$root.selectedLabel? 'visible' : 'hidden' " align-v="top" flex-grow="1" height="100vh" overflow="auto")
-            MainContainer
+            CenterStage
+        
+        //- TODO: show json data of selected moment, maybe even allow editing
+        //- h5 Moment
+        //-     JsonTree.json-tree-root(:data='each')
         
         //- 
-        //- Show the Videos
+        //- Show the Video Sidebar
         //- 
-            //- SidePanel(rightSide v-if="$root.selectedLabel")
-            //-     template(v-slot:nub-content="")
-            //-         row.side-label
-            //-             | Moments
-            //-     template(v-slot:panel-content="")
-            //-         column(align-v="top" height="100vh" overflow='auto' padding-top="2rem")
-            //-             Segments(:segments='selectedSegments')
+        SidePanel(rightSide v-if="$root.selectedLabel")
+            template(v-slot:nub-content="")
+                row.side-label
+                    | Videos
+            template(v-slot:panel-content="")
+                VideoList
                 
 </template>
 <script>
@@ -78,8 +81,8 @@ let Fuse = require("fuse.js").default
 export default {
     name: "HomePage",
     components: {
-        MainContainer: require("../components/MainContainer").default,
-        Segments: require("../components/Segments").default,
+        CenterStage: require("../components/CenterStage").default,
+        VideoList: require("../components/VideoList").default,
         Loader: require('../components/Loader').default,
         SidePanel: require('../components/SidePanel').default,
     },

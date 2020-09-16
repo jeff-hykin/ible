@@ -95,11 +95,18 @@ export default RootComponent = {
         window.$root = this // for debugging
     },
     methods: {
-        async relatedVideos() {
-            if (selectedLabel) {
-                let realEndpoints = await endpoints
-                realEndpoints.videos
+        relatedVideos() {
+            let output = []
+            if (this.selectedLabel instanceof Object && this.selectedLabel.videos instanceof Object) {
+                output = Object.keys(this.selectedLabel.videos)
             }
+            // don't show the current video in the related videos list
+            if (this.selectedVideo instanceof Object) {
+                if (this.selectedVideo.$id) {
+                    output = output.filter(each=>each != this.selectedVideo.$id)
+                }
+            }
+            return output
         },
         getCachedVideoObject(id) {
             // if video isn't cached
