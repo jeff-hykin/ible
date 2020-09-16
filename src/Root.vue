@@ -1,5 +1,5 @@
 <template lang="pug">
-    #app
+    #vue-root
         //- [ Put stuff you always want to exist here (like a nav bar) ]
         //- This (below) will load to the Home page by default 
         router-view
@@ -47,12 +47,12 @@ let colorCopy = [...colors]
     //     
 
 
-let App
-// create App instance and attach it (executed after this file)
-setTimeout(()=>(new (Vue.extend(App))).$mount('#app'),0)
+let RootComponent
+// create Root instance and attach it (executed after this file loads)
+setTimeout(()=>(new (Vue.extend(RootComponent))).$mount('#vue-root'),0)
 // actually create the App, user router to pick main pages
-export default App = {
-    name: 'App',
+export default RootComponent = {
+    name: 'RootComponent',
     components: {},
     // 
     // routes
@@ -73,6 +73,9 @@ export default App = {
             },
         ]
     }),
+    // 
+    // global data
+    // 
     data: ()=>({
         selectedVideo: null,
         selectedLabel: null,
@@ -89,8 +92,15 @@ export default App = {
     created() {
         // get the labels ASAP
         this.retrieveLabels()
+        window.$root = this // for debugging
     },
     methods: {
+        async relatedVideos() {
+            if (selectedLabel) {
+                let realEndpoints = await endpoints
+                realEndpoints.videos
+            }
+        },
         getCachedVideoObject(id) {
             // if video isn't cached
             if (!(this.$root.videos[id] instanceof Object)) {
