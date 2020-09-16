@@ -2,7 +2,7 @@
     "name": "iilvd-online",
     "version": "1.0.1",
     "description": "",
-    "main": "src/App.vue",
+    "main": "src/Root.vue",
     "scripts": {
         "start": "npx parcel serve index.html --open --no-source-maps",
         "build": "rm -rf .cache .parcel-cache docs && npx parcel build index.html --out-dir docs --no-source-maps --public-url './'",
