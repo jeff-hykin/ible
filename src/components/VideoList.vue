@@ -44,7 +44,8 @@ export default {
 
     
 .video-list-element
-    height: 18vh 
+    height: 12rem 
+    min-height: 12rem
     width: 100%  
     margin-bottom: 1.5rem 
     position: relative
