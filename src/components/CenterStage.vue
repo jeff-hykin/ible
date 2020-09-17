@@ -18,13 +18,14 @@
                         span
                             | ←
                     youtube(
-                        v-if='$root.selectedVideo'
+                        :key="$root.selectedVideo.$id"
+                        ref="youtube"
+                        v-if='getSegmentStart() != null'
                         :video-id="$root.selectedVideo.$id"
-                        :player-vars='{start: (segment && segment.start) || 0}'
                         host="https://www.youtube-nocookie.com"
                         @ready="ready"
                         @playing="playing"
-                        playerVars="{ autoplay: false }"
+                        :playerVars="{ start: getSegmentStart(), /* disablekb: 1, end: 2 */ }"
                         player-width="100%"
                         player-height="100%"
                         style="height: 100%;width: 100%;"
@@ -70,12 +71,15 @@ const { wrapIndex, storageObject } = require('../utils')
 const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
 const Fuse = require("fuse.js").default
 
+const checkPlayPauseFrequency = 50 // ms 
 const video = {
     IS_LOADING: -1,
+    HAS_ENDED: 0,
     IS_PLAYING: 1,
     IS_PAUSED: 2,
+    BUFFERING: 3,
     HASNT_EVEN_INITILIZED: null,
-    HASNT_STARTED_STATE: 5,
+    IS_CUED: 5,
 }
 // 
 // summary
@@ -108,20 +112,30 @@ export default {
     components: { 
     },
     data: ()=>({
+        shouldInstantStop: false,
+        videoIsReady: false,
+        initCheckAlreadyRunning: false,
+        initVideoCalls: [],
         maxLevel: 1,
         organizedSegments: [],
         
         searchTerm: null,
         suggestions: [],
         
+        nextVideoActionType: null,
+        latestCuedVideoAction: {
+            label: "init",
+            promise: new Promise((resolve)=>resolve()),
+            done: true,
+        },
         player: null,
         videoPlayerInitilized: false,
         scheduledToggle: {},
     }),
     resolvables: {
         // these are used for loading data in a very dynamic way,
-        // such as loading from two seperate sources and allowing for either of them
-        // to complete the request for missing data
+        // such as data that can be loaded from two seperate sources
+        // and allowing for either source (simultaneously) to resolve the data
         // this allows any part of the component to say
         // "okay I found/calculated that data that another function(s) depended on"
         // the alternative to this method is often busywaiting or complex callbacks
@@ -129,10 +143,10 @@ export default {
         // 
         // can use:
         //     [resolvable].promise
-        //     [resolvable].resolve()
+        //     [resolvable].resolve() 
         //     [resolvable].reject()
-        //     [resolvable].done
-        //     [resolvable].check()
+        //     [resolvable].done      // true/false check
+        //     [resolvable].check()   // check/ping the source again for the missing data
         
         hasVideo(resolve, reject) {
             if (get(this, ["$root", "selectedVideo", "$id"], null)) {
@@ -142,8 +156,10 @@ export default {
         async hasVideoPlayer(resolve, reject) {
             // wait until a video exists
             await this.hasVideo.promise
-            if (this.player instanceof Object) {
-                resolve(this.player)
+            if (this.videoIsReady) {
+                if (this.player instanceof Object) {
+                    resolve(this.player)
+                }
             }
         },
         async hasDurationData(resolve, reject) {
@@ -165,10 +181,13 @@ export default {
                 // 1. request the data from the backend
                 endpoints.then(async (realEndpoints)=>{
                     let video = await this.hasVideo.promise
+                    console.log(`getting duration from backend`)
                     let result = await realEndpoints.videos.get({keyList: [ this.$root.selectedVideo.$id, "summary",  "duration" ]})
                     if (checkIf({value: result, is: Number}) && result > 0) {
+                        console.debug(`result is:`,result)
                         this.$root.selectedVideo.duration = result
                         this.$forceUpdate() // for some reason vue doens't dectect the change in duration
+                        console.log(`resolving`)
                         resolve(this.$root.selectedVideo.duration)
                     }
                 })
@@ -192,6 +211,7 @@ export default {
                     const videoId = this.$root.selectedVideo.$id
                     // wait for duration data to exist
                     let duration = await this.hasDurationData.promise
+                    console.debug(`duration is:`,duration)
                     // then get the segments from backend
                     let realEndpoints = await endpoints
                     let keySegments = await realEndpoints.raw.all({
@@ -203,9 +223,11 @@ export default {
                         ]
                     })
                     // process the segments
-                    let segments = this.processNewSegments({ duration, keySegments })
+                    this.segments = this.processNewSegments({ duration, keySegments })
+                    // go to the first segment
+                    this.jumpSegment(0)
                     if (videoId == this.$root.selectedVideo.$id) {
-                        this.$root.selectedVideo.keySegments = segments
+                        this.$root.selectedVideo.keySegments = this.segments
                         resolve(this.$root.selectedVideo.keySegments)
                     }
                 }
@@ -213,6 +235,7 @@ export default {
         }
     },
     mounted() {
+        window.centerStage = this
         // add some default suggestions
         this.suggestions = storageObject.cachedVideoIds
     },
@@ -242,7 +265,7 @@ export default {
     },
     rootHooks: {
         watch: {
-            // when different labels are selected
+            // when different labels are selected (checkboxes)
             labels(newValue, oldValue) {
                 this.reorganizeSegments()
             },
@@ -251,7 +274,7 @@ export default {
             },
             // when the selected video changes
             selectedVideo(newValue, oldValue) {
-                // this shouldn't need to be done, but for some reason it doesn't update properly
+                // this assignment shouldn't need to be done, but for some reason it doesn't update properly
                 this.$root.selectedVideo = newValue
                 logBlock({name: "selectedVideo changed [CenterStage:watch]"}, ()=>{
                     // if we know the video exists, go ahead and mark it as resolved
@@ -260,6 +283,7 @@ export default {
                     }
                     // resets
                     this.segment = null // no selected segment
+                    this.initCheckAlreadyRunning = false
                     // make sure the duration is reset (otherwise duration of old video will be used)
                     if (get(this, ["player", "playerInfo", "duration" ], null)) {
                         set(this, ["player", "playerInfo", "duration" ], null)
@@ -272,6 +296,9 @@ export default {
         }
     },
     watch: {
+        videoActions(newValue) {
+            this.videoActionsChecker()
+        },
         suggestions(newValue) {
             // save video id suggestions to local storage
             storageObject.cachedVideoIds = newValue
@@ -310,12 +337,36 @@ export default {
         video:    { get() { return this.$root.selectedVideo             }, set(newValue) { this.$root.selectedVideo             = newValue }, },
     },
     methods: {
+        getSegmentStart() {
+            let segment = this.$root.selectedSegment
+            console.debug(`segment is:`,segment)
+            if (segment && checkIf({value: segment.start, is: Number })) {
+                this.player || (this.$refs.youtube && (this.player = this.$refs.youtube.player))
+                return segment.start
+            }
+        },
+        toggleLabel(labelName) {
+            // this is a dumb hack that only exists because sometimes the ui-checkbox doens't display the change
+            // even though the change has been made
+            
+            // get the value
+            const actualValue = this.$root.labels[labelName]
+            // change it to nothing
+            this.$root.labels[labelName] = {}
+            // almost immediately change it back to something
+            setTimeout(() => {
+                this.$root.labels[labelName] = actualValue
+            }, 0)
+        },
+        videoSelect() {
+            this.$root.selectedVideo = this.$root.getCachedVideoObject(this.searchTerm.trim())
+            this.videoIsReady = false
+        },
         async attemptToSetupSegments() {
             // confirm or wait on a video to exist
             await this.hasVideo.promise
             // ensure that all the video segments are here
             let segments = await this.videoHasSegmentData.promise
-            
             // then get the segments that are going to be displayed
             this.reorganizeSegments()
             // load / init the first segment
@@ -405,6 +456,7 @@ export default {
             let player = await this.hasVideoPlayer.promise
             // make sure there is segment data 
             await this.videoHasSegmentData.promise
+            
             // if there's at least one segment
             if (this.segments.length > 0) {
                 // if no segment is selected then select the first one
@@ -412,48 +464,85 @@ export default {
                     this.segment = this.segments[0]
                 }
             }
-            if (this.segment instanceof Object && this.segment.start) {
-                player.seekTo(this.segment.start)
+            // make sure the video is initilized before seeking
+            await this.checkInitVideo()
+            try  {
+                let start = this.getSegmentStart()
+                if (start != null) {
+                    // after the video is initilized, go to wherever this was supposed to go
+                    if (this.player.getCurrentTime() != start) {
+                        this.player.seekTo(start)
+                    }
+                }
+            // sometimes the error is caused by 
+            } catch (err) {
+                console.debug(`seeking to segment start (will retry):`,err)
+                return this.seekToSegmentStart()
             }
         },
         ready(event) {
             console.log(`video is ready`)
             this.player = event.target
+            this.videoIsReady = true
             this.hasVideoPlayer.resolve(this.player)
             this.player.setVolume(0)
+            this.seekToSegmentStart()
             window.player = this.player // for debugging
         },
-        videoSelect() {
-            this.$root.selectedVideo = this.$root.getCachedVideoObject(this.searchTerm.trim())
-        },
-        playing() {
-            console.log(`video is playing`)
-            this.player.playerInfo.playerState = video.IS_PLAYING
-        },
-        waitThenPause(seekBackToStart=null) {
-            // if already playing
-            if (this.player && this.player.getPlayerState() == 1) {
-                // then pause
+        async playing() {
+            // this is part of the fix for YouTube's bad API
+            if (this.shouldInstantStop) {
+                // try pausing immediately
                 this.player.pauseVideo()
-                this.videoPlayerInitilized = true
-                // resolve the promise
-                this.playerPromiseResolver(this.player)
-                // if there is a seek back time, go there
-                if (seekBackToStart) {
-                    this.player.seekTo(this.segment.start)
-                }
-            } else {
-                setTimeout(() => {
-                    // init the video by pressing play
-                    if (!this.videoPlayerInitilized) {
-                        this.player.playVideo()
+                let url = this.player.getVideoUrl()
+                // create a busy-wait loop checking for the pause action to have actually been completed
+                while (1) {
+                    // busy wait
+                    await new Promise(r=>setTimeout(r,0))
+                    // make sure the player didn't disconnect, the video hasn't changed, and then check if the video is paused
+                    if (!this.player || url != this.player.getVideoUrl() || this.player.getPlayerState() == video.IS_PAUSED ) {
+                        this.shouldInstantStop = false
+                        break
                     }
-                    this.waitThenPause(seekBackToStart)
-                }, 0)
+                    // if its still not paused, then tell it again that it needs to pause
+                    this.player.pauseVideo()
+                }
             }
         },
-        isPlaying() {
-            return this.player.getPlayerState() == 1
+        // this is to cover a stupid bug in the YouTube API
+        // the bug shows infinite loading until the video has been played for a bit
+        // instantly pausing and playing fixes it in the console, but from a script it optimizes out the
+        // pause-then-play and just stays paused
+        // so this needs to play and then immediately pause if the video hasn't been initilized
+        // but its needs to wait before pausing again
+        async checkInitVideo() {
+            let url = this.player.getVideoUrl()
+            let videoHasntLoaded = ()=>this.player.getPlayerState() == video.IS_LOADING || this.player.getPlayerState() == video.IS_CUED
+            
+            if (!this.initCheckAlreadyRunning) {
+                // make sure two of these don't start running at the same time
+                this.initCheckAlreadyRunning = true
+                
+                // try to play the video if it isn't in a playing state
+                if (videoHasntLoaded()) {
+                    this.shouldInstantStop = true
+                    this.player.playVideo()
+                }
+                
+                // busy wait for the playing state to be resolved
+                while (videoHasntLoaded()) {
+                    // busy wait
+                    await new Promise(r=>setTimeout(r,0))
+                    
+                    // edge case: if still waiting, but the video changed, cancel this one
+                    if (url != this.player.getVideoUrl()) {
+                        break
+                    }
+                }
+                
+                // since this instance is done, this function can be called/run again
+                this.initCheckAlreadyRunning = false
+            }
         },
         incrementIndex() {
             this.jumpSegment(this.segment.$displayIndex+1)
@@ -511,69 +600,118 @@ export default {
             })()
             this.seekToSegmentStart()
         },
-        pauseVideo() {
-            // TODO: check me
+        // 
+        // videoActionsChecker
+        // 
+        // whenever there is an action, check if the action as been completed or not
+        // this function is really annoying but its necessary because of YouTube's stupid API
+        // https://developers.google.com/youtube/iframe_api_reference?csw=1#seekTo
+        // YouTube doesn't provide a "togglePlayPause()" function, and if you call
+        //     this.playVideo()
+        //     console.log(this.getPlayerState() == video.IS_PAUSED)
+        // it logs "false", because the play() is done asyncly. Calling:
+        //     this.playVideo()
+        //     this.pauseVideo()
+        // means you have no idea if the this.getPlayerState() is before or
+        // after both of those have been applied
+        // so we have have to manually keep track of the scheduled state outself to know 
+        // whether or not the video is paused
+        async videoActionsChecker() {
+            // make sure the player exists
+            let player = await this.hasVideoPlayer.promise
+            // get the current video-time when the action was requested
+            let timeOfAction = this.player.getCurrentTime()
+            // make sure the latest action has finished
+            await this.latestCuedVideoAction.promise
+            switch (this.nextVideoActionType) {
+                case "pause":
+                    // if the video is not paused (after all actions have been waited on)
+                    if (player.playerInfo.playerState != video.IS_PAUSED) {
+                        // then pause the video
+                        player.pauseVideo()
+                        // create a checker that only resolves once the video is actually paused
+                        this.latestCuedVideoAction = this.generateIntervalResolvable({
+                            label: "pause",
+                            intervalSize: checkPlayPauseFrequency,
+                            resolveCheck: async (resolve, reject)=>{
+                                if (this.player) {
+                                    // we finally found the correct state
+                                    if (this.player.getPlayerState() == video.IS_PAUSED) {
+                                        // go back to the time when the action occured
+                                        this.player.seekTo(timeOfAction)
+                                        // if we were being perfect we would wait on that seekTo() call
+                                        // but thats hard to do generically, and would probably have problems of its own
+                                        resolve()
+                                    }
+                                }
+                            },
+                        })
+                    }
+                    break
+                
+                case "play":
+                    // if the video is not playing
+                    if (player.playerInfo.playerState == video.IS_PLAYING) {
+                        // then play the video
+                        player.playVideo()
+                        // create a checker that only resolves once the video is actually playing
+                        this.latestCuedVideoAction = this.generateIntervalResolvable({
+                            label: "play",
+                            intervalSize: checkPlayplayFrequency,
+                            resolveCheck: async (resolve, reject)=>{
+                                if (this.player) {
+                                    // we finally found the correct state
+                                    if (this.player.getPlayerState() == video.IS_PLAYING) {
+                                        // go back to the time when the action occured
+                                        this.player.seekTo(timeOfAction)
+                                        // if we were being perfect we would wait on that seekTo() call
+                                        // but thats hard to do generically, and would probably have problems of its own
+                                        resolve()
+                                    }
+                                }
+                            },
+                        })
+                    }
+                    break
             
-            // cancel scheduled play
-            if (this.scheduledToggle.type == "play") {
-                clearTimeout(this.scheduledToggle.id)
-            }
-            // reset the schedule
-            this.scheduledToggle = {}
-            
-            if (!this.player) {
-                return
-            }
-            
-            this.player.pauseVideo()
-            // if video is playing
-            if (this.player.playerInfo.playerState == video.IS_PLAYING) {
-                // schedule another pause for good measure
-                this.scheduledToggle.type = "pause"
-                this.scheduledToggle.id = setTimeout(()=>this.pauseVideo(), 50)
-            }
-        },
-        async playVideo() {
-            // TODO: check me
-            
-            // cancel scheduled pause
-            if (this.scheduledToggle.type == "pause") {
-                clearTimeout(this.scheduledToggle.id)
-            }
-            // reset the schedule
-            this.scheduledToggle = {}
-            
-            if (!this.player) {
-                return
-            }
-            // try to play
-            this.player.playVideo()
-            
-            // if video isn't playing
-            if (this.player.playerInfo.playerState != video.IS_PLAYING) {
-                // schedule another play for good measure
-                this.scheduledToggle.type = "play"
-                this.scheduledToggle.id = setTimeout(()=>this.playVideo(), 50)
+                case null:
+                    break
+                    
+                default:
+                    break
             }
         },
         videoIsPaused() {
-            // TODO: check me
-            
-            if (this.scheduledToggle.type == "play") {
-                return false
-            }
-            if (this.player == null || this.scheduledToggle.type == "pause") {
-                return true
-            }
-            switch (this.player.playerInfo.playerState) {
-                case video.IS_PLAYING:
+            // if there is an unfinished action
+            // then report the scheduled action rather 
+            // than the actual state of the video (which is about to change)
+            if (!this.latestCuedVideoAction.done) {
+                if (this.latestCuedVideoAction == "play") {
                     return false
-                case video.HASNT_EVEN_INITILIZED:
-                case video.HASNT_STARTED_STATE:
-                case video.IS_LOADING: // this might not always be true, but I'm not sure
-                case video.IS_PAUSED:
+                } else {
                     return true
+                }
+            // if there are no cued unresolved items 
+            } else {
+                if (this.player instanceof Object) {
+                    // then the player state (should) be an accurate representation
+                    return this.player.playerInfo.playerState != video.IS_PLAYING
+                }
+                // if player doesn't exist
+                return null
             }
+        },
+        pauseVideo() {
+            // tell what should happen
+            this.nextVideoActionType = "pause"
+            // let the actions checker do all the annoying work
+            return this.videoActionsChecker()
+        },
+        playVideo() {
+            // tell what should happen
+            this.nextVideoActionType = "play"
+            // let the actions checker do all the annoying work
+            return this.videoActionsChecker()
         },
         togglePlayPause() {
             if (this.videoIsPaused()) {
@@ -582,15 +720,36 @@ export default {
                 this.pauseVideo()
             }
         },
-        toggleLabel(labelName) {
-            // this is a dumb hack that only exists because sometimes the ui-checkbox doens't display the change
-            // even though the change has been made
-            const actualValue = this.$root.labels[labelName]
-            this.$root.labels[labelName] = {}
-            setTimeout(() => {
-                this.$root.labels[labelName] = actualValue
-            }, 0)
-        }
+        // a helper for dealing with the dumb YouTube API
+        // basically busy-checks to see if a promise can be resolved
+        // also stores a .done to indicate if the promise is already resolved/rejected
+        // also has a .label
+        // TODO: try improving this by using player.onStateChange
+        generateIntervalResolvable({label, resolveCheck, intervalSize}) {
+            let interval
+            let resolvable = {
+                label,
+                done: false,
+            }
+            resolvable.promise = new Promise((resolve, reject)=>{
+                let resolver = (...args)=>{
+                    resolvable.done = true
+                    resolve(...args)
+                    clearInterval(interval)
+                }
+                let rejecter = (...args)=>{
+                    resolvable.done = true
+                    reject(...args)
+                    clearInterval(interval)
+                }
+                interval = setInterval(() => {
+                    // call the check every interval
+                    resolveCheck(resolver, rejecter)
+                    // the resolver will cancel the interval
+                }, intervalSize)
+            })
+            return resolvable
+        },
     }
 }
 </script>
@@ -691,7 +850,7 @@ export default {
                     opacity: 0.9
                 
 .circle-button
-    background: var(--red)
+    background: var(--vue-green)
     color: white
     padding: 2.3rem
     --radius: 5rem

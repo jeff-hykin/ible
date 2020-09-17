@@ -204,7 +204,7 @@ export default {
     &.labelSelected
         .side-panel-nub.leftSide
             box-shadow: var(--shadow-1)
-            background-color: var(--vue-green)
+            background-color: var(--blue)
             .panel
                 transition: transform 0.15s ease-in-out, width 1.15s ease-in, color 1.15s ease-in
                 background-color: whitesmoke
@@ -219,7 +219,7 @@ export default {
     
     .side-panel-nub.rightSide
         z-index: 0
-        background-color: var(--blue)
+        background-color: var(--red)
         box-shadow: var(--shadow-1)
         &:hover
             z-index: 999
