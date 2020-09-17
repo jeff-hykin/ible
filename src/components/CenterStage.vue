@@ -46,11 +46,11 @@
                         container(v-for="(eachLevel, eachLabelName) in $root.labels" :background-color="$root.labels[eachLabelName].color")
                             ui-checkbox(v-model="$root.labels[eachLabelName].selected" @change="toggleLabel(eachLabelName)")
                                 | {{eachLabelName}}
-                    h5(v-if="organizedSegments.length > 0")
+                    h5(v-if="segmentsInfo.organizedSegments.length > 0")
                         | Moments
-                    row.level(v-if="organizedSegments.length > 0" align-h="space-between" position="relative" :height="`${maxLevel*2.2}rem`")
+                    row.level(v-if="segmentsInfo.organizedSegments.length > 0" align-h="space-between" position="relative" :height="`${segmentsInfo.maxLevel*2.2}rem`")
                         row.segment(
-                            v-for="(eachSegment, index) in organizedSegments"
+                            v-for="(eachSegment, index) in segmentsInfo.organizedSegments"
                             :left="eachSegment.$renderData.leftPercent"
                             :width="eachSegment.$renderData.widthPercent"
                             :top="eachSegment.$renderData.topAmount"
@@ -124,8 +124,10 @@ export default {
         idOfLastInitilizedVideo: null,
         initCheckAlreadyRunning: false,
         
-        maxLevel: 1,
-        organizedSegments: [],
+        segmentsInfo: {
+            maxLevel: 1,
+            organizedSegments: [],
+        }
     }),
     resolvables: {
         // these are used for loading data in a very dynamic way,
@@ -348,7 +350,7 @@ export default {
     },
     windowListeners: {
         keydown(eventObj) {
-            console.debug(`EVENT: keydown`)
+            console.debug(`EVENT: keydown: ${eventObj.key}`)
             // 
             // key controls
             // 
@@ -393,8 +395,10 @@ export default {
                     this.$root.selectedSegment = null // no selected segment
                     this.initCheckAlreadyRunning = false
                     this.videoIsReady = false
-                    this.organizedSegments = []
-                    this.maxLevel = 1
+                    this.segmentsInfo = {
+                        maxLevel: 1,
+                        organizedSegments: []
+                    }
                     console.debug(`data was reset\n`)
                     // update data
                     console.debug(`checking for video id`)
@@ -587,8 +591,10 @@ export default {
                     eachSegment.$renderData.level = level 
                     eachSegment.$renderData.topAmount = `${level*2.2}rem`
                 }
-                this.maxLevel = levels.length
-                this.organizedSegments = levels.flat()
+                this.segmentsInfo = {
+                    maxLevel: levels.length,
+                    organizedSegments: levels.flat(),
+                }
             })
         },
         async seekToSegmentStart() {
@@ -646,32 +652,32 @@ export default {
                     console.debug(`[jumpSegment] segments don't exist, returning`)
                     return 
                 }
-                const startingPoint = newIndex
-                let start = 0
-                if (this.$root.selectedSegment) {
-                    start = this.$root.selectedSegment.$displayIndex
-                }
-                if (newIndex == start) {
-                    this.$root.selectedSegment = this.$root.selectedVideo.keySegments[newIndex]
-                } else {
-                    let direction = start > newIndex ? -1 : 1
-                    const effectiveStartingPoint = wrapIndex(startingPoint, this.$root.selectedVideo.keySegments)
+                // get the previous segment or the first one in the list
+                let segment = this.$root.selectedSegment || this.$root.selectedVideo.keySegments[0]
+                const startingPoint = wrapIndex(newIndex, this.$root.selectedVideo.keySegments)
+                let indexOfPreviousSegment = (!segment) ? 0 : segment.$displayIndex
+                if (newIndex != indexOfPreviousSegment) {
+                    let direction = indexOfPreviousSegment > newIndex ? -1 : 1
+                    console.debug(`direction is:`,direction)
                     while (1) {
                         let newSegment = this.$root.selectedVideo.keySegments[ wrapIndex(newIndex, this.$root.selectedVideo.keySegments) ]
                         // if its a displayable segment then good, were done
                         if (newSegment.$shouldDisplay) {
-                            this.$root.selectedSegment = newSegment
+                            segment = newSegment
                             console.debug(`[jumpSegment] found a displayable segment`)
                             break
                         }
                         // cycle the index
                         newIndex += direction
                         // if somehow ended back at the start then fail
-                        if (wrapIndex(newIndex, this.$root.selectedVideo.keySegments) == effectiveStartingPoint) {
+                        if (wrapIndex(newIndex, this.$root.selectedVideo.keySegments) == startingPoint) {
                             console.debug(`[jumpSegment] couldn't find a displayable segment`)
                             break
                         }
                     }
+                }
+                if (!segment || !segment.$shouldDisplay) {
+                    this.$root.selectedSegment = null
                 }
                 if (this.$root.selectedSegment instanceof Object) {
                     console.debug(`[jumpSegment] seeking to segment start since a new index was found`)
