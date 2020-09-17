@@ -18,6 +18,7 @@ import './plugins/window-listeners-plugin'
 import './plugins/resolvables-plugin'
 import { Router } from './plugins/router-plugin'
 const endpoints = require("./iilvd-api").endpoints
+const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
 
 // Pages 
 import pages from "./pages/*.vue"
@@ -109,17 +110,18 @@ export default RootComponent = {
             return output
         },
         getCachedVideoObject(id) {
-            // if video isn't cached
-            if (!(this.$root.videos[id] instanceof Object)) {
-                // then cache it
-                this.$root.videos[id] = {}
-            }
-            console.debug(`this.$root.videos[id] is:`,JSON.stringify(this.$root.videos[id],0,4))
-            // ensure the id didn't get messed up
-            this.$root.videos[id].$id = id
-            console.debug(`this.$root.videos[id] is:`,JSON.stringify(this.$root.videos[id]))
-            // return the cached video
-            return this.$root.videos[id]
+            return logBlock({name: "getCachedVideoObject"}, ()=>{
+                // if video isn't cached
+                if (!(this.$root.videos[id] instanceof Object)) {
+                    // then cache it
+                    this.$root.videos[id] = {}
+                }
+                // ensure the id didn't get messed up
+                this.$root.videos[id].$id = id
+                console.debug(`this.$root.videos[id] is:`,JSON.stringify(this.$root.videos[id],0,4))
+                // return the cached video
+                return this.$root.videos[id]
+            })
         },
         getNamesOfSelectedLabels() {
             return Object.entries(this.$root.labels).filter(([eachKey, eachValue])=>(eachValue.selected)).map(([eachKey, eachValue])=>(eachKey))

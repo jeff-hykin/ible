@@ -31,10 +31,6 @@ export default {
             console.debug(`eventObj is:`,eventObj)
             // get it from the cache (auto-adds to cache if needed)
             this.$root.selectedVideo = this.$root.getCachedVideoObject(videoId)
-            console.debug(`this.$root.selectedVideo is:`,JSON.stringify(this.$root.selectedVideo))
-        },
-        jumpSegment(index) {
-            this.$root.selectedSegment = wrapIndex(index, this.segments)
         },
     }
 }

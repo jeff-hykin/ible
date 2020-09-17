@@ -17,15 +17,18 @@
                     div.circle-button.left(@click='decrementIndex')
                         span
                             | ←
+                    span(v-if='!getVideoId()')
+                        | Video Not Selected
+                    
                     youtube(
-                        :key="$root.selectedVideo.$id"
+                        v-if='getVideoId()'
+                        :key="getVideoId()"
                         ref="youtube"
-                        v-if='getSegmentStart() != null'
-                        :video-id="$root.selectedVideo.$id"
+                        :video-id="getVideoId()"
                         host="https://www.youtube-nocookie.com"
                         @ready="ready"
-                        @playing="playing"
-                        :playerVars="{ start: getSegmentStart(), /* disablekb: 1, end: 2 */ }"
+                        @playing="videoStartedPlaying"
+                        :playerVars="{ /* disablekb: 1, end: 2 */ }"
                         player-width="100%"
                         player-height="100%"
                         style="height: 100%;width: 100%;"
@@ -71,7 +74,7 @@ const { wrapIndex, storageObject } = require('../utils')
 const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
 const Fuse = require("fuse.js").default
 
-const checkPlayPauseFrequency = 50 // ms 
+const generalTimeoutFrequency = 50 // ms 
 const video = {
     IS_LOADING: -1,
     HAS_ENDED: 0,
@@ -100,9 +103,10 @@ const video = {
     //     this.$root.$watch.labels
     //     this.$root.$watch.selectedVideo
     //     this.$root.$watch.selectedSegment
+    //     "CenterStage: videoStartedPlaying"
     // 
     // emits:
-    // 
+    //     "CenterStage: videoStartedPlaying"
 
 // make sure cachedVideoIds exists as an Array
 storageObject.cachedVideoIds || (storageObject.cachedVideoIds = [])
@@ -112,25 +116,16 @@ export default {
     components: { 
     },
     data: ()=>({
-        shouldInstantStop: false,
-        videoIsReady: false,
-        initCheckAlreadyRunning: false,
-        initVideoCalls: [],
-        maxLevel: 1,
-        organizedSegments: [],
-        
         searchTerm: null,
         suggestions: [],
-        
-        nextVideoActionType: null,
-        latestCuedVideoAction: {
-            label: "init",
-            promise: new Promise((resolve)=>resolve()),
-            done: true,
-        },
         player: null,
-        videoPlayerInitilized: false,
-        scheduledToggle: {},
+        
+        videoIsReady: false,
+        idOfLastInitilizedVideo: null,
+        initCheckAlreadyRunning: false,
+        
+        maxLevel: 1,
+        organizedSegments: [],
     }),
     resolvables: {
         // these are used for loading data in a very dynamic way,
@@ -148,70 +143,173 @@ export default {
         //     [resolvable].done      // true/false check
         //     [resolvable].check()   // check/ping the source again for the missing data
         
-        hasVideo(resolve, reject) {
-            if (get(this, ["$root", "selectedVideo", "$id"], null)) {
-                resolve(this.$root.selectedVideo)
-            }
-        },
-        async hasVideoPlayer(resolve, reject) {
-            // wait until a video exists
-            await this.hasVideo.promise
-            if (this.videoIsReady) {
-                if (this.player instanceof Object) {
-                    resolve(this.player)
+        
+        // this is to cover a stupid bug in the YouTube API
+        // the bug shows infinite loading until the video has been played for a bit
+        // instantly pausing and playing fixes it in the console, but from a script it optimizes out the
+        // pause-then-play and just stays paused (and continues to show infinite loading)
+        // so this needs to play and then immediately pause if the video hasn't been initilized
+        videoStateInitilized(resolve, reject) {
+            // NOTE: this function has a vital counterpart in the $methods.videoStartedPlaying()
+            logBlock({name: "[resolvable:videoStateInitilized]"}, ()=>{
+                let realResolve = ()=>{
+                    this.initCheckAlreadyRunning = false
+                    this.idOfLastInitilizedVideo = this.getVideoId()
+                    resolve()
                 }
-            }
-        },
-        async hasDurationData(resolve, reject) {
-            // wait until a video exists
-            await this.hasVideo.promise
-            // try getting the duration in a few ways
-            const possibleDuration1 = get(this, ["video", "summary", "duration"     ], NaN)-0
-            const possibleDuration2 = get(this, ["player", "playerInfo", "duration" ], NaN)-0
-            if (checkIf({value: possibleDuration1, is: Number })) {
-                resolve(possibleDuration1)
-            // if the video player exists
-            } else if (checkIf({value: possibleDuration2, is: Number }) && possibleDuration2 > 0) {
-                this.$root.selectedVideo.duration = possibleDuration2
-                resolve(possibleDuration2)
-            } else {
-                // start two different requests for the same data
-                // we don't care which finishes first
-                
-                // 1. request the data from the backend
-                endpoints.then(async (realEndpoints)=>{
-                    let video = await this.hasVideo.promise
-                    console.log(`getting duration from backend`)
-                    let result = await realEndpoints.videos.get({keyList: [ this.$root.selectedVideo.$id, "summary",  "duration" ]})
-                    if (checkIf({value: result, is: Number}) && result > 0) {
-                        console.debug(`result is:`,result)
-                        this.$root.selectedVideo.duration = result
-                        this.$forceUpdate() // for some reason vue doens't dectect the change in duration
-                        console.log(`resolving`)
-                        resolve(this.$root.selectedVideo.duration)
+                let realReject = ()=>{
+                    this.initCheckAlreadyRunning = false
+                    reject()
+                }
+                if (!this.player) {
+                    console.debug(`[resolvable:videoStateInitilized] no player, ending this check`)
+                    return
+                // make sure two checks don't start running at the same time
+                } else if (this.initCheckAlreadyRunning) {
+                    console.debug(`[resolvable:videoStateInitilized] check is already running, ending this check`)
+                    return
+                } else if (this.idOfLastInitilizedVideo && this.idOfLastInitilizedVideo == this.getVideoId()) {
+                    console.debug(`[resolvable:videoStateInitilized] video already initilized (resolving): ${this.idOfLastInitilizedVideo}`)
+                    realResolve()
+                    return
+                }
+                let videoHasntLoaded = ()=> this.player && (this.player.getPlayerState() == video.IS_LOADING || this.player.getPlayerState() == video.IS_CUED)
+                let videoIsPaused = ()=>(this.player ? this.player.getPlayerState() == video.IS_PAUSED : false)
+                // if paused, then the video must already be initilized
+                if (videoIsPaused()) {
+                    console.debug(`[resolvable:videoStateInitilized] video is paused, therefore it must be initilized. Resolving.`)
+                    this.idOfLastInitilizedVideo = this.getVideoId()
+                    realResolve()
+                    return
+                }
+                if (!videoHasntLoaded()) {
+                    console.log(`[resolvable:videoStateInitilized] something strange happened:\n - the video was not in a loading/paused state (probably playing)\n- but the initCheckAlreadyRunning was false\n- and video hadn't initilized\n\nmaybe something else it the code reset the idOfLastInitilizedVideo?\n`)
+                    this.player.pauseVideo()
+                }
+                // prevent doubling up on this part of the code
+                this.initCheckAlreadyRunning = true
+                  
+                const urlOfVideoToPause = this.player.getVideoUrl()
+                // try to play the video if it isn't in a playing state
+                this.player.playVideo()
+                // as soon as the video starts playing, pause it
+                this.$once("CenterStage: videoStartedPlaying", async ()=>{
+                    const urlOfVideoToPlay = this.player.getVideoUrl()
+                    // if video has since changed, then cancel
+                    if (urlOfVideoToPause != urlOfVideoToPlay) {
+                        realReject()
+                        return
+                    }
+                    // otherwise immediately pause the video
+                    this.player.pauseVideo()
+                    
+                    // the video isn't initilized until the video finishes pausing
+                    // so busy-wait for that to happen
+                    while (1) {
+                        // wait the minimum amount of time
+                        await new Promise(r=>setTimeout(r,0))
+                        // if the video changed
+                        if (!this.player || urlOfVideoToPlay != this.player.getVideoUrl()) {
+                            // failed
+                            realReject()
+                            return
+                        }
+                        if (videoIsPaused()) {
+                            realResolve()
+                            return
+                        }
+                        // if its still not paused, then tell it again that it needs to pause
+                        this.player.pauseVideo()
                     }
                 })
-                
-                // 2. wait until there is a video player loaded with duration
-                this.hasVideoPlayer.promise.then(()=>{
-                    // this is a form of recursion, but it won't recurse if the data is already resolved
-                    this.hasDurationData.check()
-                })
-            }
+            })
+        },
+        hasVideo(resolve, reject) {
+            logBlock({name: "[resolvable:hasVideo]"}, ()=>{
+                if (get(this, ["$root", "selectedVideo", "$id"], null)) {
+                    console.debug("video exists!")
+                    resolve(this.$root.selectedVideo)
+                } else {
+                    console.debug("nope, video still doesn't exist")
+                }
+            })
+        },
+        async hasVideoPlayer(resolve, reject) {
+            await logBlock({name: "[resolvable:hasVideoPlayer]"}, async ()=>{
+                if (this.videoIsReady) {
+                    if (this.player instanceof Object) {
+                        console.debug(`player exists, resolving`)
+                        resolve(this.player)
+                    }
+                } else {
+                    console.debug(`nope player still doesn't exist`)
+                }
+            })
+        },
+        async hasDurationData(resolve, reject) {
+            await logBlock({name: "[resolvable:hasDurationData]"}, async ()=>{
+                // wait until a video exists
+                console.log(`awaiting hasVideo.promise`)
+                await this.hasVideo.promise
+                console.log(`hasVideo.promise was resolved`)
+                // try getting the duration in a few ways
+                const possibleDuration1 = get(this, ["video", "summary", "duration"     ], NaN)-0
+                const possibleDuration2 = get(this, ["player", "playerInfo", "duration" ], NaN)-0
+                if (checkIf({value: possibleDuration1, is: Number })) {
+                    console.debug(`[resolvable:hasDurationData] video.summary.duration exists, resolving`)
+                    resolve(possibleDuration1)
+                // if the video player exists
+                } else if (checkIf({value: possibleDuration2, is: Number }) && possibleDuration2 > 0) {
+                    this.$root.selectedVideo.duration = possibleDuration2
+                    console.debug(`[resolvable:hasDurationData] youtube player duration exists, resolving`)
+                    resolve(possibleDuration2)
+                } else {
+                    // start two different requests for the same data
+                    // we don't care which finishes first
+                    console.debug(`[resolvable:hasDurationData] setting up callbacks for duration `)
+                    // 1. request the data from the backend
+                    endpoints.then(async (realEndpoints)=>{
+                        let video = await this.hasVideo.promise
+                        console.log(`getting duration from backend`)
+                        let result = await realEndpoints.videos.get({keyList: [ this.getVideoId(), "summary",  "duration" ]})
+                        if (checkIf({value: result, is: Number}) && result > 0) {
+                            console.debug(`result is:`,result)
+                            this.$root.selectedVideo.duration = result
+                            this.$forceUpdate() // for some reason vue doens't dectect the change in duration
+                            console.log(`resolving`)
+                            resolve(this.$root.selectedVideo.duration)
+                        }
+                    })
+                    
+                    // 2. wait until there is a video player loaded with duration
+                    this.hasVideoPlayer.promise.then(()=>{
+                        console.debug(`[resolvable:hasDurationData] this.hasVideoPlayer.promise callback`)
+                        // this is a form of recursion, but it won't recurse if the data is already resolved
+                        this.hasDurationData.check()
+                    })
+                }
+            })
         },
         async videoHasSegmentData(resolve, reject) {
-            logBlock({name: "videoHasSegmentData"}, async ()=>{
-                // make sure the video exists
-                await this.hasVideo.promise
+            await logBlock({name: "[resolvable:videoHasSegmentData]"}, async ()=>{
+                if (!this.getVideoId()) {
+                    console.debug(`[resolvable:videoHasSegmentData] video id doesnt exist, canceling check`,)
+                    return
+                }
                 // check and see if there are segments
+                console.debug(`[resolvable:videoHasSegmentData] checking if segments exist`)
                 if (this.$root.selectedVideo.keySegments instanceof Array) {
+                    console.debug(`[resolvable:videoHasSegmentData] selectedVideo.keySegments is an array, therefore segmentData should exist (resolving videoHasSegmentData)`,)
                     resolve(this.$root.selectedVideo.keySegments)
                 // if the segments don't exist, try getting them from the backend
                 } else {
-                    const videoId = this.$root.selectedVideo.$id
+                    console.debug(`[resolvable:videoHasSegmentData] it appears segments dont yet exist`)
+                    const videoId = this.getVideoId()
                     // wait for duration data to exist
+                    console.debug(`[resolvable:videoHasSegmentData] checking hasDurationData.promise`)
                     let duration = await this.hasDurationData.promise
-                    console.debug(`duration is:`,duration)
+                    console.debug(`[resolvable:videoHasSegmentData] finished hasDurationData.promise check`)
+                    console.debug(`[resolvable:videoHasSegmentData] duration is:`,duration)
                     // then get the segments from backend
                     let realEndpoints = await endpoints
                     let keySegments = await realEndpoints.raw.all({
@@ -219,28 +317,38 @@ export default {
                         where: [
                             // FIXME: also add the fixedSegments (the computer generated ones)
                             { valueOf: ['type']     , is: "keySegment" },
-                            { valueOf: [ 'videoId' ], is: this.$root.selectedVideo.$id },
+                            { valueOf: [ 'videoId' ], is: this.getVideoId() },
                         ]
                     })
+                    console.debug(`[resolvable:videoHasSegmentData] keySegments retrived from backend`)
                     // process the segments
-                    this.segments = this.processNewSegments({ duration, keySegments })
-                    // go to the first segment
-                    this.jumpSegment(0)
-                    if (videoId == this.$root.selectedVideo.$id) {
-                        this.$root.selectedVideo.keySegments = this.segments
+                    console.debug(`[resolvable:videoHasSegmentData] checking if videoId has changed while awaiting`)
+                    if (videoId == this.getVideoId()) {
+                        console.debug(`[resolvable:videoHasSegmentData] videoId has not changed`)
+                        this.$root.selectedVideo.keySegments = this.processNewSegments({ duration, keySegments })
+                        console.debug(`[resolvable:videoHasSegmentData] this.$root.selectedVideo.keySegments is:`,this.$root.selectedVideo.keySegments)
+                        // go to the first segment
+                        console.debug(`[resolvable:videoHasSegmentData] jumping to first segment`)
+                        this.jumpSegment(0)
+                        console.debug(`[resolvable:videoHasSegmentData] resolving videoHasSegmentData`)
                         resolve(this.$root.selectedVideo.keySegments)
                     }
                 }
             })
-        }
+        },
     },
     mounted() {
         window.centerStage = this
         // add some default suggestions
         this.suggestions = storageObject.cachedVideoIds
     },
+    updated() {
+        // the player reference doesn't exist till after update
+        this.setThisPlayer()
+    },
     windowListeners: {
         keydown(eventObj) {
+            console.debug(`EVENT: keydown`)
             // 
             // key controls
             // 
@@ -267,30 +375,58 @@ export default {
         watch: {
             // when different labels are selected (checkboxes)
             labels(newValue, oldValue) {
+                console.debug(`EVENT-watch: labels changed`)
                 this.reorganizeSegments()
             },
             selectedLabel(newValue) {
+                console.debug(`EVENT-watch: selectedLabel changed`)
                 this.reorganizeSegments()
             },
             // when the selected video changes
             selectedVideo(newValue, oldValue) {
-                // this assignment shouldn't need to be done, but for some reason it doesn't update properly
-                this.$root.selectedVideo = newValue
-                logBlock({name: "selectedVideo changed [CenterStage:watch]"}, ()=>{
-                    // if we know the video exists, go ahead and mark it as resolved
-                    if (newValue instanceof Object && newValue.$id) {
-                        this.hasVideo.resolve(newValue)
-                    }
-                    // resets
-                    this.segment = null // no selected segment
+                console.debug(`EVENT-watch: selectedVideo changed`)
+                logBlock({name: "selectedVideo changed [CenterStage:watch]"}, async ()=>{
+                    // 
+                    // reset data
+                    // 
+                    console.debug(`resetting data`)
+                    this.$root.selectedSegment = null // no selected segment
                     this.initCheckAlreadyRunning = false
-                    // make sure the duration is reset (otherwise duration of old video will be used)
-                    if (get(this, ["player", "playerInfo", "duration" ], null)) {
-                        set(this, ["player", "playerInfo", "duration" ], null)
+                    this.videoIsReady = false
+                    this.organizedSegments = []
+                    this.maxLevel = 1
+                    console.debug(`data was reset\n`)
+                    // update data
+                    console.debug(`checking for video id`)
+                    if (typeof this.getVideoId() == 'string') {
+                        console.debug("video id seems to exist")
+                        console.debug("getting this.player reference")
+                        this.setThisPlayer()
+                        console.debug("telling hasVideo to resolve")
+                        this.hasVideo.resolve(newValue)
+                    } else {
+                        console.debug("there appears not to be an id")
                     }
                     
+                    console.debug("awaiting the video to initlize")
+                    console.debug(`this.player is:`,this.player)
+                    await this.videoStateInitilized.promise
+                    console.debug("video was initlized")
+                    
                     // basically look to reorganize them and jump to the begining of the segment
-                    this.attemptToSetupSegments()
+                    console.debug(`checking videoHasSegmentData.promise`)
+                    console.debug(`note: this should call the duration check`)
+                    await this.videoHasSegmentData.promise
+                    console.debug(`finished videoHasSegmentData.promise check`)                    
+                    // then get the segments that are going to be displayed
+                    console.debug(`calling reorganizeSegments`)
+                    await this.reorganizeSegments()
+                    console.debug(`finished calling reorganizeSegments`)
+                    // load / init the first segment
+                    console.debug(`calling seekToSegmentStart`)
+                    await this.seekToSegmentStart()
+                    console.debug(`calling seekToSegmentStart`)
+                    console.debug("finished attemptToSetupSegments()")
                 })
             },
         }
@@ -322,25 +458,23 @@ export default {
                         extractHidden: [ '_id']
                     },
                 })
-                console.log(`setting suggestions`)
+                console.debug(`setting suggestions`)
                 this.suggestions = [...new Set(possibleVideoIds.concat(this.suggestions))]
             }
         }
     },
-    computed: {
-        // just shortcuts to this.$root
-        segments: { get() { return this.$root.selectedVideo.keySegments }, set(newValue) { this.$root.selectedVideo.keySegments = newValue }, },
-        segment:  { get() { return this.$root.selectedSegment           }, set(newValue) { this.$root.selectedSegment           = newValue }, },
-        video:    { get() { return this.$root.selectedVideo             }, set(newValue) { this.$root.selectedVideo             = newValue }, },
-    },
     methods: {
-        getSegmentStart() {
-            let segment = this.$root.selectedSegment
-            console.debug(`segment is:`,segment)
-            if (segment && checkIf({value: segment.start, is: Number })) {
-                this.player || (this.$refs.youtube && (this.player = this.$refs.youtube.player))
-                return segment.start
+        setThisPlayer() {
+            if (this.$refs.youtube && this.$refs.youtube.player && this.$refs.youtube.player.getPlayerState) {
+                this.player = this.$refs.youtube.player
+            } else {
+                this.player = null
             }
+            window.player = this.player
+        },
+        getVideoId() {
+            this.$once("")
+            return this.$root.selectedVideo && this.$root.selectedVideo.$id
         },
         toggleLabel(labelName) {
             // this is a dumb hack that only exists because sometimes the ui-checkbox doens't display the change
@@ -356,19 +490,22 @@ export default {
             }, 0)
         },
         videoSelect() {
-            this.$root.selectedVideo = this.$root.getCachedVideoObject(this.searchTerm.trim())
-            this.videoIsReady = false
+            if (this.searchTerm.trim() == this.getVideoId()) {
+                this.$toasted.show(`Video is already open`).goAway(2500)
+            } else {
+                this.$root.selectedVideo = this.$root.getCachedVideoObject(this.searchTerm.trim())
+            }
         },
         async attemptToSetupSegments() {
-            // confirm or wait on a video to exist
-            await this.hasVideo.promise
-            // ensure that all the video segments are here
-            let segments = await this.videoHasSegmentData.promise
-            // then get the segments that are going to be displayed
-            this.reorganizeSegments()
-            // load / init the first segment
-            this.seekToSegmentStart()
-            
+            await logBlock({name: "attemptToSetupSegments"}, async ()=>{
+                
+                // confirm or wait on a video to exist
+                console.debug(`checking hasVideo.promise`)
+                await this.hasVideo.promise
+                console.debug(`finished hasVideo.promise check`)
+                // ensure that all the video segments are here
+              
+            })
         },
         processNewSegments({duration, keySegments}) {
             let minWidth = duration / 50
@@ -416,15 +553,21 @@ export default {
             return keySegments
         },
         async reorganizeSegments() {
-            logBlock({name: "reorganizeSegments"}, async ()=>{
+            await logBlock({name: "reorganizeSegments"}, async ()=>{
+                // if a video hasn't event been selected
+                if (this.getVideoId() == null) {
+                    // don't create a pending reorganizeSegments() call, just return
+                    console.debug(`ending reorganizeSegments: no currently selected video`)
+                    return 
+                }
                 // confirm or wait on a video to exist
                 await this.hasVideo.promise
                 // ensure that all the video segments are here
-                this.segments = await this.videoHasSegmentData.promise
+                this.$root.selectedVideo.keySegments = await this.videoHasSegmentData.promise
                 
                 // only return segments that match the selected labels
                 let namesOfSelectedLabels = this.$root.getNamesOfSelectedLabels()
-                let displaySegments = this.segments.filter(eachSegment=>(eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.$data.label)))
+                let displaySegments = this.$root.selectedVideo.keySegments.filter(eachSegment=>(eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.$data.label)))
             
                 // 2 percent of the width of the video
                 let levels = []
@@ -449,29 +592,31 @@ export default {
             })
         },
         async seekToSegmentStart() {
-            // wait for the player to exist
-            let player = await this.hasVideoPlayer.promise
-            // make sure there is segment data 
-            await this.videoHasSegmentData.promise
-            
-            // if there's at least one segment
-            if (this.segments.length > 0) {
-                // if no segment is selected then select the first one
-                if (!this.segment) {
-                    this.segment = this.segments[0]
-                }
+            // if no segment is selected
+            if (!this.$root.selectedSegment) {
+                // the go to the first displayable segment
+                console.debug(`[seekToSegmentStart] there is no selected segment`)
+                console.debug(`[seekToSegmentStart] calling jumpSegment(0) and returning`)
+                return this.jumpSegment(0)
             }
-            // make sure the video is initilized before seeking
-            await this.checkInitVideo()
+            if (!this.player) {
+                console.debug(`[seekToSegmentStart] video isn't ready for seeking, retrying later`)
+                return this.hasVideoPlayer.promise.then(()=>this.seekToSegmentStart())
+            }
+            // if not initilized
+            if (this.idOfLastInitilizedVideo != this.getVideoId()) {
+                console.debug(`[seekToSegmentStart] video isn't initilized, retrying later`)
+                return this.videoStateInitilized.promise.then(()=>this.seekToSegmentStart())
+            }
+            if (!checkIf({value: this.$root.selectedSegment.start, is: Number })) {
+                console.error(`[seekToSegmentStart] this.$root.selectedSegment.start isn't a number`)
+                return
+            }
+            // if all checks pass
             try  {
-                let start = this.getSegmentStart()
-                if (start != null) {
-                    // after the video is initilized, go to wherever this was supposed to go
-                    if (this.player.getCurrentTime() != start) {
-                        this.player.seekTo(start)
-                    }
-                }
-            // sometimes the error is caused by 
+                console.debug(`seeking to ${this.$root.selectedSegment.start}`)
+                this.player.seekTo(this.$root.selectedSegment.start)
+            // sometimes an error is caused by switching videos, and all thats needed is a restart
             } catch (err) {
                 console.debug(`seeking to segment start (will retry):`,err)
                 return this.seekToSegmentStart()
@@ -479,123 +624,60 @@ export default {
         },
         ready(event) {
             console.log(`video is ready`)
-            this.player = event.target
             this.videoIsReady = true
+            this.setThisPlayer()
             this.hasVideoPlayer.resolve(this.player)
-            this.player.setVolume(0)
-            this.seekToSegmentStart()
             window.player = this.player // for debugging
+            this.player.setVolume(0)
         },
-        async playing() {
-            // this is part of the fix for YouTube's bad API
-            if (this.shouldInstantStop) {
-                // try pausing immediately
-                this.player.pauseVideo()
-                let url = this.player.getVideoUrl()
-                // create a busy-wait loop checking for the pause action to have actually been completed
-                while (1) {
-                    // busy wait
-                    await new Promise(r=>setTimeout(r,0))
-                    // make sure the player didn't disconnect, the video hasn't changed, and then check if the video is paused
-                    if (!this.player || url != this.player.getVideoUrl() || this.player.getPlayerState() == video.IS_PAUSED ) {
-                        this.shouldInstantStop = false
-                        break
-                    }
-                    // if its still not paused, then tell it again that it needs to pause
-                    this.player.pauseVideo()
-                }
-            }
-        },
-        // this is to cover a stupid bug in the YouTube API
-        // the bug shows infinite loading until the video has been played for a bit
-        // instantly pausing and playing fixes it in the console, but from a script it optimizes out the
-        // pause-then-play and just stays paused
-        // so this needs to play and then immediately pause if the video hasn't been initilized
-        // but its needs to wait before pausing again
-        async checkInitVideo() {
-            let url = this.player.getVideoUrl()
-            let videoHasntLoaded = ()=>this.player.getPlayerState() == video.IS_LOADING || this.player.getPlayerState() == video.IS_CUED
-            
-            if (!this.initCheckAlreadyRunning) {
-                // make sure two of these don't start running at the same time
-                this.initCheckAlreadyRunning = true
-                
-                // try to play the video if it isn't in a playing state
-                if (videoHasntLoaded()) {
-                    this.shouldInstantStop = true
-                    this.player.playVideo()
-                }
-                
-                // busy wait for the playing state to be resolved
-                while (videoHasntLoaded()) {
-                    // busy wait
-                    await new Promise(r=>setTimeout(r,0))
-                    
-                    // edge case: if still waiting, but the video changed, cancel this one
-                    if (url != this.player.getVideoUrl()) {
-                        break
-                    }
-                }
-                
-                // since this instance is done, this function can be called/run again
-                this.initCheckAlreadyRunning = false
-            }
+        async videoStartedPlaying() {
+            this.$emit("CenterStage: videoStartedPlaying")
         },
         incrementIndex() {
-            this.jumpSegment(this.segment.$displayIndex+1)
+            this.jumpSegment(this.$root.selectedSegment.$displayIndex+1)
         },
         decrementIndex() {
-            this.jumpSegment(this.segment.$displayIndex-1)
+            this.jumpSegment(this.$root.selectedSegment.$displayIndex-1)
         },
         jumpSegment(newIndex) {
-            // TODO: this is messy, clean it up
-            (()=>{
+            return logBlock({name: "jumpSegment"}, async ()=>{
                 // basic saftey check
-                if (!(this.segments instanceof Array) || this.segments.length == 0) {
+                if (!(this.$root.selectedVideo.keySegments instanceof Array) || this.$root.selectedVideo.keySegments.length == 0) {
+                    console.debug(`[jumpSegment] segments don't exist, returning`)
                     return 
                 }
                 const startingPoint = newIndex
                 let start = 0
-                if (this.segment) {
-                    start = this.segment.$displayIndex
+                if (this.$root.selectedSegment) {
+                    start = this.$root.selectedSegment.$displayIndex
                 }
                 if (newIndex == start) {
-                    this.segment = this.segments[newIndex]
-                    return
-                }
-                // if going in the relatively negative direction
-                if (start > newIndex) {
-                    while (1) {
-                        let newSegment = this.segments[ wrapIndex(newIndex, this.segments) ]
-                        // if its a displayable segment then good, were done
-                        if (newSegment.$shouldDisplay) {
-                            this.segment = newSegment
-                            return
-                        }
-                        --newIndex // because this was a jump in the negative direction
-                                    // relative to where the old segement was
-                        if (wrapIndex(newIndex, this.segments) == wrapIndex(startingPoint, this.segments)) {
-                            return
-                        }
-                    }
-                // if going in the positive direction
+                    this.$root.selectedSegment = this.$root.selectedVideo.keySegments[newIndex]
                 } else {
+                    let direction = start > newIndex ? -1 : 1
+                    const effectiveStartingPoint = wrapIndex(startingPoint, this.$root.selectedVideo.keySegments)
                     while (1) {
-                        let newSegment = this.segments[ wrapIndex(newIndex, this.segments) ]
+                        let newSegment = this.$root.selectedVideo.keySegments[ wrapIndex(newIndex, this.$root.selectedVideo.keySegments) ]
                         // if its a displayable segment then good, were done
                         if (newSegment.$shouldDisplay) {
-                            this.segment = newSegment
-                            return
+                            this.$root.selectedSegment = newSegment
+                            console.debug(`[jumpSegment] found a displayable segment`)
+                            break
                         }
-                        ++newIndex // because this was a jump in the not-negative direction
-                                // relative to where the old segement was
-                        if (wrapIndex(newIndex, this.segments) == wrapIndex(startingPoint, this.segments)) {
-                            return
+                        // cycle the index
+                        newIndex += direction
+                        // if somehow ended back at the start then fail
+                        if (wrapIndex(newIndex, this.$root.selectedVideo.keySegments) == effectiveStartingPoint) {
+                            console.debug(`[jumpSegment] couldn't find a displayable segment`)
+                            break
                         }
                     }
                 }
-            })()
-            this.seekToSegmentStart()
+                if (this.$root.selectedSegment instanceof Object) {
+                    console.debug(`[jumpSegment] seeking to segment start since a new index was found`)
+                    await this.seekToSegmentStart()
+                }
+            })
         },
         togglePlayPause() {
             if (this.player.getPlayerState() != video.IS_PLAYING && this.player.getPlayerState() != video.BUFFERING) {
