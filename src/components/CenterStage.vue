@@ -245,11 +245,11 @@ export default {
             // key controls
             // 
             switch (eventObj.key) {
-                case "ArrowUp":
+                case "ArrowDown":
                     eventObj.preventDefault()
                     this.incrementIndex()
                     break
-                case "ArrowDown":
+                case "ArrowUp":
                     eventObj.preventDefault()
                     this.decrementIndex()
                     break
@@ -296,9 +296,6 @@ export default {
         }
     },
     watch: {
-        videoActions(newValue) {
-            this.videoActionsChecker()
-        },
         suggestions(newValue) {
             // save video id suggestions to local storage
             storageObject.cachedVideoIds = newValue
@@ -600,155 +597,12 @@ export default {
             })()
             this.seekToSegmentStart()
         },
-        // 
-        // videoActionsChecker
-        // 
-        // whenever there is an action, check if the action as been completed or not
-        // this function is really annoying but its necessary because of YouTube's stupid API
-        // https://developers.google.com/youtube/iframe_api_reference?csw=1#seekTo
-        // YouTube doesn't provide a "togglePlayPause()" function, and if you call
-        //     this.playVideo()
-        //     console.log(this.getPlayerState() == video.IS_PAUSED)
-        // it logs "false", because the play() is done asyncly. Calling:
-        //     this.playVideo()
-        //     this.pauseVideo()
-        // means you have no idea if the this.getPlayerState() is before or
-        // after both of those have been applied
-        // so we have have to manually keep track of the scheduled state outself to know 
-        // whether or not the video is paused
-        async videoActionsChecker() {
-            // make sure the player exists
-            let player = await this.hasVideoPlayer.promise
-            // get the current video-time when the action was requested
-            let timeOfAction = this.player.getCurrentTime()
-            // make sure the latest action has finished
-            await this.latestCuedVideoAction.promise
-            switch (this.nextVideoActionType) {
-                case "pause":
-                    // if the video is not paused (after all actions have been waited on)
-                    if (player.playerInfo.playerState != video.IS_PAUSED) {
-                        // then pause the video
-                        player.pauseVideo()
-                        // create a checker that only resolves once the video is actually paused
-                        this.latestCuedVideoAction = this.generateIntervalResolvable({
-                            label: "pause",
-                            intervalSize: checkPlayPauseFrequency,
-                            resolveCheck: async (resolve, reject)=>{
-                                if (this.player) {
-                                    // we finally found the correct state
-                                    if (this.player.getPlayerState() == video.IS_PAUSED) {
-                                        // go back to the time when the action occured
-                                        this.player.seekTo(timeOfAction)
-                                        // if we were being perfect we would wait on that seekTo() call
-                                        // but thats hard to do generically, and would probably have problems of its own
-                                        resolve()
-                                    }
-                                }
-                            },
-                        })
-                    }
-                    break
-                
-                case "play":
-                    // if the video is not playing
-                    if (player.playerInfo.playerState == video.IS_PLAYING) {
-                        // then play the video
-                        player.playVideo()
-                        // create a checker that only resolves once the video is actually playing
-                        this.latestCuedVideoAction = this.generateIntervalResolvable({
-                            label: "play",
-                            intervalSize: checkPlayplayFrequency,
-                            resolveCheck: async (resolve, reject)=>{
-                                if (this.player) {
-                                    // we finally found the correct state
-                                    if (this.player.getPlayerState() == video.IS_PLAYING) {
-                                        // go back to the time when the action occured
-                                        this.player.seekTo(timeOfAction)
-                                        // if we were being perfect we would wait on that seekTo() call
-                                        // but thats hard to do generically, and would probably have problems of its own
-                                        resolve()
-                                    }
-                                }
-                            },
-                        })
-                    }
-                    break
-            
-                case null:
-                    break
-                    
-                default:
-                    break
-            }
-        },
-        videoIsPaused() {
-            // if there is an unfinished action
-            // then report the scheduled action rather 
-            // than the actual state of the video (which is about to change)
-            if (!this.latestCuedVideoAction.done) {
-                if (this.latestCuedVideoAction == "play") {
-                    return false
-                } else {
-                    return true
-                }
-            // if there are no cued unresolved items 
-            } else {
-                if (this.player instanceof Object) {
-                    // then the player state (should) be an accurate representation
-                    return this.player.playerInfo.playerState != video.IS_PLAYING
-                }
-                // if player doesn't exist
-                return null
-            }
-        },
-        pauseVideo() {
-            // tell what should happen
-            this.nextVideoActionType = "pause"
-            // let the actions checker do all the annoying work
-            return this.videoActionsChecker()
-        },
-        playVideo() {
-            // tell what should happen
-            this.nextVideoActionType = "play"
-            // let the actions checker do all the annoying work
-            return this.videoActionsChecker()
-        },
         togglePlayPause() {
-            if (this.videoIsPaused()) {
-                this.playVideo()
+            if (this.player.getPlayerState() != video.IS_PLAYING && this.player.getPlayerState() != video.BUFFERING) {
+                this.player.playVideo()
             } else {
-                this.pauseVideo()
+                this.player.pauseVideo()
             }
-        },
-        // a helper for dealing with the dumb YouTube API
-        // basically busy-checks to see if a promise can be resolved
-        // also stores a .done to indicate if the promise is already resolved/rejected
-        // also has a .label
-        // TODO: try improving this by using player.onStateChange
-        generateIntervalResolvable({label, resolveCheck, intervalSize}) {
-            let interval
-            let resolvable = {
-                label,
-                done: false,
-            }
-            resolvable.promise = new Promise((resolve, reject)=>{
-                let resolver = (...args)=>{
-                    resolvable.done = true
-                    resolve(...args)
-                    clearInterval(interval)
-                }
-                let rejecter = (...args)=>{
-                    resolvable.done = true
-                    reject(...args)
-                    clearInterval(interval)
-                }
-                interval = setInterval(() => {
-                    // call the check every interval
-                    resolveCheck(resolver, rejecter)
-                    // the resolver will cancel the interval
-                }, intervalSize)
-            })
-            return resolvable
         },
     }
 }
