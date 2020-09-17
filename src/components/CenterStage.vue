@@ -426,6 +426,7 @@ export default {
                     console.debug(`calling reorganizeSegments`)
                     await this.reorganizeSegments()
                     console.debug(`finished calling reorganizeSegments`)
+                    console.debug(`this.segmentsInfo.organizedSegments is:`,this.segmentsInfo.organizedSegments)
                     // load / init the first segment
                     console.debug(`calling seekToSegmentStart`)
                     await this.seekToSegmentStart()
@@ -633,6 +634,7 @@ export default {
             this.videoIsReady = true
             this.setThisPlayer()
             this.hasVideoPlayer.resolve(this.player)
+            this.videoStateInitilized.check()
             window.player = this.player // for debugging
             this.player.setVolume(0)
         },
@@ -656,9 +658,9 @@ export default {
                 let segment = this.$root.selectedSegment || this.$root.selectedVideo.keySegments[0]
                 const startingPoint = wrapIndex(newIndex, this.$root.selectedVideo.keySegments)
                 let indexOfPreviousSegment = (!segment) ? 0 : segment.$displayIndex
-                if (newIndex != indexOfPreviousSegment) {
+                if (newIndex != indexOfPreviousSegment || !segment.$shouldDisplay) {
                     let direction = indexOfPreviousSegment > newIndex ? -1 : 1
-                    console.debug(`direction is:`,direction)
+                    console.debug(`jump direction is:`,direction)
                     while (1) {
                         let newSegment = this.$root.selectedVideo.keySegments[ wrapIndex(newIndex, this.$root.selectedVideo.keySegments) ]
                         // if its a displayable segment then good, were done
@@ -677,8 +679,12 @@ export default {
                     }
                 }
                 if (!segment || !segment.$shouldDisplay) {
+                    console.debug(`!segment || !segment.$shouldDisplay is:`,!segment || !segment.$shouldDisplay)
                     this.$root.selectedSegment = null
+                } else {
+                    this.$root.selectedSegment = segment
                 }
+                console.debug(`this.$root.selectedSegment is:`,this.$root.selectedSegment)
                 if (this.$root.selectedSegment instanceof Object) {
                     console.debug(`[jumpSegment] seeking to segment start since a new index was found`)
                     await this.seekToSegmentStart()
