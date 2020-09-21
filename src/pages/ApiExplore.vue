@@ -18,7 +18,7 @@
                 //- )
                 column
                     h5 Search Options
-                    jsonRoot.where(:initValue="{from: 'videos', limit: 10}" @changeValue="newJsonValue")
+                    jsonRoot.where(:initValue="{from: 'videos', maxNumberOfResults: 10}" @changeValue="newJsonValue")
             
             column
                 h5 Search Results
@@ -28,6 +28,7 @@
 </template>
 
 <script>
+const FileSaver = require('file-saver')
 export default {
     name: "ApiExplore",
     components: {
@@ -67,9 +68,27 @@ export default {
         },
         async submitSearch() {
             this.$toasted.show(`Searching`).goAway(2500)
-            this.searchResult = {}
-            this.searchResult = await endpoints.raw.all(this.searchOptions)
-            this.$toasted.show(`Search results returned`).goAway(2500)
+            console.log(`about to await the endpoints.raw.all`)
+            console.debug(`this.searchOptions is:`,this.searchOptions)
+            let result = await endpoints.raw.all(this.searchOptions)
+            window.apiResult = result
+            const numberOfCharsFoundToReallyReallyReallySlowTheUIDown = 24956
+            if (JSON.stringify(result).length < numberOfCharsFoundToReallyReallyReallySlowTheUIDown) {
+                this.$toasted.show(`Search results returned`).goAway(2500)
+                this.searchResult = result
+            } else {
+                this.searchResult = {}
+                this.$toasted.show(`Results are too large (UI will freeze)`, {
+                    action:[
+                        {
+                            text : 'Save Results To File?',
+                            onClick : (eventData, toastObject) => {
+                                FileSaver.saveAs(new Blob([JSON.stringify(result, 0, 4)], {type: "text/plain;charset=utf-8"}), "result.json")
+                            },
+                        },
+                    ]
+                }).goAway(6500)
+            }
         }
     }
 }
