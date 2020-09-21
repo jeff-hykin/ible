@@ -18,7 +18,7 @@
                 //- )
                 column
                     h5 Search Options
-                    jsonRoot.where(:initValue="{from: 'video', limit: 10}" @changeValue="newJsonValue")
+                    jsonRoot.where(:initValue="{from: 'videos', limit: 10}" @changeValue="newJsonValue")
             
             column
                 h5 Search Results
