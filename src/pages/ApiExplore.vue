@@ -58,7 +58,7 @@ export default {
     },
     created() {
         this.$once("loadedAll$",async ()=>{
-            this.collections = await this.endpoints.collections()
+            this.collections = await endpoints.collections()
         })
     },
     methods: {
@@ -68,7 +68,7 @@ export default {
         async submitSearch() {
             this.$toasted.show(`Searching`).goAway(2500)
             this.searchResult = {}
-            this.searchResult = await this.endpoints.raw.all(this.searchOptions)
+            this.searchResult = await endpoints.raw.all(this.searchOptions)
             this.$toasted.show(`Search results returned`).goAway(2500)
         }
     }
