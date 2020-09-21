@@ -18,7 +18,7 @@
                 //- )
                 column
                     h5 Search Options
-                    jsonRoot.where(:initValue="{from: 'videos', maxNumberOfResults: 10}" @changeValue="newJsonValue")
+                    jsonRoot.json-root-class(:initValue="{from: 'videos', maxNumberOfResults: 10}" @changeValue="newJsonValue")
             
             column
                 h5 Search Results
@@ -95,7 +95,7 @@ export default {
 </script>
 
 <style lang="sass">
-.where
+.json-root-class
     padding: 1rem
 
 </style>
