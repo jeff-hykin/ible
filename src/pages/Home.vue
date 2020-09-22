@@ -100,6 +100,12 @@ export default {
     mounted() {
         // generate the UI for the labels right after mounting
         this.$rootHooks.watch.labels()
+        setTimeout(() => {
+            if (!this.loadedAll$) {
+                this.$toasted.show(`I think the Server might be down. \nComplain to Jeff Hykin`).goAway(3500)
+                this.$toasted.show(`I'll keep trying to connect in the meantime`).goAway(3500)
+            }
+        }, 2500)
     },
     rootHooks: {
         watch: {
@@ -245,6 +251,7 @@ export default {
         padding: 1.2rem 
         border-radius: var(--card-radius)
         width: 16rem
+        min-width: fit-content
         border: 3px solid white
         flex-grow: 1
         transition: all 0.25s ease-out

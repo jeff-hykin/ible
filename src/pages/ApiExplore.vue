@@ -68,8 +68,6 @@ export default {
         },
         async submitSearch() {
             this.$toasted.show(`Searching`).goAway(2500)
-            console.log(`about to await the endpoints.raw.all`)
-            console.debug(`this.searchOptions is:`,this.searchOptions)
             let result = await endpoints.raw.all(this.searchOptions)
             window.apiResult = result
             const numberOfCharsFoundToReallyReallyReallySlowTheUIDown = 24956

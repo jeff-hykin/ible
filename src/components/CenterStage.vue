@@ -20,12 +20,13 @@
                     span(v-if='!getVideoId()')
                         | Video Not Selected
                     
+                    //- :host="'http://www.youtube-nocookie.com/embed/' + getVideoId() + '?showinfo=0&enablejsapi=1&origin=http://localhost:1234'"
                     youtube(
                         v-if='getVideoId()'
                         :key="getVideoId()"
                         ref="youtube"
                         :video-id="getVideoId()"
-                        host="https://www.youtube-nocookie.com"
+                        :host="player ? 'http://www.youtube-nocookie.com': 'https://www.youtube.com'"
                         @ready="ready"
                         @playing="videoStartedPlaying"
                         :playerVars="{ /* disablekb: 1, end: 2 */ }"
@@ -209,7 +210,7 @@ export default {
                     // so busy-wait for that to happen
                     while (1) {
                         // wait the minimum amount of time
-                        await new Promise(r=>setTimeout(r,0))
+                        await new Promise(r=>setTimeout(r,generalTimeoutFrequency))
                         // if the video changed
                         if (!this.player || urlOfVideoToPlay != this.player.getVideoUrl()) {
                             // failed
@@ -347,6 +348,17 @@ export default {
     updated() {
         // the player reference doesn't exist till after update
         this.setThisPlayer()
+        // this is a hack because of an issue with the youtube embedded player throwing errors
+        // https://github.com/anteriovieira/vue-youtube/issues/38
+        // https://stackoverflow.com/questions/27573017/failed-to-execute-postmessage-on-domwindow-https-www-youtube-com-http
+        let interval 
+        interval = setInterval(() => {
+            if (this.player instanceof Object) {
+                clearInterval(interval)
+            } else {
+                this.setThisPlayer()
+            }
+        }, generalTimeoutFrequency)
     },
     windowListeners: {
         keydown(eventObj) {
@@ -470,7 +482,8 @@ export default {
     },
     methods: {
         setThisPlayer() {
-            if (this.$refs.youtube && this.$refs.youtube.player && this.$refs.youtube.player.getPlayerState) {
+            console.log(`setThisPlayer`)
+            if (this.$refs.youtube && this.$refs.youtube.player) {
                 this.player = this.$refs.youtube.player
             } else {
                 this.player = null
@@ -492,7 +505,7 @@ export default {
             // almost immediately change it back to something
             setTimeout(() => {
                 this.$root.labels[labelName] = actualValue
-            }, 0)
+            }, generalTimeoutFrequency)
         },
         videoSelect() {
             if (this.searchTerm.trim() == this.getVideoId()) {
