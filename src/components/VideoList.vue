@@ -1,5 +1,5 @@
 <template lang="pug">
-    column.video-list-container(width="100%" padding="1rem")
+    column.video-list-container(width="100%" padding="1rem" align-v="top")
         column.video-list-element(v-for="each in $root.relatedVideos()")
             div.overlay(@click="selectVideo($event, each)")
             youtube(
@@ -38,7 +38,9 @@ export default {
 
 <style lang='sass' scoped>
 
-    
+.video-list-container
+    overflow: scroll
+
 .video-list-element
     height: 12rem 
     min-height: 12rem
