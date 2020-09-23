@@ -107,6 +107,11 @@ export default RootComponent = {
                     output = output.filter(each=>each != this.selectedVideo.$id)
                 }
             }
+            // TODO: fix this by using dynamic loading
+            const maxRelatedVideoNumber = 20
+            if (output.length > maxRelatedVideoNumber) {
+                output = output.slice(0,maxRelatedVideoNumber)
+            }
             return output
         },
         getCachedVideoObject(id) {

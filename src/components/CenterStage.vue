@@ -20,13 +20,13 @@
                     span(v-if='!getVideoId()')
                         | Video Not Selected
                     
-                    //- :host="'http://www.youtube-nocookie.com/embed/' + getVideoId() + '?showinfo=0&enablejsapi=1&origin=http://localhost:1234'"
+                        //- :host="'https://www.youtube.com'"
                     youtube(
                         v-if='getVideoId()'
                         :key="getVideoId()"
                         ref="youtube"
+                        :host="this.player ? 'http://www.youtube-nocookie.com/' : 'https://www.youtube.com'"
                         :video-id="getVideoId()"
-                        :host="player ? 'http://www.youtube-nocookie.com': 'https://www.youtube.com'"
                         @ready="ready"
                         @playing="videoStartedPlaying"
                         :playerVars="{ /* disablekb: 1, end: 2 */ }"
@@ -482,8 +482,7 @@ export default {
     },
     methods: {
         setThisPlayer() {
-            console.log(`setThisPlayer`)
-            if (this.$refs.youtube && this.$refs.youtube.player) {
+            if (this.$refs.youtube && this.$refs.youtube.player && this.$refs.youtube.player.getPlayerState) {
                 this.player = this.$refs.youtube.player
             } else {
                 this.player = null
@@ -650,6 +649,7 @@ export default {
             this.videoStateInitilized.check()
             window.player = this.player // for debugging
             this.player.setVolume(0)
+            window.dispatchEvent(new CustomEvent("CenterStage: videoIsReady"))
         },
         async videoStartedPlaying() {
             this.$emit("CenterStage: videoStartedPlaying")

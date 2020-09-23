@@ -1,14 +1,20 @@
 <template lang="pug">
     column.video-list-container(width="100%" padding="1rem" align-v="top")
-        column.video-list-element(v-for="each in $root.relatedVideos()")
+        
+        column.video-list-element(v-for="each in videoList()")
             div.overlay(@click="selectVideo($event, each)")
-            youtube(
-                :video-id="each"
-                host="https://www.youtube-nocookie.com"
-                player-width="100%"
-                player-height="100%"
-                style="height: 100%;width: 100%;"
-            )
+                //- host="https://www.youtube-nocookie.com"
+                //- :host="'https://www.youtube.com'"
+            row(width="100%" height="100%" background="lightgrey" position="relative")
+                container(position="absolute" color="black" z-index="1")
+                    | loading...
+                youtube(
+                    :video-id="each"
+                    :host="host()"
+                    player-width="100%"
+                    player-height="100%"
+                    style="height: 100%;width: 100%; z-index: 2"
+                )
 </template>
 
 <script>
@@ -24,9 +30,25 @@ export default {
     }),
     watch: {
     },
+    windowListeners: {
+        "CenterStage: videoIsReady": function() {
+            this.$forceUpdate()
+        },
+    },
     mounted() {
     },
     methods: {
+        host() {
+            return window.player ? 'http://www.youtube-nocookie.com/' : 'https://www.youtube.com'
+        },
+        videoList() {
+            console.debug(`window is:`,window)
+            if (window.player) {
+                return this.$root.relatedVideos()
+            } else {
+                return []
+            }
+        },
         selectVideo(eventObj, videoId) {
             console.debug(`eventObj is:`,eventObj)
             // get it from the cache (auto-adds to cache if needed)
@@ -42,10 +64,10 @@ export default {
     overflow: scroll
 
 .video-list-element
-    height: 12rem 
-    min-height: 12rem
+    height: 14rem 
+    min-height: 14rem
     width: 100%  
-    margin-bottom: 1.5rem 
+    margin-bottom: 2rem 
     position: relative
     .overlay
         width: 100%
