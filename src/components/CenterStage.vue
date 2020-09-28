@@ -401,6 +401,9 @@ export default {
             },
             // when the selected video changes
             selectedVideo(newValue, oldValue) {
+                if (this.$refs.youtube && this.$refs.youtube.$destroy instanceof Function) {
+                    this.$refs.youtube.$destroy()
+                }
                 console.debug(`EVENT-watch: selectedVideo changed`)
                 logBlock({name: "selectedVideo changed [CenterStage:watch]"}, async ()=>{
                     // 
