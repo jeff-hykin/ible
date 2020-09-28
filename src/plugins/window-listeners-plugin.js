@@ -10,7 +10,9 @@ Vue.mixin(module.exports = {
         if (!newOption) {
             return
         }
-        const vueStaticDestination = this.$windowListeners || this
+        let windowListeners = {...this.$windowListeners}
+        this.$windowListeners = {}
+        const vueStaticDestination = windowListeners || this
         if (vueStaticDestination instanceof Object) {
             if (newOption instanceof Function) {
                 Object.assign(vueStaticDestination, newOption.apply(this))
@@ -18,21 +20,22 @@ Vue.mixin(module.exports = {
                 Object.assign(vueStaticDestination, newOption)
             }
         }
-
-        this[windowListenersSymbol] = []
-        if (this.$windowListeners instanceof Object) {
-            for (let [eachKey, eachValue] of Object.entries(this.$windowListeners)) {
+        
+        this[windowListenersSymbol] = {}
+        if (windowListeners instanceof Object) {
+            for (let [eachKey, eachValue] of Object.entries(windowListeners)) {
                 if (eachValue.bind instanceof Function) {
                     eachValue = eachValue.bind(this)
                 }
+                this[windowListenersSymbol][eachKey] = eachValue
                 window.addEventListener(eachKey, eachValue)
             }
         }
     },
     beforeDestroy() {
         // remove all the listeners
-        if (this.$windowListeners instanceof Object) {
-            for (let [eachKey, eachValue] of Object.entries(this.$windowListeners)) {
+        if (this[windowListenersSymbol] instanceof Object) {
+            for (let [eachKey, eachValue] of Object.entries(this[windowListenersSymbol])) {
                 window.removeEventListener(eachKey, eachValue)
             }
         }
