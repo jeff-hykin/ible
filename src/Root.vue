@@ -116,6 +116,7 @@ export default RootComponent = {
         },
         getCachedVideoObject(id) {
             return logBlock({name: "getCachedVideoObject"}, ()=>{
+                console.debug(`id is:`,id)
                 // if video isn't cached
                 if (!(this.$root.videos[id] instanceof Object)) {
                     // then cache it

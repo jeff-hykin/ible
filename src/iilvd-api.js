@@ -24,7 +24,7 @@ let endpoints = new Promise(async (resolve, reject)=>{
     let endpointPaths
     try {
         endpointPaths = await databaseApiCall("smartEndpoints")
-        console.debug(`=\n=\n=\n= endpointPaths is:`,endpointPaths)
+        console.debug(`endpointPaths is:`,endpointPaths)
     } catch (error) {
         console.error("couldn't get the endpoints from the database")
         endpointPaths = []
