@@ -1,6 +1,7 @@
 <template lang="pug">
     column.video-list-container(width="100%" padding="1rem" align-v="top")
-        
+        span(v-if="videoList() instanceof Array && videoList().length == 0")
+            | (no other videos with this label)
         column.video-list-element(v-for="each in videoList()")
             div.overlay(@click="selectVideo($event, each)")
                 //- host="https://www.youtube-nocookie.com"
@@ -60,6 +61,9 @@ export default {
 
 <style lang='sass' scoped>
 
+span
+    color: black
+    
 .video-list-container
     overflow: scroll
 
@@ -73,39 +77,4 @@ export default {
         width: 100%
         height: 100%
         position: absolute
-    
-.segment
-    border-top: gray solid 2px
-    background: #f7f8f9
-    padding-top: 1pc
-    margin-bottom: 1rem
-    min-width: 100%
-    color: black
-    opacity: 0.7
-    transition: all 0.25s ease-out
-    
-    .json-tree-root
-        border-bottom: gray solid 2px
-        max-width: 50vw
-        min-width: 3rem
-        width: 100%
-        padding: 1rem
-        border-radius: 0
-    
-    h5
-        padding: 0 1pc
-        
-    &.selected
-        padding-bottom: 2pc
-        font-weight: bold
-        background: #2196f3
-        color: white
-        opacity: 1
-        
-        .json-tree-root
-            margin-left: 1rem
-            margin-right: 1rem
-            
-        h5
-            padding: 1pc 1pc
 </style>

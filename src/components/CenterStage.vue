@@ -8,6 +8,9 @@
                 v-model="searchTerm"
                 :suggestions="suggestions"
             )
+            span(v-if='getVideoId()' style="color: darkgrey;")
+                | Current Video ID: {{getVideoId()}}
+            
         //- Video area
         row.video-container(flex-basis="100%" padding-top="1rem" align-v="top")
             column(align-v="top").video-width-sizer

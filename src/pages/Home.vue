@@ -90,6 +90,9 @@ export default {
         require("../mixins/loader"),
     ],
     data: ()=>({
+        needToLoad$: {
+            endpoints,
+        },
         items: {},
         searchTerm: "",
         fuseSuggestor: null,
@@ -102,8 +105,8 @@ export default {
         this.$rootHooks.watch.labels()
         setTimeout(() => {
             if (!this.loadedAll$) {
-                this.$toasted.show(`I think the Server might be down. \nComplain to Jeff Hykin`).goAway(3500)
-                this.$toasted.show(`I'll keep trying to connect in the meantime`).goAway(3500)
+                this.$toasted.show(`I think the Server might be down. \nComplain to Jeff Hykin`).goAway(6500)
+                this.$toasted.show(`I'll keep trying to connect in the meantime`).goAway(6500)
             }
         }, 2500)
     },
