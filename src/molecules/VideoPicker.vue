@@ -1,18 +1,21 @@
 <template lang="pug">
-    column.video-list-container(width="100%" padding="1rem" align-v="top")
-        span(v-if="videoList() instanceof Array && videoList().length == 0")
-            | (no other videos with this label)
-        column.video-list-element(v-for="eachVideoId in videoList()" @click="selectVideo($event, eachVideoId)")
-            span.video-title
-                | {{getTitleFor(eachVideoId)}}
-            row(width="100%" height="100%" :background="`url(http://img.youtube.com/vi/${eachVideoId}/mqdefault.jpg)`" position="relative")
-                //- containe
+    container.nub(align-self="top" @mouseover="onHover" :visibility="$root.selectedLabel? 'visible' : 'hidden'")
+        | Videos
+        portal(to="right-panel")
+            column.video-list-container(width="100%" padding="1rem" align-v="top")
+                span(v-if="videoList() instanceof Array && videoList().length == 0")
+                    | (no other videos with this label)
+                column.video-list-element(v-for="eachVideoId in videoList()" @click="selectVideo($event, eachVideoId)")
+                    span.video-title
+                        | {{getTitleFor(eachVideoId)}}
+                    row.thumbnail(width="100%" height="100%" :background-image="`url(http://img.youtube.com/vi/${eachVideoId}/mqdefault.jpg)`" position="relative")
 </template>
 
 <script>
 const endpoints = require("../iilvd-api").endpoints
 const { wrapIndex } = require('../utils')
 const { dynamicSort, logBlock } = require("good-js")
+const { openPanel } = require("../templates/RightSidePanel")
 
 export default {
     props: [],
@@ -34,6 +37,9 @@ export default {
     mounted() {
     },
     methods: {
+        onHover() {
+            openPanel()
+        },
         host() {
             return window.player ? 'http://www.youtube-nocookie.com/' : 'https://www.youtube.com'
         },
@@ -84,6 +90,24 @@ export default {
 </script>
 
 <style lang='sass' scoped>
+.nub
+    position: fixed
+    top: 0
+    right: 0
+    left: unset
+    height: var(--nub-size)
+    width: var(--nub-size)
+    background: var(--red)
+    color: white
+    padding: 1rem
+    padding-top: 2rem
+    border-bottom-left-radius: var(--nub-size)
+    text-align: right
+    align-items: flex-end
+
+.thumbnail
+    background-size: cover
+    background-repeat: no-repeat
 
 span
     color: black

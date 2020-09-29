@@ -32,7 +32,7 @@ const FileSaver = require('file-saver')
 export default {
     name: "ApiExplore",
     components: {
-        Loader: require('../components/Loader').default,
+        Loader: require('../atoms/Loader').default,
         JsonTree: require('vue-json-tree').default,
         jsonRoot: require("edit-json-vue/src/jsonRoot.vue").default,
         

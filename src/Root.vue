@@ -3,6 +3,8 @@
         //- [ Put stuff you always want to exist here (like a nav bar) ]
         //- This (below) will load to the Home page by default 
         router-view
+        LeftSidePanel
+        RightSidePanel
 </template>
 <script>
 
@@ -16,6 +18,7 @@ import './plugins/youtube-player-plugin'
 import './plugins/root-hooks-plugin'
 import './plugins/window-listeners-plugin'
 import './plugins/resolvables-plugin'
+import './plugins/portal-plugin'
 import { Router } from './plugins/router-plugin'
 const endpoints = require("./iilvd-api").endpoints
 const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
@@ -54,7 +57,10 @@ setTimeout(()=>(new (Vue.extend(RootComponent))).$mount('#vue-root'),0)
 // actually create the App, user router to pick main pages
 export default RootComponent = {
     name: 'RootComponent',
-    components: {},
+    components: {
+        LeftSidePanel: require("./templates/LeftSidePanel").default,
+        RightSidePanel: require("./templates/RightSidePanel").default,
+    },
     // 
     // routes
     // 
