@@ -2,7 +2,18 @@
 //     rootHooks
 let Vue = require("vue").default
 
-Vue.prototype.$rootHooks = {}
+let rootHooksSymbol = Symbol("$rootHooks")
+Object.defineProperty(Vue.prototype, "$rootHooks", {
+    get() {
+        if (this[rootHooksSymbol] == undefined) {
+            this[rootHooksSymbol] = {}
+        }
+        return this[rootHooksSymbol]
+    },
+    set(value) {
+        this[rootHooksSymbol] = value
+    }
+})
 const unwatcherSymbol = Symbol("unwatchers")
 Vue.mixin(module.exports = {
     beforeCreate () {
