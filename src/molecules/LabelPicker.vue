@@ -1,7 +1,7 @@
 <template lang="pug">
     container(align-self="top" @mouseover="onHover").nub
         | Labels
-        portal(to="left-panel")
+        portal(to="left-panel" :order="order")
             column.label-search(align-v='top' width='100%' min-width="100%" align-self="top")
                 //- top bar search area
                 column.top-bar-container(width="100%" padding="1rem")
@@ -44,6 +44,7 @@ export default {
         needToLoad$: {
             endpoints,
         },
+        order: 2,
         items: {},
         searchTerm: "",
         fuseSuggestor: null,
@@ -57,7 +58,7 @@ export default {
                 this.$toasted.show(`I think the Server might be down. \nComplain to Jeff Hykin`).goAway(6500)
                 this.$toasted.show(`I'll keep trying to connect in the meantime`).goAway(6500)
             }
-        }, 2500)
+        }, 3500)
     },
     watch: {
         // when the search term changes
@@ -103,8 +104,14 @@ export default {
     },
     methods: {
         onHover() {
-            console.log(`hovering`)
+            // this looks werid, but basically it just allows kicking-out
+            // whatever used to be in the sidepanel
+            this.order = 2
+            this.$forceUpdate()
             openPanel()
+            setTimeout(() => {
+                this.order = 1
+            }, 0)
         },
         selectLabel(labelName, label) {
             console.debug(`EVENT: selectLabel callback (Home.vue)`)

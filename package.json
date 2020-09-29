@@ -10,6 +10,7 @@
         "serve": "npx http-server ./docs/"
     },
     "dependencies": {
+        "clipboardy": "^2.3.0",
         "css-baseline": "^1.1.10",
         "edit-json-vue": "^1.0.13",
         "file-saver": "^2.0.2",

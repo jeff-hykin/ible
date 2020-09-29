@@ -6,8 +6,8 @@
                 span(v-if="videoList() instanceof Array && videoList().length == 0")
                     | (no other videos with this label)
                 column.video-list-element(v-for="eachVideoId in videoList()" @click="selectVideo($event, eachVideoId)")
-                    span.video-title
-                        | {{getTitleFor(eachVideoId)}}
+                    //- span.video-title
+                    //-     | {{getTitleFor(eachVideoId)}}
                     row.thumbnail(width="100%" height="100%" :background-image="`url(http://img.youtube.com/vi/${eachVideoId}/mqdefault.jpg)`" position="relative")
 </template>
 
@@ -67,7 +67,7 @@ export default {
                         if (!(videoObject.summary instanceof Object)) {
                             videoObject.summary = {}
                         }
-                        videoObject.summary.title = title
+                        videoObject.summary.title = title || null
                         this.$forceUpdate()
                     })
                 })
