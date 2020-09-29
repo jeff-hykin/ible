@@ -4,7 +4,7 @@
         portal(to="right-panel")
             column.video-list-container(width="100%" padding="1rem" align-v="top")
                 span(v-if="videoList() instanceof Array && videoList().length == 0")
-                    | (no other videos with this label)
+                    | (Loading or no other videos with this label)
                 column.video-list-element(v-for="eachVideoId in videoList()" @click="selectVideo($event, eachVideoId)")
                     //- span.video-title
                     //-     | {{getTitleFor(eachVideoId)}}

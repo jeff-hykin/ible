@@ -6,8 +6,14 @@
 <script>
 const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
 
+let oldOwner = { giveUpControl: ()=>0 }
 export let openPanel = ()=>{
     console.log(`opening panel`)
+    window.dispatchEvent(new CustomEvent("LeftSidePanel: Open"))
+}
+export let takeover = (giveUpControlCallback)=>{
+    oldOwner.giveUpControl()
+    oldOwner.giveUpControl = giveUpControlCallback
     window.dispatchEvent(new CustomEvent("LeftSidePanel: Open"))
 }
 export let closePanel = ()=>{
@@ -51,6 +57,7 @@ export default {
     box-shadow: var(--shadow-3)
     transform: translateX(-105%)
     transition: transform 0.15s ease-in-out, width 1.15s ease-in
+    overflow: auto
     
     &.open
         transform: translateX(0%) !important

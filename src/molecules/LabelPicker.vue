@@ -1,7 +1,7 @@
 <template lang="pug">
     container(align-self="top" @mouseover="onHover").nub
         | Labels
-        portal(to="left-panel" :order="order")
+        portal(to="left-panel" v-if="useLeftPanel")
             column.label-search(align-v='top' width='100%' min-width="100%" align-self="top")
                 //- top bar search area
                 column.top-bar-container(width="100%" padding="1rem")
@@ -30,7 +30,7 @@
 
 <script>
 const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
-const { openPanel } = require("../templates/LeftSidePanel")
+const { openPanel, takeover } = require("../templates/LeftSidePanel")
 let Fuse = require("fuse.js").default
 
 export default {
@@ -41,10 +41,10 @@ export default {
         require("../mixins/loader"),
     ],
     data: ()=>({
+        useLeftPanel: true,
         needToLoad$: {
             endpoints,
         },
-        order: 2,
         items: {},
         searchTerm: "",
         fuseSuggestor: null,
@@ -104,14 +104,10 @@ export default {
     },
     methods: {
         onHover() {
-            // this looks werid, but basically it just allows kicking-out
-            // whatever used to be in the sidepanel
-            this.order = 2
-            this.$forceUpdate()
-            openPanel()
-            setTimeout(() => {
-                this.order = 1
-            }, 0)
+            // this component takes over the left panel, and passes 
+            // a callback that (when called) gives up control
+            takeover(()=>(this.useLeftPanel = false))
+            this.useLeftPanel = true
         },
         selectLabel(labelName, label) {
             console.debug(`EVENT: selectLabel callback (Home.vue)`)

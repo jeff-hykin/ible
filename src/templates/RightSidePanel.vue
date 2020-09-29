@@ -47,6 +47,7 @@ export default {
     box-shadow: var(--shadow-3)
     transform: translateX(105%)
     transition: transform 0.15s ease-in-out, width 1.15s ease-in
+    overflow: auto
     
     &.open
         transform: translateX(0%) !important

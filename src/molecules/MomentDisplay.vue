@@ -1,7 +1,7 @@
 <template lang="pug">
-    container(align-self="top" @mouseover="onHover" :order="order" v-if="$root.selectedSegment").nub
+    container(align-self="top" @mouseover="onHover" v-if="$root.selectedSegment").nub
         | Moment
-        portal(to="left-panel" :order="order")
+        portal(to="left-panel" v-if="useLeftPanel")
             column(align-v="top" padding="1rem" :data-clipboard-text="getMomentData()")
                 H4
                     | Raw Moment
@@ -15,15 +15,15 @@
 
 <script>
 const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
-const { openPanel } = require("../templates/LeftSidePanel")
+const { openPanel, takeover } = require("../templates/LeftSidePanel")
 const clipboardy = require('clipboardy')
 
 export default {
     components: {
         JsonTree: require('vue-json-tree').default,
     },
-    data: ()=>({ 
-        order: 2
+    data: ()=>({
+        useLeftPanel: false,
     }),
     methods: {
         copyToClipBoard() {
@@ -50,14 +50,10 @@ export default {
             )
         },
         onHover() {
-            // this looks werid, but basically it just allows kicking-out
-            // whatever used to be in the sidepanel
-            this.order = 2
-            this.$forceUpdate()
-            openPanel()
-            setTimeout(() => {
-                this.order = 1
-            }, 0)
+            // this component takes over the left panel, and passes 
+            // a callback that (when called) gives up control
+            takeover(()=>(this.useLeftPanel = false))
+            this.useLeftPanel = true
         }
     }
 }

@@ -10,21 +10,13 @@
 
 // libs and plugins
 import Vue from "vue"
-import './plugins/css-baseline-plugin'
-import './plugins/good-vue-plugin'
-import './plugins/keen-ui-plugin'
-import './plugins/vue-toasted-plugin'
-import './plugins/youtube-player-plugin'
-import './plugins/root-hooks-plugin'
-import './plugins/window-listeners-plugin'
-import './plugins/resolvables-plugin'
-import './plugins/portal-plugin'
-import { Router } from './plugins/router-plugin'
+import plugins from "./plugins/*.js"
+import pages from "./pages/*.vue"
 const endpoints = require("./iilvd-api").endpoints
+
+import { Router } from './plugins/router-plugin'
 const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
 
-// Pages 
-import pages from "./pages/*.vue"
 // make sure home page exists
 if (!("Home" in pages)) {
     throw Error("Hey, this template expects there to be a 'Home.vue' page.\nIf you don't want one that's fine. Just change the router in the App.vue file so it doesn't expect/need one")
@@ -72,6 +64,10 @@ export default RootComponent = {
                 name: eachPageName,
                 component: pages[eachPageName].default,
             })),
+            {
+                path: '/video/:id',
+                component: pages.Home.default
+            },
             // all other routes redirect to the home page
             // You can change this to a 404 page if you want
             {
@@ -114,7 +110,7 @@ export default RootComponent = {
                 }
             }
             // TODO: fix this by using dynamic loading
-            const maxRelatedVideoNumber = 20
+            const maxRelatedVideoNumber = 100
             if (output.length > maxRelatedVideoNumber) {
                 output = output.slice(0,maxRelatedVideoNumber)
             }
