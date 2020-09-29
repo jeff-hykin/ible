@@ -55,8 +55,14 @@ export default {
         this.$rootHooks.watch.labels()
         setTimeout(() => {
             if (!this.loadedAll$) {
-                this.$toasted.show(`I think the Server might be down. \nComplain to Jeff Hykin`).goAway(6500)
-                this.$toasted.show(`I'll keep trying to connect in the meantime`).goAway(6500)
+                this.$toasted.show(`Are you on the A&M VPN?`).goAway(6500)
+                setTimeout(() => {
+                    this.$toasted.show(`If you are, then I think the Server might be down`).goAway(6500)
+                    this.$toasted.show(`(Complain to jeff.hykin@gmail.com)`).goAway(6500)
+                    setTimeout(()=>{
+                        this.$toasted.show(`I'll keep trying to connect in the meantime`).goAway(6500)
+                    }, 600)
+                }, 700)
             }
         }, 3500)
     },
