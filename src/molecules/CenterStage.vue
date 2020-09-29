@@ -11,7 +11,7 @@
             span(v-if='getVideoId()' style="color: darkgrey;")
                 | Current Video ID: {{getVideoId()}}
                 br
-                | Pause Time: {{currentTime.toFixed()}} ms
+                | Pause Time: {{currentTime}} ms
             
         //- Video area
         row.video-container(flex-basis="100%" padding-top="1rem" align-v="top")
@@ -71,6 +71,55 @@
                                 | length: {{  (eachSegment.end - eachSegment.start).toFixed(2) }} sec
                                 br
                                 | start: {{ eachSegment.start }} sec
+                //- 
+                //- new moment
+                //- 
+                container.new-moment-wrapper(
+                    v-if="$root.selectedVideo"
+                    width="40rem"
+                )
+                    ui-collapsible(title="Add A Moment" style="background: transparent !important;" @open="newMomentExpanded") 
+                        row(position="relative" padding="1.5rem 0")
+                            column(width="50%")
+                                ui-textbox(
+                                    floating-label
+                                    label="whichVideo (videoId)"
+                                    v-model="momentData.whichVideo"
+                                )
+                                ui-textbox(
+                                    label="startTime (miliseconds)"
+                                    :placeholder="`${momentData.startTime}`"
+                                    v-model.number="momentData.startTime"
+                                    type="number"
+                                )
+                                ui-textbox(
+                                    ref="endTime"
+                                    label="endTime (miliseconds)"
+                                    :placeholder="`${momentData.endTime}`"
+                                    v-model.number="momentData.endTime"
+                                    type="number"
+                                )
+                                ui-textbox(
+                                    floating-label
+                                    label="username (or name of model)"
+                                    v-model="momentData.username"
+                                )
+                                ui-textbox(
+                                    floating-label
+                                    label="label"
+                                    v-model="momentData.label"
+                                )
+                                ui-switch(v-model="momentData.fromHuman")
+                                    | fromHuman
+                            
+                            column(width="45%" margin-left="1rem")
+                                h5
+                                    | API Respresentation
+                                container(color="gray" align-self="flex-start" font-weight="100" font-size="12pt" margin-top="1rem")
+                                    | endpoints.addKeySegment(
+                                JsonTree.json-tree-root(:data="getMomentData()")
+                                container(color="gray" align-self="flex-start" font-weight="100" font-size="12pt")
+                                    | )
 
         
 </template>
@@ -120,9 +169,18 @@ storageObject.cachedVideoIds || (storageObject.cachedVideoIds = [])
 
 export default {
     props: [],
-    components: { 
+    components: {
+        JsonTree: require('vue-json-tree').default,
     },
     data: ()=>({
+        momentData: {
+            whichVideo: null,
+            startTime: 0,
+            endTime: 0,
+            username: "",
+            label: "",
+            fromHuman: true,
+        },
         currentTime: 0,
         searchTerm: null,
         suggestions: [],
@@ -354,7 +412,7 @@ export default {
         // update the time periodically
         setInterval(() => {
             if (this.player && this.player.getCurrentTime instanceof Function) {
-                this.currentTime = this.player.getCurrentTime()*1000
+                this.currentTime = (this.player.getCurrentTime()*1000).toFixed()
             }
         }, 700)
     },
@@ -379,18 +437,19 @@ export default {
             // 
             // key controls
             // 
+            // This is disabled because the don't pay attention to the textboxes
             switch (eventObj.key) {
                 case "ArrowDown":
                     eventObj.preventDefault()
-                    this.incrementIndex()
+                    // this.incrementIndex()
                     break
                 case "ArrowUp":
                     eventObj.preventDefault()
-                    this.decrementIndex()
+                    // this.decrementIndex()
                     break
                 case " ":
                     eventObj.preventDefault()
-                    this.togglePlayPause()
+                    // this.togglePlayPause()
                     break
                 default:
                     // we dont care about other keys
@@ -497,6 +556,23 @@ export default {
         }
     },
     methods: {
+        getMomentData() {
+            return {
+                whichVideo: this.momentData.whichVideo,
+                startTime: this.momentData.startTime-0,
+                endTime: this.momentData.endTime-0,
+                username: this.momentData.username,
+                data: {
+                    label: this.momentData.label,
+                    fromHuman: this.momentData.fromHuman,
+                }
+            }
+        },
+        newMomentExpanded() {
+            this.momentData.whichVideo = this.$root.selectedVideo.$id
+            this.momentData.startTime = this.currentTime
+            this.momentData.endTime = this.currentTime
+        },
         videoWasPaused(...args) {
             this.currentTime = this.player.getCurrentTime()*1000
         },
@@ -794,6 +870,7 @@ export default {
         .ui-checkbox
             margin: 0
     
+    
     .segments
         width: 100%
         align-items: flex-start
@@ -802,7 +879,6 @@ export default {
         background: white
         border-radius: 1rem
         box-shadow: var(--shadow-1)
-        margin-bottom: 5rem
 
         h5
             color: gray
@@ -828,7 +904,17 @@ export default {
                 &:hover
                     box-shadow: var(--shadow-1)
                     opacity: 0.9
-                
+    .new-moment-wrapper
+        .ui-textbox
+            width: 85%
+        .ui-collapsible__header
+            background: transparent !important
+            color: gray
+            border-radius: 1rem
+        .ui-collapsible__body
+            border: 1px solid darkgray
+            border-radius: 1rem
+            
 .circle-button
     background: var(--vue-green)
     color: white
@@ -853,4 +939,9 @@ export default {
             position: relative
             right: -100%
 
+.json-tree-root
+    min-width: 100%
+    min-height: 100%
+    background: transparent
+    
 </style>

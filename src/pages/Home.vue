@@ -8,6 +8,7 @@
             CenterStage
         
         VideoPicker
+            
                 
 </template>
 <script>
@@ -42,6 +43,22 @@ export default {
         LabelPicker: require("../molecules/LabelPicker").default,
         MomentDisplay: require("../molecules/MomentDisplay").default,
     },
+    methods: {
+        newMoment() {
+            
+            let videoId = this.$root.selectedVideo.$id
+            let moment = {
+                whichVideo: videoId,
+                startTime: 275913,
+                endTime: 279922,
+                username: "jeff.hykin",
+                data: {
+                    label: "Happy",
+                    fromHuman: true
+                }   
+            }
+        }
+    }
 }
 </script>
 <style lang="sass">
