@@ -10,6 +10,8 @@
             )
             span(v-if='getVideoId()' style="color: darkgrey;")
                 | Current Video ID: {{getVideoId()}}
+                br
+                | Pause Time: {{currentTime.toFixed()}} ms
             
         //- Video area
         row.video-container(flex-basis="100%" padding-top="1rem" align-v="top")
@@ -32,6 +34,7 @@
                         :video-id="getVideoId()"
                         @ready="ready"
                         @playing="videoStartedPlaying"
+                        @paused="videoWasPaused"
                         :playerVars="{ /* disablekb: 1, end: 2 */ }"
                         player-width="100%"
                         player-height="100%"
@@ -120,6 +123,7 @@ export default {
     components: { 
     },
     data: ()=>({
+        currentTime: 0,
         searchTerm: null,
         suggestions: [],
         player: null,
@@ -347,6 +351,12 @@ export default {
         window.centerStage = this
         // add some default suggestions
         this.suggestions = storageObject.cachedVideoIds
+        // update the time periodically
+        setInterval(() => {
+            if (this.player && this.player.getCurrentTime instanceof Function) {
+                this.currentTime = this.player.getCurrentTime()*1000
+            }
+        }, 700)
     },
     updated() {
         // the player reference doesn't exist till after update
@@ -487,6 +497,9 @@ export default {
         }
     },
     methods: {
+        videoWasPaused(...args) {
+            this.currentTime = this.player.getCurrentTime()*1000
+        },
         setThisPlayer() {
             if (this.$refs.youtube && this.$refs.youtube.player && this.$refs.youtube.player.getPlayerState) {
                 this.player = this.$refs.youtube.player
