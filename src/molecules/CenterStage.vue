@@ -564,7 +564,7 @@ export default {
                 startTime: this.momentData.startTime-0,
                 endTime: this.momentData.endTime-0,
                 username: this.momentData.username,
-                data: {
+                observation: {
                     label: this.momentData.label,
                     fromHuman: this.momentData.fromHuman,
                 }
