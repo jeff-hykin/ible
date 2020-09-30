@@ -6,11 +6,12 @@
                 H4
                     | Raw Moment
                 JsonTree.json-tree-root(:raw="getMomentData()")
-                ui-button(
-                    color="primary"
-                    @click="copyToClipBoard"
-                )
-                    | Copy ^ To Clipboard
+                //- The Below code fails because the server isn't https
+                //- ui-button(
+                //-     color="primary"
+                //-     @click="copyToClipBoard"
+                //- )
+                //-     | Copy ^ To Clipboard
 </template>
 
 <script>
@@ -26,8 +27,8 @@ export default {
         useLeftPanel: false,
     }),
     methods: {
-        copyToClipBoard() {
-            clipboardy.write(this.getMomentData())
+        async copyToClipBoard() {
+            await clipboardy.write(this.getMomentData())
             this.$toasted.show(`Copied to clipboard!`).goAway(4500)
         },
         getMomentData() {
