@@ -824,6 +824,7 @@ export default {
     .video-container
         width: 100%
         max-width: 100vw
+        margin-bottom: 5.5rem
         
         .video-width-sizer
             --max-width: calc(40rem + 30vw)
@@ -890,7 +891,7 @@ export default {
             
         
         .level
-            width: 100%
+            width: 95%
             height: 2.2rem
             // border-bottom: #e0e0e0 1px solid
             overflow: hidden
