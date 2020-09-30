@@ -9,6 +9,8 @@
                 :suggestions="suggestions"
             )
             span(v-if='getVideoId()' style="color: darkgrey;")
+                | Selected Label: {{$root.selectedLabel.name}}
+                br
                 | Current Video ID: {{getVideoId()}}
                 br
                 | Pause Time: {{currentTime}} ms

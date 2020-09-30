@@ -2,6 +2,8 @@
     container.nub(align-self="top" @mouseover="onHover" :visibility="$root.selectedLabel? 'visible' : 'hidden'")
         | Videos
         portal(to="right-panel")
+            h5(style="width: 100%; text-align: center; padding-top: 1rem; padding-bottom: 1rem; color: gray; text-decoration: underline;")
+                | Videos Containing: {{$root.selectedLabel.name}}
             column.video-list-container(width="100%" padding="1rem" align-v="top")
                 span(v-if="videoList() instanceof Array && videoList().length == 0")
                     | (Loading or no other videos with this label)
