@@ -576,7 +576,7 @@ export default {
             this.momentData.endTime = this.currentTime
         },
         videoWasPaused(...args) {
-            this.currentTime = this.player.getCurrentTime()*1000
+            this.currentTime = (this.player.getCurrentTime()*1000).toFixed()
         },
         setThisPlayer() {
             if (this.$refs.youtube && this.$refs.youtube.player && this.$refs.youtube.player.getPlayerState) {
