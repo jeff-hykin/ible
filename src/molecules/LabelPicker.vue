@@ -61,8 +61,8 @@ export default {
                     this.$toasted.show(`(Complain to jeff.hykin@gmail.com)`).goAway(6500)
                     setTimeout(()=>{
                         this.$toasted.show(`I'll keep trying to connect in the meantime`).goAway(6500)
-                    }, 600)
-                }, 700)
+                    }, 1600)
+                }, 1700)
             }
         }, 3500)
     },
