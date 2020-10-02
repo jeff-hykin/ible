@@ -1,72 +1,46 @@
 <template lang="pug">
-    column.main-container(v-if='$root.selectedVideo' :opacity='$root.selectedVideo? 1 : 0' flex-grow=1)
-        //- search for video
-        column.top-bar-container(width="100%" padding="1rem")
-            ui-autocomplete.rounded-search(
-                placeholder="Search for a video id"
-                @select="videoSelect"
-                v-model="searchTerm"
-                :suggestions="suggestions"
-            )
-            span(v-if='$root.getVideoId()' style="color: darkgrey;")
-                | Selected Label: {{$root.selectedLabel.name}}
-                br
-                | Current Video ID: {{$root.getVideoId()}}
-                br
-                | Pause Time: {{currentTime}} ms
-            
-        row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top")
-            //- Video area
-            column(align-v="top").video-width-sizer
-                row.video-sizer
-                    //- BACK
-                    SideButton(left @click='decrementIndex')
-                    
-                    youtube(
-                        v-if='$root.getVideoId()'
-                        :key="$root.getVideoId()"
-                        ref="youtube"
-                        :host="this.player ? 'http://www.youtube-nocookie.com/' : 'https://www.youtube.com'"
-                        :video-id="$root.getVideoId()"
-                        @ready="ready"
-                        @playing="videoStartedPlaying"
-                        @paused="videoWasPaused"
-                        :playerVars="{ /* disablekb: 1, end: 2 */ }"
-                        player-width="100%"
-                        player-height="100%"
-                        style="height: 100%;width: 100%;"
-                    )
-                    //- NEXT
-                    SideButton(right @click='incrementIndex')
+    row
+        column.main-container(v-if='$root.selectedVideo' :opacity='$root.selectedVideo? 1 : 0' flex-grow=1)
+            //- search for video
+            column.top-bar-container(width="100%" padding="1rem")
+                ui-autocomplete.rounded-search(
+                    placeholder="Search for a video id"
+                    @select="videoSelect"
+                    v-model="searchTerm"
+                    :suggestions="suggestions"
+                )
                 
-                //- Segments
-                column.segments(align-h="left")
-                    h5
-                        | Labels
-                    row.labels
-                        container(v-for="(eachLevel, eachLabelName) in $root.labels" :background-color="$root.labels[eachLabelName].color")
-                            ui-checkbox(v-model="$root.labels[eachLabelName].selected" @change="toggleLabel(eachLabelName)")
-                                | {{eachLabelName}}
-                    h5(v-if="segmentsInfo.organizedSegments.length > 0")
-                        | Moments
-                    row.level(v-if="segmentsInfo.organizedSegments.length > 0" align-h="space-between" position="relative" :height="`${segmentsInfo.maxLevel*2.2}rem`")
-                        row.segment(
-                            v-for="(eachSegment, index) in segmentsInfo.organizedSegments"
-                            :left="eachSegment.$renderData.leftPercent"
-                            :width="eachSegment.$renderData.widthPercent"
-                            :top="eachSegment.$renderData.topAmount"
-                            :background-color="$root.labels[eachSegment.$data.label].color"
-                            :key="eachSegment.listIndex"
-                            @click="jumpSegment(eachSegment.$displayIndex)"
+            row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top")
+                //- Video area
+                column(align-v="top").video-width-sizer
+                    row.video-sizer
+                        youtube(
+                            v-if='$root.getVideoId()'
+                            :key="$root.getVideoId()"
+                            ref="youtube"
+                            :host="this.player ? 'http://www.youtube-nocookie.com/' : 'https://www.youtube.com'"
+                            :video-id="$root.getVideoId()"
+                            @ready="ready"
+                            @playing="videoStartedPlaying"
+                            @paused="videoWasPaused"
+                            :playerVars="{ /* disablekb: 1, end: 2 */ }"
+                            player-width="100%"
+                            player-height="100%"
+                            style="height: 100%;width: 100%;"
                         )
-                            ui-tooltip(position="left" animation="fade")
-                                | label: {{ eachSegment.$data.label }}
-                                br
-                                | length: {{  (eachSegment.end - eachSegment.start).toFixed(2) }} sec
-                                br
-                                | start: {{ eachSegment.start }} sec
-            column
-                MomentEditor(:momentData="momentData")
+                        
+                    
+                    container.below-video
+                        //- BACK
+                        SideButton.left-side-button(left @click='decrementIndex')
+                        //- segments
+                        SegmentDisplay(:segmentsInfo="segmentsInfo" :jumpSegment="jumpSegment")
+                        //- NEXT
+                        SideButton.right-side-button(right @click='incrementIndex')
+
+        column
+            InfoSection
+            MomentEditor
 
 </template>
 
@@ -116,20 +90,12 @@ storageObject.cachedVideoIds || (storageObject.cachedVideoIds = [])
 export default {
     props: [],
     components: {
-        JsonTree: require('vue-json-tree').default,
         SideButton: require("../atoms/SideButton").default,
+        InfoSection: require("../molecules/InfoSection").default,
         MomentEditor: require("../organisms/MomentEditor").default,
+        SegmentDisplay: require("../organisms/SegmentDisplay").default,
     },
     data: ()=>({
-        momentData: {
-            whichVideo: null,
-            startTime: 0,
-            endTime: 0,
-            username: "",
-            label: "",
-            fromHuman: true,
-        },
-        currentTime: 0,
         searchTerm: null,
         suggestions: [],
         player: null,
@@ -357,12 +323,7 @@ export default {
         window.centerStage = this
         // add some default suggestions
         this.suggestions = storageObject.cachedVideoIds
-        // update the time periodically
-        setInterval(() => {
-            if (this.player && this.player.getCurrentTime instanceof Function) {
-                this.currentTime = (this.player.getCurrentTime()*1000).toFixed()
-            }
-        }, 700)
+        
     },
     updated() {
         // the player reference doesn't exist till after update
@@ -505,7 +466,7 @@ export default {
     },
     methods: {
         videoWasPaused(...args) {
-            this.currentTime = (this.player.getCurrentTime()*1000).toFixed()
+            window.dispatchEvent(new CustomEvent("CenterStage: videoWasPaused"))
         },
         setThisPlayer() {
             if (this.$refs.youtube && this.$refs.youtube.player && this.$refs.youtube.player.getPlayerState) {
@@ -737,13 +698,13 @@ export default {
 }
 </script>
 
-<style lang='sass'>
+<style lang='sass' scoped>
         
 .main-container
     flex-shrink: 0
     min-height: 44vw
     transition: opacity ease 0.5s
-    width: 100%
+    width: fit-content
     min-width: fit-content
 
     .below-video-search
@@ -752,14 +713,15 @@ export default {
         margin-bottom: 5.5rem
         
         .video-width-sizer
-            --max-width: calc(40rem + 30vw)
-            width: 100%
+            --max-width: calc(70rem)
+            width: 50vw
             min-width: 18rem
             max-width: var(--max-width)
             height: fit-content
             
             .video-sizer
                 position: relative
+                padding: 0 1rem 
                 // width
                 width: inherit
                 max-width: inherit
@@ -771,82 +733,24 @@ export default {
                 min-height: 40vh
                 max-height: calc(var(--max-width) * 0.55)
     
-    .labels 
-        margin-bottom: 1rem
-        
-        .ui-checkbox__checkmark::after
-            color: black
-            border-bottom: 0.125rem solid black
-            border-right: 0.125rem solid black
-            
-        & > *
-            // background: whitesmoke
-            padding: 6px 11px
-            border-radius: 1rem
-            margin-left: 12px
-            border: white 1px solid
-            color: white
-            
-        .ui-checkbox--color-primary
-            .ui-checkbox__checkmark-background
-                border-color: white
-            &.is-checked
-                .ui-checkbox__checkmark-background
-                    border-color: white
-                    background-color: white
-        
-        .ui-checkbox
-            margin: 0
-    
-    
-    .segments
-        width: 100%
-        align-items: flex-start
-        text-align: left
+    .below-video
+        position: relative
         padding: 1rem
         background: white
         border-radius: 1rem
         box-shadow: var(--shadow-1)
-
-        h5
-            color: gray
-            margin-bottom: 5px
-            margin-left: 10px
-            font-weight: 100
-            
+        width: 100%
         
-        .level
-            width: 95%
-            align-self: center
-            height: 2.2rem
-            // border-bottom: #e0e0e0 1px solid
-            overflow: hidden
-            transition: all ease 0.5s
-            .segment
-                position: absolute
-                min-height: 1.4rem
-                background-color: var(--blue)
-                padding: 2px
-                border-radius: 2px
-                transition: all ease 0.5s
-                cursor: pointer
-                &:hover
-                    box-shadow: var(--shadow-1)
-                    opacity: 0.9
-    .new-moment-wrapper
-        .ui-textbox
-            width: 85%
-        .ui-collapsible__header
-            background: transparent !important
-            color: gray
-            border-radius: 1rem
-        .ui-collapsible__body
-            border: 1px solid darkgray
-            border-radius: 1rem
-
-.json-tree-root
-    min-width: 100%
-    min-height: 100%
-    background: transparent
+        .left-side-button
+            position: absolute
+            left: 0rem
+            top: 50%
+            transform: translate(-100%, -50%)
+        
+        .right-side-button
+            position: absolute
+            right: 0rem
+            top: 50%
+            transform: translate(100%, -50%)
     
 </style>

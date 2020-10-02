@@ -35,10 +35,16 @@
 
 <script>
 export default {
-    props: ["momentData"],
-    beforeUpdate() {
-        console.debug(`momentData is:`,momentData)
-    },
+    data: ()=>({
+        momentData: {
+            whichVideo: null,
+            startTime: 0,
+            endTime: 0,
+            username: "",
+            label: "",
+            fromHuman: true,
+        },
+    }),
     methods: {
         getMomentData() {
             return {
