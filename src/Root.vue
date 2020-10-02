@@ -98,6 +98,9 @@ export default RootComponent = {
         window.$root = this // for debugging
     },
     methods: {
+        getVideoId() {
+            return this.$root.selectedVideo && this.$root.selectedVideo.$id
+        },
         relatedVideos() {
             let output = []
             if (this.selectedLabel instanceof Object && this.selectedLabel.videos instanceof Object) {

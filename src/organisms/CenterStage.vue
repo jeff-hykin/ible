@@ -8,32 +8,26 @@
                 v-model="searchTerm"
                 :suggestions="suggestions"
             )
-            span(v-if='getVideoId()' style="color: darkgrey;")
+            span(v-if='$root.getVideoId()' style="color: darkgrey;")
                 | Selected Label: {{$root.selectedLabel.name}}
                 br
-                | Current Video ID: {{getVideoId()}}
+                | Current Video ID: {{$root.getVideoId()}}
                 br
                 | Pause Time: {{currentTime}} ms
             
-        //- Video area
-        row.video-container(flex-basis="100%" padding-top="1rem" align-v="top")
+        row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top")
+            //- Video area
             column(align-v="top").video-width-sizer
-                //- VIDEO
                 row.video-sizer
                     //- BACK
-                    div.circle-button.left(@click='decrementIndex')
-                        span
-                            | ←
-                    span(v-if='!getVideoId()')
-                        | Video Not Selected
+                    SideButton(left @click='decrementIndex')
                     
-                        //- :host="'https://www.youtube.com'"
                     youtube(
-                        v-if='getVideoId()'
-                        :key="getVideoId()"
+                        v-if='$root.getVideoId()'
+                        :key="$root.getVideoId()"
                         ref="youtube"
                         :host="this.player ? 'http://www.youtube-nocookie.com/' : 'https://www.youtube.com'"
-                        :video-id="getVideoId()"
+                        :video-id="$root.getVideoId()"
                         @ready="ready"
                         @playing="videoStartedPlaying"
                         @paused="videoWasPaused"
@@ -43,9 +37,7 @@
                         style="height: 100%;width: 100%;"
                     )
                     //- NEXT
-                    div.circle-button.right(@click='incrementIndex')
-                        span
-                            | →
+                    SideButton(right @click='incrementIndex')
                 
                 //- Segments
                 column.segments(align-h="left")
@@ -73,57 +65,9 @@
                                 | length: {{  (eachSegment.end - eachSegment.start).toFixed(2) }} sec
                                 br
                                 | start: {{ eachSegment.start }} sec
-                //- 
-                //- new moment
-                //- 
-                container.new-moment-wrapper(
-                    v-if="$root.selectedVideo"
-                    width="40rem"
-                )
-                    ui-collapsible(title="Add A Moment" style="background: transparent !important;" @open="newMomentExpanded") 
-                        row(position="relative" padding="1.5rem 0")
-                            column(width="50%")
-                                ui-textbox(
-                                    floating-label
-                                    label="whichVideo (videoId)"
-                                    v-model="momentData.whichVideo"
-                                )
-                                ui-textbox(
-                                    label="startTime (miliseconds)"
-                                    :placeholder="`${momentData.startTime}`"
-                                    v-model.number="momentData.startTime"
-                                    type="number"
-                                )
-                                ui-textbox(
-                                    ref="endTime"
-                                    label="endTime (miliseconds)"
-                                    :placeholder="`${momentData.endTime}`"
-                                    v-model.number="momentData.endTime"
-                                    type="number"
-                                )
-                                ui-textbox(
-                                    floating-label
-                                    label="username (or name of model)"
-                                    v-model="momentData.username"
-                                )
-                                ui-textbox(
-                                    floating-label
-                                    label="label"
-                                    v-model="momentData.label"
-                                )
-                                ui-switch(v-model="momentData.fromHuman")
-                                    | fromHuman
-                            
-                            column(width="45%" margin-left="1rem")
-                                h5
-                                    | API Respresentation
-                                container(color="gray" align-self="flex-start" font-weight="100" font-size="12pt" margin-top="1rem")
-                                    | endpoints.addKeySegment(
-                                JsonTree.json-tree-root(:data="getMomentData()")
-                                container(color="gray" align-self="flex-start" font-weight="100" font-size="12pt")
-                                    | )
+            column
+                MomentEditor(:momentData="momentData")
 
-        
 </template>
 
 <script>
@@ -173,6 +117,8 @@ export default {
     props: [],
     components: {
         JsonTree: require('vue-json-tree').default,
+        SideButton: require("../atoms/SideButton").default,
+        MomentEditor: require("../organisms/MomentEditor").default,
     },
     data: ()=>({
         momentData: {
@@ -224,7 +170,7 @@ export default {
             logBlock({name: "[resolvable:videoStateInitilized]"}, ()=>{
                 let realResolve = ()=>{
                     this.initCheckAlreadyRunning = false
-                    this.idOfLastInitilizedVideo = this.getVideoId()
+                    this.idOfLastInitilizedVideo = this.$root.getVideoId()
                     resolve()
                 }
                 let realReject = ()=>{
@@ -238,7 +184,7 @@ export default {
                 } else if (this.initCheckAlreadyRunning) {
                     console.debug(`[resolvable:videoStateInitilized] check is already running, ending this check`)
                     return
-                } else if (this.idOfLastInitilizedVideo && this.idOfLastInitilizedVideo == this.getVideoId()) {
+                } else if (this.idOfLastInitilizedVideo && this.idOfLastInitilizedVideo == this.$root.getVideoId()) {
                     console.debug(`[resolvable:videoStateInitilized] video already initilized (resolving): ${this.idOfLastInitilizedVideo}`)
                     realResolve()
                     return
@@ -248,7 +194,7 @@ export default {
                 // if paused, then the video must already be initilized
                 if (videoIsPaused()) {
                     console.debug(`[resolvable:videoStateInitilized] video is paused, therefore it must be initilized. Resolving.`)
-                    this.idOfLastInitilizedVideo = this.getVideoId()
+                    this.idOfLastInitilizedVideo = this.$root.getVideoId()
                     realResolve()
                     return
                 }
@@ -341,7 +287,7 @@ export default {
                     endpoints.then(async (realEndpoints)=>{
                         let video = await this.hasVideo.promise
                         console.log(`getting duration from backend`)
-                        let result = await realEndpoints.videos.get({keyList: [ this.getVideoId(), "summary",  "duration" ]})
+                        let result = await realEndpoints.videos.get({keyList: [ this.$root.getVideoId(), "summary",  "duration" ]})
                         if (checkIf({value: result, is: Number}) && result > 0) {
                             console.debug(`result is:`,result)
                             this.$root.selectedVideo.duration = result
@@ -362,7 +308,7 @@ export default {
         },
         async videoHasSegmentData(resolve, reject) {
             await logBlock({name: "[resolvable:videoHasSegmentData]"}, async ()=>{
-                if (!this.getVideoId()) {
+                if (!this.$root.getVideoId()) {
                     console.debug(`[resolvable:videoHasSegmentData] video id doesnt exist, canceling check`,)
                     return
                 }
@@ -374,7 +320,7 @@ export default {
                 // if the segments don't exist, try getting them from the backend
                 } else {
                     console.debug(`[resolvable:videoHasSegmentData] it appears segments dont yet exist`)
-                    const videoId = this.getVideoId()
+                    const videoId = this.$root.getVideoId()
                     // wait for duration data to exist
                     console.debug(`[resolvable:videoHasSegmentData] checking hasDurationData.promise`)
                     let duration = await this.hasDurationData.promise
@@ -387,13 +333,13 @@ export default {
                         where: [
                             // FIXME: also add the fixedSegments (the computer generated ones)
                             { valueOf: ['type']     , is: "keySegment" },
-                            { valueOf: [ 'videoId' ], is: this.getVideoId() },
+                            { valueOf: [ 'videoId' ], is: this.$root.getVideoId() },
                         ]
                     })
                     console.debug(`[resolvable:videoHasSegmentData] keySegments retrived from backend`)
                     // process the segments
                     console.debug(`[resolvable:videoHasSegmentData] checking if videoId has changed while awaiting`)
-                    if (videoId == this.getVideoId()) {
+                    if (videoId == this.$root.getVideoId()) {
                         console.debug(`[resolvable:videoHasSegmentData] videoId has not changed`)
                         this.$root.selectedVideo.keySegments = this.processNewSegments({ duration, keySegments })
                         console.debug(`[resolvable:videoHasSegmentData] this.$root.selectedVideo.keySegments is:`,this.$root.selectedVideo.keySegments)
@@ -491,7 +437,7 @@ export default {
                     console.debug(`data was reset\n`)
                     // update data
                     console.debug(`checking for video id`)
-                    if (typeof this.getVideoId() == 'string') {
+                    if (typeof this.$root.getVideoId() == 'string') {
                         console.debug("video id seems to exist")
                         console.debug("getting this.player reference")
                         this.setThisPlayer()
@@ -558,23 +504,6 @@ export default {
         }
     },
     methods: {
-        getMomentData() {
-            return {
-                whichVideo: this.momentData.whichVideo,
-                startTime: this.momentData.startTime-0,
-                endTime: this.momentData.endTime-0,
-                username: this.momentData.username,
-                observation: {
-                    label: this.momentData.label,
-                    fromHuman: this.momentData.fromHuman,
-                }
-            }
-        },
-        newMomentExpanded() {
-            this.momentData.whichVideo = this.$root.selectedVideo.$id
-            this.momentData.startTime = this.currentTime
-            this.momentData.endTime = this.currentTime
-        },
         videoWasPaused(...args) {
             this.currentTime = (this.player.getCurrentTime()*1000).toFixed()
         },
@@ -585,10 +514,6 @@ export default {
                 this.player = null
             }
             window.player = this.player
-        },
-        getVideoId() {
-            this.$once("")
-            return this.$root.selectedVideo && this.$root.selectedVideo.$id
         },
         toggleLabel(labelName) {
             // this is a dumb hack that only exists because sometimes the ui-checkbox doens't display the change
@@ -604,7 +529,7 @@ export default {
             }, generalTimeoutFrequency)
         },
         videoSelect() {
-            if (this.searchTerm.trim() == this.getVideoId()) {
+            if (this.searchTerm.trim() == this.$root.getVideoId()) {
                 this.$toasted.show(`Video is already open`).goAway(2500)
             } else {
                 this.$root.selectedVideo = this.$root.getCachedVideoObject(this.searchTerm.trim())
@@ -669,7 +594,7 @@ export default {
         async reorganizeSegments() {
             await logBlock({name: "reorganizeSegments"}, async ()=>{
                 // if a video hasn't event been selected
-                if (this.getVideoId() == null) {
+                if (this.$root.getVideoId() == null) {
                     // don't create a pending reorganizeSegments() call, just return
                     console.debug(`ending reorganizeSegments: no currently selected video`)
                     return 
@@ -720,7 +645,7 @@ export default {
                 return this.hasVideoPlayer.promise.then(()=>this.seekToSegmentStart())
             }
             // if not initilized
-            if (this.idOfLastInitilizedVideo != this.getVideoId()) {
+            if (this.idOfLastInitilizedVideo != this.$root.getVideoId()) {
                 console.debug(`[seekToSegmentStart] video isn't initilized, retrying later`)
                 return this.videoStateInitilized.promise.then(()=>this.seekToSegmentStart())
             }
@@ -821,7 +746,7 @@ export default {
     width: 100%
     min-width: fit-content
 
-    .video-container
+    .below-video-search
         width: 100%
         max-width: 100vw
         margin-bottom: 5.5rem
@@ -918,30 +843,6 @@ export default {
         .ui-collapsible__body
             border: 1px solid darkgray
             border-radius: 1rem
-            
-.circle-button
-    background: var(--vue-green)
-    color: white
-    padding: 2.3rem
-    --radius: 5rem
-    cursor: pointer
-    
-    &.left
-        padding-right: 0
-        margin-right: -10px
-        border-top-left-radius: var(--radius)
-        border-bottom-left-radius: var(--radius)
-        span
-            position: relative
-            left: -100%
-    &.right
-        padding-left: 0
-        margin-left: -10px
-        border-top-right-radius: var(--radius)
-        border-bottom-right-radius: var(--radius)
-        span
-            position: relative
-            right: -100%
 
 .json-tree-root
     min-width: 100%

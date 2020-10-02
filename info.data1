@@ -1,4 +1,6 @@
 todo:
+    - show what moment is selected
+    - edit/delete moment is selected
     - highlight the selected moment
     - "[DONE] fix the duration not updating issue"
     - "[DONE] fix the auto video playing"
