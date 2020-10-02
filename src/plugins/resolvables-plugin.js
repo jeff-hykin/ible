@@ -3,6 +3,7 @@
 //     [resolvable].resolve()
 //     [resolvable].reject()
 //     [resolvable].done
+//     [resolvable].result
 let Vue = require("vue").default
 
 let {logBlock } = require("good-js")
@@ -108,27 +109,31 @@ Vue.mixin(module.exports = {
                         if (this[resolvablesSymbol][eachKey][beforeInitResolveCalled]) {
                             // resolve the promise
                             resolve(this[resolvablesSymbol][eachKey][beforeInitActionArg])
+                            checkerFunction.result = this[resolvablesSymbol][eachKey][beforeInitActionArg]
                             checkerFunction.done = true
                             resetSyncCallbackData()
                             return
                         } else if (this[resolvablesSymbol][eachKey][beforeInitRejectCalled]) {
                             reject(this[resolvablesSymbol][eachKey][beforeInitActionArg])
+                            checkerFunction.result = this[resolvablesSymbol][eachKey][beforeInitActionArg]
                             checkerFunction.done = true
                             resetSyncCallbackData()
                             return
                         }
                         // then do the normal checking
-                        promiseData[rejectKey] = (...args)=>{
+                        promiseData[rejectKey] = (arg)=>{
                             if (!checkerFunction.done) {
+                                checkerFunction.result = arg
                                 checkerFunction.done = true
-                                reject(...args)
+                                reject(arg)
                                 resetSyncCallbackData()
                             }
                         }
-                        promiseData[resolveKey] = (...args)=>{
+                        promiseData[resolveKey] = (arg)=>{
                             if (!checkerFunction.done) {
+                                checkerFunction.result = arg
                                 checkerFunction.done = true
-                                resolve(...args)
+                                resolve(arg)
                                 resetSyncCallbackData()
                             }
                         }
@@ -149,6 +154,7 @@ Vue.mixin(module.exports = {
                     // attach the new promise
                     checkerFunction[promiseKey] = Object.assign(aPromise, promiseData)
                     // synchronously reset the resolved status
+                    delete checkerFunction.result
                     checkerFunction.done = false
                     checkerFunction.id = promiseData.id
                 }

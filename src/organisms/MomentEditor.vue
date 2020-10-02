@@ -35,7 +35,16 @@
 
 <script>
 export default {
-    props: ["momentData"],
+    data: ()=>({
+        momentData: {
+            whichVideo: null,
+            startTime: 0,
+            endTime: 0,
+            username: "",
+            label: "",
+            fromHuman: true,
+        },
+    }),
     beforeUpdate() {
         console.debug(`momentData is:`,momentData)
     },
