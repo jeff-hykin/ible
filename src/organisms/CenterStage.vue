@@ -892,6 +892,7 @@ export default {
         
         .level
             width: 95%
+            align-self: center
             height: 2.2rem
             // border-bottom: #e0e0e0 1px solid
             overflow: hidden

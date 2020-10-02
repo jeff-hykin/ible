@@ -38,10 +38,10 @@ let Fuse = require("fuse.js").default
 export default {
     name: "HomePage",
     components: {
-        CenterStage: require("../molecules/CenterStage").default,
-        VideoPicker: require("../molecules/VideoPicker").default,
-        LabelPicker: require("../molecules/LabelPicker").default,
-        MomentDisplay: require("../molecules/MomentDisplay").default,
+        CenterStage: require("../organisms/CenterStage").default,
+        VideoPicker: require("../organisms/VideoPicker").default,
+        LabelPicker: require("../organisms/LabelPicker").default,
+        MomentDisplay: require("../organisms/MomentDisplay").default,
     },
     methods: {
         newMoment() {
