@@ -2,7 +2,7 @@
     row.home-container(align-v='top' align-h="left" position="relative" width='fit-content' min-width="100vw" height="100vh" overflow="hidden" :class="{labelSelected: !!$root.selectedLabel}")
         LabelPicker
         
-        MomentDisplay
+        //- MomentDisplay
         
         column.home-container(name="home-container" :visibility="$root.selectedLabel? 'visible' : 'hidden'" align-v="top" flex-grow="1" height="100vh" overflow="auto")
             CenterStage

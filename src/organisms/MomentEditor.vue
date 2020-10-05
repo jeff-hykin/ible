@@ -30,7 +30,8 @@
         )
         ui-switch(v-model="momentData.fromHuman")
             | fromHuman
-            
+        ui-button.delete-button(color="error")
+            | Delete
 </template>
 
 <script>
@@ -45,6 +46,16 @@ export default {
             fromHuman: true,
         },
     }),
+    rootHooks: {
+        watch: {
+            // when the selected segment changes
+            selectedSegment() {
+                if (this.$root.selectedSegment instanceof Object) {
+                    
+                }
+            }
+        },
+    },
     methods: {
         getMomentData() {
             return {
@@ -58,18 +69,19 @@ export default {
                 }
             }
         },
-        newMomentExpanded() {
+        pullInfoFromEnviornment() {
             this.momentData.whichVideo = this.$root.selectedVideo.$id
-            this.momentData.startTime = this.currentTime
-            this.momentData.endTime = this.currentTime
+            this.momentData.startTime  = this.currentTime
+            this.momentData.endTime    = this.currentTime
         },
-    }
+    },
 }
 </script>
 
 <style lang='sass' scoped>
 .moment-widget
     padding: 1.7rem 2.4rem
+    position: relative
     background: white
     width: 20rem
     border-radius: 1rem
@@ -77,5 +89,15 @@ export default {
     
     *
         width: 100%
-
+    
+    .delete-button
+        position: absolute
+        top: 0.7rem
+        right: 0.8rem
+        width: 5rem
+        transform: scale(0.9)
+        background: var(--red)
+        color: white
+        
+        
 </style>

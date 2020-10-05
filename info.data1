@@ -1,6 +1,7 @@
 todo:
     - show what moment is selected
-    - edit/delete moment is selected
+    - "edit/delete moment is selected":
+        - need to make a selector for the username
     - highlight the selected moment
     - "[DONE] fix the duration not updating issue"
     - "[DONE] fix the auto video playing"

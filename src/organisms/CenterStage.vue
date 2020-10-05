@@ -1,5 +1,5 @@
 <template lang="pug">
-    row
+    row.center-stage
         column.main-container(v-if='$root.selectedVideo' :opacity='$root.selectedVideo? 1 : 0' flex-grow=1)
             //- search for video
             column.top-bar-container(width="100%" padding="1rem")
@@ -38,9 +38,14 @@
                         //- NEXT
                         SideButton.right-side-button(right @click='incrementIndex')
 
-        column
-            InfoSection
+        column.side-container(align-v="top")
+            InfoSection.info-section
             MomentEditor
+            row(margin-top="2rem")
+                ui-button(color="primary" style="margin-right: 1rem")
+                    | New Moment
+                ui-button(color="primary")
+                    | Upload Moments
 
 </template>
 
@@ -700,57 +705,65 @@ export default {
 
 <style lang='sass' scoped>
         
-.main-container
-    flex-shrink: 0
-    min-height: 44vw
-    transition: opacity ease 0.5s
-    width: fit-content
-    min-width: fit-content
+.center-stage
+    .side-container
+        margin-left: 5rem
+        
+        .info-section
+            margin-bottom: 2rem
+        
+    .main-container
+        flex-shrink: 0
+        min-height: 44vw
+        transition: opacity ease 0.5s
+        width: fit-content
+        min-width: fit-content
+        
 
-    .below-video-search
-        width: 100%
-        max-width: 100vw
-        margin-bottom: 5.5rem
-        
-        .video-width-sizer
-            --max-width: calc(70rem)
-            width: 50vw
-            min-width: 18rem
-            max-width: var(--max-width)
-            height: fit-content
+        .below-video-search
+            width: 100%
+            max-width: 100vw
+            margin-bottom: 5.5rem
             
-            .video-sizer
-                position: relative
-                padding: 0 1rem 
-                // width
-                width: inherit
-                max-width: inherit
-                min-width: inherit
-                // height
-                --height: 80vh
-                height: var(--height)
-                max-height: var(--height)
-                min-height: 40vh
-                max-height: calc(var(--max-width) * 0.55)
-    
-    .below-video
-        position: relative
-        padding: 1rem
-        background: white
-        border-radius: 1rem
-        box-shadow: var(--shadow-1)
-        width: 100%
+            .video-width-sizer
+                --max-width: calc(70rem)
+                width: 50vw
+                min-width: 18rem
+                max-width: var(--max-width)
+                height: fit-content
+                
+                .video-sizer
+                    position: relative
+                    padding: 0 1rem 
+                    // width
+                    width: inherit
+                    max-width: inherit
+                    min-width: inherit
+                    // height
+                    --height: 80vh
+                    height: var(--height)
+                    max-height: var(--height)
+                    min-height: 40vh
+                    max-height: calc(var(--max-width) * 0.55)
         
-        .left-side-button
-            position: absolute
-            left: 0rem
-            top: 50%
-            transform: translate(-100%, -50%)
+        .below-video
+            position: relative
+            padding: 1rem
+            background: white
+            border-radius: 1rem
+            box-shadow: var(--shadow-1)
+            width: 100%
+            
+            .left-side-button
+                position: absolute
+                left: 0rem
+                top: 50%
+                transform: translate(-100%, -50%)
+            
+            .right-side-button
+                position: absolute
+                right: 0rem
+                top: 50%
+                transform: translate(100%, -50%)
         
-        .right-side-button
-            position: absolute
-            right: 0rem
-            top: 50%
-            transform: translate(100%, -50%)
-    
 </style>
