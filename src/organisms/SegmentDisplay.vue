@@ -4,7 +4,7 @@
         h5
             | Labels
         row.labels
-            container(v-for="(eachLevel, eachLabelName) in $root.labels" :background-color="$root.labels[eachLabelName].color")
+            container(v-if="eachLabelName != '(No Segments)'" v-for="(eachLevel, eachLabelName) in $root.labels" :background-color="$root.labels[eachLabelName].color")
                 ui-checkbox(v-model="$root.labels[eachLabelName].selected" @change="toggleLabel(eachLabelName)")
                     | {{eachLabelName}}
         h5(v-if="segmentsInfo.organizedSegments.length > 0")
