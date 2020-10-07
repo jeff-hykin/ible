@@ -165,4 +165,7 @@ body {
 .ui-fab--color-primary:hover {
     background-color: #2196f3;
 }
+body .ui-button {
+    min-width: fit-content;
+}
 </style>

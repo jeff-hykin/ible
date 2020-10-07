@@ -38,26 +38,9 @@
                         //- NEXT
                         SideButton.right-side-button(right @click='incrementIndex')
 
-        column.side-container(align-v="top")
+        column.side-container(align-v="top" align-self="flex-start" margin-top="15vh")
             InfoSection.info-section
             ObservationEditor
-            column.add-observation-area(margin-top="1.6rem")
-                row
-                    ui-fab.new-observation-button(
-                        color="primary"
-                        icon="add"
-                        tooltipPosition="right"
-                        tooltip="New Observation"
-                        openTooltipOn="focus hover"
-                    )
-                row(margin-top="1rem")
-                    ui-fab.upload-observations-button(
-                        color="primary"
-                        icon="cloud_upload"
-                        tooltipPosition="right"
-                        tooltip="Upload Observations"
-                        openTooltipOn="focus hover"
-                    )
 
 </template>
 
@@ -772,18 +755,4 @@ export default {
                 top: 50%
                 transform: translate(100%, -50%)
     
-    .add-observation-area
-        .upload-observations-button
-            opacity: 0
-            transition: opacity ease 0.3s
-            background-color: var(--vue-green)
-            
-        &:hover
-            .upload-observations-button
-                visibility: visible
-                opacity: 1
-            
-        .new-observation-button, .upload-observations-button
-            margin-right: 1rem
-        
 </style>
