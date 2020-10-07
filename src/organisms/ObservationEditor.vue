@@ -1,38 +1,44 @@
 <template lang="pug">
     column.observation-widget
         ui-textbox(
+            disabled
             floating-label
             label="Video Id"
             v-model="observationData.videoId"
         )
         ui-textbox(
+            disabled
             label="Start Time (seconds)"
             :placeholder="`${observationData.startTime}`"
             v-model.number="observationData.startTime"
             type="number"
         )
         ui-textbox(
+            disabled
             label="End Time (seconds)"
             :placeholder="`${observationData.endTime}`"
             v-model.number="observationData.endTime"
             type="number"
         )
         ui-textbox(
+            disabled
             floating-label
             label="Observer (username)"
             v-model="observationData.observer"
         )
         ui-textbox(
+            disabled
             floating-label
             label="Label"
             v-model="observationData.label"
         )
         ui-textbox(
+            disabled
             floating-label
             label="Label Confidence"
             v-model="observationData.labelConfidence"
         )
-        ui-switch(v-model="observationData.isHuman")
+        ui-switch(disabled v-model="observationData.isHuman")
             | Observer Is Human
         ui-button.delete-button(color="error")
             | Delete
