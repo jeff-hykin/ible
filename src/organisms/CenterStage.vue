@@ -40,12 +40,12 @@
 
         column.side-container(align-v="top")
             InfoSection.info-section
-            MomentEditor
+            ObservationEditor
             row(margin-top="2rem")
                 ui-button(color="primary" style="margin-right: 1rem")
-                    | New Moment
+                    | New Observation
                 ui-button(color="primary")
-                    | Upload Moments
+                    | Upload Observations
 
 </template>
 
@@ -97,7 +97,7 @@ export default {
     components: {
         SideButton: require("../atoms/SideButton").default,
         InfoSection: require("../molecules/InfoSection").default,
-        MomentEditor: require("../organisms/MomentEditor").default,
+        ObservationEditor: require("../organisms/ObservationEditor").default,
         SegmentDisplay: require("../organisms/SegmentDisplay").default,
     },
     data: ()=>({
@@ -258,7 +258,7 @@ export default {
                     endpoints.then(async (realEndpoints)=>{
                         let video = await this.hasVideo.promise
                         console.log(`getting duration from backend`)
-                        let result = await realEndpoints.videos.get({keyList: [ this.$root.getVideoId(), "summary",  "duration" ]})
+                        let result = await realEndpoints.raw.get({keyList: [ this.$root.getVideoId(), "summary",  "duration" ], from: "videos" })
                         if (checkIf({value: result, is: Number}) && result > 0) {
                             console.debug(`result is:`,result)
                             this.$root.selectedVideo.duration = result
@@ -300,17 +300,18 @@ export default {
                     // then get the segments from backend
                     let realEndpoints = await endpoints
                     let keySegments = await realEndpoints.raw.all({
-                        from: 'moments',
+                        from: 'observations',
                         where: [
                             // FIXME: also add the fixedSegments (the computer generated ones)
-                            { valueOf: ['type']     , is: "keySegment" },
-                            { valueOf: [ 'videoId' ], is: this.$root.getVideoId() },
+                            { valueOf: ['type']   , is: "segment" },
+                            { valueOf: ['videoId'], is: this.$root.getVideoId() },
                         ]
                     })
                     console.debug(`[resolvable:videoHasSegmentData] keySegments retrived from backend`)
                     // process the segments
                     console.debug(`[resolvable:videoHasSegmentData] checking if videoId has changed while awaiting`)
                     if (videoId == this.$root.getVideoId()) {
+                        console.debug(`keySegments is:`,keySegments)
                         console.debug(`[resolvable:videoHasSegmentData] videoId has not changed`)
                         this.$root.selectedVideo.keySegments = this.processNewSegments({ duration, keySegments })
                         console.debug(`[resolvable:videoHasSegmentData] this.$root.selectedVideo.keySegments is:`,this.$root.selectedVideo.keySegments)
@@ -516,26 +517,12 @@ export default {
             let minWidth = duration / 50
             keySegments = keySegments.map(eachSegment=>{
                 // 
-                // create the .$data on each segment
-                // 
-                let combinedData = {}
-                // basically ignore who said what and just grab the data
-                // TODO: this should be changed because it ignores who said what and doesn't do any conflict resolution
-                for (const [eachUsername, eachObservation] of Object.entries(eachSegment.observations)) {
-                    combinedData = { ...combinedData, ...eachObservation }
-                }
-                eachSegment.$data = combinedData
-                // convert from miliseconds to seconds
-                eachSegment.start = eachSegment.start / 1000
-                eachSegment.end = eachSegment.end / 1000
-                
-                // 
                 // add render info
                 // 
                 // create the display info for each segment
-                let effectiveStart  = eachSegment.start
-                let effectiveEnd    = eachSegment.end
-                let segmentDuration = eachSegment.end - eachSegment.start
+                let effectiveStart  = eachSegment.startTime
+                let effectiveEnd    = eachSegment.endTime
+                let segmentDuration = eachSegment.endTime - eachSegment.startTime
                 // if segment is too small artificially make it bigger
                 if (segmentDuration < minWidth) {
                     let additionalAmount = (minWidth - segmentDuration)/2
@@ -572,7 +559,14 @@ export default {
                 
                 // only return segments that match the selected labels
                 let namesOfSelectedLabels = this.$root.getNamesOfSelectedLabels()
-                let displaySegments = this.$root.selectedVideo.keySegments.filter(eachSegment=>(eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.$data.label)))
+                console.debug(`this.$root.selectedVideo.keySegments is:`,this.$root.selectedVideo.keySegments)
+                let displaySegments = this.$root.selectedVideo.keySegments.filter(
+                    eachSegment=>{
+                        console.debug(`eachSegment is:`,eachSegment)
+                        console.debug(`eachSegment.observation is:`,eachSegment.observation)
+                        return (eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.observation.label))
+                    }
+                )
             
                 // 2 percent of the width of the video
                 let levels = []
@@ -615,14 +609,14 @@ export default {
                 console.debug(`[seekToSegmentStart] video isn't initilized, retrying later`)
                 return this.videoStateInitilized.promise.then(()=>this.seekToSegmentStart())
             }
-            if (!checkIf({value: this.$root.selectedSegment.start, is: Number })) {
-                console.error(`[seekToSegmentStart] this.$root.selectedSegment.start isn't a number`)
+            if (!checkIf({value: this.$root.selectedSegment.startTime, is: Number })) {
+                console.error(`[seekToSegmentStart] this.$root.selectedSegment.startTime isn't a number`)
                 return
             }
             // if all checks pass
             try  {
-                console.debug(`seeking to ${this.$root.selectedSegment.start}`)
-                this.player.seekTo(this.$root.selectedSegment.start)
+                console.debug(`seeking to ${this.$root.selectedSegment.startTime}`)
+                this.player.seekTo(this.$root.selectedSegment.startTime)
             // sometimes an error is caused by switching videos, and all thats needed is a restart
             } catch (err) {
                 console.debug(`seeking to segment start (will retry):`,err)

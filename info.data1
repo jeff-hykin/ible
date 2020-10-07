@@ -1,8 +1,8 @@
 todo:
-    - show what moment is selected
-    - "edit/delete moment is selected":
+    - show what observation is selected
+    - "edit/delete observation is selected":
         - need to make a selector for the username
-    - highlight the selected moment
+    - highlight the selected observation
     - "[DONE] fix the duration not updating issue"
     - "[DONE] fix the auto video playing"
     - "[DONE] display the selected label"
@@ -11,7 +11,7 @@ todo:
         - "[DONE] sort videos by number of segments"
     - "[DONE] add a legend with toggles for showing segments for the video":
         - fix the colors to specific labels
-    - show JSON data of selected moment
+    - show JSON data of selected observation
 
 logic:
     "@start":

@@ -2,8 +2,6 @@
     row.home-container(align-v='top' align-h="left" position="relative" width='fit-content' min-width="100vw" height="100vh" overflow="hidden" :class="{labelSelected: !!$root.selectedLabel}")
         LabelPicker
         
-        //- MomentDisplay
-        
         column.home-container(name="home-container" :visibility="$root.selectedLabel? 'visible' : 'hidden'" align-v="top" flex-grow="1" height="100vh" overflow="auto")
             CenterStage
         
@@ -41,24 +39,8 @@ export default {
         CenterStage: require("../organisms/CenterStage").default,
         VideoPicker: require("../organisms/VideoPicker").default,
         LabelPicker: require("../organisms/LabelPicker").default,
-        MomentDisplay: require("../organisms/MomentDisplay").default,
     },
-    methods: {
-        newMoment() {
-            
-            let videoId = this.$root.selectedVideo.$id
-            let moment = {
-                whichVideo: videoId,
-                startTime: 275913,
-                endTime: 279922,
-                username: "jeff.hykin",
-                data: {
-                    label: "Happy",
-                    fromHuman: true
-                }   
-            }
-        }
-    }
+    methods: {}
 }
 </script>
 <style lang="sass">

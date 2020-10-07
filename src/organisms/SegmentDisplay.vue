@@ -8,23 +8,23 @@
                 ui-checkbox(v-model="$root.labels[eachLabelName].selected" @change="toggleLabel(eachLabelName)")
                     | {{eachLabelName}}
         h5(v-if="segmentsInfo.organizedSegments.length > 0")
-            | Moments
+            | Observations
         row.level(v-if="segmentsInfo.organizedSegments.length > 0" align-h="space-between" position="relative" :height="`${segmentsInfo.maxLevel*2.2}rem`")
             row.segment(
                 v-for="(eachSegment, index) in segmentsInfo.organizedSegments"
                 :left="eachSegment.$renderData.leftPercent"
                 :width="eachSegment.$renderData.widthPercent"
                 :top="eachSegment.$renderData.topAmount"
-                :background-color="$root.labels[eachSegment.$data.label].color"
+                :background-color="$root.labels[eachSegment.observation.label].color"
                 :key="eachSegment.listIndex"
                 @click="jumpSegment(eachSegment.$displayIndex)"
             )
                 ui-tooltip(position="left" animation="fade")
-                    | label: {{ eachSegment.$data.label }}
+                    | label: {{ eachSegment.observation.label }}
                     br
-                    | length: {{  (eachSegment.end - eachSegment.start).toFixed(2) }} sec
+                    | length: {{  (eachSegment.endTime - eachSegment.startTime).toFixed(2) }} sec
                     br
-                    | start: {{ eachSegment.start }} sec
+                    | start: {{ eachSegment.startTime.toFixed(3) }} sec
 
 </template>
 <script>
