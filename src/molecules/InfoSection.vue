@@ -1,10 +1,16 @@
 <template lang="pug">
-    span(v-if='$root.getVideoId()' style="color: darkgrey;")
+    span.info-section(v-if='$root.getVideoId()')
         | Selected Label: {{$root.selectedLabel.name}}
         br
         | Current Video ID: {{$root.getVideoId()}}
         br
         | Pause Time: {{currentTime}} sec
+        br
+        | {{getSegmentUuid() && `Selected Segment UUID: ${$root.selectedSegment.$uuid}`}}
+        br
+        br
+        a(v-if="getVideoUrl" :href="getVideoUrl()")
+            | Link To Video
 </template>
 
 <script>
@@ -24,6 +30,12 @@ export default {
         setTime(){
             this.currentTime = window.player.getCurrentTime().toFixed(3)
         },
+        getSegmentUuid() {
+            return $root.selectedSegment && $root.selectedSegment.$uuid
+        },
+        getVideoUrl() {
+            return window.player && window.player.getVideoUrl instanceof Function && window.player.getVideoUrl()
+        }
     },
     windowListeners: {
         "CenterStage: videoWasPaused": function() {
@@ -33,4 +45,10 @@ export default {
 }
 </script>
 <style lang='sass' scoped>
+.info-section
+    align-self: flex-start
+    color: darkgrey
+    a 
+        color: var(--blue)
+
 </style>

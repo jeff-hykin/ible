@@ -1,7 +1,5 @@
 <template lang="pug">
     column(data-fjio3y598t3hi2 width="min-content")
-        span
-            | uuid: {{this.uuidOfSelectedSegment}}
         row.button-row(align-h="space-evenly" :width="editing?`143%`:`100%`" margin-bottom="0.7rem")
             ui-button.edit-button(
                 v-if="!editing"
