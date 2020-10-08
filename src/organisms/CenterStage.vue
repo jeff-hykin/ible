@@ -26,7 +26,7 @@
                             :playerVars="{ /* disablekb: 1, end: 2 */ }"
                             player-width="100%"
                             player-height="100%"
-                            style="height: 100%;width: 100%;"
+                            style="height: 100%;width: 100%; position: absolute; top: 0; left: 0"
                         )
                         
                     
@@ -38,7 +38,7 @@
                         //- NEXT
                         SideButton.right-side-button(right @click='incrementIndex')
 
-        column.side-container(align-v="top" align-self="flex-start" margin-top="15vh")
+        column.side-container(align-v="top" align-self="flex-start" margin-top="12vh" overflow="auto")
             InfoSection.info-section
             ObservationEditor
 
@@ -731,11 +731,9 @@ export default {
                     max-width: inherit
                     min-width: inherit
                     // height
-                    --height: 80vh
-                    height: var(--height)
-                    max-height: var(--height)
-                    min-height: 40vh
-                    max-height: calc(var(--max-width) * 0.55)
+                    height: 0
+                    padding-top: 56.25%
+                    
         
         .below-video
             position: relative
