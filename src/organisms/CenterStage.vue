@@ -300,8 +300,10 @@ export default {
                             // FIXME: also add the fixedSegments (the computer generated ones)
                             { valueOf: ['type']   , is: "segment" },
                             { valueOf: ['videoId'], is: this.$root.getVideoId() },
-                        ]
+                        ],
+                        returnObject: true,
                     })
+                    keySegments = Object.entries(keySegments).map(([eachKey, eachValue])=>(eachValue.$uuid=eachKey,eachValue))
                     console.debug(`[resolvable:videoHasSegmentData] keySegments retrived from backend`)
                     // process the segments
                     console.debug(`[resolvable:videoHasSegmentData] checking if videoId has changed while awaiting`)

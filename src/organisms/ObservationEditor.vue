@@ -1,5 +1,7 @@
 <template lang="pug">
     column(data-fjio3y598t3hi2 width="min-content")
+        span
+            | uuid: {{this.uuidOfSelectedSegment}}
         row.button-row(align-h="space-evenly" :width="editing?`143%`:`100%`" margin-bottom="0.7rem")
             ui-button.edit-button(
                 v-if="!editing"
@@ -29,7 +31,7 @@
                 v-if="editing"
                 @click="onDelete"
                 icon="delete"
-                color="primary"
+                color="red"
                 raised
             )
                 | Delete
@@ -95,24 +97,6 @@
                 )
                 ui-switch(:disabled="!editing" v-model="observationData.isHuman")
                     | Observer Is Human
-        
-        //- column.add-observation-area(margin-top="1.6rem")
-        //-     row
-        //-         ui-fab.new-observation-button(
-        //-             color="primary"
-        //-             icon="add"
-        //-             tooltipPosition="right"
-        //-             tooltip="New Observation"
-        //-             openTooltipOn="focus hover"
-        //-         )
-        //-     row(margin-top="1rem")
-        //-         ui-fab.upload-observations-button(
-        //-             color="primary"
-        //-             icon="cloud_upload"
-        //-             tooltipPosition="right"
-        //-             tooltip="Upload Observations"
-        //-             openTooltipOn="focus hover"
-        //-         )
 </template>
 
 <script>
@@ -144,7 +128,6 @@ export default {
             selectedSegment() {
                 let selectedSegment = this.$root.selectedSegment
                 if (this.$root.selectedSegment instanceof Object) {
-                    // FIXME this needs to be retrived
                     this.uuidOfSelectedSegment = selectedSegment.$uuid
                     this.observationData = {
                         videoId:   selectedSegment.videoId,
@@ -162,10 +145,21 @@ export default {
     methods: {
         async onNewObservation() {
             this.dataCopy = {}
-            // FIXME: add the 
-            this.uuidOfSelectedSegment = (await endpoints).addSegmentObservation({})
+            this.uuidOfSelectedSegment = await (await endpoints).addSegmentObservation({
+                videoId: this.observationData.videoId,
+                startTime: this.observationData.startTime,
+                endTime: this.observationData.endTime,
+                observer: this.observationData.observer,
+                isHuman: this.observationData.isHuman,
+                observation: {
+                    label: this.observationData.label,
+                    labelConfidence: this.observationData.labelConfidence,
+                }
+            })
+            this.$toasted.show(`New observation created (all data from previous observation was copied)`).goAway(6500)
             // start editing the newly created observation
             this.onEditObservation()
+            // FIXME: make canceling the new observation delete the new observation
         },
         onUploadObservation() {
             this.$toasted.show(`Not yet implemented, Sorry :/`).goAway(2500)
@@ -180,27 +174,47 @@ export default {
             this.observationData = JSON.parse(JSON.stringify(this.dataCopy))
             this.editing = false
         },
-        onSaveEdit() {
+        async onSaveEdit() {
             this.editing = false
-            // FIXME: call the backend with an update function
             if (this.observationData.observer) {
-                this.storageObject.observer = this.observationData.observer
+                storageObject.observer = this.observationData.observer
             }
-            // (await endpoints).raw.set()
-            this.$toasted.show(`Not yet implemented, Sorry :/`).goAway(2500)
+            // TODO: check this
+            (await endpoints).raw.set({
+                keyList:[this.uuidOfSelectedSegment],
+                from: "observations",
+                to: {
+                    videoId:   selectedSegment.videoId,
+                    startTime: selectedSegment.startTime,
+                    endTime:   selectedSegment.endTime,
+                    observer:  selectedSegment.observer,
+                    isHuman:   selectedSegment.isHuman,
+                    observation: {
+                        label: selectedSegment.observation.label,
+                        labelConfidence: selectedSegment.observation.labelConfidence,
+                    },
+                },
+            })
+            this.$toasted.show(`Data has been set, refresh to confirm`).goAway(2500)
         },
-        onDelete() {
+        async onDelete() {
             this.editing = false
             this.resetData()
-            this.$toasted.show(`Not yet implemented, Sorry :/`).goAway(2500)
+            if (this.uuidOfSelectedSegment) {
+                (await endpoints).raw.delete({
+                    keyList:[this.uuidOfSelectedSegment],
+                    from: "observations",
+                })
+                this.$toasted.show(`Data has been deleted, refresh to confirm`).goAway(2500)
+            }
         },
         resetData() {
             this.observationData = {
-                videoId: this.$root.selectedVideo.$id,
+                videoId: (this.$root.selectedVideo)&&this.$root.selectedVideo.$id,
                 startTime: this.currentTime || 0,
                 endTime: this.currentTime || 0,
                 observer: window.storageObject.observer || "",
-                label: this.$root.selectedLabel.name || "",
+                label: (this.$root.selectedLabel)&&this.$root.selectedLabel.name || "",
                 labelConfidence: 0.99,
                 isHuman: true,
             }
