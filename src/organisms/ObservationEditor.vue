@@ -2,7 +2,7 @@
     column(data-fjio3y598t3hi2 width="min-content" margin-bottom="2rem")
         row.button-row(align-h="space-evenly" :width="editing?`143%`:`100%`" margin-bottom="0.7rem")
             ui-button.edit-button(
-                v-if="!editing"
+                v-if="(!editing) && this.$root.selectedSegment"
                 @click="onEditObservation"
                 icon="edit"
                 color="primary"
@@ -107,6 +107,7 @@
                     :disabled="!editing"
                     floating-label
                     label="Label"
+                    :invalid="!observationData.label.match(/^[a-zA-Z0-9]+$/)"
                     v-model="observationData.label"
                 )
                 ui-textbox(
@@ -159,27 +160,19 @@ export default {
                         labelConfidence: selectedSegment.observation.labelConfidence,
                     }
                 }
+            },
+            selectedVideo() {
+                this.resetData()
             }
         },
     },
     methods: {
         async onNewObservation() {
             this.dataCopy = {}
-            this.uuidOfSelectedSegment = await (await endpoints).addSegmentObservation({
-                videoId: this.observationData.videoId,
-                startTime: this.observationData.startTime,
-                endTime: this.observationData.endTime,
-                observer: this.observationData.observer,
-                isHuman: this.observationData.isHuman,
-                observation: {
-                    label: this.observationData.label,
-                    labelConfidence: this.observationData.labelConfidence,
-                }
-            })
+            this.uuidOfSelectedSegment = null
             this.$toasted.show(`New observation created (all data from previous observation was copied)`).goAway(6500)
             // start editing the newly created observation
             this.onEditObservation()
-            // FIXME: make canceling the new observation delete the new observation
         },
         onUploadObservation() {
             this.$toasted.show(`Not yet implemented, Sorry :/`).goAway(2500)
@@ -199,22 +192,42 @@ export default {
             if (this.observationData.observer) {
                 storageObject.observer = this.observationData.observer
             }
-            // TODO: check this
-            (await endpoints).raw.set({
-                keyList:[this.uuidOfSelectedSegment],
-                from: "observations",
-                to: {
-                    videoId:   this.observationData.videoId,
+            
+            // convert to numbers 
+            this.observationData.startTime -= 0
+            this.observationData.endTime -= 0
+            
+            // if saving an edit
+            if (this.uuidOfSelectedSegment) {
+                (await endpoints).raw.set({
+                    keyList:[this.uuidOfSelectedSegment],
+                    from: "observations",
+                    to: {
+                        videoId:   this.observationData.videoId,
+                        startTime: this.observationData.startTime,
+                        endTime:   this.observationData.endTime,
+                        observer:  this.observationData.observer,
+                        isHuman:   this.observationData.isHuman,
+                        observation: {
+                            label: this.observationData.label,
+                            labelConfidence: this.observationData.labelConfidence,
+                        },
+                    },
+                })
+            // if saving something new
+            } else {
+                this.uuidOfSelectedSegment = await (await endpoints).addSegmentObservation({
+                    videoId: this.observationData.videoId,
                     startTime: this.observationData.startTime,
-                    endTime:   this.observationData.endTime,
-                    observer:  this.observationData.observer,
-                    isHuman:   this.observationData.isHuman,
+                    endTime: this.observationData.endTime,
+                    observer: this.observationData.observer,
+                    isHuman: this.observationData.isHuman,
                     observation: {
                         label: this.observationData.label,
                         labelConfidence: this.observationData.labelConfidence,
-                    },
-                },
-            })
+                    }
+                })
+            }
             this.$toasted.show(`Data has been set, refresh to confirm`).goAway(2500)
         },
         async onDelete() {

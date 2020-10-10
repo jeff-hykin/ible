@@ -6,7 +6,9 @@
         br
         | Pause Time: {{$root.currentTime}} sec
         br
-        | {{getSegmentUuid() && `Selected Segment UUID: ${$root.selectedSegment.$uuid}`}}
+        | {{getSegmentUuid() && `Selected Segment UUID:`}}
+        span.uuid 
+            | {{getSegmentUuid() && $root.selectedSegment.$uuid}}
         br
         br
         a(v-if="getVideoUrl" :href="getVideoUrl()")
@@ -52,5 +54,8 @@ export default {
     color: darkgrey
     a 
         color: var(--blue)
+
+.uuid
+    font-family: monospace
 
 </style>

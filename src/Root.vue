@@ -114,7 +114,7 @@ export default RootComponent = {
                 }
             }
             // TODO: fix this by using dynamic loading
-            const maxRelatedVideoNumber = 100
+            const maxRelatedVideoNumber = 1000
             if (output.length > maxRelatedVideoNumber) {
                 output = output.slice(0,maxRelatedVideoNumber)
             }

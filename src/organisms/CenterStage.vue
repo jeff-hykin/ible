@@ -28,7 +28,6 @@
                             player-height="100%"
                             style="height: 100%;width: 100%; position: absolute; top: 0; left: 0"
                         )
-                        
                     
                     container.below-video
                         //- BACK
@@ -699,6 +698,7 @@ export default {
 .center-stage
     .side-container
         padding-left: 5rem
+        padding-right: 5rem
         
         .info-section
             margin-bottom: 2rem

@@ -3,7 +3,7 @@
     column.segments(align-h="left")
         h5
             | Labels
-        row.labels
+        row(wrap).labels
             container(v-if="eachLabelName != '(No Segments)'" v-for="(eachLevel, eachLabelName) in $root.labels" :background-color="$root.labels[eachLabelName].color")
                 ui-checkbox(v-model="$root.labels[eachLabelName].selected" @change="toggleLabel(eachLabelName)")
                     | {{eachLabelName}}
@@ -77,7 +77,7 @@ export default {
         margin-left: 10px
         font-weight: 100
         
-    .labels 
+    .labels
         margin-bottom: 1rem
         
         // TODO: use v-deep to access this instead of having unscoped styles
@@ -91,6 +91,7 @@ export default {
             padding: 6px 11px
             border-radius: 1rem
             margin-left: 12px
+            margin-bottom: 7px
             border: white 1px solid
             color: white
             
