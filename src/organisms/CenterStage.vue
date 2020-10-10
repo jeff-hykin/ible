@@ -698,7 +698,7 @@ export default {
         
 .center-stage
     .side-container
-        margin-left: 5rem
+        padding-left: 5rem
         
         .info-section
             margin-bottom: 2rem

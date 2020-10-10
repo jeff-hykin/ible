@@ -4,7 +4,7 @@
         br
         | Current Video ID: {{$root.getVideoId()}}
         br
-        | Pause Time: {{currentTime}} sec
+        | Pause Time: {{$root.currentTime}} sec
         br
         | {{getSegmentUuid() && `Selected Segment UUID: ${$root.selectedSegment.$uuid}`}}
         br
@@ -23,12 +23,14 @@ export default {
         setInterval(() => {
             if (window.player && window.player.getCurrentTime instanceof Function) {
                 this.setTime()
+            } else {
+                this.$root.currentTime = null
             }
         }, 700)
     },
     methods: {
         setTime(){
-            this.currentTime = window.player.getCurrentTime().toFixed(3)
+            this.$root.currentTime = window.player.getCurrentTime().toFixed(3)
         },
         getSegmentUuid() {
             return $root.selectedSegment && $root.selectedSegment.$uuid

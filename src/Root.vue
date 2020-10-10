@@ -85,6 +85,7 @@ export default RootComponent = {
         selectedSegment: null,
         labels: {},
         videos: {},
+        currentTime: null,
     }),
     watch: {
         selectedLabel(newValue, oldValue) {

@@ -61,20 +61,42 @@
                     label="Video Id"
                     v-model="observationData.videoId"
                 )
-                ui-textbox(
-                    :disabled="!editing"
-                    label="Start Time (seconds)"
-                    :placeholder="`${observationData.startTime}`"
-                    v-model.number="observationData.startTime"
-                    type="number"
-                )
-                ui-textbox(
-                    :disabled="!editing"
-                    label="End Time (seconds)"
-                    :placeholder="`${observationData.endTime}`"
-                    v-model.number="observationData.endTime"
-                    type="number"
-                )
+                row.start-time-wrapper
+                    ui-textbox(
+                        :disabled="!editing"
+                        label="Start Time (seconds)"
+                        :placeholder="`${observationData.startTime}`"
+                        v-model.number="observationData.startTime"
+                        type="number"
+                    )
+                    ui-button.set-to-current-time-button(
+                        v-if="editing"
+                        @click="setStartToCurrentTime"
+                        color="primary"
+                        size="small"
+                        tooltip="Set start time to current video time"
+                        tooltipPosition="top"
+                    )
+                        ui-icon
+                            | skip_next
+                row.end-time-wrapper
+                    ui-textbox(
+                        :disabled="!editing"
+                        label="End Time (seconds)"
+                        :placeholder="`${observationData.endTime}`"
+                        v-model.number="observationData.endTime"
+                        type="number"
+                    )
+                    ui-button.set-to-current-time-button(
+                        v-if="editing"
+                        @click="setEndToCurrentTime"
+                        color="primary"
+                        size="small"
+                        tooltip="Set end time to current video time"
+                        tooltipPosition="top"
+                    )
+                        ui-icon
+                            | skip_next
                 ui-textbox(
                     :disabled="!editing"
                     floating-label
@@ -182,14 +204,14 @@ export default {
                 keyList:[this.uuidOfSelectedSegment],
                 from: "observations",
                 to: {
-                    videoId:   selectedSegment.videoId,
-                    startTime: selectedSegment.startTime,
-                    endTime:   selectedSegment.endTime,
-                    observer:  selectedSegment.observer,
-                    isHuman:   selectedSegment.isHuman,
+                    videoId:   this.observationData.videoId,
+                    startTime: this.observationData.startTime,
+                    endTime:   this.observationData.endTime,
+                    observer:  this.observationData.observer,
+                    isHuman:   this.observationData.isHuman,
                     observation: {
-                        label: selectedSegment.observation.label,
-                        labelConfidence: selectedSegment.observation.labelConfidence,
+                        label: this.observationData.label,
+                        labelConfidence: this.observationData.labelConfidence,
                     },
                 },
             })
@@ -209,8 +231,8 @@ export default {
         resetData() {
             this.observationData = {
                 videoId: (this.$root.selectedVideo)&&this.$root.selectedVideo.$id,
-                startTime: this.currentTime || 0,
-                endTime: this.currentTime || 0,
+                startTime: this.$root.currentTime || 0,
+                endTime: this.$root.currentTime || 0,
                 observer: window.storageObject.observer || "",
                 label: (this.$root.selectedLabel)&&this.$root.selectedLabel.name || "",
                 labelConfidence: 0.99,
@@ -229,10 +251,11 @@ export default {
                 }
             }
         },
-        pullInfoFromEnviornment() {
-            this.observationData.videoId    = this.$root.selectedVideo.$id
-            this.observationData.startTime  = this.currentTime
-            this.observationData.endTime    = this.currentTime
+        setStartToCurrentTime() {
+            this.observationData.startTime = this.$root.currentTime
+        },
+        setEndToCurrentTime() {
+            this.observationData.endTime = this.$root.currentTime
         },
     },
 }
@@ -264,6 +287,7 @@ div[data-fjio3y598t3hi2]
             transition: all ease 0.3s
         
         .add-container
+            position: relative
             .add-button
                 background-color: var(--blue)
                 color: white
@@ -273,6 +297,7 @@ div[data-fjio3y598t3hi2]
                 opacity: 0
                 width: fit-content
                 position: absolute
+                top: 0
                 transition: all ease 0.3s
                 background-color: var(--vue-green)
                 
@@ -290,6 +315,28 @@ div[data-fjio3y598t3hi2]
         width: 20rem
         border-radius: 1rem
         box-shadow: var(--shadow-1)
+        
+        .start-time-wrapper,.end-time-wrapper
+            width: 100%
+            position: relative
+            
+            .ui-textbox
+                width: 100%
+            
+            &:hover 
+                .set-to-current-time-button
+                    opacity: 1
+                    transition: opacity ease 0.2s
+            
+            .set-to-current-time-button
+                position: absolute
+                opacity: 0
+                right: 4px
+                margin-bottom: 6px
+                background-color: darkgray
+                
+                .ui-icon
+                    transform: rotate(90deg)
         
         .input-area
             width: 100%
