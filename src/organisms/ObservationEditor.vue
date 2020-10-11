@@ -1,5 +1,5 @@
 <template lang="pug">
-    column(data-fjio3y598t3hi2 width="min-content" margin-bottom="2rem")
+    column(data-fjio3y598t3hi2 width="min-content" margin-bottom="2rem" align-self="flex-start")
         row.button-row(align-h="space-evenly" :width="editing?`143%`:`100%`" margin-bottom="0.7rem")
             ui-button.edit-button(
                 v-if="(!editing) && this.$root.selectedSegment"

@@ -37,7 +37,7 @@
                         //- NEXT
                         SideButton.right-side-button(right @click='incrementIndex')
 
-        column.side-container(align-v="top" align-self="flex-start" margin-top="12vh" overflow="auto")
+        column.side-container(align-v="top" margin-top="12vh" overflow="auto")
             InfoSection.info-section
             ObservationEditor
 
@@ -709,6 +709,7 @@ export default {
         transition: opacity ease 0.5s
         width: fit-content
         min-width: fit-content
+        padding-left: 8rem
         
 
         .below-video-search
@@ -727,7 +728,7 @@ export default {
                     position: relative
                     padding: 0 1rem 
                     // width
-                    width: inherit
+                    width: 96%
                     max-width: inherit
                     min-width: inherit
                     // height

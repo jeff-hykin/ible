@@ -1,5 +1,8 @@
 <template lang="pug">
     div.side-button(v-on="this.$listeners" :class="{left: $attrs.left, right: $attrs.right}")
+        ui-tooltip(position="top" animation="fade")
+            | {{ $attrs.left  && "go to previous observation" }}
+            | {{ $attrs.right  && "go to next observation" }}
         span
             | {{ $attrs.left  && "←" }}
             | {{ $attrs.right && "→" }}
@@ -12,13 +15,13 @@ export default {}
 .side-button
     background: var(--vue-green)
     color: white
-    padding: 2.3rem
+    padding: 1.9rem
     --radius: 5rem
     cursor: pointer
+    width: 2.7rem
     
     &.left
         padding-right: 0
-        margin-right: -10px
         border-top-left-radius: var(--radius)
         border-bottom-left-radius: var(--radius)
         span
@@ -26,7 +29,6 @@ export default {}
             left: -100%
     &.right
         padding-left: 0
-        margin-left: -10px
         border-top-right-radius: var(--radius)
         border-bottom-right-radius: var(--radius)
         span
