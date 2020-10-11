@@ -9,10 +9,6 @@
         | {{getSegmentUuid() && `Selected Segment UUID:`}}
         span.uuid 
             | {{getSegmentUuid() && $root.selectedSegment.$uuid}}
-        br
-        br
-        a(v-if="getVideoUrl" :href="getVideoUrl()")
-            | Link To Video
 </template>
 
 <script>
@@ -50,6 +46,7 @@ export default {
 </script>
 <style lang='sass' scoped>
 .info-section
+    margin-left: 1rem
     align-self: flex-start
     color: darkgrey
     a 

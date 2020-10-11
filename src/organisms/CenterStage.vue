@@ -37,9 +37,9 @@
                         //- NEXT
                         SideButton.right-side-button(right @click='incrementIndex')
 
-        column.side-container(align-v="top" margin-top="12vh" overflow="auto")
-            InfoSection.info-section
+        column.side-container(align-v="top" padding-top="12vh" overflow="auto")
             ObservationEditor
+            InfoSection.info-section
 
 </template>
 
@@ -510,7 +510,9 @@ export default {
             })
         },
         processNewSegments({duration, keySegments}) {
-            let minWidth = duration / 50
+            // element needs to be shown as at least __ % of the video width
+            const minWidthPercent = 3
+            let minWidthInSeconds = duration / (100 / minWidthPercent)
             keySegments = keySegments.map(eachSegment=>{
                 // 
                 // add render info
@@ -520,12 +522,12 @@ export default {
                 let effectiveEnd    = eachSegment.endTime
                 let segmentDuration = eachSegment.endTime - eachSegment.startTime
                 // if segment is too small artificially make it bigger
-                if (segmentDuration < minWidth) {
-                    let additionalAmount = (minWidth - segmentDuration)/2
+                if (segmentDuration < minWidthInSeconds) {
+                    let additionalAmountForEachSide = (minWidthInSeconds - segmentDuration)/2
                     // sometimes this will result in a negative amount, but thats okay
                     // the UI can handle it, the user just needs to be able to see it
-                    effectiveStart -= additionalAmount
-                    effectiveEnd += additionalAmount
+                    effectiveStart -= additionalAmountForEachSide
+                    effectiveEnd += additionalAmountForEachSide
                 }
                 eachSegment.$renderData = {
                     effectiveEnd,
@@ -569,7 +571,16 @@ export default {
                 for (let eachSegment of displaySegments) {
                     // find the smallest viable level
                     let level = 0
-                    while (levels[level] != undefined && eachSegment.$renderData.effectiveStart <= levels[level][ levels[level].length-1 ].$renderData.effectiveEnd) {
+                    while (1) {
+                        let thisLevel = levels[level]
+                        if (thisLevel == undefined) {
+                            break
+                        }
+                        let indexOfLastElementOnThisLevel = levels[level].length-1
+                        let lastElementOnThisLevel = levels[level][indexOfLastElementOnThisLevel]
+                        if (eachSegment.$renderData.effectiveStart > lastElementOnThisLevel.$renderData.effectiveEnd) {
+                            break
+                        }
                         ++level
                     }
                     // create level if it didn't exist
@@ -579,8 +590,9 @@ export default {
                     } else {
                         levels[level].push(eachSegment)
                     }
+                    const heightOfSegment = 2.2 // rem
                     eachSegment.$renderData.level = level 
-                    eachSegment.$renderData.topAmount = `${level*2.2}rem`
+                    eachSegment.$renderData.topAmount = `${level*heightOfSegment}rem`
                 }
                 this.segmentsInfo = {
                     maxLevel: levels.length,

@@ -1,66 +1,64 @@
 <template lang="pug">
-    column(data-fjio3y598t3hi2 width="min-content" margin-bottom="2rem" align-self="flex-start")
-        row.button-row(align-h="space-evenly" :width="editing?`143%`:`100%`" margin-bottom="0.7rem")
-            ui-button.edit-button(
-                v-if="(!editing) && this.$root.selectedSegment"
-                @click="onEditObservation"
-                icon="edit"
+    column(data-fjio3y598t3hi2 width="min-content" margin-bottom="2rem" align-self="flex-start" position="relative")
+        column.add-container(v-if="!editing")
+            ui-button.add-button(
+                @click="onNewObservation"
+                icon="add"
                 color="primary"
                 raised
+                tooltip="create a new observation"
+                tooltipPosition="right"
             )
-                | Edit
+                | New Observation
+            ui-button.upload-button(
+                v-if="!editing"
+                @click="onUploadObservation"
+                icon="cloud_upload"
+                color="green"
+                raised
+                tooltip="upload multiple observations"
+                tooltipPosition="right"
+            )
+                | Upload
+        container(height="20px")
+        column.observation-widget(v-if="this.$root.selectedSegment || editing")
+            row(align-h="space-between" width="100%")
+                h5
+                    | Observation
+                ui-button.edit-button(
+                    v-if="(!editing) && this.$root.selectedSegment"
+                    @click="onEditObservation"
+                    icon="edit"
+                    color="primary"
+                )
+                    | Edit
+                
+            row.button-row(align-h="space-evenly" width="100%" margin-bottom="0.7rem" margin-top="0.5rem" v-if="editing")
+                ui-button.save-button(
+                    v-if="editing"
+                    @click="onSaveEdit"
+                    icon="save"
+                    color="primary"
+                )
+                    | Save
+                //- spacer
+                container(flex-basis="10%" width="10%" v-if="editing")
+                ui-button.delete-button(
+                    v-if="editing"
+                    @click="onDelete"
+                    icon="delete"
+                    color="red"
+                )
+                    | Delete
             ui-button.cancel-button(
                 v-if="editing"
                 @click="onCancelEdit"
                 icon="cancel"
                 color="accent"
-                raised
             )
                 | Cancel
-            ui-button.save-button(
-                v-if="editing"
-                @click="onSaveEdit"
-                icon="save"
-                color="primary"
-                raised
-            )
-                | Save
-            ui-button.delete-button(
-                v-if="editing"
-                @click="onDelete"
-                icon="delete"
-                color="red"
-                raised
-            )
-                | Delete
-            column.add-container(v-if="!editing")
-                ui-button.add-button(
-                    @click="onNewObservation"
-                    icon="add"
-                    color="primary"
-                    raised
-                    tooltip="create a new observation"
-                    tooltipPosition="right"
-                )
-                    | Add
-                ui-button.upload-button(
-                    v-if="!editing"
-                    @click="onUploadObservation"
-                    icon="cloud_upload"
-                    color="green"
-                    raised
-                    tooltip="upload multiple observations"
-                    tooltipPosition="right"
-                )
-                    | Upload
-        column.observation-widget
-            .input-area
-                ui-textbox(
-                    :disabled="!editing"
-                    floating-label
-                    label="Video Id"
-                    v-model="observationData.videoId"
-                )
+            
+            container.input-area(margin-top="2rem")
                 row.start-time-wrapper
                     ui-textbox(
                         :disabled="!editing"
@@ -97,12 +95,7 @@
                     )
                         ui-icon
                             | skip_next
-                ui-textbox(
-                    :disabled="!editing"
-                    floating-label
-                    label="Observer (username)"
-                    v-model="observationData.observer"
-                )
+                
                 ui-textbox(
                     :disabled="!editing"
                     floating-label
@@ -115,6 +108,18 @@
                     floating-label
                     label="Label Confidence"
                     v-model="observationData.labelConfidence"
+                )
+                ui-textbox(
+                    :disabled="!editing"
+                    floating-label
+                    label="Observer (username)"
+                    v-model="observationData.observer"
+                )
+                ui-textbox(
+                    :disabled="!editing"
+                    floating-label
+                    label="Video Id"
+                    v-model="observationData.videoId"
                 )
                 ui-switch(:disabled="!editing" v-model="observationData.isHuman")
                     | Observer Is Human
@@ -275,51 +280,86 @@ export default {
 </script>
 
 <style lang='sass'>
+
 div[data-fjio3y598t3hi2]
-    .button-row
-        --button-scale: 1.0
+    h5
+        color: gray
+        border-bottom: 1px darkgray solid
+        
+    .add-container
+        position: relative
+        padding-top: 1rem
+        
+        .add-button
+            width: max-content
+            background-color: var(--blue)
+            color: white
+            transition: all ease 0.3s
+            
+        .upload-button
+            opacity: 0
+            width: fit-content
+            position: absolute
+            top: 0
+            transition: all ease 0.3s
+            background-color: var(--vue-green)
+        
+        &:hover
+            .upload-button
+                opacity: 1
+                transform: translateY(-100%)
+            
+            
+    .observation-widget
+        transition: all ease 0.3s
+        
+        --button-color: darkgray
+        
+        .ui-button
+            transition: all ease 0.3s
+            font-size: 11pt
+            height: 1.7rem
+            background-color: transparent
+            background-color: var(--button-color) 
+            color: white
+            
+            &:hover
+                background-color: var(--button-color) !important
+                color: white
+                box-shadow: var(--shadow-3)
+            
+            .ui-icon
+                font-size: 1rem
         
         .edit-button
-            margin-right: 1rem
-            background-color: gray 
-            color: white
+            --button-color: darkgray
+            
             transition: all ease 0.3s
+            font-size: 11pt
+            height: 1.7rem
+            background-color: transparent
+            color: var(--button-color)
+            border: 1px solid var(--button-color)
+            
+            &:hover
+                background-color: var(--button-color) !important
+                color: white
 
         .cancel-button
-            background-color: gray 
-            color: white
-            transition: all ease 0.3s
+            --button-color: darkgray
+            border-bottom: 1px darkgray solid
+            flex-basis: 100%
+            min-height: 1.7rem
+            width: 100%
 
         .save-button
-            transition: all ease 0.3s
+            --button-color: var(--material-blue)
+            flex-basis: 45%
 
         .delete-button
-            width: 5rem
-            background: var(--red)
-            color: white
-            transition: all ease 0.3s
-        
-        .add-container
-            position: relative
-            .add-button
-                background-color: var(--blue)
-                color: white
-                transition: all ease 0.3s
-                
-            .upload-button
-                opacity: 0
-                width: fit-content
-                position: absolute
-                top: 0
-                transition: all ease 0.3s
-                background-color: var(--vue-green)
-                
-        &:hover
-            .add-container
-                .upload-button
-                    opacity: 1
-                    transform: translateY(-120%)
-            
+            --button-color: var(--red)
+            flex-basis: 45%
+
 
     .observation-widget
         padding: 1.7rem 2.4rem
