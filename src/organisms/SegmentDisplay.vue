@@ -10,7 +10,8 @@
                 :width="eachSegment.$renderData.widthPercent"
                 :top="eachSegment.$renderData.topAmount"
                 :background-color="$root.labels[eachSegment.observation.label].color"
-                :key="eachSegment.listIndex"
+                :key="eachSegment.$uuid"
+                :style="(eachSegment.$uuid == ($root.selectedSegment&&$root.selectedSegment.$uuid))?`animation-name: pulse-size`:``"
                 @click="jumpSegment(eachSegment.$displayIndex)"
             )
                 ui-tooltip(position="left" animation="fade")
@@ -144,21 +145,28 @@ export default {
             background-color: var(--blue)
             padding: 2px
             border-radius: 2px
-            transition: all ease 0.5s
-            cursor: pointer
-            // top: 0rem
-            // background-color: transparent
-            // border: solid gray 2px
-            // border-top: none
-            // border-top-left-radius: 0
-            // border-top-right-radius: 0
-            // max-height: none
-            // line-height: 0
-            // min-height: 0.6rem
-            // transform: scale(1.5)
+            transition: all ease 0.6s
+            cursor: pointer 
+            animation-duration: 0.90s 
+            animation-timing-function: ease
+            animation-iteration-count: infinite 
+            animation-play-state: running 
             
             &:hover
                 box-shadow: var(--shadow-1)
                 opacity: 0.9
 
+@keyframes pulse-size
+    0%  
+        opacity: 1
+
+    50%  
+        opacity: 0.5
+        // transform: scale(0.92)
+    
+    100%  
+        opacity: 1
+        // transform: scale(1.1)
+     
+ 
 </style>
