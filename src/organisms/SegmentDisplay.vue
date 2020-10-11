@@ -22,7 +22,11 @@
         h5
             | Filter Observations by Label
         container.labels
-            container(v-if="eachLabelName != '(No Segments)'" v-for="(eachLevel, eachLabelName) in $root.labels" :color="$root.labels[eachLabelName].color")
+            container(
+                v-if="eachLabelName != '(No Segments)'"
+                v-for="(eachLevel, eachLabelName) in $root.labels"
+                :style="`--label-color: ${$root.labels[eachLabelName].selected ? $root.labels[eachLabelName].color : 'gray'}`"
+            )
                 ui-checkbox(v-model="$root.labels[eachLabelName].selected" @change="toggleLabel(eachLabelName)")
                     | {{eachLabelName}}
 
@@ -95,15 +99,17 @@ export default {
             border-radius: 1rem
             margin-left: 12px
             margin-bottom: 7px
-            border: white 1px solid
-            color: white
-            text-decoration: underline
-                
+            border: transparent 1px solid
+            color: var(--label-color)
+            --checkbox-background-color: var(--label-color)
+            --checkbox-check-color: white
+        
+        // this is overridden later
+        --label-color: darkgray
+        
         // 
         // checkboxes
         // 
-        --checkbox-background-color: darkgray
-        --checkbox-check-color: white
         // TODO: use v-deep to access this instead of having unscoped styles
         .ui-checkbox__checkmark::after
             color: black
