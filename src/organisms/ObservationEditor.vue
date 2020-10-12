@@ -180,10 +180,11 @@ export default {
         },
         async onUploadObservation(eventObject) {
             window.eventObject = eventObject
-            this.$toasted.show(`Not yet implemented, Sorry :/`).goAway(2500)
-            let newObservations = JSON.stringify(await eventObject[0].text())
-            (await endpoints).addMultipleSegments(newObservations)
+            let fileText = await eventObject[0].text()
             console.debug(`fileText is:`, fileText)
+            let newObservations = JSON.stringify(fileText)
+            let newUuids = await (await endpoints).addMultipleSegments(newObservations)
+            this.$toasted.show(`Not yet implemented, Sorry :/`).goAway(2500)
         },
         onEditObservation() {
             // save a copy encase they cancel
