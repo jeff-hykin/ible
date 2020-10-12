@@ -225,6 +225,7 @@ $ui-switch-focus-ring-size  : $ui-switch-thumb-size * 2.1 !default;
     transition-property: background-color, transform;
     transition-timing-function: ease;
     width: $ui-switch-thumb-size;
+    z-index: unset;
 }
 
 .ui-switch__focus-ring {
