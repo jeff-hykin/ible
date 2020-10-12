@@ -10,15 +10,6 @@
                 tooltipPosition="right"
             )
                 | New Observation
-            ui-button.upload-button(
-                v-if="!editing"
-                color="green"
-                raised
-                tooltip="upload multiple observations"
-                tooltipPosition="right"
-            )
-                ui-fileupload(name="file" type="secondary" @change="onUploadObservation")
-                    | Upload
         container(height="20px")
         column.observation-widget(v-if="this.$root.selectedSegment || editing")
             row(align-h="space-between" width="100%")
@@ -178,14 +169,6 @@ export default {
             // start editing the newly created observation
             this.onEditObservation()
         },
-        async onUploadObservation(eventObject) {
-            window.eventObject = eventObject
-            let fileText = await eventObject[0].text()
-            console.debug(`fileText is:`, fileText)
-            let newObservations = JSON.parse(fileText)
-            let newUuids = await (await endpoints).addMultipleSegments(newObservations)
-            this.$toasted.show(`Success! Refresh to see changes`).goAway(2500)
-        },
         onEditObservation() {
             // save a copy encase they cancel
             this.dataCopy = JSON.parse(JSON.stringify(this.observationData))
@@ -299,28 +282,6 @@ div[data-fjio3y598t3hi2]
             background-color: var(--blue)
             color: white
             transition: all ease 0.3s
-            
-        .upload-button
-            opacity: 0
-            width: fit-content
-            position: absolute
-            top: 0
-            transition: all ease 0.3s
-            background-color: var(--vue-green)
-            
-            .ui-fileupload, .ui-fileupload.ui-fileupload--type-secondary.ui-fileupload--color-default.ui-fileupload--icon-position-left.ui-fileupload--size-normal
-                color: white
-                background-color: transparent
-            
-            .ui-fileupload__icon
-                color: white
-            
-        
-        &:hover
-            .upload-button
-                opacity: 1
-                transform: translateY(-100%)
-            
             
     .observation-widget
         transition: all ease 0.3s

@@ -40,7 +40,7 @@
         column.side-container(align-v="top" padding-top="12vh" overflow="auto")
             ObservationEditor
             InfoSection.info-section
-
+        
 </template>
 
 <script>

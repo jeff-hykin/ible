@@ -13,7 +13,7 @@ export default {}
 
 <style lang="sass" scoped>
 .side-button
-    background: var(--vue-green)
+    background: var(--soft-green)
     color: white
     padding: 1.9rem
     --radius: 5rem
