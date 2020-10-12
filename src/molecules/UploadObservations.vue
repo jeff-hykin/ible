@@ -112,6 +112,10 @@ export default {
             let newObservations, newUuids
             try {
                 newObservations = JSON.parse(fileText)
+                // save the uploadTime to help with removing bad data
+                for (let each of newObservations) {
+                    each.uploadTime = `${(new Date())}`
+                }
             } catch (error) {
                 this.$toasted.show(`Processing Error`).goAway(2500)
                 this.$toasted.show(`Are you sure the file is valid JSON?`).goAway(6500)
