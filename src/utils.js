@@ -52,9 +52,18 @@ window.storageObject = new Proxy(window.localStorage, {
     },
 })
 
+function readFileAsString(files) {
+    if (files.length === 0) {
+        console.log('No file is selected')
+        return
+    }
+    return (new FileReader()).readAsText(files[0])
+}
+
 module.exports = {
     EventEmitter,
     storageObject,
+    readFileAsString,
     wrapIndex(val, list) {
         if (val < 0) {
             val = list.length + val

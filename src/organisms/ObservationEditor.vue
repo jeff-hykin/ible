@@ -12,14 +12,13 @@
                 | New Observation
             ui-button.upload-button(
                 v-if="!editing"
-                @click="onUploadObservation"
-                icon="cloud_upload"
                 color="green"
                 raised
                 tooltip="upload multiple observations"
                 tooltipPosition="right"
             )
-                | Upload
+                ui-fileupload(name="file" type="secondary" @change="onUploadObservation")
+                    | Upload
         container(height="20px")
         column.observation-widget(v-if="this.$root.selectedSegment || editing")
             row(align-h="space-between" width="100%")
@@ -179,8 +178,12 @@ export default {
             // start editing the newly created observation
             this.onEditObservation()
         },
-        onUploadObservation() {
+        async onUploadObservation(eventObject) {
+            window.eventObject = eventObject
             this.$toasted.show(`Not yet implemented, Sorry :/`).goAway(2500)
+            let newObservations = JSON.stringify(await eventObject[0].text())
+            (await endpoints).addMultipleSegments(newObservations)
+            console.debug(`fileText is:`, fileText)
         },
         onEditObservation() {
             // save a copy encase they cancel
@@ -303,6 +306,14 @@ div[data-fjio3y598t3hi2]
             top: 0
             transition: all ease 0.3s
             background-color: var(--vue-green)
+            
+            .ui-fileupload, .ui-fileupload.ui-fileupload--type-secondary.ui-fileupload--color-default.ui-fileupload--icon-position-left.ui-fileupload--size-normal
+                color: white
+                background-color: transparent
+            
+            .ui-fileupload__icon
+                color: white
+            
         
         &:hover
             .upload-button
