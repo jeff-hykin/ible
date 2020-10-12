@@ -77,15 +77,9 @@ export default {
             }
         },
         selectVideo(eventObj, videoId) {
-            console.debug(`eventObj is:`,eventObj)
-            console.log(`changing selected video from VideoList`)
-            this.$root.selectedVideo = ""
-            setTimeout(() => {
-                console.debug(`videoId of selected is:`,videoId)
-                // get it from the cache (auto-adds to cache if needed)
-                this.$root.selectedVideo = this.$root.getCachedVideoObject(videoId)
-                console.debug(`this.$root.selectedVideo is:`,JSON.stringify(this.$root.selectedVideo))
-            }, 200)
+            console.log(`changing selected video from VideoPicker`)
+            console.debug(`videoId of selected is:`,videoId)
+            this.$router.push({ name: "video", params: { videoId, labelName: this.$route.params.labelName } })
         },
     }
 }

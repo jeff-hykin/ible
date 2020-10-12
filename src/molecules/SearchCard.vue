@@ -16,12 +16,12 @@ export default {
         selectLabel(labelName, label) {
             console.debug(`EVENT: selectLabel callback (Home.vue)`)
             label.name = labelName
-            this.$root.selectedLabel = label
             // (there must be at least one video with the label, unless the database is corrupt)
-            let selectedVideoId = Object.keys(this.$root.selectedLabel.videos)[0]
+            let selectedVideoId = Object.keys(label.videos)[0]
             // get it from the cache (auto-adds to cache if needed)
-            this.$root.selectedVideo = this.$root.getCachedVideoObject(selectedVideoId)
             this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500)
+            console.log(`changing routes`)
+            this.$router.push({ name: 'video', params: { videoId: selectedVideoId, labelName: labelName } })
         }
     }
 }

@@ -24,25 +24,6 @@ if (!("Home" in pages)) {
 
 let colors = [ "#4fc3f7", "#e57373", "#ba68c8", "#04d895", "#fec355",  "#9575cd", "#4fc3f7", "#ff8a65", "#9ccc65", ]
 let colorCopy = [...colors]
-
-// 
-// summary
-//
-    // set:
-    //      this.labels
-    //      this.labels[].selected
-    //      this.labels[].color
-    // 
-    // retreives:
-    //      endpoints.summary.labels()
-    // 
-    // listeners:
-    //      watch: this.selectedLabel
-    // 
-    // emits:
-    //     
-
-
 let RootComponent
 // create Root instance and attach it (executed after this file loads)
 setTimeout(()=>(new (Vue.extend(RootComponent))).$mount('#vue-root'),0)
@@ -58,16 +39,17 @@ export default RootComponent = {
     // 
     router: new Router({
         routes: [
+            {
+                name: "video",
+                path: '/video/:videoId/:labelName',
+                component: pages.Home.default
+            },
             // load up anything in the pages section
             ...Object.keys(pages).map(eachPageName=>({
                 path: "/"+eachPageName.toLowerCase(),
                 name: eachPageName,
                 component: pages[eachPageName].default,
             })),
-            {
-                path: '/video/:id',
-                component: pages.Home.default
-            },
             // all other routes redirect to the home page
             // You can change this to a 404 page if you want
             {
@@ -93,10 +75,13 @@ export default RootComponent = {
             newValue && (newValue.selected = true)
         },
     },
+    resolvables: {
+        labelsResolved() {}
+    },
     created() {
+        window.$root = this // for debugging
         // get the labels ASAP
         this.retrieveLabels()
-        window.$root = this // for debugging
     },
     methods: {
         getVideoId() {
@@ -146,6 +131,7 @@ export default RootComponent = {
             this.labels = await realEndpoints.summary.labels()
             // assign colors to all labels in a pretty (irrelevently) inefficient way
             Object.keys(this.labels).forEach(each=> this.labels[each] = {color: (colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())), ...this.labels[each]})
+            this.labelsResolved.resolve(true)
         },
     }
 }

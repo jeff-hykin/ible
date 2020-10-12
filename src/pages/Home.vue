@@ -28,28 +28,8 @@
 </template>
 <script>
 
-const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
+const { dynamicSort, logBlock, checkIf, get, set, info } = require("good-js")
 let Fuse = require("fuse.js").default
-
-// 
-// summary
-//
-    // set:
-    //     this.$root.selectedVideo
-    //     this.$root.selectedLabel
-    //     this.$root.videos
-    // 
-    // get:
-    //     this.$root.labels
-    //     this.$root.segments
-    // 
-    // retreives:
-    // 
-    // listeners:
-    //     this.$root.$watch("labels")
-    // 
-    // emits:
-    // 
 
 export default {
     name: "HomePage",
@@ -59,7 +39,56 @@ export default {
         LabelPicker: require("../organisms/LabelPicker").default,
         UploadObservations: require("../molecules/UploadObservations").default,
     },
-    methods: {}
+    async mounted() {
+        // wait till labels exist
+        $root.labelsResolved.done || await $root.labelsResolved.promise
+        this.loadVideoRoute()
+    },
+    watch: {
+        // when the route changes
+        $route(to, from){
+            this.loadVideoRoute()
+        }
+    },
+    methods: {
+        loadVideoRoute() {
+            // prefer the url data (its the source of truth)
+            let {videoId, labelName} = this.$route.params
+            console.log(`raw labelName`, labelName)
+            info(labelName)
+            // fill in missing url data
+            videoId   || (videoId = this.$root.getVideoId())
+            labelName || (labelName = (this.selectedLabel&&this.selectedLabel.name))
+            
+            console.debug(`=========================`)
+            console.debug(`videoId is:`,videoId)
+            console.debug(`labelName is:`,labelName)
+            console.debug(`selectedLabel is:`,this.$root.selectedLabel)
+            console.debug(`=========================`)
+            
+            
+            // check if one of the things is new/different
+            // update the root data as needed
+            if (!this.selectedLabel && labelName) {
+                console.log(`updating label`)
+                // change the selected label
+                this.$root.selectedLabel = this.$root.labels[labelName]
+                this.$root.selectedLabel.name = labelName
+            }
+            if (this.$root.getVideoId() != videoId) {
+                console.log(`updating selected video`)
+                this.$root.selectedVideo = this.$root.getCachedVideoObject(videoId)
+            }
+            
+            // change the url only if needed
+            if (videoId && labelName) {
+                let newUrlHash = `#/video/${videoId}/${labelName}`
+                if (window.location.hash != newUrlHash) {
+                    window.location.href = newUrlHash
+                }
+            }
+        }
+    }
 }
 </script>
 <style lang="sass" scoped>
