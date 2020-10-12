@@ -54,29 +54,18 @@ export default {
         loadVideoRoute() {
             // prefer the url data (its the source of truth)
             let {videoId, labelName} = this.$route.params
-            console.log(`raw labelName`, labelName)
-            info(labelName)
             // fill in missing url data
             videoId   || (videoId = this.$root.getVideoId())
             labelName || (labelName = (this.selectedLabel&&this.selectedLabel.name))
             
-            console.debug(`=========================`)
-            console.debug(`videoId is:`,videoId)
-            console.debug(`labelName is:`,labelName)
-            console.debug(`selectedLabel is:`,this.$root.selectedLabel)
-            console.debug(`=========================`)
-            
-            
             // check if one of the things is new/different
             // update the root data as needed
             if (!this.selectedLabel && labelName) {
-                console.log(`updating label`)
                 // change the selected label
                 this.$root.selectedLabel = this.$root.labels[labelName]
                 this.$root.selectedLabel.name = labelName
             }
             if (this.$root.getVideoId() != videoId) {
-                console.log(`updating selected video`)
                 this.$root.selectedVideo = this.$root.getCachedVideoObject(videoId)
             }
             
