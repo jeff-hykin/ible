@@ -20,8 +20,11 @@
                     | length: {{  (eachSegment.endTime - eachSegment.startTime).toFixed(2) }} sec
                     br
                     | start: {{ eachSegment.startTime.toFixed(3) }} sec
-        h5
-            | Filter Observations by Label
+        row(position="relative" align-h="left" align-v="top" width="100%")
+            h5
+                | Filter Observations by Label
+            ui-button.outline-button(@click="toggleAllLabels" style="position: absolute; right: 1.5rem; top: -0.3rem; --button-color: darkgray")
+                | Toggle All
         container.labels
             container(
                 v-if="eachLabelName != '(No Segments)'"
@@ -48,10 +51,22 @@ export default {
     components: {
         SideButton: require("../atoms/SideButton").default,
     },
-    data: ()=>({}),
+    data: ()=>({
+        allLabelsOn: false,
+    }),
     mounted() {
     },
     methods: {
+        toggleAllLabels() {
+            // toggle
+            this.allLabelsOn = !this.allLabelsOn
+            // assign
+            for (let [eachKey, eachValue] of Object.entries(this.$root.labels)) {
+                if (eachKey != this.$root.selectedLabel.name) {
+                    eachValue.selected = this.allLabelsOn
+                }
+            }
+        },
         toggleLabel(labelName) {
             // this is a dumb hack that only exists because sometimes the ui-checkbox doens't display the change
             // even though the change has been made
@@ -76,6 +91,12 @@ export default {
     align-items: flex-start
     text-align: left
     padding-top: 0.3rem
+    
+    .outline-button
+        opacity: 0
+    &:hover
+        .outline-button
+            opacity: 1
 
     h5
         color: gray
