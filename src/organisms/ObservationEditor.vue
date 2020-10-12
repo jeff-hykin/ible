@@ -182,7 +182,7 @@ export default {
             window.eventObject = eventObject
             let fileText = await eventObject[0].text()
             console.debug(`fileText is:`, fileText)
-            let newObservations = JSON.stringify(fileText)
+            let newObservations = JSON.parse(fileText)
             let newUuids = await (await endpoints).addMultipleSegments(newObservations)
             this.$toasted.show(`Success! Refresh to see changes`).goAway(2500)
         },
