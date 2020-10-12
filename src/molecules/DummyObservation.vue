@@ -1,62 +1,54 @@
 <template lang="pug">
-    column
+    column.dummy-observation
         ui-textbox(
-            disabled
             label="Start Time (seconds)"
-            v-model.number="startTime"
+            v-model.number="observationData.startTime"
             type="number"
         )
         ui-textbox(
-            disabled
             label="End Time (seconds)"
-            v-model.number="endTime"
+            v-model.number="observationData.endTime"
             type="number"
         )
         ui-textbox(
-            disabled
             floating-label
             label="Label"
-            :invalid="!label.match(/^[a-zA-Z0-9]+$/)"
-            v-model="label"
+            :invalid="!observationData.observation.label.match(/^[a-zA-Z0-9]+$/)"
+            v-model="observationData.observation.label"
         )
         ui-textbox(
-            disabled
             floating-label
             label="Label Confidence"
-            v-model="labelConfidence"
+            v-model="observationData.observation.labelConfidence"
         )
         ui-textbox(
-            disabled
             floating-label
             label="Observer (username)"
-            v-model="observer"
+            v-model="observationData.observer"
         )
         ui-textbox(
-            disabled
             floating-label
             label="Video Id"
-            v-model="videoId"
+            v-model="observationData.videoId"
         )
-        ui-switch(disabled v-model="isHuman")
+        ui-switch( v-model="observationData.isHuman")
             | Observer Is Human
 </template>
 
 <script>
 export default {
     props: [
-        'startTime',
-        'endTime',
-        'label',
-        'label',
-        'labelConfidence',
-        'observer',
-        'videoId',
-        'isHuman',
+        'observationData',
     ],
     data: ()=>({}),
 }
 </script>
 
-<style>
-
+<style lang="sass" scoped>
+.dummy-observation
+    box-shadow: var(--shadow-1)
+    padding: 1.7rem 2.4rem
+    background: white
+    border-radius: 1rem
+    
 </style>
