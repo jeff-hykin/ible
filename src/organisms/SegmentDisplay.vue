@@ -85,13 +85,15 @@ export default {
         border-bottom: 2px lightgray solid
         width: 96%
         margin-bottom: 0.5rem
-        
+    
+    --max-label-size: 8rem
     .labels
         margin: 1rem
         margin-top: 0.5rem
         display: grid
+        width: 100%
         // 6 columns
-        grid-template-columns: auto auto auto auto auto auto
+        grid-template-columns: repeat(auto-fit, var(--max-label-size))
         
         // 
         // each label

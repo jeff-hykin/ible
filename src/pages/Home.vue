@@ -84,4 +84,10 @@ export default {
     bottom: 2rem
     right: 2rem
 
+// fix a strange bug where the buttons in the 
+// ObservationEditor are show overtop of the help model 
+::v-deep .ui-button__content, ::v-deep .ui-switch__thumb
+    z-index: unset
+    
+    
 </style>
