@@ -109,16 +109,18 @@ export default {
         },
         async onUploadObservation(eventObject) {
             let fileText = await eventObject[0].text()
+            let newObservations, newUuids
             try {
-                let newObservations = JSON.parse(fileText)
+                newObservations = JSON.parse(fileText)
             } catch (error) {
                 this.$toasted.show(`Processing Error`).goAway(2500)
                 this.$toasted.show(`Are you sure the file is valid JSON?`).goAway(6500)
                 return
             }
             try {
-                let newUuids = await (await endpoints).addMultipleSegments(newObservations)
+                newUuids = await (await endpoints).addMultipleSegments(newObservations)
             } catch (error) {
+                console.debug(`error is:`,error)
                 // TODO: improve this error
                 this.$toasted.show(`Server Error`).goAway(2500)
                 this.$toasted.show(`This probably means one of the observations was invalid (bad start/end time, no 'observer', etc)`).goAway(6500)

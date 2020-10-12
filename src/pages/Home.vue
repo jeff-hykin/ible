@@ -1,5 +1,14 @@
 <template lang="pug">
-    row.home-container(align-v='top' align-h="left" position="relative" width='fit-content' min-width="100vw" height="100vh" overflow="hidden" :class="{labelSelected: !!$root.selectedLabel}")
+    row.home-container(
+        align-v='top'
+        align-h="left"
+        position="relative"
+        width='fit-content'
+        min-width="100vw"
+        height="100vh"
+        overflow="hidden"
+        :class="{labelSelected: !!$root.selectedLabel}"
+    )
         LabelPicker
         
         column.home-container(
