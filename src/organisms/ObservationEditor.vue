@@ -111,13 +111,16 @@
                     label="Video Id"
                     v-model="observationData.videoId"
                 )
-                ui-switch(:disabled="!editing" v-model="observationData.isHuman")
+                UiSwitch(:disabled="!editing" v-model="observationData.isHuman")
                     | Observer Is Human
 </template>
 
 <script>
 import { endpoints } from '../iilvd-api'
 export default {
+    components: {
+        UiSwitch: require("../atoms/UiSwitch").default,
+    },
     data: ()=>({
         observationData: {
             videoId: null,

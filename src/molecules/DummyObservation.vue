@@ -31,7 +31,7 @@
             label="Video Id"
             v-model="observationData.videoId"
         )
-        ui-switch( v-model="observationData.isHuman")
+        UiSwitch( v-model="observationData.isHuman")
             | Observer Is Human
 </template>
 
@@ -40,6 +40,9 @@ export default {
     props: [
         'observationData',
     ],
+    components: {
+        UiSwitch: require("../atoms/UiSwitch").default,
+    },
     data: ()=>({}),
 }
 </script>
