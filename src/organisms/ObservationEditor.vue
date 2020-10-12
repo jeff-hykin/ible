@@ -184,7 +184,7 @@ export default {
             console.debug(`fileText is:`, fileText)
             let newObservations = JSON.stringify(fileText)
             let newUuids = await (await endpoints).addMultipleSegments(newObservations)
-            this.$toasted.show(`Not yet implemented, Sorry :/`).goAway(2500)
+            this.$toasted.show(`Success! Refresh to see changes`).goAway(2500)
         },
         onEditObservation() {
             // save a copy encase they cancel
