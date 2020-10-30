@@ -6,6 +6,7 @@
                 ui-autocomplete.rounded-search(
                     placeholder="Search for a video id"
                     @select="videoSelect"
+                    @change="videoSelect"
                     v-model="searchTerm"
                     :suggestions="suggestions"
                 )
@@ -492,10 +493,30 @@ export default {
             }, generalTimeoutFrequency)
         },
         videoSelect() {
-            if (this.searchTerm.trim() == this.$root.getVideoId()) {
+            let newVideoId = this.searchTerm.trim()
+            // if search empty do nothing
+            if (newVideoId.length == 0) {
+                return
+            }
+            if (newVideoId == this.$root.getVideoId()) {
                 this.$toasted.show(`Video is already open`).goAway(2500)
             } else {
-                this.$root.selectedVideo = this.$root.getCachedVideoObject(this.searchTerm.trim())
+                const currentFixedSizeOfYouTubeVideoId = 11 // This is not guarenteed to stay this way forever
+                if (newVideoId.length == currentFixedSizeOfYouTubeVideoId) {
+                    this.$router.push({name: "video", params: { videoId: newVideoId, labelName: this.$route.params.labelName } })
+                } else {
+                    this.$toasted.show(`It looks like that video id isn't valid\n(its not 11 characters)\nWould you like to try and load it anyways?`, {
+                        keepOnHover:true,
+                        action:[
+                            {
+                                text : 'Load Anyways',
+                                onClick : (eventData, toastObject) => {
+                                    this.$router.push({name: "video", params: { videoId: newVideoId, labelName: this.$route.params.labelName } })
+                                },
+                            },
+                        ]
+                    })
+                }
             }
         },
         async attemptToSetupSegments() {
