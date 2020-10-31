@@ -346,26 +346,52 @@ export default {
     windowListeners: {
         keydown(eventObj) {
             console.debug(`EVENT: keydown: ${eventObj.key}`)
-            // 
-            // key controls
-            // 
-            // This is disabled because the don't pay attention to the textboxes
-            switch (eventObj.key) {
-                case "ArrowDown":
-                    eventObj.preventDefault()
-                    // this.incrementIndex()
-                    break
-                case "ArrowUp":
-                    eventObj.preventDefault()
-                    // this.decrementIndex()
-                    break
-                case " ":
-                    eventObj.preventDefault()
-                    // this.togglePlayPause()
-                    break
-                default:
-                    // we dont care about other keys
-                    break
+            if (eventObj.target == this.$el || eventObj.target == document.body) {
+                // 
+                // key controls
+                // 
+                // This is disabled because the don't pay attention to the textboxes
+                switch (eventObj.key) {
+                    case "ArrowRight":
+                        eventObj.preventDefault()
+                        try {
+                            // skip ahead 5 seconds
+                            this.player.seekTo(this.player.getCurrentTime()+5)
+                        } catch (err) {}
+                        // this.incrementIndex()
+                        break
+                    case "ArrowLeft":
+                        eventObj.preventDefault()
+                        try {
+                            // skip ahead 5 seconds
+                            this.player.seekTo(this.player.getCurrentTime()-5)
+                        } catch (err) {}
+                        eventObj.preventDefault()
+                        break
+                    case ".":
+                        eventObj.preventDefault()
+                        try {
+                            // skip ahead 5 seconds
+                            this.player.seekTo(this.player.getCurrentTime()+(1/60))
+                        } catch (err) {}
+                        // this.incrementIndex()
+                        break
+                    case ",":
+                        eventObj.preventDefault()
+                        try {
+                            // skip ahead 5 seconds
+                            this.player.seekTo(this.player.getCurrentTime()-(1/60))
+                        } catch (err) {}
+                        eventObj.preventDefault()
+                        break
+                    case " ":
+                        eventObj.preventDefault()
+                        this.togglePlayPause()
+                        break
+                    default:
+                        // we dont care about other keys
+                        break
+                }
             }
         }
     },
