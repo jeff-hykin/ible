@@ -518,16 +518,27 @@ export default {
                 this.$root.labels[labelName] = actualValue
             }, generalTimeoutFrequency)
         },
+        extractVideoIdIfPossible(newVideoId) {
+            if (newVideoId.match(/www\.youtube\.com/)) {
+                return newVideoIda.match(/.+(?:\?|&)v=(.{11})/)
+            } else if (newVideoId.match(/youtu\.be\//)) {
+                return newVideoIda.match(/youtu.be\/4Wud4aIt7bA(.{11})/)
+            } else {
+                return newVideoId
+            }
+        },
         videoSelect() {
             let newVideoId = this.searchTerm.trim()
             // if search empty do nothing
             if (newVideoId.length == 0) {
                 return
             }
+            newVideoId = this.extractVideoIdIfPossible(newVideoId)
             if (newVideoId == this.$root.getVideoId()) {
                 this.$toasted.show(`Video is already open`).goAway(2500)
             } else {
                 const currentFixedSizeOfYouTubeVideoId = 11 // This is not guarenteed to stay this way forever
+                https://www.youtube.com/watch?v=4Wud4aIt7bA&ab_channel=StrictlySkateboarding
                 if (newVideoId.length == currentFixedSizeOfYouTubeVideoId) {
                     this.$router.push({name: "video", params: { videoId: newVideoId, labelName: this.$route.params.labelName } })
                 } else {
