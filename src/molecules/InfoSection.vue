@@ -28,7 +28,12 @@ export default {
     },
     methods: {
         setTime(){
-            this.$root.currentTime = window.player.getCurrentTime().toFixed(3)
+            // TODO: stop using globals
+            try {
+                this.$root.currentTime = window.player.getCurrentTime().toFixed(3)
+            } catch (error) {
+                window.centerStage.player.getCurrentTime().toFixed(3)
+            }
         },
         getSegmentUuid() {
             return $root.selectedSegment && $root.selectedSegment.$uuid
