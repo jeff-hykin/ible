@@ -519,13 +519,14 @@ export default {
             }, generalTimeoutFrequency)
         },
         extractVideoIdIfPossible(newVideoId) {
-            if (newVideoId.match(/www\.youtube\.com/)) {
-                return newVideoIda.match(/.+(?:\?|&)v=(.{11})/)
-            } else if (newVideoId.match(/youtu\.be\//)) {
-                return newVideoIda.match(/youtu.be\/4Wud4aIt7bA(.{11})/)
-            } else {
-                return newVideoId
-            }
+            try {
+                if (newVideoId.match(/.*www\.youtube\.com/)) {
+                    return newVideoIda.match(/.+(?:\?|&)v=(.{11})/)[1]
+                } else if (newVideoId.match(/.*youtu\.be\//)) {
+                    return newVideoIda.match(/.*youtu.be\/(.{11})/)[1]
+                }
+            } catch (error) {}
+            return newVideoId
         },
         videoSelect() {
             let newVideoId = this.searchTerm.trim()
