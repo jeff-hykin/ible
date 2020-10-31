@@ -521,20 +521,26 @@ export default {
         extractVideoIdIfPossible(newVideoId) {
             try {
                 if (newVideoId.match(/.*www\.youtube\.com/)) {
-                    return newVideoIda.match(/.+(?:\?|&)v=(.{11})/)[1]
+                    return newVideoId.match(/.+(?:\?|&)v=(.{11})/)[1]
                 } else if (newVideoId.match(/.*youtu\.be\//)) {
-                    return newVideoIda.match(/.*youtu.be\/(.{11})/)[1]
+                    return newVideoId.match(/.*youtu.be\/(.{11})/)[1]
                 }
             } catch (error) {}
             return newVideoId
         },
         videoSelect() {
+            console.log(`#`)
+            console.log(`#`)
+            console.log(`# vid select`)
+            console.log(`#`)
+            console.log(`#`)
             let newVideoId = this.searchTerm.trim()
             // if search empty do nothing
             if (newVideoId.length == 0) {
                 return
             }
             newVideoId = this.extractVideoIdIfPossible(newVideoId)
+            console.debug(`newVideoId is:`,newVideoId)
             if (newVideoId == this.$root.getVideoId()) {
                 this.$toasted.show(`Video is already open`).goAway(2500)
             } else {
