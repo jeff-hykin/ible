@@ -52,6 +52,9 @@ export default {
 <style lang='sass' scoped>
 .info-section
     margin-left: 1rem
+    max-width: 18rem
+    overflow: visible
+    white-space: pre
     align-self: flex-start
     color: darkgrey
     a 

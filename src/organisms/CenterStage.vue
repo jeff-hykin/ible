@@ -1,46 +1,66 @@
 <template lang="pug">
-    row.center-stage
-        column.main-container(v-if='$root.selectedVideo' :opacity='$root.selectedVideo? 1 : 0' flex-grow=1)
-            //- search for video
-            column.top-bar-container(width="100%" padding="1rem")
-                ui-autocomplete.rounded-search(
-                    placeholder="Search for a video id"
-                    @select="videoSelect"
-                    @change="videoSelect"
-                    v-model="searchTerm"
-                    :suggestions="suggestions"
-                )
-                
-            row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top")
-                //- Video area
-                column(align-v="top").video-width-sizer
-                    row.video-sizer
-                        youtube(
-                            v-if='$root.getVideoId()'
-                            :key="$root.getVideoId()"
-                            ref="youtube"
-                            :host="this.player ? 'http://www.youtube-nocookie.com/' : 'https://www.youtube.com'"
-                            :video-id="$root.getVideoId()"
-                            @ready="ready"
-                            @playing="videoStartedPlaying"
-                            @paused="videoWasPaused"
-                            :playerVars="{ /* disablekb: 1, end: 2 */ }"
-                            player-width="100%"
-                            player-height="100%"
-                            style="height: 100%;width: 100%; position: absolute; top: 0; left: 0"
+    column(
+        width="100%"
+        height="100vh"
+        align-h="center"
+        align-v="top"
+        overflow="auto"
+    )
+        //- search for video
+        column.top-bar-container(v-if='!$root.selectedVideo' key="search" width="100%" padding="1rem")
+            ui-autocomplete.rounded-search(
+                placeholder="Enter YouTube url or Video ID"
+                @focus="selectSearchText"
+                @select="videoSelect"
+                @change="videoSelect"
+                v-model="searchTerm"
+                :suggestions="suggestions"
+            )
+        
+        column(v-if='!$root.selectedVideo' width="100%" height="100vh" flex-shrink="1" color="gray")
+            h5 No Video Selected
+            
+        transition(name="fade")
+            row.center-stage(v-if='$root.selectedVideo' align-v="top" align-h="center")
+                column.main-container( flex-grow=1 align-v="top")
+                    column.top-bar-container(v-if='$root.selectedVideo' key="search" width="100%" padding="1rem" margin-bottom="2.5rem")
+                        ui-autocomplete.rounded-search(
+                            placeholder="Enter YouTube url or Video ID"
+                            @focus="selectSearchText"
+                            @select="videoSelect"
+                            @change="videoSelect"
+                            v-model="searchTerm"
+                            :suggestions="suggestions"
                         )
-                    
-                    container.below-video
-                        //- BACK
-                        SideButton.left-side-button(left @click='decrementIndex')
-                        //- segments
-                        SegmentDisplay(:segmentsInfo="segmentsInfo" :jumpSegment="jumpSegment")
-                        //- NEXT
-                        SideButton.right-side-button(right @click='incrementIndex')
-
-        column.side-container(align-v="top" padding-top="12vh" overflow="auto")
-            ObservationEditor
-            InfoSection.info-section
+                    row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top" :opacity='$root.selectedVideo? 1 : 0')
+                        //- Video area
+                        column(align-v="top").video-width-sizer
+                            row.video-sizer
+                                youtube(
+                                    v-if='$root.getVideoId()'
+                                    :key="$root.getVideoId()"
+                                    ref="youtube"
+                                    :host="this.player ? 'http://www.youtube-nocookie.com/' : 'https://www.youtube.com'"
+                                    :video-id="$root.getVideoId()"
+                                    @ready="ready"
+                                    @playing="videoStartedPlaying"
+                                    @paused="videoWasPaused"
+                                    :playerVars="{ /* disablekb: 1, end: 2 */ }"
+                                    player-width="100%"
+                                    player-height="100%"
+                                    style="height: 100%;width: 100%; position: absolute; top: 0; left: 0"
+                                )
+                            
+                            container.below-video
+                                //- BACK
+                                SideButton.left-side-button(left @click='decrementIndex')
+                                //- segments
+                                SegmentDisplay(:segmentsInfo="segmentsInfo" :jumpSegment="jumpSegment")
+                                //- NEXT
+                                SideButton.right-side-button(right @click='incrementIndex')
+                column.side-container(v-show='$root.selectedVideo' align-v="top" padding-top="calc(12vh + 3rem)" overflow="visible" min-height="50rem" width="fit-content")
+                    ObservationEditor
+                    InfoSection.info-section
         
 </template>
 
@@ -60,29 +80,6 @@ const video = {
     HASNT_EVEN_INITILIZED: null,
     IS_CUED: 5,
 }
-// 
-// summary
-//
-    // set:
-    //     this.$root.labels[].selected
-    //     this.$root.selectedVideo.keySegments
-    //     this.$root.selectedVideo.duration
-    //     this.$root.selectedSegment
-    // 
-    // get:
-    //     this.$root.labels
-    //     this.$root.segments
-    // 
-    // retreives:
-    // 
-    // listeners:
-    //     this.$root.$watch.labels
-    //     this.$root.$watch.selectedVideo
-    //     this.$root.$watch.selectedSegment
-    //     "CenterStage: videoStartedPlaying"
-    // 
-    // emits:
-    //     "CenterStage: videoStartedPlaying"
 
 // make sure cachedVideoIds exists as an Array
 storageObject.cachedVideoIds || (storageObject.cachedVideoIds = [])
@@ -528,6 +525,10 @@ export default {
             } catch (error) {}
             return newVideoId
         },
+        selectSearchText(eventObject) {
+            console.debug(`eventObject is:`,eventObject)
+            eventObject.target.select()
+        },
         videoSelect() {
             console.log(`#`)
             console.log(`#`)
@@ -771,7 +772,6 @@ export default {
 </script>
 
 <style lang='sass' scoped>
-        
 .center-stage
     .side-container
         padding-left: 5rem
@@ -788,7 +788,6 @@ export default {
         min-width: fit-content
         padding-left: 8rem
         
-
         .below-video-search
             width: 100%
             max-width: 100vw
@@ -832,5 +831,11 @@ export default {
                 right: 0rem
                 top: 50%
                 transform: translate(100%, -50%)
+    
+    .fade-enter-active, .fade-leave-active
+        transition: opacity 2.5s
+    
+    .fade-enter, .fade-leave-to
+        opacity: 0
     
 </style>

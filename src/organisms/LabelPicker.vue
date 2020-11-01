@@ -12,13 +12,14 @@
                     )
                 
                 Loader(v-if="!loadedAll$")
-                //- all the panel things
-                row.below-search-container(v-if="loadedAll$" align-v='top' align-h="space-between" padding='1rem' overflow="auto")
-                    //- waterfall style area
-                    row(:wrap="true" flex-grow=1)
-                        SearchCard(v-for="(label, labelName) in items" :label="label" :labelName="labelName")
-                        //- dud card to remove some strange behavior
-                        column.search-card(opacity=0)
+                transition(name="fade")
+                    //- all the panel things
+                    row.below-search-container(v-if="loadedAll$" align-v='top' align-h="space-between" padding='1rem' overflow="auto")
+                        //- waterfall style area
+                        row(:wrap="true" flex-grow=1)
+                            SearchCard(v-for="(label, labelName) in items" :label="label" :labelName="labelName")
+                            //- dud card to remove some strange behavior
+                            column.search-card(opacity=0)
 </template>
 
 <script>
