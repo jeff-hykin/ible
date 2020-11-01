@@ -44,6 +44,22 @@ export default RootComponent = {
                 path: '/video/:videoId/:labelName',
                 component: pages.Home.default
             },
+            {
+                path: '/video/:videoId',
+                redirect: ()=>{
+                    // TODO: improve
+                    // this is a hack (this function should return the route)
+                    setTimeout(() => {
+                        window.$root.$router.push({
+                            name: "video",
+                            params: {
+                                videoId: window.location.hash.replace(/#\/video\//,""),
+                                labelName: "(No Segments)" 
+                            } 
+                        })
+                    }, 0)
+                },
+            },
             // load up anything in the pages section
             ...Object.keys(pages).map(eachPageName=>({
                 path: "/"+eachPageName.toLowerCase(),
@@ -167,5 +183,11 @@ body .outline-button {
         background-color: var(--button-color) !important;
         color: white !important;
     }
+}
+.fade-enter-active, .fade-leave-active {
+    transition: opacity 1.5s
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */ {
+    opacity: 0
 }
 </style>

@@ -28,7 +28,12 @@ export default {
     },
     methods: {
         setTime(){
-            this.$root.currentTime = window.player.getCurrentTime().toFixed(3)
+            // TODO: stop using globals
+            try {
+                this.$root.currentTime = window.player.getCurrentTime().toFixed(3)
+            } catch (error) {
+                window.centerStage.player.getCurrentTime().toFixed(3)
+            }
         },
         getSegmentUuid() {
             return $root.selectedSegment && $root.selectedSegment.$uuid
@@ -47,6 +52,9 @@ export default {
 <style lang='sass' scoped>
 .info-section
     margin-left: 1rem
+    max-width: 18rem
+    overflow: visible
+    white-space: pre
     align-self: flex-start
     color: darkgrey
     a 

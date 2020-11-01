@@ -11,15 +11,7 @@
     )
         LabelPicker
         
-        column.home-container(
-            name="home-container"
-            :visibility="$root.selectedLabel? 'visible' : 'hidden'"
-            align-v="top"
-            flex-grow="1"
-            height="100vh"
-            overflow="auto"
-        )
-            CenterStage
+        CenterStage
         
         VideoPicker
         
