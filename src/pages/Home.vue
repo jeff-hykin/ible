@@ -9,13 +9,21 @@
         overflow="hidden"
         :class="{labelSelected: !!$root.selectedLabel}"
     )
-        LabelPicker
+        Card(max-width="30rem" align-self="center" margin-left="calc(50vw)" transform="translateX(-50%)")
+            H5(style="text-decoration:underline")
+                | Howdy!
+            br
+            span(style="color: black")
+                | I'm swapping the site to the new/stable database!
+                br
+                | Should take ≤1hr, but I need to stop new data so I can copy it over.
+        //- LabelPicker
         
-        CenterStage
+        //- CenterStage
         
-        VideoPicker
+        //- VideoPicker
         
-        UploadObservations.upload-button
+        //- UploadObservations.upload-button
         
 </template>
 <script>
@@ -30,6 +38,7 @@ export default {
         VideoPicker: require("../organisms/VideoPicker").default,
         LabelPicker: require("../organisms/LabelPicker").default,
         UploadObservations: require("../molecules/UploadObservations").default,
+        Card: require("../molecules/Card").default,
     },
     async mounted() {
         // wait till labels exist
