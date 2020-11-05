@@ -60,10 +60,24 @@ function readFileAsString(files) {
     return (new FileReader()).readAsText(files[0])
 }
 
+let colors = [ "#4fc3f7", "#e57373", "#ba68c8", "#04d895",  "#9575cd",  "#fec355", "#4fc3f7", "#ff8a65", "#9ccc65", ]
+let colorCopy = [...colors]
+function getColor(name) {
+    if (typeof name == "string") {
+        let total = name.length
+        for(let each in name) {
+            total += name.charCodeAt(each) * name.length
+        }
+        return colors[total % colors.length]
+    }
+    return colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())
+}
+
 module.exports = {
     EventEmitter,
     storageObject,
     readFileAsString,
+    getColor,
     wrapIndex(val, list) {
         if (val < 0) {
             val = list.length + val

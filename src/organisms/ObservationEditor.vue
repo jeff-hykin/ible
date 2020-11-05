@@ -126,6 +126,8 @@
 
 <script>
 import { endpoints } from '../iilvd-api'
+let { getColor } = require("../utils")
+
 export default {
     components: {
         UiSwitch: require("../atoms/UiSwitch").default,
@@ -234,6 +236,28 @@ export default {
                 })
             }
             this.$toasted.show(`Data has been set, refresh to confirm`).goAway(2500)
+            
+            // create label if it doesn't exist
+            if (!this.$root.labels[this.observationData.label]) {
+                this.$root.labels[this.observationData.label] = {
+                    color: getColor(this.observationData.label),
+                    segmentCount: 1,
+                    videoCount: 1,
+                    videos: [ this.observationData.videoId ],
+                    selected: true,
+                }
+                console.debug(`this.observationData.label is:`,this.observationData.label)
+                console.debug(`JSON.stringify(this.$root.labels[this.observationData.label]) is:`,JSON.stringify(this.$root.labels[this.observationData.label]))
+            }
+             
+            // show the label 
+            this.$root.labels[this.observationData.label] = {...this.$root.labels[this.observationData.label], selected: true}
+            
+            // switch to the label that was just added
+            if (this.$root.selectedLabel != this.observationData.label || this.$root.getVideoId() != this.observationData.videoId ) {
+                console.log(`pushing new route`)
+                await this.$router.push({ name: 'video', params: { videoId: this.observationData.videoId, labelName: this.observationData.label } })
+            }
         },
         async onDelete() {
             this.editing = false

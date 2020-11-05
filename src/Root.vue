@@ -12,6 +12,7 @@
 import Vue from "vue"
 import plugins from "./plugins/*.js"
 import pages from "./pages/*.vue"
+import {getColor} from "./utils"
 const endpoints = require("./iilvd-api").endpoints
 
 import { Router } from './plugins/router-plugin'
@@ -22,8 +23,6 @@ if (!("Home" in pages)) {
     throw Error("Hey, this template expects there to be a 'Home.vue' page.\nIf you don't want one that's fine. Just change the router in the App.vue file so it doesn't expect/need one")
 }
 
-let colors = [ "#4fc3f7", "#e57373", "#ba68c8", "#04d895", "#fec355",  "#9575cd", "#4fc3f7", "#ff8a65", "#9ccc65", ]
-let colorCopy = [...colors]
 let RootComponent
 // create Root instance and attach it (executed after this file loads)
 setTimeout(()=>(new (Vue.extend(RootComponent))).$mount('#vue-root'),0)
@@ -130,7 +129,7 @@ export default RootComponent = {
             // 
             this.labels = await realEndpoints.summary.labels()
             // assign colors to all labels in a pretty (irrelevently) inefficient way
-            Object.keys(this.labels).forEach(each=> this.labels[each] = {color: (colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())), ...this.labels[each]})
+            Object.keys(this.labels).forEach(each=> this.labels[each] = {color: getColor(each), ...this.labels[each]})
             this.labelsResolved.resolve(true)
         },
     }
