@@ -546,8 +546,8 @@ export default {
                 this.$toasted.show(`Video is already open`).goAway(2500)
             } else {
                 const currentFixedSizeOfYouTubeVideoId = 11 // This is not guarenteed to stay this way forever
-                https://www.youtube.com/watch?v=4Wud4aIt7bA&ab_channel=StrictlySkateboarding
                 if (newVideoId.length == currentFixedSizeOfYouTubeVideoId) {
+                    // pushing searched video route
                     this.$router.push({name: "video", params: { videoId: newVideoId, labelName: this.$route.params.labelName } })
                 } else {
                     this.$toasted.show(`It looks like that video id isn't valid\n(its not 11 characters)\nWould you like to try and load it anyways?`, {

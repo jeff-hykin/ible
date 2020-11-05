@@ -1,6 +1,6 @@
 <template lang="pug">
     span.info-section(v-if='$root.getVideoId()')
-        | Selected Label: {{$root.selectedLabel.name}}
+        | Selected Label: {{$root.selectedLabel&&$root.selectedLabel.name}}
         br
         | Current Video ID: {{$root.getVideoId()}}
         br

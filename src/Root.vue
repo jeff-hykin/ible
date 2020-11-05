@@ -41,24 +41,8 @@ export default RootComponent = {
         routes: [
             {
                 name: "video",
-                path: '/video/:videoId/:labelName',
+                path: '/video/:videoId/:labelName?',
                 component: pages.Home.default
-            },
-            {
-                path: '/video/:videoId',
-                redirect: ()=>{
-                    // TODO: improve
-                    // this is a hack (this function should return the route)
-                    setTimeout(() => {
-                        window.$root.$router.push({
-                            name: "video",
-                            params: {
-                                videoId: window.location.hash.replace(/#\/video\//,""),
-                                labelName: "(No Segments)" 
-                            } 
-                        })
-                    }, 0)
-                },
             },
             // load up anything in the pages section
             ...Object.keys(pages).map(eachPageName=>({

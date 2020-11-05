@@ -5,7 +5,8 @@ window.network = network
 // const databaseUrl = "http://192.168.86.198:3000"
 // const databaseUrl = "http://localhost:3000"
 // const databaseUrl = "http://paradise.cs.tamu.edu:3000"
-const databaseUrl = "http://128.194.4.15:3000"
+// const databaseUrl = "http://128.194.4.15:3000"
+const databaseUrl = "http://192.168.192.57:3000"
 const key = "4a75cfe3cdc1164b67aae6b413c9714280d2f102"
 
 

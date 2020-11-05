@@ -20,7 +20,7 @@ export default {
             let selectedVideoId = Object.keys(label.videos)[0]
             // get it from the cache (auto-adds to cache if needed)
             this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500)
-            console.log(`changing routes`)
+            console.debug(`changing routes from label select`)
             this.$router.push({ name: 'video', params: { videoId: selectedVideoId, labelName: labelName } })
         }
     }
