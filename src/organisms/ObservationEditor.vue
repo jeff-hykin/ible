@@ -235,7 +235,7 @@ export default {
                     }
                 })
             }
-            this.$toasted.show(`Data has been set, refresh to confirm`).goAway(2500)
+            
             
             // create label if it doesn't exist
             if (!this.$root.labels[this.observationData.label]) {
@@ -246,8 +246,6 @@ export default {
                     videos: [ this.observationData.videoId ],
                     selected: true,
                 }
-                console.debug(`this.observationData.label is:`,this.observationData.label)
-                console.debug(`JSON.stringify(this.$root.labels[this.observationData.label]) is:`,JSON.stringify(this.$root.labels[this.observationData.label]))
             }
              
             // show the label 
@@ -255,8 +253,13 @@ export default {
             
             // switch to the label that was just added
             if (this.$root.selectedLabel != this.observationData.label || this.$root.getVideoId() != this.observationData.videoId ) {
-                console.log(`pushing new route`)
-                await this.$router.push({ name: 'video', params: { videoId: this.observationData.videoId, labelName: this.observationData.label } })
+                this.$toasted.show(`New label added, refreshing to retrive data`).goAway(2500)
+                this.$router.push({ name: 'video', params: { videoId: this.observationData.videoId, labelName: this.observationData.label } })
+                setTimeout(() => {
+                    ()=>window.location.reload()
+                }, 2500)
+            } else {
+                this.$toasted.show(`Data has been set, refresh to confirm`).goAway(2500)
             }
         },
         async onDelete() {
