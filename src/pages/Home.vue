@@ -9,14 +9,6 @@
         overflow="hidden"
         :class="{labelSelected: !!$root.selectedLabel}"
     )
-        //- Card(max-width="30rem" align-self="center" margin-left="calc(50vw)" transform="translateX(-50%)")
-        //-     H5(style="text-decoration:underline")
-        //-         | Howdy!
-        //-     br
-        //-     span(style="color: black")
-        //-         | I'm swapping the site to the new/stable database!
-        //-         br
-        //-         | Should take ≤1hr, but I need to stop new data so I can copy it over.
         
         LabelPicker
         

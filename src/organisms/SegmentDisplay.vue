@@ -9,7 +9,9 @@
                 :left="eachSegment.$renderData.leftPercent"
                 :width="eachSegment.$renderData.widthPercent"
                 :top="eachSegment.$renderData.topAmount"
+                :isHuman="eachSegment.isHuman"
                 :background-color="$root.labels[eachSegment.observation.label].color"
+                :border-color="$root.labels[eachSegment.observation.label].color"
                 :key="eachSegment.$uuid"
                 :style="(eachSegment.$uuid == ($root.selectedSegment&&$root.selectedSegment.$uuid))?`animation-name: pulse-size`:``"
                 @click="jumpSegment(eachSegment.$displayIndex)"
@@ -20,6 +22,8 @@
                     | length: {{  (eachSegment.endTime - eachSegment.startTime).toFixed(2) }} sec
                     br
                     | start: {{ eachSegment.startTime.toFixed(3) }} sec
+                    br
+                    | human?: {{ eachSegment.isHuman }}
         row(position="relative" align-h="left" align-v="top" width="100%")
             h5
                 | Filter Observations by Label
@@ -160,7 +164,7 @@ export default {
         align-self: center
         height: 2.2rem
         // border-bottom: #e0e0e0 1px solid
-        overflow: hidden
+        overflow: visible
         transition: all ease 0.5s
         .segment
             position: absolute
@@ -174,6 +178,33 @@ export default {
             animation-timing-function: ease
             animation-iteration-count: infinite 
             animation-play-state: running 
+            
+            &:not([isHuman])
+                background-color: transparent
+                border-width: 5px
+                border-style: solid
+                border-radius: 0
+                overflow: hidden
+                background-color: transparent !important
+                // checkerboard (yeah the css is a tiny bit complicated)
+                // combines this: https://stackoverflow.com/questions/27277641/create-a-checkered-background-using-css
+                // and this: https://www.sitepoint.com/css3-transform-background-image/
+                // border-radius: 0.3rem
+                // &::before
+                //     --on-color: black
+                //     --off-color: white
+                //     content: ""
+                //     position: absolute
+                //     width: 4rem
+                //     height: 4rem
+                //     top: -50%
+                //     left: -50%
+                //     z-index: -1
+                //     transform: scale(1) rotate(45deg)
+                //     background-image: linear-gradient(45deg, var(--on-color) 27%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--on-color) 75%), linear-gradient(45deg, transparent 75%, var(--on-color) 75%), linear-gradient(45deg, var(--on-color) 27%, var(--off-color) 25%)
+                //     --scale: 8px
+                //     background-size: calc(var(--scale) * 2) calc(var(--scale) * 2)
+                //     background-position: 0 0, 0 0, calc(var(--scale) * -1) calc(var(--scale) * -1), var(--scale) var(--scale)
             
             &:hover
                 box-shadow: var(--shadow-1)
