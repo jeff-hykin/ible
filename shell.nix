@@ -49,6 +49,9 @@ in
         # we don't want to give nix or other apps our home folder
         if [[ "$HOME" != "$(pwd)" ]] 
         then
+            # copy in gitconfig before changing home var 
+            cp ~/.gitconfig ./.gitconfig
+            
             # so make the home folder the same as the project folder
             export HOME="$(pwd)"
             # make it explicit which nixpkgs we're using

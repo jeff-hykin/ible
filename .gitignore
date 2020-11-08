@@ -9,6 +9,7 @@
 .zsh_history
 .bash_history
 .zcompdump*
+.gitconfig
 
 # 
 # Linux
