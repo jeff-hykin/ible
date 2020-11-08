@@ -14,6 +14,9 @@ in
         buildInputs = [
             normalPackages.nodejs
             # basic commandline tools
+            normalPackages.zsh
+            normalPackages.zsh-syntax-highlighting
+            normalPackages.oh-my-zsh
             normalPackages.ripgrep
             normalPackages.which
             normalPackages.git
@@ -43,15 +46,22 @@ in
         ];
         
         shellHook = ''
-        # 
-        # find and run all the startup scripts in alphabetical order
-        # 
-        for file in ./settings/shell_startup/*
-        do
-            # make sure its a file
-            if [[ -f $file ]]; then
-                source $file
-            fi
-        done
+        # we don't want to give nix or other apps our home folder
+        if [[ "$HOME" != "$(pwd)" ]] 
+        then
+            # so make the home folder the same as the project folder
+            export HOME="$(pwd)"
+            # make it explicit which nixpkgs we're using
+            export NIX_PATH="nixpkgs=${sources.nixpkgs}:."
+            
+            # pass the zsh data to zsh (roundabout way)
+            mkdir -p ./settings/.cache
+            echo "${normalPackages.zsh-syntax-highlighting}/share/zsh-syntax-highlighting/highlighters" > ./settings/.cache/.zsh-syntax-highlighting-dir.cleanable
+            echo "${normalPackages.oh-my-zsh}" > ./settings/.cache/.normalPackages.oh-my-zsh-dir.cleanable
+            
+            # start zsh
+            nix-shell --pure --command zsh
+            exit
+        fi
         '';
     }
