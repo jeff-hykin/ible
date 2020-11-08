@@ -12,15 +12,45 @@ if [[ -f "$CUSTOM_USER_SETTINGS" ]]; then
 #
 # if no custom user settings, then use epic defaults 👌
 # 
-else 
+else
+    # 
+    # import paths from nix
+    # 
+    # this var needs to match the one inside shell.nix
+    paths_passthrough="./settings/.cache/package-paths"
+    mkdir -p "$paths_passthrough"
+    spaceship_prompt__path="$(cat "$paths_passthrough/spaceship-prompt.cleanable")"
+    zsh_syntax_highlighting__path="$(cat "$paths_passthrough/zsh-syntax-highlighting.cleanable")"
+    oh_my_zsh__path="$(cat "$paths_passthrough/oh-my-zsh.cleanable")"
+    zsh__path="$(cat "$paths_passthrough/zsh.cleanable")"
+    
+    # 
+    # set fpath for zsh
+    # 
+    local_zsh="$PWD/settings/zsh.nosync/site-functions/"
+    mkdir -p "$local_zsh"
+    # export fpath=""
+    export fpath=("$local_zsh")
+    export fpath=("$oh_my_zsh__path"/share/oh-my-zsh/functions $fpath)
+    export fpath=("$oh_my_zsh__path"/share/oh-my-zsh/completions $fpath)
+    export fpath=("$zsh__path"/share/zsh/site-functions $fpath)
+    export fpath=("$zsh__path"/share/zsh/*/functions $fpath)
+    
     # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
     ZSH_THEME="robbyrussell" # default
     
-    export ZSH="$(cat ./settings/.cache/.normalPackages.oh-my-zsh-dir.cleanable)/share/oh-my-zsh"
+    # 
+    # add spaceship-prompt theme
+    # 
+    ln -s "$spaceship_prompt__path/lib/spaceship-prompt/spaceship.zsh" "$local_zsh/prompt_spaceship_setup"
+    
+    export ZSH="$oh_my_zsh__path/share/oh-my-zsh"
     source "$ZSH/oh-my-zsh.sh"
     
-    export ZSH_HIGHLIGHT_HIGHLIGHTERS_DIR="$(cat ./settings/.cache/.zsh-syntax-highlighting-dir.cleanable)"
+    # 
     # enable syntax highlighing
+    # 
+    export ZSH_HIGHLIGHT_HIGHLIGHTERS_DIR="$zsh_syntax_highlighting__path/share/zsh-syntax-highlighting/highlighters"
     source "$ZSH_HIGHLIGHT_HIGHLIGHTERS_DIR/../zsh-syntax-highlighting.zsh"
     
     
