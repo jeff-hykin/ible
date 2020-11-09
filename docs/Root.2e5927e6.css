@@ -5556,7 +5556,7 @@ div[data-fjio3y598t3hi2] .add-observation-area .new-observation-button, div[data
   overflow: hidden;
   background-color: transparent !important;
 }
-.segments .segment-container .segment:not([isHuman]):not([rejectedBySomeone]):not([confirmedBySomeone]) {
+.segments .segment-container .segment:not([isHuman]):not([rejectedBySomeone]):not([confirmedBySomeone]):not([selected]) {
   border-width: 0;
   --border-gap: 10px;
   --border-width: 2px;

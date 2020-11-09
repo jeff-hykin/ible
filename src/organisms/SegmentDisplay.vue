@@ -193,7 +193,7 @@ export default {
                 overflow: hidden
                 background-color: transparent !important
             
-                &:not([rejectedBySomeone]):not([confirmedBySomeone])
+                &:not([rejectedBySomeone]):not([confirmedBySomeone]):not([selected])
                     border-width: 0
                     --border-gap: 10px
                     --border-width: 2px
