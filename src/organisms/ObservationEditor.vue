@@ -122,6 +122,10 @@
                     )
                     UiSwitch(:disabled="!editing" v-model="observationData.isHuman")
                         | Observer Is Human
+                    UiSwitch(:disabled="!editing" v-model="observationData.confirmedBySomeone" v-if="!observationData.isHuman")
+                        | Confirmed By ≥1 Human
+                    UiSwitch(:disabled="!editing" v-model="observationData.rejectedBySomeone" v-if="!observationData.isHuman")
+                        | Rejected By ≥1 Human
 </template>
 
 <script>
@@ -141,6 +145,8 @@ export default {
             label: "",
             labelConfidence: 0.99,
             isHuman: true,
+            confirmedBySomeone: false,
+            rejectedBySomeone: false,
         },
         uuidOfSelectedSegment: null,
         dataCopy: null,
@@ -166,6 +172,8 @@ export default {
                         endTime:   selectedSegment.endTime,
                         observer:  selectedSegment.observer,
                         isHuman:   selectedSegment.isHuman,
+                        confirmedBySomeone: selectedSegment.confirmedBySomeone,
+                        rejectedBySomeone: selectedSegment.rejectedBySomeone,
                         label:           selectedSegment.observation.label,
                         labelConfidence: selectedSegment.observation.labelConfidence,
                     }
@@ -204,36 +212,29 @@ export default {
             this.observationData.startTime -= 0
             this.observationData.endTime -= 0
             
+            let observation = {
+                videoId:            this.observationData.videoId,
+                startTime:          this.observationData.startTime,
+                endTime:            this.observationData.endTime,
+                observer:           this.observationData.observer,
+                isHuman:            this.observationData.isHuman,
+                confirmedBySomeone: this.observationData.confirmedBySomeone,
+                rejectedBySomeone:  this.observationData.rejectedBySomeone,
+                observation: {
+                    label:           this.observationData.label,
+                    labelConfidence: this.observationData.labelConfidence,
+                },
+            }
             // if saving an edit
             if (this.uuidOfSelectedSegment) {
                 (await endpoints).raw.set({
                     keyList:[this.uuidOfSelectedSegment],
                     from: "observations",
-                    to: {
-                        videoId:   this.observationData.videoId,
-                        startTime: this.observationData.startTime,
-                        endTime:   this.observationData.endTime,
-                        observer:  this.observationData.observer,
-                        isHuman:   this.observationData.isHuman,
-                        observation: {
-                            label: this.observationData.label,
-                            labelConfidence: this.observationData.labelConfidence,
-                        },
-                    },
+                    to: observation,
                 })
             // if saving something new
             } else {
-                this.uuidOfSelectedSegment = await (await endpoints).addSegmentObservation({
-                    videoId: this.observationData.videoId,
-                    startTime: this.observationData.startTime,
-                    endTime: this.observationData.endTime,
-                    observer: this.observationData.observer,
-                    isHuman: this.observationData.isHuman,
-                    observation: {
-                        label: this.observationData.label,
-                        labelConfidence: this.observationData.labelConfidence,
-                    }
-                })
+                this.uuidOfSelectedSegment = await (await endpoints).addSegmentObservation(observation)
             }
             
             
@@ -281,19 +282,9 @@ export default {
                 observer: window.storageObject.observer || "",
                 label: (this.$root.selectedLabel)&&this.$root.selectedLabel.name || "",
                 labelConfidence: 0.99,
+                confirmedBySomeone: false,
+                rejectedBySomeone:  false,
                 isHuman: true,
-            }
-        },
-        getObservationData() {
-            return {
-                videoId: this.observationData.videoId,
-                startTime: this.observationData.startTime-0,
-                endTime: this.observationData.endTime-0,
-                observer: this.observationData.observer,
-                observation: {
-                    label: this.observationData.label,
-                    isHuman: this.observationData.isHuman,
-                }
             }
         },
         setStartToCurrentTime() {
