@@ -136,7 +136,7 @@ export default RootComponent = {
 }
 
 </script>
-<style lang="scss">
+<style>
 :root {
     --shadow-1: rgba(0, 0, 0, 0.14) 0px 4px 5px 0px, rgba(0, 0, 0, 0.12) 0px 1px 10px 0px, rgba(0, 0, 0, 0.3) 0px 2px 4px -1px;
     --shadow-3: rgba(0, 0, 0, 0.14) 0px 8px 17px 2px, rgba(0, 0, 0, 0.12) 0px 3px 14px 2px, rgba(0, 0, 0, 0.2) 0px 5px 5px -3px;
@@ -162,15 +162,15 @@ body .outline-button {
     color: var(--button-color) !important;
     border: 1px solid var(--button-color) !important;
     
-    &:hover {
-        background-color: var(--button-color) !important;
-        color: white !important;
-    }
+}
+body .outline-button:hover {
+    background-color: var(--button-color) !important;
+    color: white !important;
 }
 .fade-enter-active, .fade-leave-active {
     transition: opacity 1.5s
 }
 .fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */ {
     opacity: 0
-}
+}   
 </style>

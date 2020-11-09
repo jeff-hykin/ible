@@ -10,10 +10,13 @@
                 :width="eachSegment.$renderData.widthPercent"
                 :top="eachSegment.$renderData.topAmount"
                 :isHuman="eachSegment.isHuman"
+                :confirmedBySomeone="eachSegment.confirmedBySomeone"
+                :rejectedBySomeone="eachSegment.rejectedBySomeone"
+                :selected="eachSegment.$uuid == ($root.selectedSegment&&$root.selectedSegment.$uuid)"
                 :background-color="$root.labels[eachSegment.observation.label].color"
                 :border-color="$root.labels[eachSegment.observation.label].color"
                 :key="eachSegment.$uuid"
-                :style="getStyle(eachSegment)"
+                :style="`--color: ${$root.labels[eachSegment.observation.label].color}`"
                 @click="jumpSegment(eachSegment.$displayIndex)"
             )
                 ui-tooltip(position="left" animation="fade")
@@ -61,24 +64,6 @@ export default {
     mounted() {
     },
     methods: {
-        getStyle(eachSegment) {
-            if (eachSegment.$uuid == ($root.selectedSegment&&$root.selectedSegment.$uuid)) {
-                return "animation-name: pulse-size;border-width: 4px;"
-            } else if (!eachSegment.isHuman && (!eachSegment.confirmedBySomeone && !eachSegment.rejectedBySomeone)) {
-                return `
-                    border-width: 0;
-                    --color: ${$root.labels[eachSegment.observation.label].color};
-                    --border-gap: 10px;
-                    --border-width: 2px;
-                    background-image: linear-gradient(90deg, var(--color) 50%, transparent 50%), linear-gradient(90deg, var(--color) 50%, transparent 50%), linear-gradient(0deg, var(--color) 50%, transparent 50%), linear-gradient(0deg, var(--color) 50%, transparent 50%);
-                    background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
-                    background-size: var(--border-gap) var(--border-width), var(--border-gap) var(--border-width), var(--border-width) var(--border-gap), var(--border-width) var(--border-gap);
-                    background-position: left top, right bottom, left bottom, right top;
-                    animation: border-dance 1s infinite linear;
-                `
-            }
-            return "border-width: 4px;"
-        },
         toggleAllLabels() {
             // toggle
             this.allLabelsOn = !this.allLabelsOn
@@ -196,7 +181,9 @@ export default {
             animation-timing-function: ease
             animation-iteration-count: infinite 
             animation-play-state: running 
-            
+            &[selected]
+                animation-name: pulse-fade
+                
             &:not([isHuman])
                 background-color: transparent
                 --border-width: 8px // this is used later 
@@ -205,6 +192,17 @@ export default {
                 border-radius: 0
                 overflow: hidden
                 background-color: transparent !important
+            
+                &:not([rejectedBySomeone]):not([confirmedBySomeone])
+                    border-width: 0
+                    --border-gap: 10px
+                    --border-width: 2px
+                    background-image: linear-gradient(90deg, var(--color) 50%, transparent 50%), linear-gradient(90deg, var(--color) 50%, transparent 50%), linear-gradient(0deg, var(--color) 50%, transparent 50%), linear-gradient(0deg, var(--color) 50%, transparent 50%)
+                    background-repeat: repeat-x, repeat-x, repeat-y, repeat-y
+                    background-size: var(--border-gap) var(--border-width), var(--border-gap) var(--border-width), var(--border-width) var(--border-gap), var(--border-width) var(--border-gap)
+                    background-position: left top, right bottom, left bottom, right top
+                    animation: border-dance 1s infinite linear
+            
                 // checkerboard (yeah the css is a tiny bit complicated)
                 // combines this: https://stackoverflow.com/questions/27277641/create-a-checkered-background-using-css
                 // and this: https://www.sitepoint.com/css3-transform-background-image/
@@ -229,7 +227,7 @@ export default {
                 box-shadow: var(--shadow-1)
                 opacity: 0.9
 
-@keyframes pulse-size
+@keyframes pulse-fade
     0%  
         opacity: 1
 
