@@ -13,7 +13,7 @@
                 :background-color="$root.labels[eachSegment.observation.label].color"
                 :border-color="$root.labels[eachSegment.observation.label].color"
                 :key="eachSegment.$uuid"
-                :style="(eachSegment.$uuid == ($root.selectedSegment&&$root.selectedSegment.$uuid))?`animation-name: pulse-size`:``"
+                :style="getStyle(eachSegment)"
                 @click="jumpSegment(eachSegment.$displayIndex)"
             )
                 ui-tooltip(position="left" animation="fade")
@@ -61,6 +61,26 @@ export default {
     mounted() {
     },
     methods: {
+        getStyle(eachSegment) {
+            
+            console.debug(`!eachSegment.isHuman && (!eachSegment.confirmedBySomeone || !eachSegment.rejectedBySomeone) is:`,!eachSegment.isHuman && (!eachSegment.confirmedBySomeone || !eachSegment.rejectedBySomeone))
+            if (eachSegment.$uuid == ($root.selectedSegment&&$root.selectedSegment.$uuid)) {
+                return "animation-name: pulse-size"
+            } else if (!eachSegment.isHuman && (!eachSegment.confirmedBySomeone || !eachSegment.rejectedBySomeone)) {
+                return `
+                    border-width: 0;
+                    --color: ${$root.labels[eachSegment.observation.label].color};
+                    --border-gap: 10px;
+                    --border-width: 2px;
+                    background-image: linear-gradient(90deg, var(--color) 50%, transparent 50%), linear-gradient(90deg, var(--color) 50%, transparent 50%), linear-gradient(0deg, var(--color) 50%, transparent 50%), linear-gradient(0deg, var(--color) 50%, transparent 50%);
+                    background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+                    background-size: var(--border-gap) var(--border-width), var(--border-gap) var(--border-width), var(--border-width) var(--border-gap), var(--border-width) var(--border-gap);
+                    background-position: left top, right bottom, left bottom, right top;
+                    animation: border-dance 1s infinite linear;
+                `
+            }
+            return ""
+        },
         toggleAllLabels() {
             // toggle
             this.allLabelsOn = !this.allLabelsOn
@@ -181,7 +201,8 @@ export default {
             
             &:not([isHuman])
                 background-color: transparent
-                border-width: 5px
+                --border-width: 8px // this is used later 
+                border-width: var(--border-width)
                 border-style: solid
                 border-radius: 0
                 overflow: hidden
@@ -221,6 +242,12 @@ export default {
     100%  
         opacity: 1
         // transform: scale(1.1)
-     
- 
+
+@keyframes border-dance 
+    0% 
+        background-position: left top, right bottom, left bottom, right top
+    
+    100% 
+        background-position: left var(--border-gap) top, right var(--border-gap) bottom, left bottom var(--border-gap), right top var(--border-gap)
+    
 </style>
