@@ -34,7 +34,7 @@ let endpoints = new Promise(async (resolve, reject)=>{
     for (let each of endpointPaths) {
         set({
             keyList: each.split("/"),
-            to: (...args) => { return databaseApiCall(each, args) },
+            to: (...args) => databaseApiCall(each, args),
             on: actualEndpoints
         })
     }
