@@ -24,8 +24,6 @@
         ui-modal.modal(ref="helpModal" title="Example Upload" transition="scale-up")
             row(align-h="space-evenly" align-v="top")
                 column(align-v="top")
-                    br
-                    | 1. Here are two observations 
                     br 
                     | Try editing them! Then look at the code →
                     row(align-h="space-between" padding="2rem 1rem" align-v="top")
@@ -46,18 +44,21 @@
                 column(flex-basis="50%" max-width="31rem" align-v="top")
                     span
                         br
-                        | 2. To upload these, create a file ending with
+                        | To upload these observations
+                        br
+                        br
+                        | 1. Create a file ending with
                         code
                             |  .json 
                         br
                         br
-                        | 3. Then add the following text to that file.
+                        | 2. Then add the following text to that file.
                         br
                         br
                     JsonTree.json-tree(:data="[dummyData1, dummyData2]")
                     span
                         br
-                        | 4. Then simply use the upload button to upload the file
+                        | 3. Then simply use the upload button to upload the file.
                         br
                         br
                         | The JSON file is just a list of each observation represented as a kind of dictionary.
