@@ -1,5 +1,5 @@
 <template lang="pug">
-    column.dummy-observation
+    column.dummy-observation(align-h="left")
         ui-textbox(
             label="Start Time (seconds)"
             v-model.number="observationData.startTime"
@@ -33,6 +33,10 @@
         )
         UiSwitch( v-model="observationData.isHuman")
             | Observer Is Human
+        UiSwitch(v-model="observationData.confirmedBySomeone" v-if="!observationData.isHuman")
+            | Confirmed By ≥1 Human
+        UiSwitch(v-model="observationData.rejectedBySomeone" v-if="!observationData.isHuman")
+            | Rejected By ≥1 Human
 </template>
 
 <script>
@@ -53,5 +57,6 @@ export default {
     padding: 1.7rem 2.4rem
     background: white
     border-radius: 1rem
+    min-width: 19rem
     
 </style>

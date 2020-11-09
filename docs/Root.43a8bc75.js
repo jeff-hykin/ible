@@ -35915,6 +35915,10 @@ exports.default = void 0;
 //
 //
 //
+//
+//
+//
+//
 var _default = {
   props: ['observationData'],
   components: {
@@ -35931,7 +35935,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($858549, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"dummy-observation"},[_c('ui-textbox',{attrs:{"label":"Start Time (seconds)","type":"number"},model:{value:(_vm.observationData.startTime),callback:function ($$v) {_vm.$set(_vm.observationData, "startTime", _vm._n($$v))},expression:"observationData.startTime"}}),_c('ui-textbox',{attrs:{"label":"End Time (seconds)","type":"number"},model:{value:(_vm.observationData.endTime),callback:function ($$v) {_vm.$set(_vm.observationData, "endTime", _vm._n($$v))},expression:"observationData.endTime"}}),_c('ui-textbox',{attrs:{"floating-label":"floating-label","label":"Label","invalid":!_vm.observationData.observation.label.match(/^[a-zA-Z0-9]+$/)},model:{value:(_vm.observationData.observation.label),callback:function ($$v) {_vm.$set(_vm.observationData.observation, "label", $$v)},expression:"observationData.observation.label"}}),_c('ui-textbox',{attrs:{"floating-label":"floating-label","label":"Label Confidence"},model:{value:(_vm.observationData.observation.labelConfidence),callback:function ($$v) {_vm.$set(_vm.observationData.observation, "labelConfidence", $$v)},expression:"observationData.observation.labelConfidence"}}),_c('ui-textbox',{attrs:{"floating-label":"floating-label","label":"Observer (username)"},model:{value:(_vm.observationData.observer),callback:function ($$v) {_vm.$set(_vm.observationData, "observer", $$v)},expression:"observationData.observer"}}),_c('ui-textbox',{attrs:{"floating-label":"floating-label","label":"Video Id"},model:{value:(_vm.observationData.videoId),callback:function ($$v) {_vm.$set(_vm.observationData, "videoId", $$v)},expression:"observationData.videoId"}}),_c('UiSwitch',{model:{value:(_vm.observationData.isHuman),callback:function ($$v) {_vm.$set(_vm.observationData, "isHuman", $$v)},expression:"observationData.isHuman"}},[_vm._v("Observer Is Human")])],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"dummy-observation",attrs:{"align-h":"left"}},[_c('ui-textbox',{attrs:{"label":"Start Time (seconds)","type":"number"},model:{value:(_vm.observationData.startTime),callback:function ($$v) {_vm.$set(_vm.observationData, "startTime", _vm._n($$v))},expression:"observationData.startTime"}}),_c('ui-textbox',{attrs:{"label":"End Time (seconds)","type":"number"},model:{value:(_vm.observationData.endTime),callback:function ($$v) {_vm.$set(_vm.observationData, "endTime", _vm._n($$v))},expression:"observationData.endTime"}}),_c('ui-textbox',{attrs:{"floating-label":"floating-label","label":"Label","invalid":!_vm.observationData.observation.label.match(/^[a-zA-Z0-9]+$/)},model:{value:(_vm.observationData.observation.label),callback:function ($$v) {_vm.$set(_vm.observationData.observation, "label", $$v)},expression:"observationData.observation.label"}}),_c('ui-textbox',{attrs:{"floating-label":"floating-label","label":"Label Confidence"},model:{value:(_vm.observationData.observation.labelConfidence),callback:function ($$v) {_vm.$set(_vm.observationData.observation, "labelConfidence", $$v)},expression:"observationData.observation.labelConfidence"}}),_c('ui-textbox',{attrs:{"floating-label":"floating-label","label":"Observer (username)"},model:{value:(_vm.observationData.observer),callback:function ($$v) {_vm.$set(_vm.observationData, "observer", $$v)},expression:"observationData.observer"}}),_c('ui-textbox',{attrs:{"floating-label":"floating-label","label":"Video Id"},model:{value:(_vm.observationData.videoId),callback:function ($$v) {_vm.$set(_vm.observationData, "videoId", $$v)},expression:"observationData.videoId"}}),_c('UiSwitch',{model:{value:(_vm.observationData.isHuman),callback:function ($$v) {_vm.$set(_vm.observationData, "isHuman", $$v)},expression:"observationData.isHuman"}},[_vm._v("Observer Is Human")]),(!_vm.observationData.isHuman)?_c('UiSwitch',{model:{value:(_vm.observationData.confirmedBySomeone),callback:function ($$v) {_vm.$set(_vm.observationData, "confirmedBySomeone", $$v)},expression:"observationData.confirmedBySomeone"}},[_vm._v("Confirmed By ≥1 Human")]):_vm._e(),(!_vm.observationData.isHuman)?_c('UiSwitch',{model:{value:(_vm.observationData.rejectedBySomeone),callback:function ($$v) {_vm.$set(_vm.observationData, "rejectedBySomeone", $$v)},expression:"observationData.rejectedBySomeone"}},[_vm._v("Rejected By ≥1 Human")]):_vm._e()],1)}
 var staticRenderFns = []
 
           return {
@@ -35950,6 +35954,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+//
+//
 //
 //
 //
@@ -36050,13 +36056,28 @@ var _default = {
     dummyData1: {
       deep: true,
 
-      handler() {
-        console.log(`dummyData1 changed`);
+      handler(...args) {
+        this.dummyDataChange(...args);
+      }
+
+    },
+    dummyData2: {
+      deep: true,
+
+      handler(...args) {
+        this.dummyDataChange(...args);
       }
 
     }
   },
   methods: {
+    dummyDataChange(dummyData) {
+      if (dummyData.isHuman) {
+        delete dummyData.confirmedBySomeone;
+        delete dummyData.rejectedBySomeone;
+      }
+    },
+
     async showHelp() {
       this.$refs.helpModal.open();
     },
@@ -36102,7 +36123,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($a6b296, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"upload-wrapper",attrs:{"akfdjguo3359gip":"akfdjguo3359gip"}},[_c('ui-fab',{staticClass:"help-button",attrs:{"color":"gray","icon":"live_help","raised":"raised","tooltip":"Help with file upload","tooltipPosition":"left"},on:{"click":_vm.showHelp}}),_c('ui-fab',{staticClass:"upload-button",attrs:{"color":"blue","raised":"raised","tooltip":"upload multiple observations","tooltipPosition":"left"}},[_c('ui-icon',[_vm._v("cloud_upload")]),_c('ui-fileupload',{attrs:{"name":"file","type":"secondary"},on:{"change":_vm.onUploadObservation}})],1),_c('ui-modal',{ref:"helpModal",staticClass:"modal",attrs:{"title":"Example Upload","transition":"scale-up"}},[_c('row',{attrs:{"align-h":"space-evenly","align-v":"top"}},[_c('column',{attrs:{"align-v":"top"}},[_c('br'),_vm._v("1. Here are two observations (they can be edited)"),_c('row',{attrs:{"align-h":"space-between","padding":"2rem 1rem"}},[_c('column',[_c('h5',[_vm._v("Observation 1")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData1}})],1),_c('container',{attrs:{"min-width":"3rem"}}),_c('column',[_c('h5',[_vm._v("Observation 2")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData2}})],1)],1)],1),_c('container',{attrs:{"width":"2rem"}}),_c('column',{attrs:{"flex-basis":"50%","max-width":"31rem","align-v":"top"}},[_c('span',[_c('br'),_vm._v("2. To upload these, create a file ending with"),_c('code',[_vm._v(" .json ")]),_c('br'),_c('br'),_vm._v("3. Then add the following text to that file."),_c('br'),_c('br')]),_c('JsonTree',{staticClass:"json-tree",attrs:{"data":[_vm.dummyData1, _vm.dummyData2]}}),_c('span',[_c('br'),_vm._v("4. Then simply use the upload button to upload the file"),_c('br'),_c('br'),_vm._v("The JSON file is just a list of each observation represented as a kind of dictionary.")])],1)],1)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"upload-wrapper",attrs:{"akfdjguo3359gip":"akfdjguo3359gip"}},[_c('ui-fab',{staticClass:"help-button",attrs:{"color":"gray","icon":"live_help","raised":"raised","tooltip":"Help with file upload","tooltipPosition":"left"},on:{"click":_vm.showHelp}}),_c('ui-fab',{staticClass:"upload-button",attrs:{"color":"blue","raised":"raised","tooltip":"upload multiple observations","tooltipPosition":"left"}},[_c('ui-icon',[_vm._v("cloud_upload")]),_c('ui-fileupload',{attrs:{"name":"file","type":"secondary"},on:{"change":_vm.onUploadObservation}})],1),_c('ui-modal',{ref:"helpModal",staticClass:"modal",attrs:{"title":"Example Upload","transition":"scale-up"}},[_c('row',{attrs:{"align-h":"space-evenly","align-v":"top"}},[_c('column',{attrs:{"align-v":"top"}},[_c('br'),_vm._v("1. Here are two observations "),_c('br'),_vm._v("Try editing them! Then look at the code →"),_c('row',{attrs:{"align-h":"space-between","padding":"2rem 1rem","align-v":"top"}},[_c('column',[_c('h5',[_vm._v("Observation 1")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData1}})],1),_c('container',{attrs:{"min-width":"3rem"}}),_c('column',[_c('h5',[_vm._v("Observation 2")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData2}})],1)],1)],1),_c('container',{attrs:{"width":"2rem"}}),_c('column',{attrs:{"flex-basis":"50%","max-width":"31rem","align-v":"top"}},[_c('span',[_c('br'),_vm._v("2. To upload these, create a file ending with"),_c('code',[_vm._v(" .json ")]),_c('br'),_c('br'),_vm._v("3. Then add the following text to that file."),_c('br'),_c('br')]),_c('JsonTree',{staticClass:"json-tree",attrs:{"data":[_vm.dummyData1, _vm.dummyData2]}}),_c('span',[_c('br'),_vm._v("4. Then simply use the upload button to upload the file"),_c('br'),_c('br'),_vm._v("The JSON file is just a list of each observation represented as a kind of dictionary.")])],1)],1)],1)],1)}
 var staticRenderFns = []
 
           return {

@@ -25,8 +25,10 @@
             row(align-h="space-evenly" align-v="top")
                 column(align-v="top")
                     br
-                    | 1. Here are two observations (they can be edited)
-                    row(align-h="space-between" padding="2rem 1rem")
+                    | 1. Here are two observations 
+                    br 
+                    | Try editing them! Then look at the code →
+                    row(align-h="space-between" padding="2rem 1rem" align-v="top")
                         column
                             h5
                                 | Observation 1
@@ -100,12 +102,20 @@ export default {
     watch: {
         dummyData1: {
             deep: true,
-            handler() {
-                console.log(`dummyData1 changed`)
-            }
-        }
+            handler(...args) { this.dummyDataChange(...args) }
+        },
+        dummyData2: {
+            deep: true,
+            handler(...args) { this.dummyDataChange(...args) }
+        },
     },
     methods: {
+        dummyDataChange(dummyData) {
+            if (dummyData.isHuman) {
+                delete dummyData.confirmedBySomeone
+                delete dummyData.rejectedBySomeone
+            }
+        },
         async showHelp() {
             this.$refs.helpModal.open()
         },
