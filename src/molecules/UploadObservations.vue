@@ -89,6 +89,8 @@ export default {
             "endTime": 96.193,
             "observer": "YOLO-v4-001",
             "isHuman": false,
+            "confirmedBySomeone": false,
+            "rejectedBySomeone": false,
             "observation": {
                 "label": "Sad",
                 "labelConfidence": 0.85
