@@ -62,11 +62,9 @@ export default {
     },
     methods: {
         getStyle(eachSegment) {
-            
-            console.debug(`!eachSegment.isHuman && (!eachSegment.confirmedBySomeone || !eachSegment.rejectedBySomeone) is:`,!eachSegment.isHuman && (!eachSegment.confirmedBySomeone || !eachSegment.rejectedBySomeone))
             if (eachSegment.$uuid == ($root.selectedSegment&&$root.selectedSegment.$uuid)) {
-                return "animation-name: pulse-size"
-            } else if (!eachSegment.isHuman && (!eachSegment.confirmedBySomeone || !eachSegment.rejectedBySomeone)) {
+                return "animation-name: pulse-size;border-width: 4px;"
+            } else if (!eachSegment.isHuman && (!eachSegment.confirmedBySomeone && !eachSegment.rejectedBySomeone)) {
                 return `
                     border-width: 0;
                     --color: ${$root.labels[eachSegment.observation.label].color};
@@ -79,7 +77,7 @@ export default {
                     animation: border-dance 1s infinite linear;
                 `
             }
-            return ""
+            return "border-width: 4px;"
         },
         toggleAllLabels() {
             // toggle
@@ -237,11 +235,9 @@ export default {
 
     50%  
         opacity: 0.5
-        // transform: scale(0.92)
     
     100%  
         opacity: 1
-        // transform: scale(1.1)
 
 @keyframes border-dance 
     0% 
