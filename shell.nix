@@ -73,8 +73,6 @@ in
             # start zsh
             nix-shell --pure --command zsh
             exit
-        else
-            echo "you were already in a nix-shell"
         fi
         '';
     }
