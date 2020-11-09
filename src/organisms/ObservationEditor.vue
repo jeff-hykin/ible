@@ -225,16 +225,23 @@ export default {
                     labelConfidence: this.observationData.labelConfidence,
                 },
             }
-            // if saving an edit
-            if (this.uuidOfSelectedSegment) {
-                (await endpoints).raw.set({
-                    keyList:[this.uuidOfSelectedSegment],
-                    from: "observations",
-                    to: observation,
-                })
-            // if saving something new
-            } else {
-                this.uuidOfSelectedSegment = await (await endpoints).addSegmentObservation(observation)
+            try {
+                // if saving an edit
+                if (this.uuidOfSelectedSegment) {
+                    await (await endpoints).raw.set({
+                        keyList:[this.uuidOfSelectedSegment],
+                        from: "observations",
+                        to: observation,
+                    })
+                // if saving something new
+                } else {
+                    this.uuidOfSelectedSegment = await (await endpoints).addSegmentObservation(observation)
+                }
+            } catch (error) {
+                this.$toasted.show(`There was an error on the database`).goAway(5500)
+                this.$toasted.show(error.message.slice(0,65)).goAway(5500)
+                this.$toasted.show(`(Full error log in the console)`).goAway(6500)
+                throw error
             }
             
             
