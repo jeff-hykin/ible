@@ -12,6 +12,8 @@
 .gitconfig
 .local
 .cache
+.nix-defexpr
+.nix-profile
 
 # 
 # Linux

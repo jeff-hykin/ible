@@ -13,16 +13,36 @@ if [[ -f "$CUSTOM_USER_SETTINGS" ]]; then
 # if no custom user settings, then use epic defaults 👌
 # 
 else
+    function nix_path_for {
+        nix-instantiate --eval -E  '"${
+            (
+                builtins.elemAt (
+                    builtins.filter (each: each.name == "'$1'") (
+                        builtins.map (
+                            each: ({
+                                name = each.load;
+                                source = builtins.getAttr each.load (
+                                    builtins.import (
+                                        builtins.fetchTarball {url="https://github.com/NixOS/nixpkgs/archive/${each.from}.tar.gz";}
+                                    ) {
+                                        config = (builtins.fromJSON (builtins.readFile ./package.json)).nix.config;
+                                    }
+                                );
+                            })
+                        ) (builtins.fromJSON (builtins.readFile ./package.json)).nix.packages
+                    )
+                ) 0
+            ).source
+        }"' | sed -E 's/^"|"$//g'
+    }
+    
     # 
     # import paths from nix
     # 
-    # this var needs to match the one inside shell.nix
-    paths_passthrough="./settings/.cache/package-paths"
-    mkdir -p "$paths_passthrough"
-    spaceship_prompt__path="$(cat "$paths_passthrough/spaceship-prompt.cleanable")"
-    zsh_syntax_highlighting__path="$(cat "$paths_passthrough/zsh-syntax-highlighting.cleanable")"
-    oh_my_zsh__path="$(cat "$paths_passthrough/oh-my-zsh.cleanable")"
-    zsh__path="$(cat "$paths_passthrough/zsh.cleanable")"
+    zsh_syntax_highlighting__path="$(nix_path_for zsh-syntax-highlighting)"
+    spaceship_prompt__path="$(nix_path_for spaceship-prompt)"
+    oh_my_zsh__path="$(nix_path_for oh-my-zsh)"
+    zsh__path="$(nix_path_for zsh)"
     
     # 
     # set fpath for zsh
@@ -42,7 +62,7 @@ else
     # 
     # add spaceship-prompt theme
     # 
-    ln -s "$spaceship_prompt__path/lib/spaceship-prompt/spaceship.zsh" "$local_zsh/prompt_spaceship_setup"
+    ln -fs "$spaceship_prompt__path/lib/spaceship-prompt/spaceship.zsh" "$local_zsh"prompt_spaceship_setup
     
     export ZSH="$oh_my_zsh__path/share/oh-my-zsh"
     source "$ZSH/oh-my-zsh.sh"
