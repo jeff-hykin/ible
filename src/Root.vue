@@ -13,7 +13,6 @@ import Vue from "vue"
 import plugins from "./plugins/*.js"
 import pages from "./pages/*.vue"
 import {getColor} from "./utils"
-const endpoints = require("./iilvd-api").endpoints
 
 import { Router } from './plugins/router-plugin'
 const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
@@ -123,11 +122,10 @@ export default RootComponent = {
             return Object.entries(this.$root.labels).filter(([eachKey, eachValue])=>(eachValue.selected)).map(([eachKey, eachValue])=>(eachKey))
         },
         async retrieveLabels() {
-            let realEndpoints = await endpoints
             // 
             // get labels
             // 
-            this.labels = await realEndpoints.summary.labels()
+            this.labels = await (await this.backend).summary.labels()
             // assign colors to all labels in a pretty (irrelevently) inefficient way
             Object.keys(this.labels).forEach(each=> this.labels[each] = {color: getColor(each), ...this.labels[each]})
             this.labelsResolved.resolve(true)

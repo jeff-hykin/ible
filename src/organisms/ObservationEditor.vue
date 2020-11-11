@@ -129,7 +129,7 @@
 </template>
 
 <script>
-import { endpoints } from '../iilvd-api'
+let { backend } = require('../iilvd-api')
 let { getColor } = require("../utils")
 
 export default {
@@ -228,14 +228,14 @@ export default {
             try {
                 // if saving an edit
                 if (this.uuidOfSelectedSegment) {
-                    await (await endpoints).raw.set({
+                    await (await this.backend).mongoInterface.set({
                         keyList:[this.uuidOfSelectedSegment],
                         from: "observations",
                         to: observation,
                     })
                 // if saving something new
                 } else {
-                    this.uuidOfSelectedSegment = await (await endpoints).addSegmentObservation(observation)
+                    this.uuidOfSelectedSegment = await (await this.backend).addSegmentObservation(observation)
                 }
             } catch (error) {
                 this.$toasted.show(`There was an error on the database`).goAway(5500)
@@ -274,7 +274,7 @@ export default {
             this.editing = false
             this.resetData()
             if (this.uuidOfSelectedSegment) {
-                (await endpoints).raw.delete({
+                (await this.backend).mongoInterface.delete({
                     keyList:[this.uuidOfSelectedSegment],
                     from: "observations",
                 })

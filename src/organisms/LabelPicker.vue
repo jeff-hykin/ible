@@ -23,6 +23,7 @@
 </template>
 
 <script>
+let { backend } = require("../iilvd-api")
 const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
 const { openPanel, takeover } = require("../templates/LeftSidePanel")
 let Fuse = require("fuse.js").default
@@ -38,7 +39,7 @@ export default {
     data: ()=>({
         useLeftPanel: true,
         needToLoad$: {
-            endpoints,
+            backend,
         },
         items: {},
         searchTerm: "",

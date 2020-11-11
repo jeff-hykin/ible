@@ -43,8 +43,6 @@
 
 </template>
 <script>
-
-const { endpoints } = require("../iilvd-api")
 const { wrapIndex, storageObject } = require('../utils')
 const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
 

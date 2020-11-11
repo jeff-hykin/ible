@@ -14,7 +14,6 @@
 </template>
 
 <script>
-const endpoints = require("../iilvd-api").endpoints
 const { wrapIndex } = require('../utils')
 const { dynamicSort, logBlock } = require("good-js")
 const { openPanel } = require("../templates/RightSidePanel")
@@ -62,9 +61,12 @@ export default {
             if (title != undefined) {
                 return title
             } else {
-                endpoints.then(endpoints=>{
+                this.backend.then(backend=>{
                     console.log(`requesting video title`)
-                    endpoints.videos.get({ keyList: [videoId, "summary", "title"] }).then(title=>{
+                    backend.mongoInterface.get({
+                        from: 'videos',
+                        keyList: [videoId, "summary", "title"],
+                    }).then(title=>{
                         console.log(`received title ${title}`)
                         if (!(videoObject.summary instanceof Object)) {
                             videoObject.summary = {}

@@ -65,7 +65,6 @@
 </template>
 
 <script>
-const { endpoints } = require("../iilvd-api")
 const { wrapIndex, storageObject } = require('../utils')
 const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
 const Fuse = require("fuse.js").default
@@ -247,10 +246,10 @@ export default {
                     // we don't care which finishes first
                     console.debug(`[resolvable:hasDurationData] setting up callbacks for duration `)
                     // 1. request the data from the backend
-                    endpoints.then(async (realEndpoints)=>{
+                    this.backend.then(async (backend)=>{
                         let video = await this.hasVideo.promise
                         console.log(`getting duration from backend`)
-                        let result = await realEndpoints.raw.get({keyList: [ this.$root.getVideoId(), "summary",  "duration" ], from: "videos" })
+                        let result = await backend.mongoInterface.get({keyList: [ this.$root.getVideoId(), "summary",  "duration" ], from: "videos" })
                         if (checkIf({value: result, is: Number}) && result > 0) {
                             console.debug(`result is:`,result)
                             this.$root.selectedVideo.duration = result
@@ -290,8 +289,7 @@ export default {
                     console.debug(`[resolvable:videoHasSegmentData] finished hasDurationData.promise check`)
                     console.debug(`[resolvable:videoHasSegmentData] duration is:`,duration)
                     // then get the segments from backend
-                    let realEndpoints = await endpoints
-                    let keySegments = await realEndpoints.raw.all({
+                    let keySegments = await (await this.backend).mongoInterface.getAll({
                         from: 'observations',
                         where: [
                             // FIXME: also add the fixedSegments (the computer generated ones)
@@ -472,8 +470,7 @@ export default {
                 this.suggestions = storageObject.cachedVideoIds
             } else {
                 // add results from the database
-                let realEndpoints = await endpoints
-                let possibleVideoIds = await realEndpoints.raw.all({
+                let possibleVideoIds = await (await this.backend).mongoInterface.getAll({
                     from: "videos",
                     where: [
                         {
@@ -626,8 +623,6 @@ export default {
                 console.debug(`this.$root.selectedVideo.keySegments is:`,this.$root.selectedVideo.keySegments)
                 let displaySegments = this.$root.selectedVideo.keySegments.filter(
                     eachSegment=>{
-                        console.debug(`eachSegment is:`,eachSegment)
-                        console.debug(`eachSegment.observation is:`,eachSegment.observation)
                         return (eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.observation.label))
                     }
                 )

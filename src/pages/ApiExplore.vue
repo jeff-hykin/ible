@@ -68,7 +68,7 @@ export default {
         },
         async submitSearch() {
             this.$toasted.show(`Searching`).goAway(2500)
-            let result = await endpoints.raw.all(this.searchOptions)
+            let result = await (await this.backend).mongoInterface.getAll(this.searchOptions)
             window.apiResult = result
             const numberOfCharsFoundToReallyReallyReallySlowTheUIDown = 24956
             if (JSON.stringify(result).length < numberOfCharsFoundToReallyReallyReallySlowTheUIDown) {

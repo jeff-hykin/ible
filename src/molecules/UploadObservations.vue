@@ -135,7 +135,7 @@ export default {
                 return
             }
             try {
-                newUuids = await (await endpoints).addMultipleSegments(newObservations)
+                newUuids = await (await this.backend).addMultipleSegments(newObservations)
             } catch (error) {
                 console.debug(`error is:`,error)
                 // TODO: improve this error

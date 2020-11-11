@@ -1,54 +1,25 @@
-let { network, set, get } = require("good-js")
-
-window.network = network
+let Vue = require("vue").default
+let ezRpc = require("ez-rpc-frontend")
 
 // const databaseUrl = "http://192.168.86.198:3000"
 // const databaseUrl = "http://localhost:3000"
 // const databaseUrl = "http://paradise.cs.tamu.edu:3000"
-const databaseUrl = "http://128.194.4.15:3000" // csce-jiang1.engr.tamu.edu:3000
+// const databaseUrl = "http://128.194.4.15:3000" // csce-jiang1.engr.tamu.edu:3000
 // const databaseUrl = "http://192.168.192.57:3000"
+// const databaseUrl = "http://192.168.192.137:3000" // my desktop db 
+const ezRpcUrl = "http://192.168.192.137:54321"
 const key = "4a75cfe3cdc1164b67aae6b413c9714280d2f102"
 
-
-let databaseApiCall = async (methodName, args=[])=> {
-    let {value, error} = await network.post({ data: { args, key } , to: `${databaseUrl}/${methodName}`})
-    if (error) {
-        throw Error(`Error from backend:\n${error}`)
-    }
-    return value
-}
-
-// 
-// setup the database API (auto-generate all the methods)
-//
-let endpoints = new Promise(async (resolve, reject)=>{
-    let actualEndpoints = {}
-    let endpointPaths
-    try {
-        endpointPaths = await databaseApiCall("smartEndpoints")
-        console.debug(`endpointPaths is:`,endpointPaths)
-    } catch (error) {
-        console.error("couldn't get the endpoints from the database")
-        endpointPaths = []
-    }
-    for (let each of endpointPaths) {
-        set({
-            keyList: each.split("/"),
-            to: (...args) => databaseApiCall(each, args),
-            on: actualEndpoints
-        })
-    }
-    resolve(actualEndpoints)
-    window.endpoints = await endpoints
-})
-window.endpoints = endpoints
-
+window.backend = ezRpc.buildInterfaceFor(ezRpcUrl)
 
 module.exports = {
-    endpoints,
+    backend,
     mixin: {
         data: ()=>({
-            endpoints,
+            backend,
         }),
     },
 }
+
+// add the backend to all of the components
+Vue.mixin(module.exports.mixin)
