@@ -42,12 +42,49 @@ let
             })
         ) packageJson.nix.packages;
     };
+    
+    # TODO: add support for package.json to have nested packages
+    nestedPackages = [
+        # definitions.mainPackages.unixtools.arp      # commented out because of security flaws in openssl-1.0.2u, TODO: make a fixed version with overrides
+        # definitions.mainPackages.unixtools.ifconfig # commented out because of security flaws in openssl-1.0.2u, TODO: make a fixed version with overrides
+        # definitions.mainPackages.unixtools.netstat  # commented out because of security flaws in openssl-1.0.2u, TODO: make a fixed version with overrides
+        # definitions.mainPackages.unixtools.ping     # commented out because of security flaws in openssl-1.0.2u, TODO: make a fixed version with overrides
+        # definitions.mainPackages.unixtools.route    # commented out because of security flaws in openssl-1.0.2u, TODO: make a fixed version with overrides
+        # definitions.mainPackages.unixtools.logger # fail on macos
+        # definitions.mainPackages.unixtools.wall   # fail on macos
+        definitions.mainPackages.unixtools.col
+        definitions.mainPackages.unixtools.column
+        definitions.mainPackages.unixtools.fdisk
+        definitions.mainPackages.unixtools.fsck
+        definitions.mainPackages.unixtools.getconf
+        definitions.mainPackages.unixtools.getent
+        definitions.mainPackages.unixtools.getopt
+        definitions.mainPackages.unixtools.hexdump
+        definitions.mainPackages.unixtools.hostname
+        definitions.mainPackages.unixtools.killall
+        definitions.mainPackages.unixtools.locale
+        definitions.mainPackages.unixtools.more
+        definitions.mainPackages.unixtools.mount
+        definitions.mainPackages.unixtools.ps
+        definitions.mainPackages.unixtools.quota
+        definitions.mainPackages.unixtools.script
+        definitions.mainPackages.unixtools.sysctl
+        definitions.mainPackages.unixtools.top
+        definitions.mainPackages.unixtools.umount
+        definitions.mainPackages.unixtools.whereis
+        definitions.mainPackages.unixtools.write
+        definitions.mainPackages.unixtools.xxd
+    ];
+    
+    # TODO: add support for OS-specific packages (if statement inside package inclusion)
+    packagesForMacOnly = [] ++ definitions.mainPackages.lib.optionals (definitions.mainPackages.stdenv.isDarwin) [
+    ];
 # using those definitions
 in
     # create a shell
     definitions.mainPackages.mkShell {
         # inside that shell, make sure to use these packages
-        buildInputs = builtins.map (each: each.source) definitions.packagesWithSources;
+        buildInputs = nestedPackages ++ packagesForMacOnly ++ builtins.map (each: each.source) definitions.packagesWithSources;
         
         # run some bash code before starting up the shell
         shellHook = ''
