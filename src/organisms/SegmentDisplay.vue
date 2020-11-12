@@ -67,7 +67,7 @@ export default {
             this.allLabelsOn = !this.allLabelsOn
             // assign
             for (let [eachKey, eachValue] of Object.entries(this.$root.labels)) {
-                if (eachKey != this.$root.selectedLabel.name) {
+                if (eachKey != this.$root.getSelectedLabelName()) {
                     eachValue.selected = this.allLabelsOn
                 }
             }

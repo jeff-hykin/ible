@@ -82,6 +82,9 @@ export default RootComponent = {
         this.retrieveLabels()
     },
     methods: {
+        getSelectedLabelName() {
+            return this.$root.selectedLabel && this.$root.selectedLabel.name
+        },
         getVideoId() {
             return this.$root.selectedVideo && this.$root.selectedVideo.$id
         },

@@ -287,7 +287,7 @@ export default {
                 startTime: this.$root.currentTime || 0,
                 endTime: this.$root.currentTime || 0,
                 observer: window.storageObject.observer || "",
-                label: (this.$root.selectedLabel)&&this.$root.selectedLabel.name || "",
+                label: this.$root.getSelectedLabelName() || "",
                 labelConfidence: 0.99,
                 confirmedBySomeone: false,
                 rejectedBySomeone:  false,
