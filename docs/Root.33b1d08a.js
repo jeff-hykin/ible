@@ -31511,77 +31511,607 @@ module.exports = {
   }
 
 };
-},{}],"AC5t":[function(require,module,exports) {
-let {
-  network,
-  set,
-  get
-} = require("good-js");
+},{}],"BNOB":[function(require,module,exports) {
+module.exports = {
+    /**
+     * Safely get nested values
+     *
+     * @param {any} obj.from - what object/value you're extracting from
+     * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
+     * @param {any} obj.failValue - what to return in the event of an error
+     * @return {any} either the failValue or the actual value
+     *
+     * @example
+     *     let obj = { key1: {} }
+     *     // equivlent to obj.key1.subKey.subSubKey
+     *     get({
+     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+     *         from: obj,
+     *     })
+     *     get({
+     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+     *         from: null,
+     *     })
+     *     get({
+     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+     *         from: null,
+     *         failValue: 0
+     *     })
+     */
+    get({ from, keyList, failValue }) {
+        // iterate over nested values
+        try {
+            for (var each of keyList) {
+                if (from instanceof Object && each in from) {
+                    from = from[each]
+                } else {
+                    return failValue
+                }
+            }
+        } catch (error) {
+            return failValue
+        }
+        return from
+    },
+    /**
+     * Forcefully set nested values
+     *
+     * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
+     * @param {any} obj.to - what the new value should be
+     * @param {any} obj.on - what object/value you're modifying
+     * @return {Object} - the object given (object is still mutated)
+     * @error
+     * only if the argument is not an object
+     *
+     * @example
+     *     let obj = { key1: {} }
+     *     // equivlent to obj.key1.subKey.subSubKey
+     *     set({
+     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+     *         to: 10,
+     *         on: obj,
+     *     })
+     *     set({
+     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+     *         to: 10,
+     *         on: obj,
+     *     })
+     */
+    set({ keyList, on, to }) {
+        let originalKeyList = keyList
+        try {
+            keyList = [...keyList]
+            let lastAttribute = keyList.pop()
+            for (var key of keyList) {
+                // create each parent if it doesnt exist
+                if (!(on[key] instanceof Object)) {
+                    on[key] = {}
+                }
+                // change the object reference be the nested element
+                on = on[key]
+            }
+            on[lastAttribute] = to
+        } catch (error) {
+            throw new Error(`\nthe set function was unable to set the value for some reason\n    the set obj was: ${JSON.stringify(on)}\n    the keyList was: ${JSON.stringify(originalKeyList)}\n    the value was: ${JSON.stringify(to)}\nthe original error message was:\n\n`, error)
+        }
+        return on
+    },
+    /**
+     * Safely delete nested values
+     *
+     * @param {any} obj.from - what object/value you're extracting from
+     * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
+     * @return {undefined}
+     *
+     * @example
+     *     let obj = { key1: {} }
+     *     // equivlent to obj.key1.subKey.subSubKey
+     *     delete({
+     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+     *         from: obj,
+     *     })
+     */
+    delete({ keyList, from }) {
+        if (keyList.length == 1) {
+            try {
+                delete from[keyList[0]]
+            } catch (error) {
+                return false
+            }
+        } else if (keyList.length > 1) {
+            keyList = [...keyList]
+            let last = keyList.pop()
+            let parentObj = module.exports.get({ keyList, from })
+            return module.exports.delete({ keyList: [last], from: parentObj })
+        }
+    },
+    merge({ oldData, newData }) {
+        // if its not an object, then it immediately overwrites the value
+        if (!(newData instanceof Object) || !(oldData instanceof Object)) {
+            return newData
+        }
+        // default value for all keys is the original object
+        let output = {}
+        newData instanceof Array && (output = [])
+        Object.assign(output, oldData)
+        for (const key in newData) {
+            // if no conflict, then assign as normal
+            if (!(key in output)) {
+                output[key] = newData[key]
+                // if there is a conflict, then be recursive
+            } else {
+                output[key] = module.exports.merge(oldData[key], newData[key])
+            }
+        }
+        return output
+    },
+    /**
+     * Function to sort alphabetically an array of objects by some specific key.
+     *
+     * @param {string[]} obj.keyList list of keys of which property to sort by
+     * @param {string[]} [obj.largestFirst=false] decending order
+     * @example
+     * let listOfObjects = [ { a:1 }, { a:3 }, { a:2 }, ]
+     * listOfObjects.sort(
+     *     compareProperty({keyList:['a']})
+     * )
+     * //  [ { a: 1 }, { a: 2 }, { a: 3 } ]
+     *
+     * listOfObjects.sort(
+     *   compareProperty({
+     *     keyList:['a'],
+     *     largestFirst:true
+     *   })
+     * )
+     * //  [ { a: 3 }, { a: 2 }, { a: 1 } ]
+     */
+    compareProperty({ keyList, largestFirst = false }) {
+        let comparison = (a, b) => {
+            let aValue = module.exports.get({ keyList, from: a, failValue: -Infinity })
+            let bValue = module.exports.get({ keyList, from: b, failValue: -Infinity })
+            if (typeof aValue == "number") {
+                return aValue - bValue
+            } else {
+                return aValue.localeCompare(bValue)
+            }
+        }
+        if (largestFirst) {
+            oldComparison = comparison
+            comparison = (b, a) => oldComparison(a, b)
+        }
+        return comparison
+    },
+    /**
+     * Deep iterate objects
+     *
+     * @param {Object} obj - Any object
+     * @return {string[][]} lists of key-lists
+     *
+     * @example
+     *
+     *     recursivelyAllAttributesOf({ a: { b: 1} })
+     *     >>> [
+     *         [ 'a', ],
+     *         [ 'a', 'b' ],
+     *     ]
+     */
+    recursivelyAllAttributesOf(obj) {
+        // if not an object then add no attributes
+        if (!(obj instanceof Object)) {
+            return []
+        }
+        // else check all keys for sub-attributes
+        let output = []
+        for (let eachKey of Object.keys(obj)) {
+            // add the key itself (alone)
+            output.push([eachKey])
+            // add all of its children
+            let newAttributes = module.exports.recursivelyAllAttributesOf(obj[eachKey])
+            // if nested
+            for (let eachNewAttributeList of newAttributes) {
+                // add the parent key
+                eachNewAttributeList.unshift(eachKey)
+                output.push(eachNewAttributeList)
+            }
+        }
+        return output
+    },
+}
 
-window.network = network; // const databaseUrl = "http://192.168.86.198:3000"
+},{}],"z2hx":[function(require,module,exports) {
+
+"use strict"; // ref: https://github.com/tc39/proposal-global
+
+var getGlobal = function () {
+  // the only reliable means to get the global object is
+  // `Function('return this')()`
+  // However, this causes CSP violations in Chrome apps.
+  if (typeof self !== 'undefined') {
+    return self;
+  }
+
+  if (typeof window !== 'undefined') {
+    return window;
+  }
+
+  if (typeof global !== 'undefined') {
+    return global;
+  }
+
+  throw new Error('unable to locate global object');
+};
+
+var global = getGlobal();
+module.exports = exports = global.fetch; // Needed for TypeScript and Webpack.
+
+if (global.fetch) {
+  exports.default = global.fetch.bind(global);
+}
+
+exports.Headers = global.Headers;
+exports.Request = global.Request;
+exports.Response = global.Response;
+},{}],"zuT8":[function(require,module,exports) {
+// use libs since node doesn't have fetch
+if (typeof document == 'undefined') {
+    fetch = require("node-fetch")
+}
+
+module.exports = {
+    curl(url) {
+        return new Promise((resolve) =>
+            fetch(url)
+                .then((res) => res.text())
+                .then((body) => resolve(body))
+        )
+    },
+    getJson(url) {
+        return new Promise((resolve, reject) =>
+            fetch(url)
+                .then(function (response) {
+                    return response.json()
+                })
+                .then(function (data) {
+                    resolve(data)
+                })
+                .catch(function () {
+                    reject()
+                })
+        )
+    },
+    async postJson({ data = null, to = null }) {
+        return (await fetch(to, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })).json()
+    },
+}
+
+},{"node-fetch":"z2hx"}],"Noob":[function(require,module,exports) {
+module.exports = {
+    capitalize: (string) => string.replace(/\b\w/g, chr=>chr.toUpperCase()),
+    indent: ({string, by="    "}) => by + string.replace(/\n/g,"\n"+by),
+    snakeToCamelCase: (baseName) => (baseName.toLowerCase().replace(/_/," ")).replace(/.\b\w/g, aChar=>aChar.toUpperCase()).replace(" ",""),
+    varnameToTitle: (string) => string.replace(/_/," ").replace(/\b\w/g, chr=>chr.toUpperCase()),
+    findAll(regexPattern, sourceString) {
+        let output = []
+        let match
+        // make sure the pattern has the global flag
+        let regexPatternWithGlobal = RegExp(regexPattern, [...new Set("g"+regexPattern.flags)].join(""))
+        while (match = regexPatternWithGlobal.exec(sourceString)) {
+            // get rid of the string copy
+            delete match.input
+            // store the match data
+            output.push(match)
+        } 
+        return output
+    },
+}
+},{}],"HeEn":[function(require,module,exports) {
+module.exports = {
+    /**
+     * Checks type according to English
+     *
+     * @param {Object} args.value - any possible value 
+     * @param {Object} args.is - a class or string-description Object, Array, null, "nullish", "number", Number, Boolean, Function
+     * @return {Boolean} the legitmate/intuitive answer
+     * 
+     * @note
+     *     Object means can-be-a JSON-object
+     * 
+     * @example
+     *     checkIf({value: undefined , is: null     }) // false
+     *     checkIf({value: undefined , is: String   }) // false
+     *     checkIf({value: undefined , is: 'nullish'}) // true
+     *     checkIf({value: null      , is: 'nullish'}) // true
+     *     checkIf({value: NaN       , is: 'nullish'}) // true
+     *     checkIf({value: null      , is: Object   }) // false
+     *     checkIf({value: NaN       , is: NaN      }) // true!
+     *     checkIf({value: NaN       , is: Number   }) // false!
+     *     checkIf({value: ("string"), is: Object   }) // false
+     *     checkIf({value: {blah: 10}, is: Object   }) // true!
+     *     checkIf({value: new Date(), is: Object   }) // false!
+     *     checkIf({value: new CustomClass()         , is: Object}) // true!
+     *     checkIf({value: ()=>{return "imma func"}  , is: Object}) // false
+     *     checkIf({value: ["I", "am", "an", "array"], is: Object}) // false
+     *     checkIf({value: new CustomClass()         , is: Date})   // false
+     */
+    checkIf({ value, is }) {
+        let typeOrClass = is 
+        // 
+        // Check typeOrClass
+        // 
+        // see if typeOrClass is actually a class 
+        if (typeof typeOrClass == 'function') {
+            typeOrClass = typeOrClass.name
+        }
+        // lowercase any string-names
+        if (typeof typeOrClass == 'string') {
+            typeOrClass = typeOrClass.toLowerCase()
+        }
+
+        //
+        // Strict Values
+        //
+        // object (non-null, non-function, non-array)
+        if (typeOrClass === "object") {
+            if (!(value instanceof Object)) {
+                return false
+            } else if (value instanceof Array || value instanceof Function || value instanceof Date) {
+                return false
+            // check if its stringified+parsed form is also an object 
+            // (this is to remove things like BigInt and BigInt64Array and other built-in pseudo-primitives)
+            } else {
+                let stringified = JSON.stringify(value)
+                // note that this is not == '"undefined"'
+                if (stringified === 'undefined') {
+                    return false
+                } else if (JSON.parse(stringified) instanceof Object) {
+                    return true
+                } else {
+                    return false
+                }
+            }
+        }
+        // undefined
+        else if (typeof typeOrClass === 'undefined' || typeOrClass == 'undefined') {
+            return typeof value === 'undefined'
+        }
+        // null
+        else if (typeOrClass === null || typeOrClass == 'null') {
+            return value === null
+        }
+        // NaN
+        else if ((typeOrClass !== typeOrClass && typeof typeOrClass == 'number') || typeOrClass == 'nan') {
+            return value !== value && typeof value == 'number'
+        }
+        // false
+        else if (typeOrClass === false) {
+            return value === false
+        }
+        // true
+        else if (typeOrClass === true) {
+            return value === true
+        }
+        // bool
+        else if (typeOrClass === "bool" || typeOrClass === "boolean") {
+            return value === true || value === false
+        }
+        // empty string
+        else if (typeOrClass === "") {
+            return value === ""
+        }
+        // empty list
+        else if (typeOrClass === "[]" || Array.isArray(typeOrClass) && typeOrClass.length == 0) {
+            return value instanceof Array && value.length == 0
+        }
+        // function
+        else if (typeOrClass === "function") {
+            return typeof value == "function"
+        }
+        // number
+        else if (typeOrClass == "number" || typeOrClass == Number) {
+            if (value !== value) {
+                return false
+            }
+            else {
+                return typeof value == "number" || value instanceof Number
+            }
+        }
+        // string
+        else if (typeOrClass == "string") {
+            return typeof value == "string" || value instanceof String
+        }
+        // array
+        else if (typeOrClass == "array") {
+            return value instanceof Array
+        }
+        // symbol
+        else if (typeOrClass == "symbol") {
+            return typeof value == "symbol"
+        }
+
+        // 
+        // Unstrict values
+        // 
+        // nullish (null, undefined, NaN)
+        else if (typeOrClass === 'nullish') {
+            return value == null || value !== value
+        }
+        // emptyish ({},[],"",null,undefined)
+        else if (typeOrClass === 'emptyish') {
+            if ((value instanceof Array && value.length == 0) || value === "" || value == null) {
+                return true
+            }
+            else if (value instanceof Object) {
+                return Object.keys(value).length == 0
+            }
+            else {
+                return false
+            }
+        }
+        // falsey ("0",0,false,null,undefined,NaN)
+        else if (typeOrClass === 'falsey' || typeOrClass === 'falsy' || typeOrClass === 'falseish' || typeOrClass === 'falsish') {
+            return value == null || value === false || value !== value || value === 0 || value === "0"
+        }
+        // falsey-or-empty ({},[],"","0",0,false,null,undefined,NaN)
+        else if (typeOrClass === 'falsey-or-empty' || typeOrClass === 'falsy-or-empty' || typeOrClass === 'falseish-or-empty' || typeOrClass === 'falsish-or-empty') {
+            // empty array
+            if (value instanceof Array && value.length == 0) {
+                return true
+            }
+            // empty object
+            else if (value instanceof Object) {
+                return Object.keys(value).length == 0
+            }
+            else {
+                return (value ? true : false)
+            }
+        }
+        // numberish 
+        else if (typeOrClass == 'numberish') {
+            return (value != value) || !isNaN(value - 0)
+        }
+        // 
+        // class type
+        // 
+        else if (aClass) {
+            // if no constructor
+            if (value === null || value === undefined) {
+                return false
+            }
+            else {
+                // see if constructors match
+                if (value.constructor.name === typeOrClass) {
+                    return true
+                }
+                // check instanceof 
+                else {
+                    return value instanceof aClass
+                }
+            }
+        }
+        // 
+        // failed to recognize
+        // 
+        else {
+            throw new Error(`when you call checkIf(), I'm not recoginizing the type or class: ${typeOrClass}`)
+        }
+    },
+    /**
+     * Throws error if type requirement isn't met
+     *
+     * @param {Object} args.value - any possible value 
+     * @param {Object} args.is - a class or string-description Object, Array, null, "nullish", "number", Number, Boolean, Function
+     * @param {string} args.failMessage - a string to be added to the top of the error message
+     * @return {undefined}
+     * 
+     * 
+     * @example
+     * // see checkIf() for more argument examples
+     * requireThat({
+     *     value: arg1.size,
+     *     is: Number,
+     *     failMessage: "The size of the first argument needs to be a number"
+     * })
+     */
+    requireThat({ value, is, failMessage }){
+        if (!module.exports.checkIf({ value, is})) {
+            let requiredType = (is instanceof Object) ? is.prototype.constructor.name : is
+            // 
+            // figure out the real type of the object
+            // 
+            let actualType
+            if (value instanceof Object) {
+                actualType = value.constructor.prototype.constructor.name
+            } else {
+                if (value !== value) {
+                    actualType = "NaN"
+                } else if (value === null) {
+                    actualType = "null"
+                } else {
+                    actualType = typeof value
+                }
+            }
+            failMessage = failMessage ? `Error Message: ${failMessage}` : ""
+            throw Error(`Failed to pass a type check created by requireThat()\n    the value is considered to be: ${actualType}\n    which fails to meet the requirement of: ${requiredType}\n    the failing value is: ${value}\n\n${failMessage}`)
+        }
+    }
+}
+},{}],"kwxG":[function(require,module,exports) {
+module.exports = {
+    object: require("./source/object"),
+    network: require("./source/network"),
+    string: require("./source/string"),
+    tests: require("./source/tests"),
+}
+},{"./source/object":"BNOB","./source/network":"zuT8","./source/string":"Noob","./source/tests":"HeEn"}],"YL07":[function(require,module,exports) {
+let { network, object } = require("good-js")
+
+let apiCall = async (url, args=[], metaData)=> {
+    let response = await network.postJson({
+        data: [args, metaData],
+        to: url
+    })
+    if (response.error instanceof Object) {
+        throw response.error
+    }
+    return response.value
+} 
+
+module.exports = {
+    metaKey: Symbol.for("EzRpcMetadata"),
+    buildInterfaceFor(url) {
+        let actualEndpoints = {
+            [module.exports.metaKey]: {}
+        }
+        
+        return new Promise(async (resolve, reject)=>{
+            let result = await network.postJson({ data: [], to: `${url}/interface`})
+            
+            // create all the endpoints
+            for (let eachKeyList of result.interface) {
+                const endpointUrl = `${url}/call/${eachKeyList.join("/")}`
+                object.set({
+                    keyList: eachKeyList,
+                    on: actualEndpoints,
+                    to: (...args)=>apiCall(endpointUrl, args, actualEndpoints[module.exports.metaKey])
+                })
+            }
+            
+            resolve(actualEndpoints)
+        })
+    }
+}
+},{"good-js":"kwxG"}],"AC5t":[function(require,module,exports) {
+let Vue = require("vue").default;
+
+let ezRpc = require("ez-rpc-frontend"); // const databaseUrl = "http://192.168.86.198:3000"
 // const databaseUrl = "http://localhost:3000"
 // const databaseUrl = "http://paradise.cs.tamu.edu:3000"
-
-const databaseUrl = "http://128.194.4.15:3000"; // csce-jiang1.engr.tamu.edu:3000
+// const databaseUrl = "http://128.194.4.15:3000" // csce-jiang1.engr.tamu.edu:3000
 // const databaseUrl = "http://192.168.192.57:3000"
+// const databaseUrl = "http://192.168.192.137:3000" // my desktop db 
 
+
+const ezRpcUrl = "http://192.168.192.137:54321";
 const key = "4a75cfe3cdc1164b67aae6b413c9714280d2f102";
-
-let databaseApiCall = async (methodName, args = []) => {
-  let {
-    value,
-    error
-  } = await network.post({
-    data: {
-      args,
-      key
-    },
-    to: `${databaseUrl}/${methodName}`
-  });
-
-  if (error) {
-    throw Error(`Error from backend:\n${error}`);
-  }
-
-  return value;
-}; // 
-// setup the database API (auto-generate all the methods)
-//
-
-
-let endpoints = new Promise(async (resolve, reject) => {
-  let actualEndpoints = {};
-  let endpointPaths;
-
-  try {
-    endpointPaths = await databaseApiCall("smartEndpoints");
-    console.debug(`endpointPaths is:`, endpointPaths);
-  } catch (error) {
-    console.error("couldn't get the endpoints from the database");
-    endpointPaths = [];
-  }
-
-  for (let each of endpointPaths) {
-    set({
-      keyList: each.split("/"),
-      to: (...args) => databaseApiCall(each, args),
-      on: actualEndpoints
-    });
-  }
-
-  resolve(actualEndpoints);
-  window.endpoints = await endpoints;
-});
-window.endpoints = endpoints;
+window.backend = ezRpc.buildInterfaceFor(ezRpcUrl);
 module.exports = {
-  endpoints,
+  backend,
   mixin: {
     data: () => ({
-      endpoints
+      backend
     })
   }
-};
-},{"good-js":"vKem"}],"CmfW":[function(require,module,exports) {
+}; // add the backend to all of the components
+
+Vue.mixin(module.exports.mixin);
+},{"vue":"NtAQ","ez-rpc-frontend":"YL07"}],"CmfW":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -31661,7 +32191,7 @@ var _default = {
 
     async submitSearch() {
       this.$toasted.show(`Searching`).goAway(2500);
-      let result = await endpoints.raw.all(this.searchOptions);
+      let result = await (await this.backend).mongoInterface.getAll(this.searchOptions);
       window.apiResult = result;
       const numberOfCharsFoundToReallyReallyReallySlowTheUIDown = 24956;
 
@@ -33928,8 +34458,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _iilvdApi = require("../iilvd-api");
-
 //
 //
 //
@@ -34061,6 +34589,10 @@ var _iilvdApi = require("../iilvd-api");
 //
 //
 let {
+  backend
+} = require('../iilvd-api');
+
+let {
   getColor
 } = require("../utils");
 
@@ -34169,13 +34701,13 @@ var _default = {
       try {
         // if saving an edit
         if (this.uuidOfSelectedSegment) {
-          await (await _iilvdApi.endpoints).raw.set({
+          await (await this.backend).mongoInterface.set({
             keyList: [this.uuidOfSelectedSegment],
             from: "observations",
             to: observation
           }); // if saving something new
         } else {
-          this.uuidOfSelectedSegment = await (await _iilvdApi.endpoints).addSegmentObservation(observation);
+          this.uuidOfSelectedSegment = await (await this.backend).addSegmentObservation(observation);
         }
       } catch (error) {
         this.$toasted.show(`There was an error on the database`).goAway(5500);
@@ -34222,7 +34754,7 @@ var _default = {
       this.resetData();
 
       if (this.uuidOfSelectedSegment) {
-        (await _iilvdApi.endpoints).raw.delete({
+        (await this.backend).mongoInterface.delete({
           keyList: [this.uuidOfSelectedSegment],
           from: "observations"
         });
@@ -34328,10 +34860,6 @@ exports.default = void 0;
 //
 //
 const {
-  endpoints
-} = require("../iilvd-api");
-
-const {
   wrapIndex,
   storageObject
 } = require('../utils');
@@ -34405,7 +34933,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"../iilvd-api":"AC5t","../utils":"K0yk","good-js":"vKem","../atoms/SideButton":"CzpK"}],"hqcF":[function(require,module,exports) {
+},{"../utils":"K0yk","good-js":"vKem","../atoms/SideButton":"CzpK"}],"hqcF":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -34479,10 +35007,6 @@ exports.default = void 0;
 //
 //
 //
-const {
-  endpoints
-} = require("../iilvd-api");
-
 const {
   wrapIndex,
   storageObject
@@ -34694,10 +35218,10 @@ var _default = {
           // we don't care which finishes first
           console.debug(`[resolvable:hasDurationData] setting up callbacks for duration `); // 1. request the data from the backend
 
-          endpoints.then(async realEndpoints => {
+          this.backend.then(async backend => {
             let video = await this.hasVideo.promise;
             console.log(`getting duration from backend`);
-            let result = await realEndpoints.raw.get({
+            let result = await backend.mongoInterface.get({
               keyList: [this.$root.getVideoId(), "summary", "duration"],
               from: "videos"
             });
@@ -34748,8 +35272,7 @@ var _default = {
           console.debug(`[resolvable:videoHasSegmentData] finished hasDurationData.promise check`);
           console.debug(`[resolvable:videoHasSegmentData] duration is:`, duration); // then get the segments from backend
 
-          let realEndpoints = await endpoints;
-          let keySegments = await realEndpoints.raw.all({
+          let keySegments = await (await this.backend).mongoInterface.getAll({
             from: 'observations',
             where: [// FIXME: also add the fixedSegments (the computer generated ones)
             {
@@ -34963,8 +35486,7 @@ var _default = {
         this.suggestions = storageObject.cachedVideoIds;
       } else {
         // add results from the database
-        let realEndpoints = await endpoints;
-        let possibleVideoIds = await realEndpoints.raw.all({
+        let possibleVideoIds = await (await this.backend).mongoInterface.getAll({
           from: "videos",
           where: [{
             hiddenValueOf: ["_id"],
@@ -35141,8 +35663,6 @@ var _default = {
         let namesOfSelectedLabels = this.$root.getNamesOfSelectedLabels();
         console.debug(`this.$root.selectedVideo.keySegments is:`, this.$root.selectedVideo.keySegments);
         let displaySegments = this.$root.selectedVideo.keySegments.filter(eachSegment => {
-          console.debug(`eachSegment is:`, eachSegment);
-          console.debug(`eachSegment.observation is:`, eachSegment.observation);
           return eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.observation.label);
         }); // 2 percent of the width of the video
 
@@ -35336,7 +35856,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"../iilvd-api":"AC5t","../utils":"K0yk","good-js":"vKem","fuse.js":"jqRt","../atoms/SideButton":"CzpK","../molecules/InfoSection":"tPI3","../organisms/ObservationEditor":"ICy3","../organisms/SegmentDisplay":"RG1B"}],"bZ7G":[function(require,module,exports) {
+},{"../utils":"K0yk","good-js":"vKem","fuse.js":"jqRt","../atoms/SideButton":"CzpK","../molecules/InfoSection":"tPI3","../organisms/ObservationEditor":"ICy3","../organisms/SegmentDisplay":"RG1B"}],"bZ7G":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -35429,8 +35949,6 @@ exports.default = void 0;
 //
 //
 //
-const endpoints = require("../iilvd-api").endpoints;
-
 const {
   wrapIndex
 } = require('../utils');
@@ -35492,9 +36010,10 @@ var _default = {
       if (title != undefined) {
         return title;
       } else {
-        endpoints.then(endpoints => {
+        this.backend.then(backend => {
           console.log(`requesting video title`);
-          endpoints.videos.get({
+          backend.mongoInterface.get({
+            from: 'videos',
             keyList: [videoId, "summary", "title"]
           }).then(title => {
             console.log(`received title ${title}`);
@@ -35546,7 +36065,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"../iilvd-api":"AC5t","../utils":"K0yk","good-js":"vKem","../templates/RightSidePanel":"bZ7G","vue-json-tree":"vQbQ"}],"SId6":[function(require,module,exports) {
+},{"../utils":"K0yk","good-js":"vKem","../templates/RightSidePanel":"bZ7G","vue-json-tree":"vQbQ"}],"SId6":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -35732,6 +36251,10 @@ exports.default = void 0;
 //
 //
 //
+let {
+  backend
+} = require("../iilvd-api");
+
 const {
   dynamicSort,
   logBlock,
@@ -35756,7 +36279,7 @@ var _default = {
   data: () => ({
     useLeftPanel: true,
     needToLoad$: {
-      endpoints
+      backend
     },
     items: {},
     searchTerm: "",
@@ -35871,7 +36394,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"good-js":"vKem","../templates/LeftSidePanel":"SId6","fuse.js":"jqRt","../atoms/Loader":"N6QO","../molecules/SearchCard":"nE3y","../mixins/loader":"UPxk"}],"ygBg":[function(require,module,exports) {
+},{"../iilvd-api":"AC5t","good-js":"vKem","../templates/LeftSidePanel":"SId6","fuse.js":"jqRt","../atoms/Loader":"N6QO","../molecules/SearchCard":"nE3y","../mixins/loader":"UPxk"}],"ygBg":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -36019,6 +36542,7 @@ exports.default = void 0;
 //
 //
 //
+//
 var _default = {
   components: {
     JsonTree: require('vue-json-tree').default,
@@ -36099,7 +36623,7 @@ var _default = {
       }
 
       try {
-        newUuids = await (await endpoints).addMultipleSegments(newObservations);
+        newUuids = await (await this.backend).addMultipleSegments(newObservations);
       } catch (error) {
         console.debug(`error is:`, error); // TODO: improve this error
 
@@ -36123,7 +36647,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($a6b296, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"upload-wrapper",attrs:{"akfdjguo3359gip":"akfdjguo3359gip"}},[_c('ui-fab',{staticClass:"help-button",attrs:{"color":"gray","icon":"live_help","raised":"raised","tooltip":"Help with file upload","tooltipPosition":"left"},on:{"click":_vm.showHelp}}),_c('ui-fab',{staticClass:"upload-button",attrs:{"color":"blue","raised":"raised","tooltip":"upload multiple observations","tooltipPosition":"left"}},[_c('ui-icon',[_vm._v("cloud_upload")]),_c('ui-fileupload',{attrs:{"name":"file","type":"secondary"},on:{"change":_vm.onUploadObservation}})],1),_c('ui-modal',{ref:"helpModal",staticClass:"modal",attrs:{"title":"Example Upload","transition":"scale-up"}},[_c('row',{attrs:{"align-h":"space-evenly","align-v":"top"}},[_c('column',{attrs:{"align-v":"top"}},[_c('br'),_vm._v("1. Here are two observations "),_c('br'),_vm._v("Try editing them! Then look at the code →"),_c('row',{attrs:{"align-h":"space-between","padding":"2rem 1rem","align-v":"top"}},[_c('column',[_c('h5',[_vm._v("Observation 1")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData1}})],1),_c('container',{attrs:{"min-width":"3rem"}}),_c('column',[_c('h5',[_vm._v("Observation 2")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData2}})],1)],1)],1),_c('container',{attrs:{"width":"2rem"}}),_c('column',{attrs:{"flex-basis":"50%","max-width":"31rem","align-v":"top"}},[_c('span',[_c('br'),_vm._v("2. To upload these, create a file ending with"),_c('code',[_vm._v(" .json ")]),_c('br'),_c('br'),_vm._v("3. Then add the following text to that file."),_c('br'),_c('br')]),_c('JsonTree',{staticClass:"json-tree",attrs:{"data":[_vm.dummyData1, _vm.dummyData2]}}),_c('span',[_c('br'),_vm._v("4. Then simply use the upload button to upload the file"),_c('br'),_c('br'),_vm._v("The JSON file is just a list of each observation represented as a kind of dictionary.")])],1)],1)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"upload-wrapper",attrs:{"akfdjguo3359gip":"akfdjguo3359gip"}},[_c('ui-fab',{staticClass:"help-button",attrs:{"color":"gray","icon":"live_help","raised":"raised","tooltip":"Help with file upload","tooltipPosition":"left"},on:{"click":_vm.showHelp}}),_c('ui-fab',{staticClass:"upload-button",attrs:{"color":"blue","raised":"raised","tooltip":"upload multiple observations","tooltipPosition":"left"}},[_c('ui-icon',[_vm._v("cloud_upload")]),_c('ui-fileupload',{attrs:{"name":"file","type":"secondary"},on:{"change":_vm.onUploadObservation}})],1),_c('ui-modal',{ref:"helpModal",staticClass:"modal",attrs:{"title":"Example Upload","transition":"scale-up"}},[_c('row',{attrs:{"align-h":"space-evenly","align-v":"top"}},[_c('column',{attrs:{"align-v":"top"}},[_c('br'),_vm._v("Try editing them! Then look at the code →"),_c('row',{attrs:{"align-h":"space-between","padding":"2rem 1rem","align-v":"top"}},[_c('column',[_c('h5',[_vm._v("Observation 1")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData1}})],1),_c('container',{attrs:{"min-width":"3rem"}}),_c('column',[_c('h5',[_vm._v("Observation 2")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData2}})],1)],1)],1),_c('container',{attrs:{"width":"2rem"}}),_c('column',{attrs:{"flex-basis":"50%","max-width":"31rem","align-v":"top"}},[_c('span',[_c('br'),_vm._v("To upload these observations"),_c('br'),_c('br'),_vm._v("1. Create a file ending with"),_c('code',[_vm._v(" .json ")]),_c('br'),_c('br'),_vm._v("2. Then add the following text to that file."),_c('br'),_c('br')]),_c('JsonTree',{staticClass:"json-tree",attrs:{"data":[_vm.dummyData1, _vm.dummyData2]}}),_c('span',[_c('br'),_vm._v("3. Then simply use the upload button to upload the file."),_c('br'),_c('br'),_vm._v("The JSON file is just a list of each observation represented as a kind of dictionary.")])],1)],1)],1)],1)}
 var staticRenderFns = []
 
           return {
@@ -36321,8 +36845,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //
 //
 // libs and plugins
-const endpoints = require("./iilvd-api").endpoints;
-
 const {
   dynamicSort,
   logBlock,
@@ -36449,11 +36971,10 @@ var _default = RootComponent = {
     },
 
     async retrieveLabels() {
-      let realEndpoints = await endpoints; // 
+      // 
       // get labels
       // 
-
-      this.labels = await realEndpoints.summary.labels(); // assign colors to all labels in a pretty (irrelevently) inefficient way
+      this.labels = await (await this.backend).summary.labels(); // assign colors to all labels in a pretty (irrelevently) inefficient way
 
       Object.keys(this.labels).forEach(each => this.labels[each] = {
         color: (0, _utils.getColor)(each),
@@ -36486,7 +37007,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"vue":"NtAQ","./plugins/*.js":"Xeh1","./pages/*.vue":"Ka75","./utils":"K0yk","./iilvd-api":"AC5t","./plugins/router-plugin":"yBli","good-js":"vKem","./templates/LeftSidePanel":"SId6","./templates/RightSidePanel":"bZ7G"}],"ln2R":[function(require,module,exports) {
+},{"vue":"NtAQ","./plugins/*.js":"Xeh1","./pages/*.vue":"Ka75","./utils":"K0yk","./plugins/router-plugin":"yBli","good-js":"vKem","./templates/LeftSidePanel":"SId6","./templates/RightSidePanel":"bZ7G"}],"ln2R":[function(require,module,exports) {
 module.exports = function loadCSSBundle(bundle) {
   return new Promise(function (resolve, reject) {
     var link = document.createElement('link');
