@@ -606,7 +606,3 @@ settings/home/.gitconfig
 settings/home/.mongorc.js
 settings/home/.ungitrc
 settings/home/.vuerc
-
-# this next line was auto-added, and may be very important (passwords/auth etc)
-# comment it out if dont want it to be ignored (and you know what you're doing)
-Library/Caches
