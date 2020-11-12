@@ -43,7 +43,7 @@
         "sass": "^1.29.0",
         "vue-cli-plugin-pug": "~1.0.7",
         "vue-hot-reload-api": "^2.3.4",
-        "vue-template-compiler": "^2.6.11"
+        "vue-template-compiler": "^2.6.12"
     },
     "repository": {
         "type": "git",
