@@ -127,8 +127,8 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 
 /*!
- * Vue.js v2.6.11
- * (c) 2014-2019 Evan You
+ * Vue.js v2.6.12
+ * (c) 2014-2020 Evan You
  * Released under the MIT License.
  */
 
@@ -5568,7 +5568,7 @@ Object.defineProperty(Vue.prototype, '$ssrContext', {
 Object.defineProperty(Vue, 'FunctionalRenderContext', {
   value: FunctionalRenderContext
 });
-Vue.version = '2.6.11';
+Vue.version = '2.6.12';
 /*  */
 // these are reserved for web because they are directly compiled away
 // during template compilation
@@ -7147,7 +7147,7 @@ function updateDOMProps(oldVnode, vnode) {
     } else if ( // skip the update if old and new VDOM state is the same.
     // `value` is handled separately because the DOM value may be temporarily
     // out of sync with VDOM state due to focus, composition and modifiers.
-    // This  #4521 by skipping the unnecesarry `checked` update.
+    // This  #4521 by skipping the unnecessary `checked` update.
     cur !== oldProps[key]) {
       // some property updates can throw
       // e.g. `value` on <progress> w/ non-finite value
@@ -9053,7 +9053,7 @@ _vue.default.use(_goodVue.default);
 var define;
 var global = arguments[3];
 /*!
- * Keen UI v1.3.0 (https://github.com/JosephusPaye/keen-ui)
+ * Keen UI v1.3.1 (https://github.com/JosephusPaye/keen-ui)
  * (c) 2020 Josephus Paye II
  * Released under the MIT License.
  */
@@ -15952,6 +15952,8 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         },
         clear: function clear() {
             var _this = this;
+
+            this.hasSelection = false;
 
             this.renderInput = false;
 
@@ -27236,7 +27238,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 
 /*!
-  * vue-router v3.4.2
+  * vue-router v3.4.9
   * (c) 2020 Evan You
   * @license MIT
   */
@@ -27261,159 +27263,6 @@ function extend(a, b) {
 
   return a;
 }
-
-var View = {
-  name: 'RouterView',
-  functional: true,
-  props: {
-    name: {
-      type: String,
-      default: 'default'
-    }
-  },
-  render: function render(_, ref) {
-    var props = ref.props;
-    var children = ref.children;
-    var parent = ref.parent;
-    var data = ref.data; // used by devtools to display a router-view badge
-
-    data.routerView = true; // directly use parent context's createElement() function
-    // so that components rendered by router-view can resolve named slots
-
-    var h = parent.$createElement;
-    var name = props.name;
-    var route = parent.$route;
-    var cache = parent._routerViewCache || (parent._routerViewCache = {}); // determine current view depth, also check to see if the tree
-    // has been toggled inactive but kept-alive.
-
-    var depth = 0;
-    var inactive = false;
-
-    while (parent && parent._routerRoot !== parent) {
-      var vnodeData = parent.$vnode ? parent.$vnode.data : {};
-
-      if (vnodeData.routerView) {
-        depth++;
-      }
-
-      if (vnodeData.keepAlive && parent._directInactive && parent._inactive) {
-        inactive = true;
-      }
-
-      parent = parent.$parent;
-    }
-
-    data.routerViewDepth = depth; // render previous view if the tree is inactive and kept-alive
-
-    if (inactive) {
-      var cachedData = cache[name];
-      var cachedComponent = cachedData && cachedData.component;
-
-      if (cachedComponent) {
-        // #2301
-        // pass props
-        if (cachedData.configProps) {
-          fillPropsinData(cachedComponent, data, cachedData.route, cachedData.configProps);
-        }
-
-        return h(cachedComponent, data, children);
-      } else {
-        // render previous empty view
-        return h();
-      }
-    }
-
-    var matched = route.matched[depth];
-    var component = matched && matched.components[name]; // render empty node if no matched route or no config component
-
-    if (!matched || !component) {
-      cache[name] = null;
-      return h();
-    } // cache component
-
-
-    cache[name] = {
-      component: component
-    }; // attach instance registration hook
-    // this will be called in the instance's injected lifecycle hooks
-
-    data.registerRouteInstance = function (vm, val) {
-      // val could be undefined for unregistration
-      var current = matched.instances[name];
-
-      if (val && current !== vm || !val && current === vm) {
-        matched.instances[name] = val;
-      }
-    } // also register instance in prepatch hook
-    // in case the same component instance is reused across different routes
-    ;
-
-    (data.hook || (data.hook = {})).prepatch = function (_, vnode) {
-      matched.instances[name] = vnode.componentInstance;
-    }; // register instance in init hook
-    // in case kept-alive component be actived when routes changed
-
-
-    data.hook.init = function (vnode) {
-      if (vnode.data.keepAlive && vnode.componentInstance && vnode.componentInstance !== matched.instances[name]) {
-        matched.instances[name] = vnode.componentInstance;
-      }
-    };
-
-    var configProps = matched.props && matched.props[name]; // save route and configProps in cache
-
-    if (configProps) {
-      extend(cache[name], {
-        route: route,
-        configProps: configProps
-      });
-      fillPropsinData(component, data, route, configProps);
-    }
-
-    return h(component, data, children);
-  }
-};
-
-function fillPropsinData(component, data, route, configProps) {
-  // resolve props
-  var propsToPass = data.props = resolveProps(route, configProps);
-
-  if (propsToPass) {
-    // clone to prevent mutation
-    propsToPass = data.props = extend({}, propsToPass); // pass non-declared props as attrs
-
-    var attrs = data.attrs = data.attrs || {};
-
-    for (var key in propsToPass) {
-      if (!component.props || !(key in component.props)) {
-        attrs[key] = propsToPass[key];
-        delete propsToPass[key];
-      }
-    }
-  }
-}
-
-function resolveProps(route, config) {
-  switch (typeof config) {
-    case 'undefined':
-      return;
-
-    case 'object':
-      return config;
-
-    case 'function':
-      return config(route);
-
-    case 'boolean':
-      return config ? route.params : undefined;
-
-    default:
-      if ("production" !== 'production') {
-        warn(false, "props in \"" + route.path + "\" is a " + typeof config + ", " + "expecting an object, function or boolean.");
-      }
-
-  }
-}
 /*  */
 
 
@@ -27431,7 +27280,17 @@ var encode = function (str) {
   return encodeURIComponent(str).replace(encodeReserveRE, encodeReserveReplacer).replace(commaRE, ',');
 };
 
-var decode = decodeURIComponent;
+function decode(str) {
+  try {
+    return decodeURIComponent(str);
+  } catch (err) {
+    if ("production" !== 'production') {
+      warn(false, "Error decoding \"" + str + "\". Leaving it intact.");
+    }
+  }
+
+  return str;
+}
 
 function resolveQuery(query, extraQuery, _parseQuery) {
   if (extraQuery === void 0) extraQuery = {};
@@ -27610,15 +27469,21 @@ function isObjectEqual(a, b) {
     return a === b;
   }
 
-  var aKeys = Object.keys(a);
-  var bKeys = Object.keys(b);
+  var aKeys = Object.keys(a).sort();
+  var bKeys = Object.keys(b).sort();
 
   if (aKeys.length !== bKeys.length) {
     return false;
   }
 
-  return aKeys.every(function (key) {
+  return aKeys.every(function (key, i) {
     var aVal = a[key];
+    var bKey = bKeys[i];
+
+    if (bKey !== key) {
+      return false;
+    }
+
     var bVal = b[key]; // query values can be null and undefined
 
     if (aVal == null || bVal == null) {
@@ -27646,6 +27511,187 @@ function queryIncludes(current, target) {
   }
 
   return true;
+}
+
+function handleRouteEntered(route) {
+  for (var i = 0; i < route.matched.length; i++) {
+    var record = route.matched[i];
+
+    for (var name in record.instances) {
+      var instance = record.instances[name];
+      var cbs = record.enteredCbs[name];
+
+      if (!instance || !cbs) {
+        continue;
+      }
+
+      delete record.enteredCbs[name];
+
+      for (var i$1 = 0; i$1 < cbs.length; i$1++) {
+        if (!instance._isBeingDestroyed) {
+          cbs[i$1](instance);
+        }
+      }
+    }
+  }
+}
+
+var View = {
+  name: 'RouterView',
+  functional: true,
+  props: {
+    name: {
+      type: String,
+      default: 'default'
+    }
+  },
+  render: function render(_, ref) {
+    var props = ref.props;
+    var children = ref.children;
+    var parent = ref.parent;
+    var data = ref.data; // used by devtools to display a router-view badge
+
+    data.routerView = true; // directly use parent context's createElement() function
+    // so that components rendered by router-view can resolve named slots
+
+    var h = parent.$createElement;
+    var name = props.name;
+    var route = parent.$route;
+    var cache = parent._routerViewCache || (parent._routerViewCache = {}); // determine current view depth, also check to see if the tree
+    // has been toggled inactive but kept-alive.
+
+    var depth = 0;
+    var inactive = false;
+
+    while (parent && parent._routerRoot !== parent) {
+      var vnodeData = parent.$vnode ? parent.$vnode.data : {};
+
+      if (vnodeData.routerView) {
+        depth++;
+      }
+
+      if (vnodeData.keepAlive && parent._directInactive && parent._inactive) {
+        inactive = true;
+      }
+
+      parent = parent.$parent;
+    }
+
+    data.routerViewDepth = depth; // render previous view if the tree is inactive and kept-alive
+
+    if (inactive) {
+      var cachedData = cache[name];
+      var cachedComponent = cachedData && cachedData.component;
+
+      if (cachedComponent) {
+        // #2301
+        // pass props
+        if (cachedData.configProps) {
+          fillPropsinData(cachedComponent, data, cachedData.route, cachedData.configProps);
+        }
+
+        return h(cachedComponent, data, children);
+      } else {
+        // render previous empty view
+        return h();
+      }
+    }
+
+    var matched = route.matched[depth];
+    var component = matched && matched.components[name]; // render empty node if no matched route or no config component
+
+    if (!matched || !component) {
+      cache[name] = null;
+      return h();
+    } // cache component
+
+
+    cache[name] = {
+      component: component
+    }; // attach instance registration hook
+    // this will be called in the instance's injected lifecycle hooks
+
+    data.registerRouteInstance = function (vm, val) {
+      // val could be undefined for unregistration
+      var current = matched.instances[name];
+
+      if (val && current !== vm || !val && current === vm) {
+        matched.instances[name] = val;
+      }
+    } // also register instance in prepatch hook
+    // in case the same component instance is reused across different routes
+    ;
+
+    (data.hook || (data.hook = {})).prepatch = function (_, vnode) {
+      matched.instances[name] = vnode.componentInstance;
+    }; // register instance in init hook
+    // in case kept-alive component be actived when routes changed
+
+
+    data.hook.init = function (vnode) {
+      if (vnode.data.keepAlive && vnode.componentInstance && vnode.componentInstance !== matched.instances[name]) {
+        matched.instances[name] = vnode.componentInstance;
+      } // if the route transition has already been confirmed then we weren't
+      // able to call the cbs during confirmation as the component was not
+      // registered yet, so we call it here.
+
+
+      handleRouteEntered(route);
+    };
+
+    var configProps = matched.props && matched.props[name]; // save route and configProps in cache
+
+    if (configProps) {
+      extend(cache[name], {
+        route: route,
+        configProps: configProps
+      });
+      fillPropsinData(component, data, route, configProps);
+    }
+
+    return h(component, data, children);
+  }
+};
+
+function fillPropsinData(component, data, route, configProps) {
+  // resolve props
+  var propsToPass = data.props = resolveProps(route, configProps);
+
+  if (propsToPass) {
+    // clone to prevent mutation
+    propsToPass = data.props = extend({}, propsToPass); // pass non-declared props as attrs
+
+    var attrs = data.attrs = data.attrs || {};
+
+    for (var key in propsToPass) {
+      if (!component.props || !(key in component.props)) {
+        attrs[key] = propsToPass[key];
+        delete propsToPass[key];
+      }
+    }
+  }
+}
+
+function resolveProps(route, config) {
+  switch (typeof config) {
+    case 'undefined':
+      return;
+
+    case 'object':
+      return config;
+
+    case 'function':
+      return config(route);
+
+    case 'boolean':
+      return config ? route.params : undefined;
+
+    default:
+      if ("production" !== 'production') {
+        warn(false, "props in \"" + route.path + "\" is a " + typeof config + ", " + "expecting an object, function or boolean.");
+      }
+
+  }
 }
 /*  */
 
@@ -28219,7 +28265,7 @@ function normalizeLocation(raw, current, append, router) {
   } // relative params
 
 
-  if (!next.path && (next.params || next.query || next.hash) && current) {
+  if (!next.path && next.params && current) {
     next = extend({}, next);
     next._normalized = true;
     var params$1 = extend(extend({}, current.params), next.params);
@@ -28563,6 +28609,8 @@ function addRouteRecord(pathList, pathMap, nameMap, route, parent, matchAs) {
   if ("production" !== 'production') {
     assert(path != null, "\"path\" is required in a route configuration.");
     assert(typeof route.component !== 'string', "route config \"component\" for path: " + String(path || name) + " cannot be a " + "string id. Use an actual component instead.");
+    warn( // eslint-disable-next-line no-control-regex
+    !/[^\u0000-\u007F]+/.test(path), "Route with path \"" + path + "\" contains unencoded characters, make sure " + "your path is correctly encoded before passing it to the router. Use " + "encodeURI to encode static segments of your path.");
   }
 
   var pathToRegexpOptions = route.pathToRegexpOptions || {};
@@ -28579,6 +28627,7 @@ function addRouteRecord(pathList, pathMap, nameMap, route, parent, matchAs) {
       default: route.component
     },
     instances: {},
+    enteredCbs: {},
     name: name,
     parent: parent,
     matchAs: matchAs,
@@ -28847,11 +28896,10 @@ function matchRoute(regex, path, params) {
 
   for (var i = 1, len = m.length; i < len; ++i) {
     var key = regex.keys[i - 1];
-    var val = typeof m[i] === 'string' ? decodeURIComponent(m[i]) : m[i];
 
     if (key) {
       // Fix #1994: using * with props: true generates a param named 0
-      params[key.name || 'pathMatch'] = val;
+      params[key.name || 'pathMatch'] = typeof m[i] === 'string' ? decode(m[i]) : m[i];
     }
   }
 
@@ -29029,7 +29077,17 @@ function scrollToPosition(shouldScroll, position) {
   }
 
   if (position) {
-    window.scrollTo(position.x, position.y);
+    // $flow-disable-line
+    if ('scrollBehavior' in document.documentElement.style) {
+      window.scrollTo({
+        left: position.x,
+        top: position.y,
+        // $flow-disable-line
+        behavior: shouldScroll.behavior
+      });
+    } else {
+      window.scrollTo(position.x, position.y);
+    }
   }
 }
 /*  */
@@ -29089,7 +29147,8 @@ function runQueue(queue, fn, cb) {
   };
 
   step(0);
-}
+} // When changing thing, also edit router.d.ts
+
 
 var NavigationFailureType = {
   redirected: 2,
@@ -29310,8 +29369,8 @@ History.prototype.transitionTo = function transitionTo(location, onComplete, onA
     throw e;
   }
 
+  var prev = this.current;
   this.confirmTransition(route, function () {
-    var prev = this$1.current;
     this$1.updateRoute(route);
     onComplete && onComplete(route);
     this$1.ensureURL();
@@ -29331,16 +29390,14 @@ History.prototype.transitionTo = function transitionTo(location, onComplete, onA
     }
 
     if (err && !this$1.ready) {
-      this$1.ready = true; // Initial redirection should still trigger the onReady onSuccess
+      // Initial redirection should not mark the history as ready yet
+      // because it's triggered by the redirection instead
       // https://github.com/vuejs/vue-router/issues/3225
-
-      if (!isNavigationFailure(err, NavigationFailureType.redirected)) {
+      // https://github.com/vuejs/vue-router/issues/3331
+      if (!isNavigationFailure(err, NavigationFailureType.redirected) || prev !== START) {
+        this$1.ready = true;
         this$1.readyErrorCbs.forEach(function (cb) {
           cb(err);
-        });
-      } else {
-        this$1.readyCbs.forEach(function (cb) {
-          cb(route);
         });
       }
     }
@@ -29350,6 +29407,7 @@ History.prototype.transitionTo = function transitionTo(location, onComplete, onA
 History.prototype.confirmTransition = function confirmTransition(route, onComplete, onAbort) {
   var this$1 = this;
   var current = this.current;
+  this.pending = route;
 
   var abort = function (err) {
     // changed after adding errors with
@@ -29390,7 +29448,6 @@ History.prototype.confirmTransition = function confirmTransition(route, onComple
     return m.beforeEnter;
   }), // async components
   resolveAsyncComponents(activated));
-  this.pending = route;
 
   var iterator = function (hook, next) {
     if (this$1.pending !== route) {
@@ -29426,15 +29483,9 @@ History.prototype.confirmTransition = function confirmTransition(route, onComple
   };
 
   runQueue(queue, iterator, function () {
-    var postEnterCbs = [];
-
-    var isValid = function () {
-      return this$1.current === route;
-    }; // wait until async components are resolved before
+    // wait until async components are resolved before
     // extracting in-component enter guards
-
-
-    var enterGuards = extractEnterGuards(activated, postEnterCbs, isValid);
+    var enterGuards = extractEnterGuards(activated);
     var queue = enterGuards.concat(this$1.router.resolveHooks);
     runQueue(queue, iterator, function () {
       if (this$1.pending !== route) {
@@ -29446,9 +29497,7 @@ History.prototype.confirmTransition = function confirmTransition(route, onComple
 
       if (this$1.router.app) {
         this$1.router.app.$nextTick(function () {
-          postEnterCbs.forEach(function (cb) {
-            cb();
-          });
+          handleRouteEntered(route);
         });
       }
     });
@@ -29463,11 +29512,17 @@ History.prototype.updateRoute = function updateRoute(route) {
 History.prototype.setupListeners = function setupListeners() {// Default implementation is empty
 };
 
-History.prototype.teardownListeners = function teardownListeners() {
+History.prototype.teardown = function teardown() {
+  // clean up event listeners
+  // https://github.com/vuejs/vue-router/issues/2341
   this.listeners.forEach(function (cleanupListener) {
     cleanupListener();
   });
-  this.listeners = [];
+  this.listeners = []; // reset current history route
+  // https://github.com/vuejs/vue-router/issues/3294
+
+  this.current = START;
+  this.pending = null;
 };
 
 function normalizeBase(base) {
@@ -29547,41 +29602,26 @@ function bindGuard(guard, instance) {
   }
 }
 
-function extractEnterGuards(activated, cbs, isValid) {
+function extractEnterGuards(activated) {
   return extractGuards(activated, 'beforeRouteEnter', function (guard, _, match, key) {
-    return bindEnterGuard(guard, match, key, cbs, isValid);
+    return bindEnterGuard(guard, match, key);
   });
 }
 
-function bindEnterGuard(guard, match, key, cbs, isValid) {
+function bindEnterGuard(guard, match, key) {
   return function routeEnterGuard(to, from, next) {
     return guard(to, from, function (cb) {
       if (typeof cb === 'function') {
-        cbs.push(function () {
-          // #750
-          // if a router-view is wrapped with an out-in transition,
-          // the instance may not have been registered at this time.
-          // we will need to poll for registration until current route
-          // is no longer valid.
-          poll(cb, match.instances, key, isValid);
-        });
+        if (!match.enteredCbs[key]) {
+          match.enteredCbs[key] = [];
+        }
+
+        match.enteredCbs[key].push(cb);
       }
 
       next(cb);
     });
   };
-}
-
-function poll(cb, // somehow flow cannot infer this is a function
-instances, key, isValid) {
-  if (instances[key] && !instances[key]._isBeingDestroyed // do not reuse being destroyed instance
-  ) {
-      cb(instances[key]);
-    } else if (isValid()) {
-    setTimeout(function () {
-      poll(cb, instances, key, isValid);
-    }, 16);
-  }
 }
 /*  */
 
@@ -29675,7 +29715,7 @@ var HTML5History = /*@__PURE__*/function (History) {
 }(History);
 
 function getLocation(base) {
-  var path = decodeURI(window.location.pathname);
+  var path = window.location.pathname;
 
   if (base && path.toLowerCase().indexOf(base.toLowerCase()) === 0) {
     path = path.slice(base.length);
@@ -29813,24 +29853,7 @@ function getHash() {
     return '';
   }
 
-  href = href.slice(index + 1); // decode the hash but not the search or hash
-  // as search(query) is already decoded
-  // https://github.com/vuejs/vue-router/issues/2708
-
-  var searchIndex = href.indexOf('?');
-
-  if (searchIndex < 0) {
-    var hashIndex = href.indexOf('#');
-
-    if (hashIndex > -1) {
-      href = decodeURI(href.slice(0, hashIndex)) + href.slice(hashIndex);
-    } else {
-      href = decodeURI(href);
-    }
-  } else {
-    href = decodeURI(href.slice(0, searchIndex)) + href.slice(searchIndex);
-  }
-
+  href = href.slice(index + 1);
   return href;
 }
 
@@ -29897,8 +29920,12 @@ var AbstractHistory = /*@__PURE__*/function (History) {
 
     var route = this.stack[targetIndex];
     this.confirmTransition(route, function () {
+      var prev = this$1.current;
       this$1.index = targetIndex;
       this$1.updateRoute(route);
+      this$1.router.afterHooks.forEach(function (hook) {
+        hook && hook(route, prev);
+      });
     }, function (err) {
       if (isNavigationFailure(err, NavigationFailureType.duplicated)) {
         this$1.index = targetIndex;
@@ -29999,9 +30026,7 @@ VueRouter.prototype.init = function init(app
     }
 
     if (!this$1.app) {
-      // clean up event listeners
-      // https://github.com/vuejs/vue-router/issues/2341
-      this$1.history.teardownListeners();
+      this$1.history.teardown();
     }
   }); // main app previously initialized
   // return as we don't need to set up new history listener
@@ -30153,7 +30178,7 @@ function createHref(base, fullPath, mode) {
 }
 
 VueRouter.install = install;
-VueRouter.version = '3.4.2';
+VueRouter.version = '3.4.9';
 VueRouter.isNavigationFailure = isNavigationFailure;
 VueRouter.NavigationFailureType = NavigationFailureType;
 
@@ -32181,7 +32206,7 @@ var _default = {
 
   created() {
     this.$once("loadedAll$", async () => {
-      this.collections = await endpoints.collections();
+      this.collections = await (await this.backend).collectionNames();
     });
   },
 
@@ -32246,7 +32271,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 
 /**
- * Fuse.js v6.4.1 - Lightweight fuzzy-search (http://fusejs.io)
+ * Fuse.js v6.4.3 - Lightweight fuzzy-search (http://fusejs.io)
  *
  * Copyright (c) 2020 Kiro Risk (http://kiro.me)
  * All Rights Reserved. Apache Software License 2.0
@@ -32408,6 +32433,10 @@ function get(obj, path) {
   let arr = false;
 
   const deepGet = (obj, path, index) => {
+    if (!isDefined(obj)) {
+      return;
+    }
+
     if (!path[index]) {
       // If there's no path left, we've arrived at the object we care about.
       list.push(obj);
@@ -33320,7 +33349,8 @@ class FuzzyMatch extends BaseMatch {
     includeMatches = Config.includeMatches,
     findAllMatches = Config.findAllMatches,
     minMatchCharLength = Config.minMatchCharLength,
-    isCaseSensitive = Config.isCaseSensitive
+    isCaseSensitive = Config.isCaseSensitive,
+    ignoreLocation = Config.ignoreLocation
   } = {}) {
     super(pattern);
     this._bitapSearch = new BitapSearch(pattern, {
@@ -33330,7 +33360,8 @@ class FuzzyMatch extends BaseMatch {
       includeMatches,
       findAllMatches,
       minMatchCharLength,
-      isCaseSensitive
+      isCaseSensitive,
+      ignoreLocation
     });
   }
 
@@ -33480,6 +33511,7 @@ class ExtendedSearch {
     isCaseSensitive = Config.isCaseSensitive,
     includeMatches = Config.includeMatches,
     minMatchCharLength = Config.minMatchCharLength,
+    ignoreLocation = Config.ignoreLocation,
     findAllMatches = Config.findAllMatches,
     location = Config.location,
     threshold = Config.threshold,
@@ -33491,6 +33523,7 @@ class ExtendedSearch {
       includeMatches,
       minMatchCharLength,
       findAllMatches,
+      ignoreLocation,
       location,
       threshold,
       distance
@@ -33723,6 +33756,7 @@ class Fuse {
       if (predicate(doc, i)) {
         this.removeAt(i);
         i -= 1;
+        len -= 1;
         results.push(doc);
       }
     }
@@ -34052,7 +34086,7 @@ function format(results, docs, {
   });
 }
 
-Fuse.version = '6.4.1';
+Fuse.version = '6.4.3';
 Fuse.createIndex = createIndex;
 Fuse.parseIndex = parseIndex;
 Fuse.config = Config;
@@ -34271,7 +34305,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($d9c3c7, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return (_vm.$root.getVideoId())?_c('span',{staticClass:"info-section"},[_vm._v("Selected Label: "+_vm._s(_vm.$root.selectedLabel&&_vm.$root.selectedLabel.name)),_c('br'),_vm._v("Current Video ID: "+_vm._s(_vm.$root.getVideoId())),_c('br'),_vm._v("Pause Time: "+_vm._s(_vm.$root.currentTime)+" sec"),_c('br'),_vm._v(_vm._s(_vm.getSegmentUuid() && "Selected Segment UUID:")),_c('span',{staticClass:"uuid"},[_vm._v(" "+_vm._s(_vm.getSegmentUuid() && _vm.$root.selectedSegment.$uuid))])]):_vm._e()}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return (_vm.$root.getVideoId())?_c('span',{staticClass:"info-section"},[_vm._v("Selected Label: "+_vm._s(_vm.$root.getSelectedLabelName())),_c('br'),_vm._v("Current Video ID: "+_vm._s(_vm.$root.getVideoId())),_c('br'),_vm._v("Pause Time: "+_vm._s(_vm.$root.currentTime)+" sec"),_c('br'),_vm._v(_vm._s(_vm.getSegmentUuid() && "Selected Segment UUID:")),_c('span',{staticClass:"uuid"},[_vm._v(" "+_vm._s(_vm.getSegmentUuid() && _vm.$root.selectedSegment.$uuid))])]):_vm._e()}
 var staticRenderFns = []
 
           return {
@@ -34769,7 +34803,7 @@ var _default = {
         startTime: this.$root.currentTime || 0,
         endTime: this.$root.currentTime || 0,
         observer: window.storageObject.observer || "",
-        label: this.$root.selectedLabel && this.$root.selectedLabel.name || "",
+        label: this.$root.getSelectedLabelName() || "",
         labelConfidence: 0.99,
         confirmedBySomeone: false,
         rejectedBySomeone: false,
@@ -34892,7 +34926,7 @@ var _default = {
       this.allLabelsOn = !this.allLabelsOn; // assign
 
       for (let [eachKey, eachValue] of Object.entries(this.$root.labels)) {
-        if (eachKey != this.$root.selectedLabel.name) {
+        if (eachKey != this.$root.getSelectedLabelName()) {
           eachValue.selected = this.allLabelsOn;
         }
       }
@@ -36054,7 +36088,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($0a0c97, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('container',{staticClass:"nub",attrs:{"align-self":"top","visibility":_vm.$root.selectedLabel? 'visible' : 'hidden'},on:{"mouseover":_vm.onHover}},[_vm._v("Videos"),_c('portal',{attrs:{"to":"right-panel"}},[_c('h5',{staticStyle:{"width":"100%","text-align":"center","padding-top":"1rem","padding-bottom":"1rem","color":"gray","text-decoration":"underline"}},[_vm._v("Videos With Label: "+_vm._s(_vm.$root.selectedLabel&&_vm.$root.selectedLabel.name))]),_c('column',{staticClass:"video-list-container",attrs:{"width":"100%","padding":"1rem","align-v":"top"}},[(_vm.videoList() instanceof Array && _vm.videoList().length == 0)?_c('span',[_vm._v("(Loading or no other videos with this label)")]):_vm._e(),_vm._l((_vm.videoList()),function(eachVideoId){return _c('column',{staticClass:"video-list-element",on:{"click":function($event){return _vm.selectVideo($event, eachVideoId)}}},[_c('row',{staticClass:"thumbnail",attrs:{"width":"100%","height":"100%","background-image":("url(http://img.youtube.com/vi/" + eachVideoId + "/mqdefault.jpg)"),"position":"relative"}})],1)})],2)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('container',{staticClass:"nub",attrs:{"align-self":"top","visibility":_vm.$root.selectedLabel? 'visible' : 'hidden'},on:{"mouseover":_vm.onHover}},[_vm._v("Videos"),_c('portal',{attrs:{"to":"right-panel"}},[_c('h5',{staticStyle:{"width":"100%","text-align":"center","padding-top":"1rem","padding-bottom":"1rem","color":"gray","text-decoration":"underline"}},[_vm._v("Videos With Label: "+_vm._s(_vm.$root.getSelectedLabelName()))]),_c('column',{staticClass:"video-list-container",attrs:{"width":"100%","padding":"1rem","align-v":"top"}},[(_vm.videoList() instanceof Array && _vm.videoList().length == 0)?_c('span',[_vm._v("(Loading or no other videos with this label)")]):_vm._e(),_vm._l((_vm.videoList()),function(eachVideoId){return _c('column',{staticClass:"video-list-element",on:{"click":function($event){return _vm.selectVideo($event, eachVideoId)}}},[_c('row',{staticClass:"thumbnail",attrs:{"width":"100%","height":"100%","background-image":("url(http://img.youtube.com/vi/" + eachVideoId + "/mqdefault.jpg)"),"position":"relative"}})],1)})],2)],1)],1)}
 var staticRenderFns = []
 
           return {
@@ -36920,6 +36954,10 @@ var _default = RootComponent = {
   },
 
   methods: {
+    getSelectedLabelName() {
+      return this.$root.selectedLabel && this.$root.selectedLabel.name;
+    },
+
     getVideoId() {
       return this.$root.selectedVideo && this.$root.selectedVideo.$id;
     },
