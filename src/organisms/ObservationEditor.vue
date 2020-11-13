@@ -213,6 +213,7 @@ export default {
             this.observationData.endTime -= 0
             
             let observation = {
+                type: "segment",
                 videoId:            this.observationData.videoId,
                 startTime:          this.observationData.startTime,
                 endTime:            this.observationData.endTime,
