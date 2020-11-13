@@ -593,6 +593,7 @@ dkms.conf
 #
 # home folder files
 #
+settings/home/Library/Caches
 settings/home/*
 !settings/home/.zshrc
 # dont remove these next one unless you want passwords to be public
