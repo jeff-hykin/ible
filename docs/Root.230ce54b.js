@@ -36661,11 +36661,33 @@ var _default = {
       try {
         newUuids = await (await this.backend).addMultipleSegments(newObservations);
       } catch (error) {
-        console.debug(`error is:`, error); // TODO: improve this error
+        console.debug(`error is:`, error);
+        this.$toasted.show(`The Server said there was an error:`).goAway(2500);
+        this.$toasted.show(`Message: ${error.message}<br>`, {
+          closeOnSwipe: false,
+          action: {
+            text: 'Close',
+            onClick: (e, toastObject) => {
+              toastObject.goAway(0);
+            }
+          }
+        }); // if arguments are long
 
-        this.$toasted.show(`Server Error`).goAway(2500);
-        this.$toasted.show(`This probably means one of the observations was invalid (bad start/end time, no 'observer', etc)`).goAway(6500);
-        this.$toasted.show(`In the future this error message will hopefully be improved to be more specific`).goAway(6500);
+        const maxLength = 2000;
+
+        if (JSON.stringify(error.arguments).length > maxLength) {
+          error.arguments = JSON.stringify(error.arguments).slice(0, maxLength);
+        }
+
+        this.$toasted.show(`Full Details:<br><pre style="max-width: 70vw;overflow: auto;white-space: pre-wrap;">${JSON.stringify(error, 0, 3).replace(/\\n/g, "<br>")}<pre>`, {
+          closeOnSwipe: false,
+          action: {
+            text: 'Close',
+            onClick: (e, toastObject) => {
+              toastObject.goAway(0);
+            }
+          }
+        });
         return;
       }
 
