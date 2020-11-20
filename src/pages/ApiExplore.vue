@@ -59,7 +59,7 @@ export default {
     },
     created() {
         this.$once("loadedAll$",async ()=>{
-            this.collections = await endpoints.collections()
+            this.collections = await (await this.backend).collectionNames()
         })
     },
     methods: {
