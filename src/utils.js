@@ -60,7 +60,7 @@ function readFileAsString(files) {
     return (new FileReader()).readAsText(files[0])
 }
 
-let colors = [ "#4fc3f7", "#e57373", "#ba68c8", "#04d895",  "#9575cd",  "#fec355", "#4fc3f7", "#ff8a65", "#9ccc65", ]
+let colors = [ "#26c6da", "#e57373", "#ba68c8", "#04d895",  "#9575cd",  "#fec355", "#29b6f6", "#ff8a65", "#9ccc65", ]
 let colorCopy = [...colors]
 function getColor(name) {
     if (typeof name == "string") {
