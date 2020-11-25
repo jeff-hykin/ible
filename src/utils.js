@@ -77,6 +77,7 @@ module.exports = {
     EventEmitter,
     storageObject,
     readFileAsString,
+    colors,
     getColor,
     wrapIndex(val, list) {
         if (val < 0) {
