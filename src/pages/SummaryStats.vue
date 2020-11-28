@@ -131,6 +131,7 @@ export default {
             if (this.$root.filterAndSort.kindOfObserver == "Only Robots"   ) { where.push({ valueOf: ['isHuman'                          ], is:                     false                         , }) }
             if (this.$root.filterAndSort.validation     == "Only Confirmed") { where.push({ valueOf: ['confirmedBySomeone'               ], is:                     true                          , }) }
             if (this.$root.filterAndSort.validation     == "Only Rejected" ) { where.push({ valueOf: ['rejectedBySomeone'                ], is:                     true                          , }) }
+            console.log(`querying the backend`)
             let observationEntries = await backend.mongoInterface.getAll({
                 from: 'observations',
                 where: [
@@ -138,6 +139,7 @@ export default {
                     ...where,
                 ]
             })
+            console.debug(`observationEntries is:`,observationEntries)
             let results = {
                 uncheckedObservations: [],
                 rejected: [],
@@ -179,11 +181,10 @@ export default {
             window.results = results
         },
     },
-    watch: {
-        search: {
-            deep: true,
-            handler(...args) {
-                this.submitSearch()
+    rootHooks: {
+        watch: {
+            filterAndSort() {
+                setTimeout(this.submitSearch, 0)
             }
         }
     }
