@@ -61,6 +61,11 @@ function readFileAsString(files) {
 }
 
 let colors = [ "#26c6da", "#e57373", "#ba68c8", "#04d895",  "#9575cd",  "#fec355", "#29b6f6", "#ff8a65", "#9ccc65", ]
+colors.green  = "#04d895"
+colors.blue   = "#29b6f6"
+colors.purple = "#9575cd"
+colors.red    = "#e57373"
+colors.yellow = "#fec355"
 let colorCopy = [...colors]
 function getColor(name) {
     if (typeof name == "string") {
