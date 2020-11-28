@@ -1,7 +1,7 @@
 <template lang="pug">
     column.label-search(align-v='top' width='100%' min-width="100%" align-self="top")
         //- top bar search area
-        column.top-bar-container(width="100%" padding="1rem")
+        column.top-bar-container(width="100%")
             ui-autocomplete.rounded-search(
                 placeholder="Search for a label"
                 v-model="searchTerm"
@@ -11,7 +11,7 @@
         Loader(v-if="!loadedAll$")
         transition(name="fade")
             //- all the panel things
-            row.below-search-container(v-if="loadedAll$" align-v='top' align-h="space-between" padding='1rem' overflow="auto")
+            row.below-search-container(v-if="loadedAll$" align-v='top' align-h="space-between" overflow="auto")
                 //- waterfall style area
                 row(:wrap="true" flex-grow=1)
                     SearchCard(v-for="(label, labelName) in items" :label="label" :labelName="labelName" :key="labelName")

@@ -21,7 +21,7 @@ export default {
     data: ()=> ({
         chartOptions: {
             chart: {
-                width: 380,
+                width: "100%",
                 type: "donut",
             },
             dataLabels: {
@@ -30,10 +30,10 @@ export default {
             colors,
             responsive: [
                 {
-                    breakpoint: 480,
+                    // breakpoint: 480,
                     options: {
                         chart: {
-                            width: 200,
+                            // width: 200,
                         },
                         legend: {
                             show: false,

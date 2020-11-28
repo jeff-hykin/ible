@@ -63,7 +63,17 @@ export default RootComponent = {
     // global data
     // 
     data: ()=>({
-        filterAndSort: {},
+        needToLoad$: {
+            backend,
+        },
+        filterAndSort: {
+            label: null,
+            minlabelConfidence: null,
+            observer: null,
+            videoId: null,
+            kindOfObserver: 'Either',
+            validation: 'Either',
+        },
         selectedVideo: null,
         selectedLabel: null,
         selectedSegment: null,

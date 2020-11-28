@@ -23,7 +23,6 @@
 </template>
 
 <script>
-let { backend } = require("../iilvd-api")
 const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
 const { openPanel, takeover } = require("../templates/LeftSidePanel")
 let Fuse = require("fuse.js").default
@@ -52,18 +51,6 @@ export default {
         }
         // generate the UI for the labels right after mounting
         this.$rootHooks.watch.labels()
-        setTimeout(() => {
-            if (!this.loadedAll$) {
-                this.$toasted.show(`Are you on the A&M VPN?`).goAway(6500)
-                setTimeout(() => {
-                    this.$toasted.show(`If you are, then I think the Server might be down`).goAway(6500)
-                    this.$toasted.show(`(Complain to jeff.hykin@gmail.com)`).goAway(6500)
-                    setTimeout(()=>{
-                        this.$toasted.show(`I'll keep trying to connect in the meantime`).goAway(6500)
-                    }, 1600)
-                }, 1700)
-            }
-        }, 3500)
     },
     watch: {
         // when the search term changes
