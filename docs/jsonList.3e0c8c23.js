@@ -204,14 +204,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $e29cad = exports.default || module.exports;
+        var $896824 = exports.default || module.exports;
       
-      if (typeof $e29cad === 'function') {
-        $e29cad = $e29cad.options;
+      if (typeof $896824 === 'function') {
+        $896824 = $896824.options;
       }
     
         /* template */
-        Object.assign($e29cad, (function () {
+        Object.assign($896824, (function () {
           var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{attrs:{"json-list-fh3935":""}},[_vm._l((this.value),function(each,index){return [_c('jsonValue',{key:_vm.uniqueKeysBecauseVueIsDumb[index],attrs:{"initValue":each},on:{"changeValue":function($event){return _vm.elementValueChange(index, $event)},"delete":function($event){return _vm.deleteElement(index, $event)}}})]}),_vm._v(" "),_c('button',{attrs:{"add-button-fh3935":"","tabindex":"1"},on:{"click":_vm.addElement}},[_vm._v("\n        +\n    ")])],2)}
 var staticRenderFns = []
 
@@ -224,7 +224,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"_bundle_loader":"z1Am","./jsonValue.vue":[["Root.230ce54b.js","rUmP"],"Root.b262a6d1.css","iVU1"]}],"Bh1I":[function(require,module,exports) {
+},{"_bundle_loader":"z1Am","./jsonValue.vue":[["Root.312a2a0e.js","rUmP"],"Root.75f1b74e.css","iVU1"]}],"Bh1I":[function(require,module,exports) {
 var bundleURL = null;
 
 function getBundleURLCached() {
