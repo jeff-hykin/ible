@@ -72,7 +72,7 @@
 </template>
 
 <script>
-let { colors } = require("../utils")
+let { colors, debounce } = require("../utils")
 
 export default {
     components: {
@@ -81,6 +81,7 @@ export default {
         LabelLister: require("../organisms/LabelLister").default,
     },
     data: ()=>({
+        debouncedSubmitSearch:()=>{},
         colors,
         results: {
             videos: new Set(),
@@ -116,7 +117,10 @@ export default {
             },
         },
     }),
-
+    mounted() {
+        // wait half a sec before updating the content
+        this.debouncedSubmitSearch = debounce(this.submitSearch, 500)
+    },
     methods: {
         async submitSearch(){
             let backend = await this.backend
@@ -181,14 +185,12 @@ export default {
                 }
             }
             this.results = results
-            console.debug(`results is:`,results)
-            window.results = results
         },
     },
     rootHooks: {
         watch: {
             filterAndSort() {
-                setTimeout(this.submitSearch, 0)
+                this.debouncedSubmitSearch()
             }
         }
     }

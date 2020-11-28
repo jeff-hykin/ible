@@ -52,6 +52,25 @@ window.storageObject = new Proxy(window.localStorage, {
     },
 })
 
+function debounce(func, wait, immediate) {
+    var timeout
+    return function(...args) {
+        let context = this
+        let later = function() {
+            timeout = null
+            if (!immediate) {
+                func.apply(context, args)
+            }
+        }
+        let callNow = immediate && !timeout
+        clearTimeout(timeout)
+        timeout = setTimeout(later, wait)
+        if (callNow) {
+            func.apply(context, args)
+        }
+    }
+}
+
 function readFileAsString(files) {
     if (files.length === 0) {
         console.log('No file is selected')
@@ -84,6 +103,7 @@ module.exports = {
     readFileAsString,
     colors,
     getColor,
+    debounce,
     wrapIndex(val, list) {
         if (val < 0) {
             val = list.length + val

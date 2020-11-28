@@ -178,7 +178,7 @@ body {
     background: radial-gradient(circle, rgb(245, 245, 245) 0%, rgb(218, 218, 218) 100%);
 }
 .ui-fab--color-primary:hover {
-    background-color: #2196f3;
+    background-color: var(--material-blue);
 }
 body .ui-button {
     min-width: fit-content;
