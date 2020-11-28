@@ -15,7 +15,7 @@ import pages from "./pages/*.vue"
 import {getColor} from "./utils"
 
 import { Router } from './plugins/router-plugin'
-const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
+let { backend } = require("./iilvd-api")
 
 // make sure home page exists
 if (!("Home" in pages)) {
@@ -32,6 +32,9 @@ export default RootComponent = {
         LeftSidePanel: require("./templates/LeftSidePanel").default,
         RightSidePanel: require("./templates/RightSidePanel").default,
     },
+    mixins: [
+        require("./mixins/loader"),
+    ],
     // 
     // routes
     // 
@@ -60,12 +63,16 @@ export default RootComponent = {
     // global data
     // 
     data: ()=>({
+        filterAndSort: {},
         selectedVideo: null,
         selectedLabel: null,
         selectedSegment: null,
         labels: {},
         videos: {},
         currentTime: null,
+        needToLoad$: {
+            backend,
+        },
     }),
     watch: {
         selectedLabel(newValue, oldValue) {
@@ -80,6 +87,18 @@ export default RootComponent = {
         window.$root = this // for debugging
         // get the labels ASAP
         this.retrieveLabels()
+        setTimeout(() => {
+            if (!this.loadedAll$) {
+                this.$toasted.show(`Are you on the A&M VPN?`).goAway(6500)
+                setTimeout(() => {
+                    this.$toasted.show(`If you are, then I think the Server might be down`).goAway(6500)
+                    this.$toasted.show(`(Complain to jeff.hykin@gmail.com)`).goAway(6500)
+                    setTimeout(()=>{
+                        this.$toasted.show(`I'll keep trying to connect in the meantime`).goAway(6500)
+                    }, 1600)
+                }, 1700)
+            }
+        }, 3500)
     },
     methods: {
         getSelectedLabelName() {
@@ -107,19 +126,17 @@ export default RootComponent = {
             return output
         },
         getCachedVideoObject(id) {
-            return logBlock({name: "getCachedVideoObject"}, ()=>{
-                console.debug(`id is:`,id)
-                // if video isn't cached
-                if (!(this.$root.videos[id] instanceof Object)) {
-                    // then cache it
-                    this.$root.videos[id] = {}
-                }
-                // ensure the id didn't get messed up
-                this.$root.videos[id].$id = id
-                console.debug(`this.$root.videos[id] is:`,JSON.stringify(this.$root.videos[id],0,4))
-                // return the cached video
-                return this.$root.videos[id]
-            })
+            console.debug(`id is:`,id)
+            // if video isn't cached
+            if (!(this.$root.videos[id] instanceof Object)) {
+                // then cache it
+                this.$root.videos[id] = {}
+            }
+            // ensure the id didn't get messed up
+            this.$root.videos[id].$id = id
+            console.debug(`this.$root.videos[id] is:`,JSON.stringify(this.$root.videos[id],0,4))
+            // return the cached video
+            return this.$root.videos[id]
         },
         getNamesOfSelectedLabels() {
             return Object.entries(this.$root.labels).filter(([eachKey, eachValue])=>(eachValue.selected)).map(([eachKey, eachValue])=>(eachKey))
