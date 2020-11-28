@@ -1,6 +1,6 @@
 <template lang="pug">
-    row.search-summary(align-v="top" align-h="space-around" padding="4rem")
-        column.card.search-observation(align-h="left")
+    row.search-summary(align-v="top" align-h="space-around" padding="4rem" height="min-content")
+        column.card.search-observation(align-h="left" min-height="fit-content")
             h5
                 | Search Filters
             br
@@ -41,8 +41,8 @@
         
         
         column.card(width="32rem")
-            h3(style="color: gray; font-weight: 100; margin-top: -10px; border-bottom: gray solid 2px;")
-                | Results
+            h3(style="ont-weight: 100; margin-top: -10px; border-bottom: black solid 2px;")
+                | Stats
             br
             br
             column(width="90%" align-h="left" height="4rem" align-v="space-between")
@@ -196,9 +196,12 @@ export default {
     & > .card
         justify-content: flex-start
         margin: 0.5rem
-        height: 70rem
+        height: 32rem
         overflow: auto
-
+        background: hsl(210 13% 83% / 1)
+        
+    background: radial-gradient(circle, hsl(210 13% 73% / 1) 0%, hsl(210 13% 55% / 1) 100%)
+    
 .pie-wrapper
     width: 100%
     
