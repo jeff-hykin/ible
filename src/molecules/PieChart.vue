@@ -1,5 +1,5 @@
 <template>
-    <VueApexCharts type="pie" :options="{...chartOptions, labels}" :series="series"></VueApexCharts>  
+    <VueApexCharts type="pie" :options="{...chartOptions, labels, colors}" :series="series"></VueApexCharts>  
 </template>
 
 <script>
@@ -14,10 +14,14 @@ export default {
     components: {
         VueApexCharts: VueApexCharts,
     },
-    props: [
-        "series",
-        "labels",
-    ],
+    props: {
+        series: Array,
+        labels: Array,
+        colors: {
+            type: Array,
+            default: ()=>colors,
+        },
+    },
     data: ()=> ({
         chartOptions: {
             chart: {
@@ -27,13 +31,10 @@ export default {
             dataLabels: {
                 enabled: true,
             },
-            colors,
             responsive: [
                 {
-                    // breakpoint: 480,
                     options: {
                         chart: {
-                            // width: 200,
                         },
                         legend: {
                             show: false,

@@ -53,8 +53,9 @@
             br
             .pie-wrapper
                 PieChart(
-                    :series="[results.counts.fromHuman, results.uncheckedObservations.length, results.counts.rejected, results.counts.confirmed, results.counts.disagreement]"
+                    :series="[results.counts.fromHuman, results.counts.rejected, results.uncheckedObservations.length, results.counts.confirmed, results.counts.disagreement]"
                     :labels="['Human','Rejected','Unchecked','Confirmed', 'Disagreement']"
+                    :colors="[ colors.blue, colors.red, colors.purple, colors.green, colors.yellow, ]"
                 )
             br
             h5
@@ -71,6 +72,8 @@
 </template>
 
 <script>
+let { colors } = require("../utils")
+
 export default {
     components: {
         UiSwitch: require("../atoms/UiSwitch").default,
@@ -78,6 +81,7 @@ export default {
         LabelLister: require("../organisms/LabelLister").default,
     },
     data: ()=>({
+        colors,
         results: {
             videos: new Set(),
             uncheckedObservations: [0],
@@ -171,7 +175,7 @@ export default {
                     if (each.rejectedBySomeone && each.confirmedBySomeone) {
                         results.counts.disagreement += 1
                     }
-                    if (!(each.rejectedBySomeone || each.confirmedBySomeone)) {
+                    if (each.rejectedBySomeone !== true && each.confirmedBySomeone !== true) {
                         results.uncheckedObservations.push(each)
                     }
                 }
