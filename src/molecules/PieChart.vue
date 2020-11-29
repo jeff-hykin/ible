@@ -1,5 +1,5 @@
 <template lang="pug">
-    .pie-wrapper(ref="pieWrapper" :style="`min-height: ${heightOfWrapper}px`")
+    div(asdfasdj0839i5t ref="pieWrapper" :style="`min-height: ${heightOfWrapper}px`")
         .pie-middle(ref="pieMiddleWrapper" :style="calculateScaling()")
                 VueApexCharts(asdfasdj0839i5t type="donut" :options="{...chartOptions, labels, colors}" :series="series")
 </template>
@@ -148,14 +148,10 @@ export default {
     methods: {
         // a hack to fix the terrible scaling Apex Charts has
         calculateScaling(){
-            const scale = 0.8
-            const baseNumber = 512
             let outerWidth = this.$refs.pieWrapper && this.$refs.pieWrapper.clientWidth
             let innerWidth = this.$refs.pieMiddleWrapper && this.$refs.pieMiddleWrapper.clientWidth
             let scaleNeeded = outerWidth/innerWidth
             this.heightOfWrapper = this.$refs.pieMiddleWrapper && (this.$refs.pieMiddleWrapper.clientHeight * scaleNeeded)
-            // let adjustmentAmount = this.$refs.pieWrapper&&(this.$refs.pieWrapper.clientWidth*this.scaler*scale)/baseNumber
-            // let adjustmentPercent = (1-adjustmentAmount)*100
             return `
                 --scaler: ${scaleNeeded};
             `
@@ -172,13 +168,14 @@ export default {
     font: 15pt;
     filter: none;
 }
-.pie-wrapper {
+[asdfasdj0839i5t] {
     width: 100%;
     overflow: hidden;
 }
 .pie-middle {
-    min-width: 512px;
-    max-width: 512px;
+    --standard-size: 512px;
+    min-width: var(--standard-size);
+    max-width: var(--standard-size);
     transform: translate(var(--percent), var(--percent)) scale(var(--scaler));
     --percent: calc(calc(calc(1 - var(--scaler)) * 50%) * -1);
 }
