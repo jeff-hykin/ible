@@ -24,10 +24,8 @@ export default {
         suggestions: [],
     }),
     mounted() {
-        window.centerStage = this
         // add some default suggestions
         this.suggestions = storageObject.cachedVideoIds
-        
     },
     watch: {
         suggestions(newValue) {
@@ -110,12 +108,12 @@ export default {
 
 <style lang='sass' scoped>
 .rounded-search
-        width: 25rem
-        max-width: 85%
-        margin: 1.2rem
-        padding: 0.7rem 2rem 1rem
-        background-color: white
-        border-radius: 2rem
-        height: fit-content
-        box-shadow: var(--shadow-1)
+    width: 25rem
+    max-width: 85%
+    margin: 1.2rem
+    padding: 0.7rem 2rem 1rem
+    background-color: white
+    border-radius: 2rem
+    height: fit-content
+    box-shadow: var(--shadow-1)
 </style>

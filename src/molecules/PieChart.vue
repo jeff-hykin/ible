@@ -163,6 +163,7 @@ export default {
 <style>
 .apexcharts-text.apexcharts-datalabel-label {
     font-size: 15pt;
+    fill: #373d3f !important;
 }
 [asdfasdj0839i5t] .apexcharts-text.apexcharts-pie-label {
     font: 15pt;
@@ -170,7 +171,7 @@ export default {
 }
 [asdfasdj0839i5t] {
     width: 100%;
-    overflow: hidden;
+    overflow: visible;
 }
 .pie-middle {
     --standard-size: 512px;

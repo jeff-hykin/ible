@@ -6,32 +6,17 @@
         align-v="top"
         overflow="auto"
     )
-        //- search for video
-        column.top-bar-container(v-if='!$root.selectedVideo' key="search" width="100%" padding="1rem")
-            ui-autocomplete.rounded-search(
-                placeholder="Enter YouTube url or Video ID"
-                @focus="selectSearchText"
-                @select="videoSelect"
-                @change="videoSelect"
-                v-model="searchTerm"
-                :suggestions="suggestions"
-            )
+        WrappedTopSearch
         
         column(v-if='!$root.selectedVideo' width="100%" height="100vh" flex-shrink="1" color="gray")
             h5 No Video Selected
             
         transition(name="fade")
-            row.center-stage(v-if='$root.selectedVideo' align-v="top" align-h="center")
-                column.main-container( flex-grow=1 align-v="top")
-                    column.top-bar-container(v-if='$root.selectedVideo' key="search" width="100%" padding="1rem" margin-bottom="2.5rem")
-                        ui-autocomplete.rounded-search(
-                            placeholder="Enter YouTube url or Video ID"
-                            @focus="selectSearchText"
-                            @select="videoSelect"
-                            @change="videoSelect"
-                            v-model="searchTerm"
-                            :suggestions="suggestions"
-                        )
+            row.center-stage(v-if='$root.selectedVideo' align-v="top" align-h="center" padding-top="6rem")
+                column.side-container(v-show='$root.selectedVideo' align-v="top" padding-top="3rem" overflow="visible" min-height="50rem" width="fit-content")
+                    ObservationEditor
+                    InfoSection.info-section
+                column.main-container(flex-grow=1 align-v="top")
                     row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top" :opacity='$root.selectedVideo? 1 : 0')
                         //- Video area
                         column(align-v="top").video-width-sizer
@@ -58,14 +43,11 @@
                                 SegmentDisplay(:segmentsInfo="segmentsInfo" :jumpSegment="jumpSegment")
                                 //- NEXT
                                 SideButton.right-side-button(right @click='incrementIndex')
-                column.side-container(v-show='$root.selectedVideo' align-v="top" padding-top="calc(12vh + 3rem)" overflow="visible" min-height="50rem" width="fit-content")
-                    ObservationEditor
-                    InfoSection.info-section
         
 </template>
 
 <script>
-const { wrapIndex, storageObject } = require('../utils')
+const { wrapIndex } = require('../utils')
 const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
 
 const generalTimeoutFrequency = 50 // ms 
@@ -79,9 +61,6 @@ const video = {
     IS_CUED: 5,
 }
 
-// make sure cachedVideoIds exists as an Array
-storageObject.cachedVideoIds || (storageObject.cachedVideoIds = [])
-
 export default {
     props: [],
     components: {
@@ -89,10 +68,9 @@ export default {
         InfoSection: require("../molecules/InfoSection").default,
         ObservationEditor: require("../organisms/ObservationEditor").default,
         SegmentDisplay: require("../organisms/SegmentDisplay").default,
+        WrappedTopSearch: require("../organisms/WrappedTopSearch").default,
     },
     data: ()=>({
-        searchTerm: null,
-        suggestions: [],
         player: null,
         
         videoIsReady: false,
@@ -318,9 +296,6 @@ export default {
     },
     mounted() {
         window.centerStage = this
-        // add some default suggestions
-        this.suggestions = storageObject.cachedVideoIds
-        
     },
     updated() {
         // the player reference doesn't exist till after update
@@ -339,7 +314,7 @@ export default {
     },
     windowListeners: {
         keydown(eventObj) {
-            console.debug(`EVENT: keydown: ${eventObj.key}`)
+            // console.debug(`EVENT: keydown: ${eventObj.key}`)
             if (eventObj.target == this.$el || eventObj.target == document.body) {
                 // 
                 // key controls
@@ -456,35 +431,6 @@ export default {
         }
     },
     watch: {
-        suggestions(newValue) {
-            // save video id suggestions to local storage
-            storageObject.cachedVideoIds = newValue
-        },
-        // when the search term changes
-        async searchTerm(value) {
-            const minNumberOfCharactersBeforeSearch = 1
-            // if no search term
-            if (typeof value != 'string' || value.trim().length <= minNumberOfCharactersBeforeSearch) {
-                // load all suggestions from storage if search isn't long enough
-                this.suggestions = storageObject.cachedVideoIds
-            } else {
-                // add results from the database
-                let possibleVideoIds = await (await this.backend).mongoInterface.getAll({
-                    from: "videos",
-                    where: [
-                        {
-                            hiddenValueOf: ["_id"],
-                            matches: `^${value.trim()}`,
-                        }
-                    ],
-                    forEach:{
-                        extractHidden: [ '_id']
-                    },
-                })
-                console.debug(`setting suggestions`)
-                this.suggestions = [...new Set(possibleVideoIds.concat(this.suggestions))]
-            }
-        }
     },
     methods: {
         videoWasPaused(...args) {
@@ -510,55 +456,6 @@ export default {
             setTimeout(() => {
                 this.$root.labels[labelName] = actualValue
             }, generalTimeoutFrequency)
-        },
-        extractVideoIdIfPossible(newVideoId) {
-            try {
-                if (newVideoId.match(/.*www\.youtube\.com/)) {
-                    return newVideoId.match(/.+(?:\?|&)v=(.{11})/)[1]
-                } else if (newVideoId.match(/.*youtu\.be\//)) {
-                    return newVideoId.match(/.*youtu.be\/(.{11})/)[1]
-                }
-            } catch (error) {}
-            return newVideoId
-        },
-        selectSearchText(eventObject) {
-            console.debug(`eventObject is:`,eventObject)
-            eventObject.target.select()
-        },
-        videoSelect() {
-            console.log(`#`)
-            console.log(`#`)
-            console.log(`# vid select`)
-            console.log(`#`)
-            console.log(`#`)
-            let newVideoId = this.searchTerm.trim()
-            // if search empty do nothing
-            if (newVideoId.length == 0) {
-                return
-            }
-            newVideoId = this.extractVideoIdIfPossible(newVideoId)
-            console.debug(`newVideoId is:`,newVideoId)
-            if (newVideoId == this.$root.getVideoId()) {
-                this.$toasted.show(`Video is already open`).goAway(2500)
-            } else {
-                const currentFixedSizeOfYouTubeVideoId = 11 // This is not guarenteed to stay this way forever
-                if (newVideoId.length == currentFixedSizeOfYouTubeVideoId) {
-                    // pushing searched video route
-                    this.$router.push({name: "video", params: { videoId: newVideoId, labelName: this.$route.params.labelName } })
-                } else {
-                    this.$toasted.show(`It looks like that video id isn't valid\n(its not 11 characters)\nWould you like to try and load it anyways?`, {
-                        keepOnHover:true,
-                        action:[
-                            {
-                                text : 'Load Anyways',
-                                onClick : (eventData, toastObject) => {
-                                    this.$router.push({name: "video", params: { videoId: newVideoId, labelName: this.$route.params.labelName } })
-                                },
-                            },
-                        ]
-                    })
-                }
-            }
         },
         async attemptToSetupSegments() {
             await logBlock({name: "attemptToSetupSegments"}, async ()=>{
@@ -780,7 +677,6 @@ export default {
         transition: opacity ease 0.5s
         width: fit-content
         min-width: fit-content
-        padding-left: 8rem
         
         .below-video-search
             width: 100%

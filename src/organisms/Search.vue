@@ -1,5 +1,5 @@
 <template lang="pug">
-    column.search(align-v="top")
+    column.search(align-v="top" width="100%")
         row.video-wrapper(style="min-width: 100%; margin-top: 1rem;")
             VideoIdSearch
         row.search-summary(
@@ -57,24 +57,27 @@
                 row.text-grid(:wrap="true" align-h="left")
                     h5
                         | Total Videos: {{results.videos.size}}
+                    //- h5
+                    //-     | Total Clips: {{results.counts.total}}
                     h5
-                        | Total Clips: {{results.counts.total}}
-                    h5
-                        | False Positive Rate: {{falsePositiveRate}}
+                        | False Positive Rate: {{falsePositiveRate()}}
                 br
-                PieChart(
-                    :series="[results.counts.fromHuman, results.counts.rejected, results.uncheckedObservations.length, results.counts.confirmed, results.counts.disagreement]"
-                    :labels="['Human','Rejected','Unchecked','Confirmed', 'Disagreement']"
-                    :colors="[ colors.blue, colors.red, colors.purple, colors.green, colors.yellow, ]"
-                )
+                br
+                .pie-wrapper(v-if="results.finishedComputing")
+                    PieChart(
+                        :series="[results.counts.fromHuman, results.counts.rejected, results.uncheckedObservations.length, results.counts.confirmed, results.counts.disagreement]"
+                        :labels="['Human','Rejected','Unchecked','Confirmed', 'Disagreement']"
+                        :colors="[ colors.blue, colors.red, colors.purple, colors.green, colors.yellow, ]"
+                    )
 
-                br
                 h5
                     | Labels
-                PieChart(
-                    :series="Object.values(results.labels)"
-                    :labels="Object.keys(results.labels)"
-                )
+                br
+                .pie-wrapper(v-if="results.finishedComputing")
+                    PieChart(
+                        :series="Object.values(results.labels)"
+                        :labels="Object.keys(results.labels)"
+                    )
             
             column.card(width="26rem" padding="0.6rem 1rem")
                 LabelLister
@@ -134,16 +137,17 @@ export default {
         this.debouncedSubmitSearch = debounce(this.submitSearch, 500)
     },
     computed: {
+    },
+    methods: {
         falsePositiveRate() {
             try {
-                return (results.counts.rejected/results.counts.confirmed).toFixed(2)
+                let answer = this.results.counts.rejected/this.results.counts.confirmed
+                return answer.toFixed(2)
             } catch (error) {
                 
             }
             return NaN
-        }
-    },
-    methods: {
+        },
         async submitSearch(){
             let backend = await this.backend
             let where = []
@@ -252,9 +256,26 @@ export default {
 
     .ui-textbox
         width: 100% 
+    
+    .video-wrapper .ui-autocomplete
+        box-shadow: var(--shadow-3)
+    
+    .pie-wrapper
+        width: 90%
+        position: relative
+        overflow: visible
+    
+    ::v-deep.label-search 
+        .ui-autocomplete
+            background-color: rgba(255, 255, 255, 0.37)
         
-    ::v-deep.search-card.good-column
-        color: rgb(0 0 0 / 0.37)
-        border-color: rgb(0 0 0 / 0.17)
+        .search-card.good-column
+            color: rgb(0 0 0 / 0.37)
+            border-color: rgb(0 0 0 / 0.17)
+            
+            .good-column.show-samples
+                border-radius: 12px
+                margin-right: 5px
+                margin-top: 5px
 
 </style>
