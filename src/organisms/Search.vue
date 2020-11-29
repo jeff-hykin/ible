@@ -56,16 +56,16 @@
                 br
                 row.text-grid(:wrap="true" align-h="left")
                     h5
-                        | Total Videos: {{results.videos.size}}
+                        | Total Videos: {{$root.searchResults.videos.size}}
                     //- h5
-                    //-     | Total Clips: {{results.counts.total}}
+                    //-     | Total Clips: {{$root.searchResults.counts.total}}
                     h5
                         | False Positive Rate: {{falsePositiveRate()}}
                 br
                 br
-                .pie-wrapper(v-if="results.finishedComputing")
+                .pie-wrapper(v-if="$root.searchResults.finishedComputing")
                     PieChart(
-                        :series="[results.counts.fromHuman, results.counts.rejected, results.uncheckedObservations.length, results.counts.confirmed, results.counts.disagreement]"
+                        :series="[$root.searchResults.counts.fromHuman, $root.searchResults.counts.rejected, $root.searchResults.uncheckedObservations.length, $root.searchResults.counts.confirmed, $root.searchResults.counts.disagreement]"
                         :labels="['Human','Rejected','Unchecked','Confirmed', 'Disagreement']"
                         :colors="[ colors.blue, colors.red, colors.purple, colors.green, colors.yellow, ]"
                     )
@@ -73,10 +73,10 @@
                 h5
                     | Labels
                 br
-                .pie-wrapper(v-if="results.finishedComputing")
+                .pie-wrapper(v-if="$root.searchResults.finishedComputing")
                     PieChart(
-                        :series="Object.values(results.labels)"
-                        :labels="Object.keys(results.labels)"
+                        :series="Object.values($root.searchResults.labels)"
+                        :labels="Object.keys($root.searchResults.labels)"
                     )
             
             column.card(width="26rem" padding="0.6rem 1rem")
@@ -97,40 +97,6 @@ export default {
     data: ()=>({
         debouncedSubmitSearch:()=>{},
         colors,
-        results: {
-            finishedComputing: false,
-            videos: new Set(),
-            uncheckedObservations: [0],
-            // this hardcoded value is only for initilization and is
-            // immediately replaced with the result of a backend call
-            labels: {
-                "Uncertain": 2,
-                "Happy": 36,
-                "Neutral": 13,
-                "Surprise": 2,
-                "Disgust": 2,
-                "Contempt": 2,
-                "Anger": 3,
-                "non-face": 1,
-                "Sad": 2,
-                "headache": 182,
-                "Smoking": 49,
-                "Shaking Head": 21,
-                "Fall": 119,
-                "Angry": 14,
-                "Hand Rotation": 3,
-                "Hand Swipe": 11,
-                "Heart-Attack": 27,
-                "chest pain": 29
-            },
-            counts: {
-                total: 1,
-                fromHuman: 0,
-                rejected: 0,
-                confirmed: 0,
-                disagreement: 0,
-            },
-        },
     }),
     mounted() {
         // wait half a sec before updating the content
@@ -141,7 +107,7 @@ export default {
     methods: {
         falsePositiveRate() {
             try {
-                let answer = this.results.counts.rejected/this.results.counts.confirmed
+                let answer = this.$root.searchResults.counts.rejected/this.$root.searchResults.counts.confirmed
                 return answer.toFixed(2)
             } catch (error) {
                 
@@ -211,13 +177,13 @@ export default {
                     }
                 }
             }
-            this.results = results
+            this.$root.searchResults = results
         },
     },
     rootHooks: {
         watch: {
             filterAndSort() {
-                this.results.finishedComputing = false
+                this.$root.searchResults.finishedComputing = false
                 this.debouncedSubmitSearch()
             }
         }

@@ -12,10 +12,7 @@
             h5 No Video Selected
             
         transition(name="fade")
-            row.center-stage(v-if='$root.selectedVideo' align-v="top" align-h="center" padding-top="6rem")
-                column.side-container(v-show='$root.selectedVideo' align-v="top" padding-top="3rem" overflow="visible" min-height="50rem" width="fit-content")
-                    ObservationEditor
-                    InfoSection.info-section
+            row.center-stage(v-if='$root.selectedVideo' align-v="top" align-h="center" padding-top="8rem")
                 column.main-container(flex-grow=1 align-v="top")
                     row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top" :opacity='$root.selectedVideo? 1 : 0')
                         //- Video area
@@ -43,13 +40,13 @@
                                 SegmentDisplay(:segmentsInfo="segmentsInfo" :jumpSegment="jumpSegment")
                                 //- NEXT
                                 SideButton.right-side-button(right @click='incrementIndex')
-        
+                column.side-container(v-show='$root.selectedVideo' align-v="top" padding-top="3rem" overflow="visible" min-height="50rem" width="fit-content")
+                    ObservationEditor
+                    InfoSection.info-section
 </template>
-
 <script>
 const { wrapIndex } = require('../utils')
 const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
-
 const generalTimeoutFrequency = 50 // ms 
 const video = {
     IS_LOADING: -1,
@@ -60,7 +57,6 @@ const video = {
     HASNT_EVEN_INITILIZED: null,
     IS_CUED: 5,
 }
-
 export default {
     props: [],
     components: {
@@ -69,6 +65,8 @@ export default {
         ObservationEditor: require("../organisms/ObservationEditor").default,
         SegmentDisplay: require("../organisms/SegmentDisplay").default,
         WrappedTopSearch: require("../organisms/WrappedTopSearch").default,
+        Card: require("../molecules/Card").default,
+        VideoLister: require("../organisms/VideoLister").default,
     },
     data: ()=>({
         player: null,
@@ -677,6 +675,7 @@ export default {
         transition: opacity ease 0.5s
         width: fit-content
         min-width: fit-content
+        padding-left: 8rem
         
         .below-video-search
             width: 100%

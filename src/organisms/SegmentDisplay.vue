@@ -36,9 +36,9 @@
             container(
                 v-if="eachLabelName != '(No Segments)'"
                 v-for="(eachLevel, eachLabelName) in $root.labels"
-                :style="`--label-color: ${$root.labels[eachLabelName].selected ? $root.labels[eachLabelName].color : 'gray'}`"
+                :style="`--label-color: ${$root.labels[eachLabelName].selected ? $root.labels[eachLabelName].color : 'gray'}; align-items: flex-start;`"
             )
-                ui-checkbox(v-model="$root.labels[eachLabelName].selected" @change="toggleLabel(eachLabelName)")
+                ui-checkbox(v-model="$root.labels[eachLabelName].selected" @change="toggleLabel(eachLabelName)" style="align-items: flex-start;")
                     | {{eachLabelName}}
 
 </template>

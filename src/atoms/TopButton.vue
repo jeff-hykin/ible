@@ -3,13 +3,10 @@
         span
             slot
 </template>
-
 <script>
 export default {
-
 }
 </script>
-
 <style lang="sass" scoped>
 [top-button-kj7bgi359860]
     --size: 4rem
