@@ -60,7 +60,7 @@
                     //- h5
                     //-     | Total Clips: {{$root.searchResults.counts.total}}
                     h5
-                        | False Positive Rate: {{falsePositiveRate()}}
+                        | False Positive Ratio: {{falsePositiveRatio()}}
                 br
                 br
                 .pie-wrapper(v-if="$root.searchResults.finishedComputing")
@@ -105,7 +105,7 @@ export default {
     computed: {
     },
     methods: {
-        falsePositiveRate() {
+        falsePositiveRatio() {
             try {
                 let answer = this.$root.searchResults.counts.rejected/this.$root.searchResults.counts.confirmed
                 return answer.toFixed(2)
