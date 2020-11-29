@@ -178,6 +178,7 @@ export default {
         overflow: visible
         transition: all ease 0.5s
         .segment
+            color: var(--color)
             position: absolute
             min-height: 1.4rem
             background-color: var(--blue)
