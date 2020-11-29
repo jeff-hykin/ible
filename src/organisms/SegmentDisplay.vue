@@ -19,6 +19,7 @@
                 :style="`--color: ${$root.labels[eachSegment.observation.label].color}`"
                 @click="jumpSegment(eachSegment.$displayIndex)"
             )
+                | {{computeSymbol(eachSegment.confirmedBySomeone, eachSegment.rejectedBySomeone)}}
                 ui-tooltip(position="left" animation="fade")
                     | label: {{ eachSegment.observation.label }}
                     br
@@ -62,6 +63,15 @@ export default {
     mounted() {
     },
     methods: {
+        computeSymbol(confirmed, rejected) {
+            if (confirmed === true && rejected !== true) {
+                return "✓"
+            } else if (confirmed !== true && rejected === true) {
+                return "✘"
+            } else {
+                return ""
+            }
+        },
         toggleAllLabels() {
             // toggle
             this.allLabelsOn = !this.allLabelsOn
