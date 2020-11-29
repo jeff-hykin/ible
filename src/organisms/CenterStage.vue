@@ -67,7 +67,6 @@
 <script>
 const { wrapIndex, storageObject } = require('../utils')
 const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
-const Fuse = require("fuse.js").default
 
 const generalTimeoutFrequency = 50 // ms 
 const video = {

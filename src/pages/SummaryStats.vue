@@ -1,74 +1,84 @@
 <template lang="pug">
-    row.search-summary(align-v="top" align-h="space-around" padding="4rem" height="min-content")
-        column.card.search-observation(align-h="left" min-height="fit-content")
-            h5
-                | Search Filters
-            br
-            ui-textbox(
-                label="Label"
-                placeholder="(Any)"
-                v-model="$root.filterAndSort.label"
-            )
-            ui-textbox(
-                label="Minium Label Confidence"
-                placeholder="(Any)"
-                v-model="$root.filterAndSort.minlabelConfidence"
-            )
-            ui-textbox(
-                label="Observer (username)"
-                placeholder="(Any)"
-                v-model="$root.filterAndSort.observer"
-            )
-            ui-textbox(
-                label="Video Id"
-                placeholder="(Any)"
-                v-model="$root.filterAndSort.videoId"
-            )
-            br
-            ui-radio-group(
-                name="Kind of Observer"
-                :options="['Only Humans', 'Either', 'Only Robots']"
-                v-model="$root.filterAndSort.kindOfObserver"
-            )
-                | Kind of Observer
-            br
-            ui-radio-group(
-                name="validation"
-                :options="['Only Confirmed', 'Either', 'Only Rejected']"
-                v-model="$root.filterAndSort.validation"
-            )
-                | Validation
-        
-        
-        column.card(width="32rem")
-            h3(style="ont-weight: 100; margin-top: -10px; border-bottom: black solid 2px;")
-                | Stats
-            br
-            br
-            column(width="90%" align-h="left" height="4rem" align-v="space-between")
+    column.search(align-v="top")
+        row.video-wrapper(style="min-width: 100%; margin-top: 1rem;")
+            VideoIdSearch
+        row.search-summary(
+            align-v="top"
+            align-h="space-around"
+            padding="1rem 4rem"
+            height="min-content"
+            width="100%"
+        )
+            column.card.search-observation(align-h="left" min-height="fit-content")
                 h5
-                    | Total Videos: {{results.videos.size}}
-                h5
-                    | Total Clips: {{results.counts.total}}
-            br
-            .pie-wrapper
+                    | Search Filters
+                br
+                ui-textbox(
+                    label="Label"
+                    placeholder="(Any)"
+                    v-model="$root.filterAndSort.label"
+                )
+                ui-textbox(
+                    label="Minium Label Confidence"
+                    placeholder="(Any)"
+                    v-model="$root.filterAndSort.minlabelConfidence"
+                )
+                ui-textbox(
+                    label="Observer (username)"
+                    placeholder="(Any)"
+                    v-model="$root.filterAndSort.observer"
+                )
+                ui-textbox(
+                    label="Video Id"
+                    placeholder="(Any)"
+                    v-model="$root.filterAndSort.videoId"
+                )
+                br
+                ui-radio-group(
+                    name="Kind of Observer"
+                    :options="['Only Humans', 'Either', 'Only Robots']"
+                    v-model="$root.filterAndSort.kindOfObserver"
+                )
+                    | Kind of Observer
+                br
+                ui-radio-group(
+                    name="validation"
+                    :options="['Only Confirmed', 'Either', 'Only Rejected']"
+                    v-model="$root.filterAndSort.validation"
+                )
+                    | Validation
+            
+            
+            column.card(width="32rem" flex-grow="0.3")
+                h3(style="ont-weight: 100; margin-top: -10px; border-bottom: black solid 2px;")
+                    | Stats
+                br
+                br
+                row.text-grid(:wrap="true" align-h="left")
+                    h5
+                        | Total Videos: {{results.videos.size}}
+                    h5
+                        | Total Clips: {{results.counts.total}}
+                    h5
+                        | False Positive Rate: {{falsePositiveRate}}
+                br
                 PieChart(
                     :series="[results.counts.fromHuman, results.counts.rejected, results.uncheckedObservations.length, results.counts.confirmed, results.counts.disagreement]"
                     :labels="['Human','Rejected','Unchecked','Confirmed', 'Disagreement']"
                     :colors="[ colors.blue, colors.red, colors.purple, colors.green, colors.yellow, ]"
                 )
-            br
-            h5
-                | Labels
-            .pie-wrapper
+
+                br
+                h5
+                    | Labels
                 PieChart(
                     :series="Object.values(results.labels)"
                     :labels="Object.keys(results.labels)"
                 )
-        
-        column.card(width="26rem" padding="0.6rem 1rem")
-            LabelLister
-        
+            
+            column.card(width="26rem" padding="0.6rem 1rem")
+                LabelLister
+            
 </template>
 
 <script>
@@ -78,12 +88,14 @@ export default {
     components: {
         UiSwitch: require("../atoms/UiSwitch").default,
         PieChart: require("../molecules/PieChart").default,
+        VideoIdSearch: require("../molecules/VideoIdSearch").default,
         LabelLister: require("../organisms/LabelLister").default,
     },
     data: ()=>({
         debouncedSubmitSearch:()=>{},
         colors,
         results: {
+            finishedComputing: false,
             videos: new Set(),
             uncheckedObservations: [0],
             // this hardcoded value is only for initilization and is
@@ -121,6 +133,16 @@ export default {
         // wait half a sec before updating the content
         this.debouncedSubmitSearch = debounce(this.submitSearch, 500)
     },
+    computed: {
+        falsePositiveRate() {
+            try {
+                return (results.counts.rejected/results.counts.confirmed).toFixed(2)
+            } catch (error) {
+                
+            }
+            return NaN
+        }
+    },
     methods: {
         async submitSearch(){
             let backend = await this.backend
@@ -149,6 +171,7 @@ export default {
             })
             console.debug(`observationEntries is:`,observationEntries)
             let results = {
+                finishedComputing: true,
                 uncheckedObservations: [],
                 rejected: [],
                 labels: {},
@@ -190,6 +213,7 @@ export default {
     rootHooks: {
         watch: {
             filterAndSort() {
+                this.results.finishedComputing = false
                 this.debouncedSubmitSearch()
             }
         }
@@ -198,30 +222,39 @@ export default {
 </script>
 
 <style lang="sass" scoped>
-.search-summary
-    & > .card
-        justify-content: flex-start
-        margin: 0.5rem
-        height: 32rem
-        overflow: auto
-        background: hsl(210 13% 83% / 1)
+
+.search
+    .text-grid
+        h5
+            width: 50%
+            min-width: fit-content
+            margin-top: 9px
         
     background: radial-gradient(circle, hsl(210 13% 73% / 1) 0%, hsl(210 13% 55% / 1) 100%)
-    
-.pie-wrapper
-    width: 100%
-    
-.card
-    box-shadow: var(--shadow-1)
-    padding: 1.7rem 2.4rem
-    background: white
-    border-radius: 1rem
-    min-width: 19rem
-    
-.search-observation
-    min-width: 19rem
+    .search-summary
+        & > .card
+            justify-content: flex-start
+            margin: 0.5rem
+            height: 32rem
+            overflow: auto
+            background: hsl(210 13% 83% / 1)
+        
+        
+    .card
+        box-shadow: var(--shadow-1)
+        padding: 1.7rem 2.4rem
+        background: white
+        border-radius: 1rem
+        min-width: 19rem
+        
+    .search-observation
+        min-width: 19rem
 
-.ui-textbox
-    width: 100% 
+    .ui-textbox
+        width: 100% 
+        
+    ::v-deep.search-card.good-column
+        color: rgb(0 0 0 / 0.37)
+        border-color: rgb(0 0 0 / 0.17)
 
 </style>
