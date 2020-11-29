@@ -57,10 +57,9 @@ export default {
         position: absolute
         color: gray
         font-size: 10pt
-
+            
     &:hover
         box-shadow: var(--shadow-3) !important
-        
         .show-samples
             transition: opacity 0.25s ease-out
             opacity: 1

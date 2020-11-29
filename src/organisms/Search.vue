@@ -182,6 +182,13 @@ export default {
     },
     rootHooks: {
         watch: {
+            selectedLabel() {
+                console.debug(`this.$root.selectedLabel.name is:`,this.$root.selectedLabel.name)
+                let labelName = this.$root.selectedLabel && this.$root.selectedLabel.name
+                if (labelName) {
+                    this.$root.filterAndSort.label = labelName
+                }
+            },
             filterAndSort() {
                 this.$root.searchResults.finishedComputing = false
                 this.debouncedSubmitSearch()
