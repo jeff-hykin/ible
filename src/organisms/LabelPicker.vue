@@ -45,10 +45,6 @@ export default {
         fuseSuggestor: null,
     }),
     mounted() {
-        let {videoId, labelName} = this.$route.params
-        if (!videoId && !labelName) {
-            openPanel()
-        }
         // generate the UI for the labels right after mounting
         this.$rootHooks.watch.labels()
     },
