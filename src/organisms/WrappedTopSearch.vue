@@ -22,10 +22,8 @@ export default {
         },
         onHover(event) {
             this.showFade = true
-            console.debug(`event.fromElement is:`,event.fromElement)
         },
         restore(event) {
-            console.debug(`event.fromElement is:`,event.fromElement)
             this.showFade = false
         }
     },

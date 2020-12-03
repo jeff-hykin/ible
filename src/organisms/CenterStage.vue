@@ -17,22 +17,7 @@
                     row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top" :opacity='$root.selectedVideo? 1 : 0')
                         //- Video area
                         column(align-v="top").video-width-sizer
-                            row.video-sizer
-                                youtube(
-                                    v-if='$root.getVideoId()'
-                                    :key="$root.getVideoId()"
-                                    ref="youtube"
-                                    :host="this.player ? 'http://www.youtube-nocookie.com/' : 'https://www.youtube.com'"
-                                    :video-id="$root.getVideoId()"
-                                    @ready="ready"
-                                    @playing="videoStartedPlaying"
-                                    @paused="videoWasPaused"
-                                    :playerVars="{ /* disablekb: 1, end: 2 */ }"
-                                    player-width="100%"
-                                    player-height="100%"
-                                    style="height: 100%;width: 100%; position: absolute; top: 0; left: 0"
-                                )
-                            
+                            VideoPlayer(:videoId="$root.getVideoId()" :eventLine="videoActions" @VideoPlayer-loaded="testLoad")
                             container.below-video
                                 //- BACK
                                 SideButton.left-side-button(left @click='decrementIndex')
@@ -48,19 +33,11 @@
 const { wrapIndex } = require('../utils')
 const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
 const generalTimeoutFrequency = 50 // ms 
-const video = {
-    IS_LOADING: -1,
-    HAS_ENDED: 0,
-    IS_PLAYING: 1,
-    IS_PAUSED: 2,
-    BUFFERING: 3,
-    HASNT_EVEN_INITILIZED: null,
-    IS_CUED: 5,
-}
 export default {
     props: [],
     components: {
         SideButton: require("../atoms/SideButton").default,
+        VideoPlayer: require("../atoms/VideoPlayer").default,
         InfoSection: require("../molecules/InfoSection").default,
         ObservationEditor: require("../organisms/ObservationEditor").default,
         SegmentDisplay: require("../organisms/SegmentDisplay").default,
@@ -74,6 +51,7 @@ export default {
         videoIsReady: false,
         idOfLastInitilizedVideo: null,
         initCheckAlreadyRunning: false,
+        videoActions: [],
         
         segmentsInfo: {
             maxLevel: 1,
@@ -101,7 +79,7 @@ export default {
         // the bug shows infinite loading until the video has been played for a bit
         // instantly pausing and playing fixes it in the console, but from a script it optimizes out the
         // pause-then-play and just stays paused (and continues to show infinite loading)
-        // so this needs to play and then immediately pause if the video hasn't been initilized
+        // so this needs to play and then (almost but not quite) immediately pause if the video hasn't been initilized
         videoStateInitilized(resolve, reject) {
             // NOTE: this function has a vital counterpart in the $methods.videoStartedPlaying()
             logBlock({name: "[resolvable:videoStateInitilized]"}, ()=>{
@@ -310,58 +288,6 @@ export default {
             }
         }, generalTimeoutFrequency)
     },
-    windowListeners: {
-        keydown(eventObj) {
-            // console.debug(`EVENT: keydown: ${eventObj.key}`)
-            if (eventObj.target == this.$el || eventObj.target == document.body) {
-                // 
-                // key controls
-                // 
-                // This is disabled because the don't pay attention to the textboxes
-                switch (eventObj.key) {
-                    case "ArrowRight":
-                        eventObj.preventDefault()
-                        try {
-                            // skip ahead 5 seconds
-                            this.player.seekTo(this.player.getCurrentTime()+5)
-                        } catch (err) {}
-                        // this.incrementIndex()
-                        break
-                    case "ArrowLeft":
-                        eventObj.preventDefault()
-                        try {
-                            // skip ahead 5 seconds
-                            this.player.seekTo(this.player.getCurrentTime()-5)
-                        } catch (err) {}
-                        eventObj.preventDefault()
-                        break
-                    case ".":
-                        eventObj.preventDefault()
-                        try {
-                            // skip ahead 5 seconds
-                            this.player.seekTo(this.player.getCurrentTime()+(1/60))
-                        } catch (err) {}
-                        // this.incrementIndex()
-                        break
-                    case ",":
-                        eventObj.preventDefault()
-                        try {
-                            // skip ahead 5 seconds
-                            this.player.seekTo(this.player.getCurrentTime()-(1/60))
-                        } catch (err) {}
-                        eventObj.preventDefault()
-                        break
-                    case " ":
-                        eventObj.preventDefault()
-                        this.togglePlayPause()
-                        break
-                    default:
-                        // we dont care about other keys
-                        break
-                }
-            }
-        }
-    },
     rootHooks: {
         watch: {
             // when different labels are selected (checkboxes)
@@ -431,6 +357,9 @@ export default {
     watch: {
     },
     methods: {
+        testLoad() {
+            console.log(`echo hello`)
+        },
         videoWasPaused(...args) {
             window.dispatchEvent(new CustomEvent("CenterStage: videoWasPaused"))
         },

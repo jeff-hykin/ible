@@ -43,7 +43,7 @@
                 br
                 ui-radio-group(
                     name="validation"
-                    :options="['Only Confirmed', 'Either', 'Only Rejected']"
+                    :options="[ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement']"
                     v-model="$root.filterAndSort.validation"
                 )
                     | Validation
@@ -129,8 +129,12 @@ export default {
             if (this.$root.filterAndSort.videoId                           ) { where.push({ valueOf: ['videoId'                          ], is:                     this.$root.filterAndSort.videoId           , }) }
             if (this.$root.filterAndSort.kindOfObserver == "Only Humans"   ) { where.push({ valueOf: ['isHuman'                          ], is:                     true                          , }) }
             if (this.$root.filterAndSort.kindOfObserver == "Only Robots"   ) { where.push({ valueOf: ['isHuman'                          ], is:                     false                         , }) }
-            if (this.$root.filterAndSort.validation     == "Only Confirmed") { where.push({ valueOf: ['confirmedBySomeone'               ], is:                     true                          , }) }
-            if (this.$root.filterAndSort.validation     == "Only Rejected" ) { where.push({ valueOf: ['rejectedBySomeone'                ], is:                     true                          , }) }
+            if (this.$root.filterAndSort.validation     == "Confirmed"     ) { where.push({ valueOf: ['confirmedBySomeone'               ], is:                     true                          , }) }
+            if (this.$root.filterAndSort.validation     == "Rejected"      ) { where.push({ valueOf: ['rejectedBySomeone'                ], is:                     true                          , }) }
+            if (this.$root.filterAndSort.validation     == "Disagreement"  ) { where.push({ valueOf: ['rejectedBySomeone'                ], is:                     true                          , }) 
+                                                                               where.push({ valueOf: ['confirmedBySomeone'               ], is:                     true                          , }) }
+            if (this.$root.filterAndSort.validation     == "Unchecked"     ) { where.push({ valueOf: ['rejectedBySomeone'                ], is:                     false                         , }) 
+                                                                               where.push({ valueOf: ['confirmedBySomeone'               ], is:                     false                         , }) }
             console.log(`querying the backend`)
             let observationEntries = await backend.mongoInterface.getAll({
                 from: 'observations',
@@ -183,8 +187,7 @@ export default {
     rootHooks: {
         watch: {
             selectedLabel() {
-                console.debug(`this.$root.selectedLabel.name is:`,this.$root.selectedLabel.name)
-                let labelName = this.$root.selectedLabel && this.$root.selectedLabel.name
+                let labelName = this.$root.getSelectedLabelName()
                 if (labelName) {
                     this.$root.filterAndSort.label = labelName
                 }
@@ -192,6 +195,10 @@ export default {
             filterAndSort() {
                 this.$root.searchResults.finishedComputing = false
                 this.debouncedSubmitSearch()
+                // update label name if needed
+                if (this.$root.filterAndSort.label != this.$root.getSelectedLabelName()) {
+                    this.$root.setSelectedLabelByName(this.$root.filterAndSort.label)
+                }
             }
         }
     }

@@ -3,15 +3,7 @@
         | Videos
         portal(to="right-panel")
             VideoLister
-            //- h5(style="width: 100%; text-align: center; padding-top: 1rem; padding-bottom: 1rem; color: gray; text-decoration: underline;")
-            //-     | Videos With Label: {{$root.getSelectedLabelName()}}
-            //- column.video-list-container(width="100%" padding="1rem" align-v="top")
-            //-     span(v-if="videoList() instanceof Array && videoList().length == 0")
-            //-         | (Loading or no other videos with this label)
-            //-     column.video-list-element(v-for="eachVideoId in videoList()" @click="selectVideo($event, eachVideoId)")
-            //-         //- span.video-title
-            //-         //-     | {{getTitleFor(eachVideoId)}}
-            //-         row.thumbnail(width="100%" height="100%" :background-image="`url(http://img.youtube.com/vi/${eachVideoId}/mqdefault.jpg)`" position="relative")
+
 </template>
 
 <script>
@@ -33,7 +25,6 @@ export default {
             console.log(`force updating because the video is ready`)
             console.debug(`window.player is:`,window.player)
             this.$forceUpdate()
-            console.debug(`this.$root.relatedVideos() is:`, this.$root.relatedVideos())
         },
     },
     mounted() {
@@ -44,14 +35,6 @@ export default {
         },
         host() {
             return window.player ? 'http://www.youtube-nocookie.com/' : 'https://www.youtube.com'
-        },
-        videoList() {
-            console.log(`returning relatedVideos()`)
-            if (window.player) {
-                return this.$root.relatedVideos()
-            } else {
-                return []
-            }
         },
         getTitleFor(videoId) {
             let videoObject = this.$root.getCachedVideoObject(videoId)

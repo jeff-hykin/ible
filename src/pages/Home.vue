@@ -31,6 +31,9 @@ export default {
         UploadObservations: require("../molecules/UploadObservations").default,
         Card: require("../molecules/Card").default,
     },
+    created() {
+        this.loadVideoRoute()
+    },
     async mounted() {
         // wait till labels exist
         $root.labelsResolved.done || await $root.labelsResolved.promise
@@ -54,8 +57,7 @@ export default {
             // update the root data as needed
             if (!this.selectedLabel && labelName) {
                 // change the selected label
-                this.$root.selectedLabel = this.$root.labels[labelName]
-                this.$root.selectedLabel.name = labelName
+                this.$root.setSelectedLabelByName(labelName)
             }
             if (this.$root.getVideoId() != videoId) {
                 this.$root.selectedVideo = this.$root.getCachedVideoObject(videoId)

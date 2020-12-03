@@ -264,11 +264,11 @@ export default {
             if (this.$root.selectedLabel != this.observationData.label || this.$root.getVideoId() != this.observationData.videoId ) {
                 this.$toasted.show(`New label added, refreshing to retrive data`).goAway(2500)
                 this.$router.push({ name: 'video', params: { videoId: this.observationData.videoId, labelName: this.observationData.label } })
-                setTimeout(() => {
-                    ()=>window.location.reload()
-                }, 2500)
+                this.$root.retrieveLabels()
+                this.$root.selectedVideo.keySegments = []
             } else {
-                this.$toasted.show(`Data has been set, refresh to confirm`).goAway(2500)
+                this.$toasted.show(`Data has been set`).goAway(2500)
+                this.$root.retrieveLabels()
             }
         },
         async onDelete() {

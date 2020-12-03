@@ -148,6 +148,20 @@ export default RootComponent = {
         getSelectedLabelName() {
             return this.$root.selectedLabel && this.$root.selectedLabel.name
         },
+        setSelectedLabelByName(labelName) {
+            this.$root.selectedLabel = this.$root.labels[labelName]
+            if (this.$root.selectedLabel instanceof Object) {
+                this.$root.selectedLabel.name = labelName
+            } else {
+                labelName = null
+            }
+            // if there was a change, then push the new route
+            if (this.$route.params.labelName != labelName) {
+                console.debug(`labelName is:`,labelName)
+                console.debug(`this.$route.params.labelName is:`,this.$route.params.labelName)
+                this.$router.push({ name: 'video', params: { ...this.$route.params, labelName } })
+            }
+        },
         getVideoId() {
             return this.$root.selectedVideo && this.$root.selectedVideo.$id
         },

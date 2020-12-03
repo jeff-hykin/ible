@@ -1,5 +1,12 @@
 import Vue from 'vue'
-import VueYouTubeEmbed from 'vue-youtube-embed'
-Vue.use(VueYouTubeEmbed)
-// if you don't want install the component globally
-Vue.use(VueYouTubeEmbed, { global: false })
+import VuePlyr from 'vue-plyr'
+import 'vue-plyr/dist/vue-plyr.css'
+
+Vue.use(VuePlyr, {
+    plyr: {
+        keyboard: {
+            focused: true,
+            global: true,
+        }
+    }
+})

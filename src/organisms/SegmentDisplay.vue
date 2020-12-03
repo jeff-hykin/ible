@@ -61,6 +61,7 @@ export default {
         allLabelsOn: false,
     }),
     mounted() {
+        window.SegmentDisplay = this
     },
     methods: {
         computeSymbol(confirmed, rejected) {
