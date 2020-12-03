@@ -14,7 +14,6 @@ export default {
     },
     data: ()=>({
         showFade: false,
-        closing: true,
     }),
     methods: {
         stopPropogation(event){
@@ -23,19 +22,11 @@ export default {
         },
         onHover(event) {
             this.showFade = true
-            this.closing = false
             console.debug(`event.fromElement is:`,event.fromElement)
         },
         restore(event) {
             console.debug(`event.fromElement is:`,event.fromElement)
-            this.closing = true
-            setTimeout(() => {
-                // if it hasn't been cancelled (would be false if cancelled)
-                if (this.closing) {
-                    this.showFade = false
-                    this.blurBackground = false
-                }
-            }, 500)
+            this.showFade = false
         }
     },
 
@@ -50,9 +41,10 @@ export default {
     left: 0
     z-index: 99999
     background: rgba(0, 0, 0, 0)
-    transition: all ease 0.9s
+    transition: all ease 0.3s
     
     &:not([hide=true])
+        transition: all ease 0.9s
         top: 0
         background: rgba(0, 0, 0, 0.5)
     

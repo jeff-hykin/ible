@@ -20,8 +20,6 @@
         
 </template>
 <script>
-
-const { dynamicSort, logBlock, checkIf, get, set, info } = require("good-js")
 let Fuse = require("fuse.js").default
 
 export default {
