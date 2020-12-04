@@ -4,8 +4,8 @@
             | No Video Selected
         row.message(v-if='videoId && !videoLoaded')
             | Video Loading...
-        vue-plyr(playsinline controls)
-            div.plyr__video-embed 
+        vue-plyr(ref="vuePlyr" :style="`opacity: ${videoId && videoLoaded ? 1 : 0}`" :key="videoId")
+            div.plyr__video-embed
                 iframe(
                     ref="videoPlayer"
                     :src="`https://www.youtube.com/embed/${videoId}?amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1`"
@@ -48,6 +48,7 @@ export default {
     },
     watch: {
         videoId() {
+            console.log(`videoId for video player changed`)
             this.loadVideo()
         },
         eventLine: {
@@ -105,15 +106,15 @@ export default {
     },
     methods: {
         loadVideo() {
-            console.log(`loading video`)
             const newVideoId = this.videoId
             let safteyCheck = (reject) => (this.videoId != newVideoId) && reject()
             this.videoLoaded = false
+            this.player = null
             
             if (typeof this.videoId != "string" || this.videoId.length == 0) {
-                console.debug(`loadVideo: this.videoId is:`,this.videoId)
                 return
             }
+            
             // 
             // wait for the player to load
             // 
@@ -135,13 +136,6 @@ export default {
                 this.$forceUpdate()
             })
         },
-        resetVideo() {
-            this.player = null
-            // fully remove the old player to prevent loading issues
-            if (this.$refs.videoPlayer && this.$refs.videoPlayer.$destroy instanceof Function) {
-                this.$refs.videoPlayer.$destroy()
-            }
-        },
         // 
         // actions
         // 
@@ -158,26 +152,10 @@ export default {
 </script>
 
 <style lang='sass' scoped>
-.video-width-sizer
-    --max-width: calc(70rem)
-    width: 50vw
-    min-width: 18rem
-    max-width: var(--max-width)
-    height: fit-content
-    
-    .video-sizer
-        position: relative
-        padding: 0 1rem 
-        // width
-        width: 96%
-        max-width: inherit
-        min-width: inherit
-        // height
-        height: 0
-        padding-top: 56.25%
 .message
     position: absolute
-    top: 2rem
+    bottom: 2rem
+
 .plyr
     width: 100%
 </style>

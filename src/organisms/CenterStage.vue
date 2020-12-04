@@ -17,7 +17,8 @@
                     row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top" :opacity='$root.selectedVideo? 1 : 0')
                         //- Video area
                         column(align-v="top").video-width-sizer
-                            VideoPlayer(:videoId="$root.getVideoId()" :eventLine="videoActions" @VideoPlayer-loaded="videoLoaded")
+                            row(width="96%" position="relative")
+                                VideoPlayer(:videoId="$root.getVideoId()" :eventLine="videoActions" @VideoPlayer-loaded="videoLoaded")
                             container.below-video
                                 //- BACK
                                 SideButton.left-side-button(left @click='decrementIndex')
@@ -68,7 +69,7 @@ export default {
         seekToSegmentStart() {
             if (this.$root.selectedSegment) {
                 if (typeof this.$root.selectedSegment.startTime == 'number') {
-                    this.videoActions.push(["seekTo", this.$root.selectedSegment.startTime ])
+                    this.videoActions.push({name:"seekTo", args: [this.$root.selectedSegment.startTime] })
                 }
             }
         },
@@ -152,18 +153,6 @@ export default {
                 min-width: 18rem
                 max-width: var(--max-width)
                 height: fit-content
-                
-                .video-sizer
-                    position: relative
-                    padding: 0 1rem 
-                    // width
-                    width: 96%
-                    max-width: inherit
-                    min-width: inherit
-                    // height
-                    height: 0
-                    padding-top: 56.25%
-                    
         
         .below-video
             position: relative

@@ -45,7 +45,7 @@
 </template>
 <script>
 const { wrapIndex, storageObject } = require('../utils')
-const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
+const { dynamicSort } = require("good-js")
 
 const generalTimeoutFrequency = 50 // ms 
 
@@ -105,7 +105,6 @@ export default {
         },
         processNewSegments({duration, keySegments}) {
             // element needs to be shown as at least __ % of the video width
-            console.debug(`duration is:`,duration)
             const minWidthPercent = 3
             let minWidthInSeconds = duration / (100 / minWidthPercent)
             keySegments = keySegments.map(eachSegment=>{
