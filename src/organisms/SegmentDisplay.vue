@@ -51,19 +51,137 @@ const generalTimeoutFrequency = 50 // ms
 
 export default {
     props: [
-        "segmentsInfo",
         "jumpSegment",
+        "videoDuration",
     ],
     components: {
         SideButton: require("../atoms/SideButton").default,
     },
     data: ()=>({
         allLabelsOn: false,
+        // a promise that keeps delaying itself
+        segmentsInfo: {
+            maxLevel: 1,
+            organizedSegments: [],
+        }
     }),
     mounted() {
         window.SegmentDisplay = this
     },
+    watch: {
+        videoDuration() { this.updateSegments() }
+    },
+    rootHooks: {
+        watch: {
+            labels       () { this.updateSegments() },
+            selectedLabel() { this.updateSegments() },
+            selectedVideo() { this.updateSegments() },
+        }
+    },
     methods: {
+        async updateSegments() {
+            const originalVideoId = this.$root.getVideoId()
+            if (originalVideoId) {
+                let keySegments = await (await this.backend).mongoInterface.getAll({
+                    from: 'observations',
+                    where: [
+                        { valueOf: ['type']   , is: "segment" },
+                        { valueOf: ['videoId'], is: originalVideoId },
+                    ],
+                    returnObject: true,
+                })
+                // add uuid to all of them
+                keySegments = Object.entries(keySegments).map(
+                    ([eachKey, eachValue])=>(eachValue.$uuid=eachKey,eachValue)
+                )
+                // get the duration data
+                let duration = await this.videoDuration
+                // check then assign
+                if (originalVideoId == this.$root.getVideoId()) {
+                    this.$root.selectedVideo.keySegments = this.processNewSegments({ duration, keySegments })
+                }
+            }
+            this.visuallyReorganizeSegments()
+        },
+        processNewSegments({duration, keySegments}) {
+            // element needs to be shown as at least __ % of the video width
+            console.debug(`duration is:`,duration)
+            const minWidthPercent = 3
+            let minWidthInSeconds = duration / (100 / minWidthPercent)
+            keySegments = keySegments.map(eachSegment=>{
+                // 
+                // add render info
+                // 
+                // create the display info for each segment
+                let effectiveStart  = eachSegment.startTime
+                let effectiveEnd    = eachSegment.endTime
+                let segmentDuration = eachSegment.endTime - eachSegment.startTime
+                // if segment is too small artificially make it bigger
+                if (segmentDuration < minWidthInSeconds) {
+                    let additionalAmountForEachSide = (minWidthInSeconds - segmentDuration)/2
+                    // sometimes this will result in a negative amount, but thats okay
+                    // the UI can handle it, the user just needs to be able to see it
+                    effectiveStart -= additionalAmountForEachSide
+                    effectiveEnd += additionalAmountForEachSide
+                }
+                eachSegment.$renderData = {
+                    effectiveEnd,
+                    effectiveStart,
+                    // how wide the element should be
+                    widthPercent: `${(effectiveEnd - effectiveStart)*100/duration}%`,
+                    // how close to the left the element should be
+                    leftPercent: `${(effectiveStart/duration)*100}%`,
+                }
+                return eachSegment
+            }).sort(dynamicSort(["$renderData","effectiveStart"])).map((each, index)=>((each.$displayIndex = index),each))
+            
+            return keySegments
+        },
+        async visuallyReorganizeSegments() {
+            this.segmentsInfo = {
+                maxLevel: 1,
+                organizedSegments: []
+            }
+            
+            // only return segments that match the selected labels
+            let namesOfSelectedLabels = this.$root.getNamesOfSelectedLabels()
+            let displaySegments = this.$root.selectedVideo.keySegments.filter(
+                eachSegment=>(eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.observation.label))
+            )
+        
+            // 2 percent of the width of the video
+            let levels = []
+            for (let eachSegment of displaySegments) {
+                // find the smallest viable level
+                let level = 0
+                while (1) {
+                    let thisLevel = levels[level]
+                    if (thisLevel == undefined) {
+                        break
+                    }
+                    let indexOfLastElementOnThisLevel = levels[level].length-1
+                    let lastElementOnThisLevel = levels[level][indexOfLastElementOnThisLevel]
+                    if (eachSegment.$renderData.effectiveStart > lastElementOnThisLevel.$renderData.effectiveEnd) {
+                        break
+                    }
+                    ++level
+                }
+                // create level if it didn't exist
+                if (levels[level] == undefined) {
+                    levels[level] = [ eachSegment ]
+                // otherwise add it to the end of the level
+                } else {
+                    levels[level].push(eachSegment)
+                }
+                const heightOfSegment = 2.2 // rem
+                eachSegment.$renderData.level = level 
+                eachSegment.$renderData.topAmount = `${level*heightOfSegment}rem`
+            }
+            this.segmentsInfo = {
+                maxLevel: levels.length,
+                organizedSegments: levels.flat(),
+            }
+        },
         computeSymbol(confirmed, rejected) {
             if (confirmed === true && rejected !== true) {
                 return "✓"
@@ -84,7 +202,7 @@ export default {
             }
         },
         toggleLabel(labelName) {
-            // this is a dumb hack that only exists because sometimes the ui-checkbox doens't display the change
+            // this is a dumb hack that only exists because sometimes the ui-checkboxes don't display the change
             // even though the change has been made
             
             // get the value

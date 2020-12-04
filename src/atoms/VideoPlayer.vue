@@ -7,7 +7,7 @@
         vue-plyr(playsinline controls)
             div.plyr__video-embed 
                 iframe(
-                    ref="youtube"
+                    ref="videoPlayer"
                     :src="`https://www.youtube.com/embed/${videoId}?amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1`"
                     allowfullscreen
                     allowtransparency
@@ -34,6 +34,7 @@ export default {
     ],
     components: {
     },
+    
     data() {
         return {
             player: null,
@@ -62,7 +63,7 @@ export default {
         }
     },
     mounted() {
-        window.YoutubePlayer = this // debugging
+        window.VideoPlayer = this // debugging
         // init
         this.loadVideo()
     },
@@ -106,8 +107,8 @@ export default {
         loadVideo() {
             console.log(`loading video`)
             const newVideoId = this.videoId
-            this.videoLoaded = false
             let safteyCheck = (reject) => (this.videoId != newVideoId) && reject()
+            this.videoLoaded = false
             
             if (typeof this.videoId != "string" || this.videoId.length == 0) {
                 console.debug(`loadVideo: this.videoId is:`,this.videoId)
@@ -116,12 +117,12 @@ export default {
             // 
             // wait for the player to load
             // 
-            this.videoLoading = new Promise(async (resolve, reject)=>{
+            this.videoLoading = new Promise(async (resolve, reject) => {
                 let checkForPlayer = (resolve, reject) => () => {
                     safteyCheck(reject)
-                    if (this.$refs.youtube && this.$refs.youtube.plyr) {
-                        this.player = this.$refs.youtube.plyr
-                        this.$emit("VideoPlayer-loaded", this.$refs.youtube.plyr)
+                    if (this.$refs.videoPlayer && this.$refs.videoPlayer.plyr && this.$refs.videoPlayer.plyr.duration) {
+                        this.player = this.$refs.videoPlayer.plyr
+                        this.$emit("VideoPlayer-loaded", this.$refs.videoPlayer.plyr)
                         this.videoLoaded = true
                         resolve(this.player)
                     } else {
@@ -137,8 +138,8 @@ export default {
         resetVideo() {
             this.player = null
             // fully remove the old player to prevent loading issues
-            if (this.$refs.youtube && this.$refs.youtube.$destroy instanceof Function) {
-                this.$refs.youtube.$destroy()
+            if (this.$refs.videoPlayer && this.$refs.videoPlayer.$destroy instanceof Function) {
+                this.$refs.videoPlayer.$destroy()
             }
         },
         // 
@@ -151,14 +152,6 @@ export default {
             if (videoId == this.videoId) {
                 this.player.currentTime = startTime
             }
-        },
-        // 
-        // events
-        // 
-        paused (event) { this.$emit("VideoPlayer-paused"); window.dispatchEvent(new CustomEvent("CenterStage: paused")) }, // FIXME
-        playing(event) {
-            console.log("VideoPlayer-playing")
-            this.$emit("VideoPlayer-playing")
         },
     }
 }
