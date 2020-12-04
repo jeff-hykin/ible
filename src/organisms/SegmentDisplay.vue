@@ -370,5 +370,5 @@ export default {
     
     100% 
         background-position: left var(--border-gap) top, right var(--border-gap) bottom, left bottom var(--border-gap), right top var(--border-gap)
-    
+
 </style>

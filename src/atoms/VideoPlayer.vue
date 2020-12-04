@@ -151,11 +151,15 @@ export default {
 }
 </script>
 
-<style lang='sass' scoped>
+<style lang='sass'>
 .message
     position: absolute
     bottom: 2rem
 
 .plyr
     width: 100%
+
+.plyr__poster
+    z-index: -1 !important
+
 </style>
