@@ -14,11 +14,11 @@
         transition(name="fade")
             row.center-stage(v-if="get($root, ['routeData$', 'videoId'], false)" align-v="top" align-h="center" padding-top="8rem")
                 column.main-container(flex-grow=1 align-v="top")
-                    row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top" :opacity=' $root.selectedVideo? 1 : 0')
+                    row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top" :opacity="get($root, ['routeData$', 'videoId'], false)? 1 : 0")
                         //- Video area
                         column(align-v="top").video-width-sizer
                             row(width="96%" position="relative")
-                                VideoPlayer(ref="videoPlayer" :videoId="$root.getVideoId()" :eventLine="videoActions" @VideoPlayer-loaded="videoLoaded")
+                                VideoPlayer(ref="videoPlayer" :videoId="get($root, ['routeData$', 'videoId'], false)" :eventLine="videoActions" @VideoPlayer-loaded="videoLoaded")
                             container.below-video
                                 //- BACK
                                 SideButton.left-side-button(left @click='decrementIndex')

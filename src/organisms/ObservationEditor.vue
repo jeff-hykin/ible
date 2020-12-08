@@ -8,7 +8,7 @@
         min-width="20rem"
         min-height="44vh"
     )
-        column.add-container(v-show="!editing")
+        column.add-container(:opacity="editing?0:1")
             ui-button.add-button(
                 @click="onNewObservation"
                 icon="add"
@@ -20,114 +20,121 @@
                 | New Observation
         container(height="20px")
         transition(name="fade")
-            column.observation-widget(v-show="$root.selectedSegment || editing")
-                row(align-h="space-between" width="100%")
-                    h5
-                        | Observation
-                    ui-button.edit-button(
-                        v-if="(!editing) && $root.selectedSegment"
-                        @click="onEditObservation"
-                        icon="edit"
-                        color="primary"
-                    )
-                        | Edit
-                    
-                row.button-row(align-h="space-evenly" width="100%" margin-bottom="0.7rem" margin-top="0.5rem" v-if="editing")
-                    ui-button.save-button(
-                        v-if="editing"
-                        @click="onSaveEdit"
-                        icon="save"
-                        color="primary"
-                    )
-                        | Save
-                    //- spacer
-                    container(flex-basis="10%" width="10%" v-if="editing")
-                    ui-button.delete-button(
-                        v-if="editing"
-                        @click="onDelete"
-                        icon="delete"
-                        color="red"
-                    )
-                        | Delete
-                ui-button.cancel-button(
-                    v-if="editing"
-                    @click="onCancelEdit"
-                    icon="cancel"
-                    color="accent"
-                )
-                    | Cancel
+            column.observation-widget(min-height="38rem")
+                h5(v-if="noSegment()")
+                    | No Segment Selected
                 
-                container.input-area(margin-top="2rem")
-                    row.start-time-wrapper
+                transition(name="fade")
+                    row(v-if="!noSegment()" align-h="space-between" width="100%")
+                        h5
+                            | Observation
+                        ui-button.edit-button(
+                            v-if="(!editing) && $root.selectedSegment"
+                            @click="onEditObservation"
+                            icon="edit"
+                            color="primary"
+                        )
+                            | Edit
+                transition(name="fade")        
+                    row.button-row(v-if="!noSegment() || editing" align-h="space-evenly" width="100%" margin-bottom="0.7rem" margin-top="0.5rem")
+                        ui-button.save-button(
+                            v-if="editing"
+                            @click="onSaveEdit"
+                            icon="save"
+                            color="primary"
+                        )
+                            | Save
+                        //- spacer
+                        container(flex-basis="10%" width="10%" v-if="editing")
+                        ui-button.delete-button(
+                            v-if="editing"
+                            @click="onDelete"
+                            icon="delete"
+                            color="red"
+                        )
+                            | Delete
+                transition(name="fade")
+                    ui-button.cancel-button(
+                        v-if="!noSegment() || editing" 
+                        @click="onCancelEdit"
+                        icon="cancel"
+                        color="accent"
+                    )
+                        | Cancel
+                
+                transition(name="fade")    
+                    container.input-area(v-if="!noSegment()" margin-top="2rem")
+                        row.start-time-wrapper
+                            ui-textbox(
+                                :disabled="!editing"
+                                label="Start Time (seconds)"
+                                :placeholder="`${observationData.startTime}`"
+                                v-model.number="observationData.startTime"
+                                :invalid="observationData.startTime < 0 || observationData.startTime > observationData.endTime"
+                                type="number"
+                            )
+                            ui-button.set-to-current-time-button(
+                                v-if="editing"
+                                @click="setStartToCurrentTime"
+                                tabindex="-1"
+                                color="primary"
+                                size="small"
+                                tooltip="Set start time to current video time"
+                                tooltipPosition="top"
+                            )
+                                ui-icon
+                                    | skip_next
+                        row.end-time-wrapper
+                            ui-textbox(
+                                :disabled="!editing"
+                                label="End Time (seconds)"
+                                :placeholder="`${observationData.endTime}`"
+                                v-model.number="observationData.endTime"
+                                type="number"
+                            )
+                            ui-button.set-to-current-time-button(
+                                v-if="editing"
+                                @click="setEndToCurrentTime"
+                                tabindex="-1"
+                                color="primary"
+                                size="small"
+                                tooltip="Set end time to current video time"
+                                tooltipPosition="top"
+                            )
+                                ui-icon
+                                    | skip_next
+                        
                         ui-textbox(
                             :disabled="!editing"
-                            label="Start Time (seconds)"
-                            :placeholder="`${observationData.startTime}`"
-                            v-model.number="observationData.startTime"
-                            type="number"
+                            floating-label
+                            label="Label"
+                            :invalid="!observationData.label.match(/^[a-zA-Z0-9\._\-]+$/)"
+                            v-model="observationData.label"
                         )
-                        ui-button.set-to-current-time-button(
-                            v-if="editing"
-                            @click="setStartToCurrentTime"
-                            tabindex="-1"
-                            color="primary"
-                            size="small"
-                            tooltip="Set start time to current video time"
-                            tooltipPosition="top"
-                        )
-                            ui-icon
-                                | skip_next
-                    row.end-time-wrapper
                         ui-textbox(
                             :disabled="!editing"
-                            label="End Time (seconds)"
-                            :placeholder="`${observationData.endTime}`"
-                            v-model.number="observationData.endTime"
-                            type="number"
+                            floating-label
+                            label="Label Confidence"
+                            v-model="observationData.labelConfidence"
                         )
-                        ui-button.set-to-current-time-button(
-                            v-if="editing"
-                            @click="setEndToCurrentTime"
-                            tabindex="-1"
-                            color="primary"
-                            size="small"
-                            tooltip="Set end time to current video time"
-                            tooltipPosition="top"
+                        ui-textbox(
+                            :disabled="!editing"
+                            floating-label
+                            label="Observer (username)"
+                            v-model="observationData.observer"
                         )
-                            ui-icon
-                                | skip_next
-                    
-                    ui-textbox(
-                        :disabled="!editing"
-                        floating-label
-                        label="Label"
-                        :invalid="!observationData.label.match(/^[a-zA-Z0-9\._\-]+$/)"
-                        v-model="observationData.label"
-                    )
-                    ui-textbox(
-                        :disabled="!editing"
-                        floating-label
-                        label="Label Confidence"
-                        v-model="observationData.labelConfidence"
-                    )
-                    ui-textbox(
-                        :disabled="!editing"
-                        floating-label
-                        label="Observer (username)"
-                        v-model="observationData.observer"
-                    )
-                    ui-textbox(
-                        :disabled="!editing"
-                        floating-label
-                        label="Video Id"
-                        v-model="observationData.videoId"
-                    )
-                    UiSwitch(:disabled="!editing" v-model="observationData.isHuman")
-                        | Observer Is Human
-                    UiSwitch(:disabled="!editing" v-model="observationData.confirmedBySomeone" v-if="!observationData.isHuman")
-                        | Confirmed By ≥1 Human
-                    UiSwitch(:disabled="!editing" v-model="observationData.rejectedBySomeone" v-if="!observationData.isHuman")
-                        | Rejected By ≥1 Human
+                        ui-textbox(
+                            :disabled="!editing"
+                            floating-label
+                            label="Video Id"
+                            v-model="observationData.videoId"
+                        )
+                        UiSwitch(:disabled="!editing" v-model="observationData.isHuman")
+                            | Observer Is Human
+                        UiSwitch(:disabled="!editing" v-model="observationData.confirmedBySomeone" v-if="!observationData.isHuman")
+                            | Confirmed By ≥1 Human
+                        UiSwitch(:disabled="!editing" v-model="observationData.rejectedBySomeone" v-if="!observationData.isHuman")
+                            | Rejected By ≥1 Human
 </template>
 
 <script>
@@ -135,6 +142,10 @@ let { backend } = require('../iilvd-api')
 let { getColor } = require("../utils")
 
 export default {
+    // BACKTRACK: fix the start/end buttons
+    props: [
+        "videoPlayer"
+    ],
     components: {
         UiSwitch: require("../atoms/UiSwitch").default,
     },
@@ -155,6 +166,9 @@ export default {
         editing: false,
         dontShow: true,
     }),
+    computed: {
+        
+    },
     mounted() {
         // bascially init the data
         if (!(this.$root.selectedSegment instanceof Object)) {
@@ -188,12 +202,17 @@ export default {
         },
     },
     methods: {
+        noSegment() {
+            return !this.$root.selectedSegment && !this.editing
+        },
         async onNewObservation() {
-            this.dataCopy = {}
-            this.uuidOfSelectedSegment = null
-            this.$toasted.show(`New observation created (all data from previous observation was copied)`).goAway(6500)
-            // start editing the newly created observation
-            this.onEditObservation()
+            if (!this.editing) {
+                this.dataCopy = {}
+                this.uuidOfSelectedSegment = null
+                this.$toasted.show(`New observation created (all data from previous observation was copied)`).goAway(6500)
+                // start editing the newly created observation
+                this.onEditObservation()
+            }
         },
         onEditObservation() {
             // save a copy encase they cancel
@@ -206,6 +225,7 @@ export default {
             this.editing = false
         },
         async onSaveEdit() {
+            console.log(`onSaveEdit`)
             this.editing = false
             if (this.observationData.observer) {
                 storageObject.observer = this.observationData.observer
@@ -248,7 +268,6 @@ export default {
                 throw error
             }
             
-            
             // create label if it doesn't exist
             if (!this.$root.labels[this.observationData.label]) {
                 this.$root.labels[this.observationData.label] = {
@@ -263,21 +282,16 @@ export default {
             // show the label 
             this.$root.labels[this.observationData.label] = {...this.$root.labels[this.observationData.label], selected: true}
             
-            // make sure the selected label is shown
-            set(this.$root.labels, [this.observationData.label, "selected"], true)
-            
-            
             // switch to the label that was just added
-            if (this.$root.selectedLabel != this.observationData.label || this.$root.getVideoId() !== this.observationData.videoId) {
+            if (this.$root.selectedLabel != this.observationData.label || get(this.$root, ['routeData$', 'videoId'], null) !== this.observationData.videoId) {
                 this.$toasted.show(`New label added, refreshing to retrive data`).goAway(2500)
                 this.$root.routeData$.videoId = this.observationData.videoId
                 this.$root.routeData$.labelName = this.observationData.label
-                this.$root.retrieveLabels()
                 this.$root.selectedVideo.keySegments = []
             } else {
                 this.$toasted.show(`Data has been set`).goAway(2500)
-                this.$root.retrieveLabels()
             }
+            this.$root.retrieveLabels()
         },
         async onDelete() {
             this.editing = false
@@ -325,6 +339,7 @@ div[data-fjio3y598t3hi2]
     .add-container
         position: relative
         padding-top: 1rem
+        transition: all ease 0.3s
         
         .add-button
             width: max-content

@@ -31,6 +31,9 @@ export default {
         UploadObservations: require("../molecules/UploadObservations").default,
         Card: require("../molecules/Card").default,
     },
+    mounted() {
+        this.$root.setVideoObject()
+    },
 }
 </script>
 <style lang="sass" scoped>

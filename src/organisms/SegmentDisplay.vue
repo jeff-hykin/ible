@@ -1,33 +1,35 @@
 <template lang="pug">
     //- Segments
     column.segments(align-h="left")
-        h5(v-if="segmentsInfo.organizedSegments.length > 0")
-            | Observations
-        row.segment-container(v-if="segmentsInfo.organizedSegments.length > 0" align-h="space-between" position="relative" :height="`${segmentsInfo.maxLevel*2.2}rem`")
-            row.segment(
-                v-for="(eachSegment, index) in segmentsInfo.organizedSegments"
-                :left="eachSegment.$renderData.leftPercent"
-                :width="eachSegment.$renderData.widthPercent"
-                :top="eachSegment.$renderData.topAmount"
-                :isHuman="eachSegment.isHuman"
-                :confirmedBySomeone="eachSegment.confirmedBySomeone"
-                :rejectedBySomeone="eachSegment.rejectedBySomeone"
-                :selected="eachSegment.$uuid == ($root.selectedSegment&&$root.selectedSegment.$uuid)"
-                :background-color="$root.labels[eachSegment.observation.label].color"
-                :border-color="$root.labels[eachSegment.observation.label].color"
-                :key="eachSegment.$uuid"
-                :style="`--color: ${$root.labels[eachSegment.observation.label].color}`"
-                @click="jumpSegment(eachSegment.$displayIndex)"
-            )
-                | {{computeSymbol(eachSegment.confirmedBySomeone, eachSegment.rejectedBySomeone)}}
-                ui-tooltip(position="left" animation="fade")
-                    | label: {{ eachSegment.observation.label }}
-                    br
-                    | length: {{  (eachSegment.endTime - eachSegment.startTime).toFixed(2) }} sec
-                    br
-                    | start: {{ eachSegment.startTime.toFixed(3) }} sec
-                    br
-                    | human?: {{ eachSegment.isHuman }}
+        transition(name="fade")
+            h5(v-if="segmentsInfo.organizedSegments.length > 0")
+                | Observations
+        transition(name="fade")
+            row.segment-container(v-if="segmentsInfo.organizedSegments.length > 0" align-h="space-between" position="relative" :height="`${segmentsInfo.maxLevel*2.2}rem`")
+                row.segment(
+                    v-for="(eachSegment, index) in segmentsInfo.organizedSegments"
+                    :left="eachSegment.$renderData.leftPercent"
+                    :width="eachSegment.$renderData.widthPercent"
+                    :top="eachSegment.$renderData.topAmount"
+                    :isHuman="eachSegment.isHuman"
+                    :confirmedBySomeone="eachSegment.confirmedBySomeone"
+                    :rejectedBySomeone="eachSegment.rejectedBySomeone"
+                    :selected="eachSegment.$uuid == ($root.selectedSegment&&$root.selectedSegment.$uuid)"
+                    :background-color="$root.labels[eachSegment.observation.label].color"
+                    :border-color="$root.labels[eachSegment.observation.label].color"
+                    :key="eachSegment.$uuid"
+                    :style="`--color: ${$root.labels[eachSegment.observation.label].color}`"
+                    @click="jumpSegment(eachSegment.$displayIndex)"
+                )
+                    | {{computeSymbol(eachSegment.confirmedBySomeone, eachSegment.rejectedBySomeone)}}
+                    ui-tooltip(position="left" animation="fade")
+                        | label: {{ eachSegment.observation.label }}
+                        br
+                        | length: {{  (eachSegment.endTime - eachSegment.startTime).toFixed(2) }} sec
+                        br
+                        | start: {{ eachSegment.startTime.toFixed(3) }} sec
+                        br
+                        | human?: {{ eachSegment.isHuman }}
         row(position="relative" align-h="left" align-v="top" width="100%")
             h5
                 | Filter Observations by Label
@@ -73,8 +75,16 @@ export default {
     },
     rootHooks: {
         watch: {
-            labels       () {this.updateSegments() },
             selectedLabel() { this.updateSegments() },
+            labels() {
+                this.updateSegments()
+                // if no labels are selected
+                if (!Object.values(this.$root.labels).some(value=>value.selected)) {
+                    console.log(`all the labels are off`)
+                    // show all of them
+                    this.toggleAllLabels()
+                }
+            },
             selectedVideo() {
                 this.$root.selectedSegment = null
                 this.updateSegments()
@@ -91,7 +101,7 @@ export default {
             } catch (err) {}
         },
         async updateSegments() {
-            const originalVideoId = this.$root.getVideoId()
+            const originalVideoId = get(this.$root, ['routeData$', 'videoId'], null)
             if (originalVideoId) {
                 let keySegments = await (await this.backend).mongoInterface.getAll({
                     from: 'observations',
@@ -107,12 +117,13 @@ export default {
                 )
                 // if there isn't a player, then wait for there to be one
                 if (!this.player) {
+                    // BACKTRACK: make the video player 
                     console.debug(`SegmentDisplay: this.player wasn't available`)
                     return
                 }
                 let duration = this.player.duration
                 // check then assign
-                if (originalVideoId == this.$root.getVideoId()) {
+                if (originalVideoId == get(this.$root, ['routeData$', 'videoId'], null)) {
                     this.$root.selectedVideo.keySegments = this.processNewSegments({ duration, keySegments })
                     this.$emit("SegmentDisplay-segementsRetrived")
                 }

@@ -155,8 +155,6 @@ export default RootComponent = {
                 }
             }
         })
-        // attempt to load video from URL
-        this.setVideoObject()
         // BACKTRACK: load label filter from URL
     },
     watch: {
@@ -171,20 +169,6 @@ export default RootComponent = {
                         delete routeDataNoNull[eachKey]
                     }
                 }
-                // prevent navigating to the same location
-                const currentJson = JSON.stringify(routeDataNoNull)
-                if (prevRouteDataJson === currentJson) {
-                    return
-                }
-                // 
-                // change route
-                // 
-                if (this.pushChangeToHistory) {
-                    this.$router.push({ name: this.$route.name, query: {"_":currentJson} })
-                } else {
-                    this.$router.replace({ name: this.$route.name, query: {"_":currentJson} })
-                }
-                this.pushChangeToHistory = false
                 
                 // 
                 // select label
@@ -197,12 +181,32 @@ export default RootComponent = {
                 // select video
                 // 
                 this.setVideoObject()
+                
+                // prevent navigating to the same location
+                const currentJson = JSON.stringify(routeDataNoNull)
+                if (prevRouteDataJson === currentJson) {
+                    return
+                }
+                
+                // 
+                // change route
+                // 
+                if (this.pushChangeToHistory) {
+                    this.$router.push({ name: this.$route.name, query: {"_":currentJson} })
+                } else {
+                    this.$router.replace({ name: this.$route.name, query: {"_":currentJson} })
+                }
+                this.pushChangeToHistory = false
             },
         },
         selectedLabel(newValue, oldValue) {
             oldValue && (oldValue.selected = false)
             newValue && (newValue.selected = true)
         },
+        labels() {
+            // run the route handler to update the selected label
+            this.routeData$ = {...this.routeData$}
+        }
     },
     resolvables: {
         labelsResolved() {}
@@ -221,11 +225,9 @@ export default RootComponent = {
             this.pushChangeToHistory = true
             this.routeData$ = {...this.routeData$, ...data}
         },
+        // BACKTRACK: 
         getSelectedLabelName() {
             return this.$root.selectedLabel && this.$root.selectedLabel.name
-        },
-        getVideoId() {
-            return this.$root.selectedVideo && this.$root.selectedVideo.$id
         },
         relatedVideos() {
             let output = []
@@ -246,7 +248,6 @@ export default RootComponent = {
             return output
         },
         getCachedVideoObject(id) {
-            console.debug(`id is:`,id)
             // if video isn't cached
             if (!(this.$root.videos[id] instanceof Object)) {
                 // then cache it
@@ -266,9 +267,21 @@ export default RootComponent = {
             // 
             // get labels
             // 
-            this.labels = await (await this.backend).summary.labels()
+            let prevLabels = get(this, "labels", {})
+            let newLabels = await (await this.backend).summary.labels()
             // assign colors to all labels in a pretty (irrelevently) inefficient way
-            Object.keys(this.labels).forEach(each=> this.labels[each] = {color: getColor(each), ...this.labels[each]})
+            Object.keys(newLabels).forEach(
+                eachLabelName => newLabels[eachLabelName] = {
+                    color: getColor(eachLabelName),
+                    ...newLabels[eachLabelName],
+                    // preserve selection information
+                    // TODO: should probably rewrite where/how this data is saved
+                    selected: get(prevLabels, [eachLabelName, "selected"], false),
+                }
+            )
+            this.labels = newLabels
+            
+            // BACKTRACK: remove this
             this.labelsResolved.resolve(true)
         },
     }
