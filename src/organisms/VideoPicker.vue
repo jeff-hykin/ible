@@ -1,5 +1,5 @@
 <template lang="pug">
-    container.nub(align-self="top" @mouseover="onHover" :visibility="$root.selectedLabel? 'visible' : 'hidden'")
+    container.nub(align-self="top" @mouseover="onHover")
         | Videos
         portal(to="right-panel")
             VideoLister

@@ -4,13 +4,25 @@
     column.video-list-container(width="100%" padding="1rem" align-v="top")
         span(v-if="$root.searchResults.videos.size == 0")
             | (Loading or no other videos with this label)
-        column.video-list-element(v-for="eachVideoId in $root.searchResults.videos" @click="selectVideo($event, eachVideoId)")
+        column.video-list-element(v-for="eachVideoId in videoResults" @click="selectVideo($event, eachVideoId)")
             row.thumbnail(width="100%" height="100%" :background-image="`url(http://img.youtube.com/vi/${eachVideoId}/mqdefault.jpg)`" position="relative")
 </template>
 
 <script>
-// BACKTRACK: videos are not being listed
+// BACKTRACK: prevent from showing self 
 export default {
+    data: ()=>({
+        get
+    }),
+    computed: {
+        videoResults() {
+            let videos = this.$root.searchResults.videos
+            let selectedId = get(this.$root, ['routeData$', 'videoId'], null)
+            let filtered = [...videos].filter(each=>each!==selectedId)
+            console.debug(`filtered is:`,filtered)
+            return filtered
+        }
+    },
     methods: {
         getTitleFor(videoId) {
             let videoObject = this.$root.getCachedVideoObject(videoId)
