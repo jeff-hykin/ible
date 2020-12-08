@@ -53,13 +53,13 @@ export default {
     props: [
         "jumpSegment",
         "videoDuration",
+        "player",
     ],
     components: {
         SideButton: require("../atoms/SideButton").default,
     },
     data: ()=>({
         allLabelsOn: false,
-        // a promise that keeps delaying itself
         segmentsInfo: {
             maxLevel: 1,
             organizedSegments: [],
@@ -69,16 +69,27 @@ export default {
         window.SegmentDisplay = this
     },
     watch: {
-        videoDuration() { this.updateSegments() }
+        player() { this.updateSegments() }
     },
     rootHooks: {
         watch: {
-            labels       () { this.updateSegments() },
+            labels       () {this.updateSegments() },
             selectedLabel() { this.updateSegments() },
-            selectedVideo() { this.updateSegments() },
+            selectedVideo() {
+                this.$root.selectedSegment = null
+                this.updateSegments()
+            },
         }
     },
     methods: {
+        attemptSegmentSelection() {
+            // select the first segment if no segment is selcted
+            try {
+                if (!this.$root.selectedSegment) {
+                    this.$root.selectedSegment = this.segmentsInfo.organizedSegments[0]
+                }
+            } catch (err) {}
+        },
         async updateSegments() {
             const originalVideoId = this.$root.getVideoId()
             if (originalVideoId) {
@@ -94,14 +105,20 @@ export default {
                 keySegments = Object.entries(keySegments).map(
                     ([eachKey, eachValue])=>(eachValue.$uuid=eachKey,eachValue)
                 )
-                // get the duration data
-                let duration = await this.videoDuration
+                // if there isn't a player, then wait for there to be one
+                if (!this.player) {
+                    console.debug(`SegmentDisplay: this.player wasn't available`)
+                    return
+                }
+                let duration = this.player.duration
                 // check then assign
                 if (originalVideoId == this.$root.getVideoId()) {
                     this.$root.selectedVideo.keySegments = this.processNewSegments({ duration, keySegments })
+                    this.$emit("SegmentDisplay-segementsRetrived")
                 }
             }
             this.visuallyReorganizeSegments()
+            this.attemptSegmentSelection()
         },
         processNewSegments({duration, keySegments}) {
             // element needs to be shown as at least __ % of the video width
@@ -144,7 +161,7 @@ export default {
             
             // only return segments that match the selected labels
             let namesOfSelectedLabels = this.$root.getNamesOfSelectedLabels()
-            let displaySegments = this.$root.selectedVideo.keySegments.filter(
+            let displaySegments = get(this.$root, ["selectedVideo", "keySegments"], []).filter(
                 eachSegment=>(eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.observation.label))
             )
         
