@@ -86,15 +86,15 @@ export default {
                 const currentFixedSizeOfYouTubeVideoId = 11 // This is not guarenteed to stay this way forever
                 if (newVideoId.length == currentFixedSizeOfYouTubeVideoId) {
                     // pushing searched video route
-                    this.$router.push({name: "video", params: { videoId: newVideoId, labelName: this.$route.params.labelName } })
+                    this.$root.routeData$.videoId = newVideoId
                 } else {
                     this.$toasted.show(`It looks like that video id isn't valid\n(its not 11 characters)\nWould you like to try and load it anyways?`, {
                         keepOnHover:true,
-                        action:[
+                        action: [
                             {
                                 text : 'Load Anyways',
                                 onClick : (eventData, toastObject) => {
-                                    this.$router.push({name: "video", params: { videoId: newVideoId, labelName: this.$route.params.labelName } })
+                                    this.$root.routeData$.videoId = newVideoId
                                 },
                             },
                         ]

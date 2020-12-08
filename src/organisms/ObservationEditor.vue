@@ -69,6 +69,7 @@
                         ui-button.set-to-current-time-button(
                             v-if="editing"
                             @click="setStartToCurrentTime"
+                            tabindex="-1"
                             color="primary"
                             size="small"
                             tooltip="Set start time to current video time"
@@ -87,6 +88,7 @@
                         ui-button.set-to-current-time-button(
                             v-if="editing"
                             @click="setEndToCurrentTime"
+                            tabindex="-1"
                             color="primary"
                             size="small"
                             tooltip="Set end time to current video time"
@@ -99,7 +101,7 @@
                         :disabled="!editing"
                         floating-label
                         label="Label"
-                        :invalid="!observationData.label.match(/^[a-zA-Z0-9]+$/)"
+                        :invalid="!observationData.label.match(/^[a-zA-Z0-9\._\-]+$/)"
                         v-model="observationData.label"
                     )
                     ui-textbox(
@@ -164,6 +166,7 @@ export default {
             // when the selected segment changes
             selectedSegment() {
                 let selectedSegment = this.$root.selectedSegment
+                console.debug(`selectedSegment is:`,selectedSegment)
                 if (this.$root.selectedSegment instanceof Object) {
                     this.uuidOfSelectedSegment = selectedSegment.$uuid
                     this.observationData = {
@@ -260,10 +263,15 @@ export default {
             // show the label 
             this.$root.labels[this.observationData.label] = {...this.$root.labels[this.observationData.label], selected: true}
             
+            // make sure the selected label is shown
+            set(this.$root.labels, [this.observationData.label, "selected"], true)
+            
+            
             // switch to the label that was just added
-            if (this.$root.selectedLabel != this.observationData.label || this.$root.getVideoId() != this.observationData.videoId ) {
+            if (this.$root.selectedLabel != this.observationData.label || this.$root.getVideoId() !== this.observationData.videoId) {
                 this.$toasted.show(`New label added, refreshing to retrive data`).goAway(2500)
-                this.$router.push({ name: 'video', params: { videoId: this.observationData.videoId, labelName: this.observationData.label } })
+                this.$root.routeData$.videoId = this.observationData.videoId
+                this.$root.routeData$.labelName = this.observationData.label
                 this.$root.retrieveLabels()
                 this.$root.selectedVideo.keySegments = []
             } else {

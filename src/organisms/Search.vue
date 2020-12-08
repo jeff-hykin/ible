@@ -16,7 +16,7 @@
                 ui-textbox(
                     label="Label"
                     placeholder="(Any)"
-                    v-model="$root.filterAndSort.label"
+                    v-model="$root.routeData$.labelName"
                 )
                 ui-textbox(
                     label="Minium Label Confidence"
@@ -43,7 +43,7 @@
                 br
                 ui-radio-group(
                     name="validation"
-                    :options="[ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement']"
+                    :options="[ 'Any', 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement']"
                     v-model="$root.filterAndSort.validation"
                 )
                     | Validation
@@ -114,16 +114,14 @@ export default {
             }
             return NaN
         },
-        async submitSearch(){
+        async submitSearch() {
             let backend = await this.backend
             let where = []
-            
-            // this.$toasted.show(`Searching`).goAway(2500)
             
             // 
             // build the backend query
             // 
-            if (this.$root.filterAndSort.label                             ) { where.push({ valueOf: ['observation', 'label'             ], is:                     this.$root.filterAndSort.label             , }) }
+            if (this.$root.routeData$.labelName                            ) { where.push({ valueOf: ['observation', 'label'             ], is:                     this.$root.routeData$.labelName            , }) }
             if (this.$root.filterAndSort.minlabelConfidence                ) { where.push({ valueOf: ['observation', 'minlabelConfidence'], isGreaterThanOrEqualTo: this.$root.filterAndSort.minlabelConfidence, }) }
             if (this.$root.filterAndSort.observer                          ) { where.push({ valueOf: ['observer'                         ], is:                     this.$root.filterAndSort.observer          , }) }
             if (this.$root.filterAndSort.videoId                           ) { where.push({ valueOf: ['videoId'                          ], is:                     this.$root.filterAndSort.videoId           , }) }
@@ -186,19 +184,9 @@ export default {
     },
     rootHooks: {
         watch: {
-            selectedLabel() {
-                let labelName = this.$root.getSelectedLabelName()
-                if (labelName) {
-                    this.$root.filterAndSort.label = labelName
-                }
-            },
             filterAndSort() {
                 this.$root.searchResults.finishedComputing = false
                 this.debouncedSubmitSearch()
-                // update label name if needed
-                if (this.$root.filterAndSort.label != this.$root.getSelectedLabelName()) {
-                    this.$root.setSelectedLabelByName(this.$root.filterAndSort.label)
-                }
             }
         }
     }

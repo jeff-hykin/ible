@@ -9,6 +9,7 @@
 </template>
 
 <script>
+// BACKTRACK: videos are not being listed
 export default {
     methods: {
         getTitleFor(videoId) {
@@ -40,7 +41,7 @@ export default {
         selectVideo(eventObj, videoId) {
             console.log(`changing selected video from VideoPicker`)
             console.debug(`videoId of selected is:`,videoId)
-            this.$router.push({ name: "video", params: { videoId, labelName: this.$route.params.labelName } })
+            this.$root.routeData$.videoId = newVideoId
         },
     }
 }
