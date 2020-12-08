@@ -7,6 +7,17 @@ Vue.use(VuePlyr, {
         keyboard: {
             focused: true,
             global: true,
-        }
+        },
+        tooltips: {
+            controls: true,
+            seek: true,
+        },
+        fullscreen: {
+            enabled: false,
+            fallback: false,
+            iosNative: false,
+            container: null,
+        },
+        invertTime: false,
     }
 })

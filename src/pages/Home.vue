@@ -31,47 +31,6 @@ export default {
         UploadObservations: require("../molecules/UploadObservations").default,
         Card: require("../molecules/Card").default,
     },
-    created() {
-        this.loadVideoRoute()
-    },
-    async mounted() {
-        // wait till labels exist
-        $root.labelsResolved.done || await $root.labelsResolved.promise
-        this.loadVideoRoute()
-    },
-    watch: {
-        // when the route changes
-        $route(to, from){
-            this.loadVideoRoute()
-        }
-    },
-    methods: {
-        loadVideoRoute() {
-            // prefer the url data (its the source of truth)
-            let {videoId, labelName} = this.$route.params
-            // fill in missing url data
-            videoId   || (videoId = this.$root.getVideoId())
-            labelName || (labelName = (this.selectedLabel&&this.selectedLabel.name))
-            
-            // check if one of the things is new/different
-            // update the root data as needed
-            if (!this.selectedLabel && labelName) {
-                // change the selected label
-                this.$root.setSelectedLabelByName(labelName)
-            }
-            if (this.$root.getVideoId() != videoId) {
-                this.$root.selectedVideo = this.$root.getCachedVideoObject(videoId)
-            }
-            
-            // change the url only if needed
-            if (videoId && labelName) {
-                let newUrlHash = `#/video/${videoId}/${labelName}`
-                if (window.location.hash != newUrlHash) {
-                    window.location.href = newUrlHash
-                }
-            }
-        }
-    }
 }
 </script>
 <style lang="sass" scoped>

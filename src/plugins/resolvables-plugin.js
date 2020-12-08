@@ -1,11 +1,10 @@
 // api
+// resolvables:
 //     [resolvable].promise
 //     [resolvable].resolve()
 //     [resolvable].reject()
 //     [resolvable].done
 let Vue = require("vue").default
-
-let {logBlock } = require("good-js")
 
 Vue.prototype.$resolvables = {}
 const resolvablesSymbol = Symbol("resolvables")
@@ -61,7 +60,7 @@ Vue.mixin(module.exports = {
                 // init the check
                 // 
                 resetSyncCallbackData()
-                checkerFunction.resolve = (arg)=>{
+                checkerFunction.resolve = (arg) => {
                     // find and use the latest resolver if it exists
                     if (checkerFunction[promiseKey][resolveKey]) {
                         // call the low level resolver

@@ -33,40 +33,6 @@ export default {
         onHover() {
             openPanel()
         },
-        host() {
-            return window.player ? 'http://www.youtube-nocookie.com/' : 'https://www.youtube.com'
-        },
-        getTitleFor(videoId) {
-            let videoObject = this.$root.getCachedVideoObject(videoId)
-            let title = videoObject&&videoObject.summary&&videoObject.summary.title
-            if (title === null) {
-                return "[Title not in database]"
-            }
-            if (title != undefined) {
-                return title
-            } else {
-                this.backend.then(backend=>{
-                    console.log(`requesting video title`)
-                    backend.mongoInterface.get({
-                        from: 'videos',
-                        keyList: [videoId, "summary", "title"],
-                    }).then(title=>{
-                        console.log(`received title ${title}`)
-                        if (!(videoObject.summary instanceof Object)) {
-                            videoObject.summary = {}
-                        }
-                        videoObject.summary.title = title || null
-                        this.$forceUpdate()
-                    })
-                })
-                return "Loading..."
-            }
-        },
-        selectVideo(eventObj, videoId) {
-            console.log(`changing selected video from VideoPicker`)
-            console.debug(`videoId of selected is:`,videoId)
-            this.$router.push({ name: "video", params: { videoId, labelName: this.$route.params.labelName } })
-        },
     }
 }
 </script>
