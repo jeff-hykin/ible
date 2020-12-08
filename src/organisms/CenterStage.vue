@@ -8,31 +8,30 @@
     )
         WrappedTopSearch
         
-        column(v-if='!$root.selectedVideo' width="100%" height="100vh" flex-shrink="1" color="gray")
+        column(v-if="!get($root, ['routeData$', 'videoId'], false)" width="100%" height="100vh" flex-shrink="1" color="gray")
             h5 No Video Selected
             
         transition(name="fade")
-            row.center-stage(v-if='$root.selectedVideo' align-v="top" align-h="center" padding-top="8rem")
+            row.center-stage(v-if="get($root, ['routeData$', 'videoId'], false)" align-v="top" align-h="center" padding-top="8rem")
                 column.main-container(flex-grow=1 align-v="top")
-                    row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top" :opacity='$root.selectedVideo? 1 : 0')
+                    row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top" :opacity=' $root.selectedVideo? 1 : 0')
                         //- Video area
                         column(align-v="top").video-width-sizer
                             row(width="96%" position="relative")
-                                VideoPlayer(:videoId="$root.getVideoId()" :eventLine="videoActions" @VideoPlayer-loaded="videoLoaded")
+                                VideoPlayer(ref="videoPlayer" :videoId="$root.getVideoId()" :eventLine="videoActions" @VideoPlayer-loaded="videoLoaded")
                             container.below-video
                                 //- BACK
                                 SideButton.left-side-button(left @click='decrementIndex')
                                 //- segments
-                                SegmentDisplay(:jumpSegment="jumpSegment" :videoDuration="videoDuration")
+                                SegmentDisplay(:jumpSegment="jumpSegment" :player="get($refs, ['videoPlayer', 'player'], null)" :videoDuration="videoDuration" @SegmentDisplay-segementsRetrived="seekToSegmentStart")
                                 //- NEXT
                                 SideButton.right-side-button(right @click='incrementIndex')
-                column.side-container(v-show='$root.selectedVideo' align-v="top" padding-top="3rem" overflow="visible" min-height="50rem" width="fit-content")
+                column.side-container(align-v="top" padding-top="3rem" overflow="visible" min-height="50rem" width="fit-content")
                     ObservationEditor
-                    InfoSection.info-section
+                    InfoSection.info-section(:player="get($refs, ['videoPlayer', 'player'], null)")
 </template>
 <script>
 const { wrapIndex } = require('../utils')
-const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
 export default {
     props: [],
     components: {
@@ -47,8 +46,10 @@ export default {
     },
     data() {
         return {
+            get,
             videoActions: [],
-            // a promise that keeps delaying itself
+            // BACKTRACK: remove this
+            // a promise that keeps delaying itself until its replaced with a value
             videoDuration: new Promise((resolve, reject)=>{
                 setTimeout(()=>this.videoDuration.then(resolve).catch(reject), 0)
             }),
@@ -59,17 +60,20 @@ export default {
     },
     rootHooks: {
         watch: {
+            // BACKTRACK fix current time
             selectedVideo() {
                 this.duration = null
-                this.seekToSegmentStart()
             },
         }
     },
     methods: {
         seekToSegmentStart() {
+            console.log(`trying to seekToSegmentStart`)
+            // go to the start of the selected segment
             if (this.$root.selectedSegment) {
                 if (typeof this.$root.selectedSegment.startTime == 'number') {
-                    this.videoActions.push({name:"seekTo", args: [this.$root.selectedSegment.startTime] })
+                    console.log(`pushing seekTo action`)
+                    this.videoActions.push({function:"seekTo", args: [this.$root.selectedSegment.startTime] })
                 }
             }
         },
