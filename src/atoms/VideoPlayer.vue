@@ -8,25 +8,14 @@
             div.plyr__video-embed
                 iframe(
                     ref="videoPlayer"
-                    :src="`https://www.youtube.com/embed/${videoId}?amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1`"
-                    allowfullscreen
+                    :src="`https://www.youtube.com/embed/${videoId}?amp;iv_load_policy=3&amp;modestbranding=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1`"
                     allowtransparency
                     controls
-                    playsinline
-                    allow="autoplay"
                 )
         
 </template>
 <script>
-const video = {
-    IS_LOADING: -1,
-    HAS_ENDED: 0,
-    IS_PLAYING: 1,
-    IS_PAUSED: 2,
-    BUFFERING: 3,
-    HASNT_EVEN_INITILIZED: null,
-    IS_CUED: 5,
-}
+// TODO: fix the fullscreen mode
 export default {
     props: [
         "videoId",
@@ -34,15 +23,11 @@ export default {
     ],
     components: {
     },
-    
     data() {
         return {
             player: null,
-            videoLoading: new Promise((resolve, reject)=>{
-                setTimeout(() => {
-                    this.videoLoading.then(resolve).catch(reject)
-                }, 0)
-            }),
+            // BACKTRACK: remove this promise
+            videoLoading: new Promise((resolve, reject)=>setTimeout(()=>this.videoLoading.then(resolve).catch(reject), 0)),
             videoLoaded: false,
         }
     },
@@ -55,7 +40,7 @@ export default {
             deep: true,
             handler() {
                 // schedule all the events
-                for (let each of [this.eventLine]) {
+                for (let each of this.eventLine) {
                     this[each.function](...each.args)
                     // remove each one
                     this.eventLine.shift()
@@ -85,7 +70,7 @@ export default {
                         eventObj.preventDefault()
                         try {
                             // skip ahead 1 frame
-                            this.player.forward(1/60)
+                            this.player.forward(1/32)
                         } catch (err) {}
                         // this.incrementIndex()
                         break
@@ -93,7 +78,7 @@ export default {
                         eventObj.preventDefault()
                         try {
                             // skip back 1 frame
-                            this.player.rewind(1/60)
+                            this.player.rewind(1/32)
                         } catch (err) {}
                         eventObj.preventDefault()
                         break
@@ -109,6 +94,7 @@ export default {
             const newVideoId = this.videoId
             let safteyCheck = (reject) => (this.videoId != newVideoId) && reject()
             this.videoLoaded = false
+            this.player && this.player.destroy()
             this.player = null
             
             if (typeof this.videoId != "string" || this.videoId.length == 0) {
@@ -123,6 +109,42 @@ export default {
                     safteyCheck(reject)
                     if (this.$refs.videoPlayer && this.$refs.videoPlayer.plyr && this.$refs.videoPlayer.plyr.duration) {
                         this.player = this.$refs.videoPlayer.plyr
+                        let focusWatcher = () => {
+                            let iframe = this.player.elements.wrapper.children[0]
+                            // we don't want to focus on the iframe ever
+                            if (document.activeElement == iframe) {
+                                // delayed recurse just as a check
+                                setTimeout(focusWatcher, 0)
+                                // focusing on nothing to move the focus to the body
+                                document.activeElement.blur()
+                                // alternatively focus directly on the player itself
+                                // this.player.elements.buttons.play[0].focus()
+                                // this.player.elements.buttons.play[1].focus()
+                            }
+                        }
+                        window.addEventListener("focus",focusWatcher)
+                        window.addEventListener("blur",focusWatcher)
+                        Object.defineProperty(Object.getPrototypeOf(this.player), "currentTime", {
+                            set(input) {
+                                // Bail if media duration isn't available yet
+                                if (!this.duration) { return }
+                                // Validate input
+                                input = input-0
+                                const inputIsValid = (input == input) && input >= 0
+                                if (inputIsValid) {
+                                    // Set
+                                    this.media.currentTime = Math.min(input, this.duration)
+                                    let location = (input / this.duration) * 100
+                                    setTimeout(() => {
+                                        this.elements.inputs.seek.setAttribute("value", location)
+                                        this.elements.inputs.seek.setAttribute("aria-valuenow", location)
+                                        this.elements.inputs.seek.style.setProperty("--value", `${location}%`)
+                                    }, 0)
+                                }
+                                // Logging
+                                this.debug.log(`Seeking to ${this.currentTime} seconds`)
+                            }
+                        })
                         this.$emit("VideoPlayer-loaded", this.$refs.videoPlayer.plyr)
                         this.videoLoaded = true
                         resolve(this.player)
@@ -144,6 +166,8 @@ export default {
             await this.videoLoading
             // if the video hasn't changed
             if (videoId == this.videoId) {
+                console.debug(`startTime is:`,startTime)
+                console.debug(`this.player.duration is:`,this.player.duration)
                 this.player.currentTime = startTime
             }
         },
