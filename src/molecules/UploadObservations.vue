@@ -135,7 +135,7 @@ export default {
                 return
             }
             try {
-                newUuids = await (await this.backend).addMultipleSegments(newObservations)
+                newUuids = await (await this.backend).addMultipleObservations(newObservations)
             } catch (error) {
                 console.debug(`error is:`,error)
                 this.$toasted.show(`The Server said there was an error:`).goAway(2500)
