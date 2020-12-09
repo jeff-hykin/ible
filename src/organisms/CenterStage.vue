@@ -80,12 +80,10 @@ export default {
     },
     methods: {
         attemptSeekToSegmentStart() {
-            console.log(`trying to attemptSeekToSegmentStart`)
             // go to the start of the selected segment
             let startTime = get(this.$root, ["selectedSegment", "startTime"], null)
             if (isFinite(startTime) && this.videoData.duration) {
                 let seekTo = get(this, ["$refs", "videoPlayer", "seekTo"], ()=>0)
-                console.log(`calling seekTo`)
                 seekTo(startTime)
             }
         },

@@ -237,7 +237,12 @@ export default RootComponent = {
             return this.$root.videos[id]
         },
         getNamesOfSelectedLabels() {
-            return Object.entries(this.$root.labels).filter(([eachKey, eachValue])=>(eachValue.selected)).map(([eachKey, eachValue])=>(eachKey))
+            let labelNames = Object.entries(this.$root.labels).filter(([eachKey, eachValue])=>(eachValue.selected)).map(([eachKey, eachValue])=>(eachKey))
+            if (isEmpty(labelNames)) {
+                return Object.keys(this.$root.labels)
+            } else {
+                return labelNames
+            }
         },
         async retrieveLabels() {
             console.log(`retriving lables`)

@@ -79,12 +79,6 @@ export default {
         watch: {
             labels() {
                 this.updateSegments()
-                // if no labels are selected
-                if (!Object.values(this.$root.labels).some(value=>value.selected)) {
-                    console.log(`all the labels are off`)
-                    // show all of them
-                    this.toggleAllLabels()
-                }
             },
             selectedVideo() {
                 this.$root.selectedSegment = null
