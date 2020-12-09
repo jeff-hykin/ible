@@ -26,7 +26,7 @@
                                 SegmentDisplay(:jumpSegment="jumpSegment" :videoDuration="videoData.duration" @SegmentDisplay-segementsRetrived="attemptSeekToSegmentStart")
                                 //- NEXT
                                 SideButton.right-side-button(right @click='incrementIndex')
-                column.side-container(align-v="top" padding-top="3rem" overflow="visible" min-height="50rem" width="fit-content")
+                column.side-container(align-v="top" overflow="visible" min-height="50rem" width="fit-content")
                     ObservationEditor(
                         :currentTime="videoData.currentTime"
                         :duration="videoData.duration"
@@ -140,6 +140,7 @@ export default {
     .side-container
         padding-left: 5rem
         padding-right: 5rem
+        padding-top: 0.5rem
         
         .info-section
             margin-bottom: 2rem

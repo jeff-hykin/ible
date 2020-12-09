@@ -174,10 +174,7 @@ export default {
         
     },
     mounted() {
-        // bascially init the data
-        if (!(this.$root.selectedSegment instanceof Object)) {
-            this.resetData()
-        }
+        this.resetData()
     },
     computed: {
         // TODO: check this before submitting to backend
@@ -199,6 +196,13 @@ export default {
     },
     rootHooks: {
         watch: {
+            "routeData$.videoId": function() {
+                if (this.editing) {
+                    this.dataCopy = {}
+                    this.editing = false
+                    this.resetData()
+                }
+            },
             // when the selected segment changes
             selectedSegment() {
                 let selectedSegment = this.$root.selectedSegment
@@ -230,8 +234,11 @@ export default {
         async onNewObservation() {
             if (!this.editing) {
                 this.dataCopy = {}
+                this.resetData()
+                this.observationData.startTime = this.currentTime.toFixed(3)
+                this.observationData.endTime = (this.currentTime+1).toFixed(3)
+                this.observationData.label = get(this.$root, ["routeData$", "labelName"],"") || "(change me)"
                 this.uuidOfSelectedSegment = null
-                this.$toasted.show(`New observation created (all data from previous observation was copied)`).goAway(6500)
                 // start editing the newly created observation
                 this.onEditObservation()
             }
@@ -339,10 +346,10 @@ export default {
             }
         },
         setStartToCurrentTime() {
-            this.observationData.startTime = this.currentTime
+            this.observationData.startTime = this.currentTime.toFixed(3)
         },
         setEndToCurrentTime() {
-            this.observationData.endTime = this.currentTime
+            this.observationData.endTime = this.currentTime.toFixed(3)
         },
     },
 }
