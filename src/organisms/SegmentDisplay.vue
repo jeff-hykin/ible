@@ -91,6 +91,9 @@ export default {
                 this.$root.selectedSegment = null
                 this.updateSegments()
             },
+            "selectedVideo.keySegments": function() {
+                this.updateSegments()
+            },
         }
     },
     windowListeners: {
@@ -131,7 +134,9 @@ export default {
                 let duration = this.videoDuration
                 // check then assign
                 if (originalVideoId == get(this.$root, ['routeData$', 'videoId'], null)) {
-                    this.$root.selectedVideo.keySegments = this.processNewSegments({ duration, keySegments })
+                    this.$withoutWatchers("SegmentDisplay-retrieveFromBackend", ()=>{
+                        this.$root.selectedVideo.keySegments = this.processNewSegments({ duration, keySegments })
+                    })
                     this.$emit("SegmentDisplay-segementsRetrived")
                 }
             }

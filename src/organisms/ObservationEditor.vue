@@ -274,6 +274,8 @@ export default {
             try {
                 // if saving an edit
                 if (this.uuidOfSelectedSegment) {
+                    // TODO: check the valid-ness of the segment first
+                    // TODO: add hints for data validity
                     await (await this.backend).mongoInterface.set({
                         keyList:[this.uuidOfSelectedSegment],
                         from: "observations",
@@ -289,9 +291,10 @@ export default {
                 this.$toasted.show(`(Full error log in the console)`).goAway(6500)
                 throw error
             }
-            
+            this.$toasted.show(`Changes saved`).goAway(2500)
             // create label if it doesn't exist
             if (!this.$root.labels[this.observationData.label]) {
+                this.$toasted.show(`New label added`).goAway(3500)
                 this.$root.labels[this.observationData.label] = {
                     color: getColor(this.observationData.label),
                     segmentCount: 1,
@@ -300,19 +303,13 @@ export default {
                     selected: true,
                 }
             }
-             
-            // show the label 
-            this.$root.labels[this.observationData.label] = {...this.$root.labels[this.observationData.label], selected: true}
             
-            // switch to the label that was just added
-            if (this.$root.selectedLabel != this.observationData.label || get(this.$root, ['routeData$', 'videoId'], null) !== this.observationData.videoId) {
-                this.$toasted.show(`New label added, refreshing to retrive data`).goAway(2500)
-                this.$root.routeData$.videoId = this.observationData.videoId
-                this.$root.routeData$.labelName = this.observationData.label
-                this.$root.selectedVideo.keySegments = [...this.$root.selectedVideo.keySegments]
-            } else {
-                this.$toasted.show(`Data has been set`).goAway(2500)
-            }
+            // enable the label if it wasn't already
+            this.$root.labels[this.observationData.label] = { ...this.$root.labels[this.observationData.label], selected: true }
+            
+            // tell segments they need to get the data from the backend again
+            window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
+            
             this.$root.retrieveLabels()
         },
         async onDelete() {
@@ -334,7 +331,7 @@ export default {
                 startTime: this.currentTime || 0,
                 endTime: this.currentTime || this.duration || 0,
                 observer: window.storageObject.observer || "",
-                label: get(this,["$root", "selectedLabel", "name"], ""),
+                label: get(this,["$root", "routeData$", "labelName"], ""),
                 labelConfidence: 0.95,
                 confirmedBySomeone: false,
                 rejectedBySomeone:  false,
