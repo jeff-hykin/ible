@@ -97,6 +97,34 @@ function getColor(name) {
     return colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())
 }
 
+const valueKey = Symbol("value")
+function Delayable() {
+    // the infinite loop ("you're resolved after you've waited on yourself to be resolved" lol)
+    this.promise = new Promise((resolve, reject)=>setTimeout(()=>this.promise.then(resolve).catch(reject), 0))
+    // the "ready" switch, breaks the infinite loop
+    Object.defineProperty(this, "value", {
+        set(value) {
+            this[valueKey] = value
+            this.promise = new Promise((resolve, reject)=>resolve(value))
+        },
+        get() {
+            return this[valueKey]
+        }
+    })
+    this.update = (value) => {
+        // only update if they're not equal according to lodash's rules (the correct)
+        if (!isEqual(value, this[valueKey])) {
+            this.value = value
+        }
+    }
+    // turn the infinite waiting loop back on
+    this.reset = () => {
+        this.promise = new Promise((resolve, reject)=>setTimeout(()=>this.promise.then(resolve).catch(reject), 0))
+    }
+}
+
+const currentFixedSizeOfYouTubeVideoId = 11 // This is not guarenteed to stay this way forever
+
 module.exports = {
     EventEmitter,
     storageObject,
@@ -104,6 +132,8 @@ module.exports = {
     colors,
     getColor,
     debounce,
+    Delayable,
+    currentFixedSizeOfYouTubeVideoId,
     wrapIndex(val, list) {
         if (val < 0) {
             val = list.length + val

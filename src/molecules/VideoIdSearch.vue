@@ -11,7 +11,7 @@
 </template>
 
 <script>
-const { storageObject } = require('../utils')
+const { storageObject, currentFixedSizeOfYouTubeVideoId } = require('../utils')
 
 // make sure cachedVideoIds exists as an Array
 storageObject.cachedVideoIds = storageObject.cachedVideoIds || []
@@ -83,7 +83,6 @@ export default {
             if (newVideoId == get(this.$root, ['routeData$', 'videoId'], null)) {
                 this.$toasted.show(`Video is already open`).goAway(2500)
             } else {
-                const currentFixedSizeOfYouTubeVideoId = 11 // This is not guarenteed to stay this way forever
                 if (newVideoId.length == currentFixedSizeOfYouTubeVideoId) {
                     // pushing searched video route
                     this.$root.routeData$.videoId = newVideoId

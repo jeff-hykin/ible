@@ -225,10 +225,6 @@ export default RootComponent = {
             this.pushChangeToHistory = true
             this.routeData$ = {...this.routeData$, ...data}
         },
-        // BACKTRACK: 
-        getSelectedLabelName() {
-            return this.$root.selectedLabel && this.$root.selectedLabel.name
-        },
         relatedVideos() {
             let output = []
             if (this.selectedLabel instanceof Object && this.selectedLabel.videos instanceof Object) {
@@ -255,7 +251,6 @@ export default RootComponent = {
             }
             // ensure the id didn't get messed up
             this.$root.videos[id].$id = id
-            console.debug(`this.$root.videos[id] is:`,JSON.stringify(this.$root.videos[id],0,4))
             // return the cached video
             return this.$root.videos[id]
         },

@@ -13,7 +13,7 @@ const { openPanel } = require("../templates/RightSidePanel")
 
 export default {
     props: [],
-    components: { 
+    components: {
         VideoLister: require('../organisms/VideoLister').default,
     },
     data: ()=>({

@@ -1,6 +1,4 @@
 <template lang="pug">
-    //- h5(style="width: 100%; text-align: center; padding-top: 1rem; padding-bottom: 1rem; color: gray; text-decoration: underline;")
-    //-     | Videos With Label: {{$root.getSelectedLabelName()}}
     column.video-list-container(width="100%" padding="1rem" align-v="top")
         span(v-if="$root.searchResults.videos.size == 0")
             | (Loading or no other videos with this label)
@@ -53,7 +51,7 @@ export default {
         selectVideo(eventObj, videoId) {
             console.log(`changing selected video from VideoPicker`)
             console.debug(`videoId of selected is:`,videoId)
-            this.$root.routeData$.videoId = newVideoId
+            this.$root.routeData$.videoId = videoId
         },
     }
 }
