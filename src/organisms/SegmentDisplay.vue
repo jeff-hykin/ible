@@ -2,11 +2,22 @@
     //- Segments
     column.segments(align-h="left")
         transition(name="fade")
-            h5(v-if="segmentsInfo.organizedSegments.length > 0")
+            h5
                 | Observations
         transition(name="fade")
-            row.segment-container(v-if="segmentsInfo.organizedSegments.length > 0" align-h="space-between" position="relative" :height="`${segmentsInfo.maxLevel*2.2}rem`")
+            row.segment-container(align-h="space-between" position="relative" :height="`${segmentsInfo.maxLevel*2.2}rem`")
+                row(
+                    v-if="segmentsInfo.organizedSegments.length <= 0"
+                    font-size="14pt"
+                    font-weight="lighter"
+                    color="gray"
+                    position="absolute"
+                    width="100%"
+                    padding="0.7rem"
+                )
+                    | No observations with given filters
                 row.segment(
+                    v-if="segmentsInfo.organizedSegments.length > 0"
                     v-for="(eachSegment, index) in segmentsInfo.organizedSegments"
                     :left="eachSegment.$renderData.leftPercent"
                     :width="eachSegment.$renderData.widthPercent"
@@ -324,7 +335,7 @@ export default {
         margin-bottom: 0.7rem
         width: 95%
         align-self: center
-        height: 2.2rem
+        min-height: 2.2rem
         // border-bottom: #e0e0e0 1px solid
         overflow: visible
         transition: all ease 0.5s
