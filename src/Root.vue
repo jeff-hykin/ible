@@ -209,9 +209,6 @@ export default RootComponent = {
             this.routeData$ = {...this.routeData$}
         }
     },
-    resolvables: {
-        labelsResolved() {}
-    },
     methods: {
         importDataFromUrl() {
             prevRouteDataJson = get(this.$route, ["query", "_"], "{}")
@@ -229,7 +226,6 @@ export default RootComponent = {
                 this.$root.selectedVideo = {}
             }
         },
-        // BACKTRACK: make sure clicking the thumbnails results in a new route
         push(data) {
             this.pushChangeToHistory = true
             this.routeData$ = {...this.routeData$, ...data}
@@ -271,9 +267,6 @@ export default RootComponent = {
                 }
             )
             this.labels = newLabels
-            
-            // BACKTRACK: remove this
-            this.labelsResolved.resolve(true)
         },
     }
 }
