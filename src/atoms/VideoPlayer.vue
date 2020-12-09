@@ -227,10 +227,10 @@ export default {
     bottom: 2rem
     color: gray
 
-::v-deep.plyr
+::v-deep .plyr
     width: 100%
 
-::v-deep.plyr__poster
+::v-deep .plyr__poster
     z-index: -1 !important
 
 </style>
