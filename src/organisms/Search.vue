@@ -29,19 +29,22 @@
                     v-model="$root.filterAndSort.observer"
                 )
                 br
-                ui-radio-group(
-                    name="Kind of Observer"
-                    :options="['Only Humans', 'Either', 'Only Robots']"
-                    v-model="$root.filterAndSort.kindOfObserver"
-                )
-                    | Kind of Observer
-                br
-                ui-radio-group(
-                    name="validation"
-                    :options="[ 'Any', 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement']"
-                    v-model="$root.filterAndSort.validation"
-                )
-                    | Validation
+                row(align-h="space-between" align-v="top")
+                    ui-radio-group(
+                        name="validation"
+                        :options="[ 'Any', 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement']"
+                        v-model="$root.filterAndSort.validation"
+                        vertical
+                    )
+                        | Validation
+                    row(width="2rem")
+                    ui-radio-group(
+                        name="Kind of Observer"
+                        :options="['Only Humans', 'Either', 'Only Robots']"
+                        v-model="$root.filterAndSort.kindOfObserver"
+                        vertical
+                    )
+                        | Kind of Observer
             
             
             column.card(width="32rem" flex-grow="0.3")
