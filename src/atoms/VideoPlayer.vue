@@ -75,6 +75,12 @@ export default {
         this.$emit("VideoPlayer-updated")
     },
     windowListeners: {
+        focus(...args) {
+            this.focusWatcher(...args)
+        },
+        blur(...args) {
+            this.focusWatcher(...args)
+        },
         keydown(eventObj) {
             // only when focused on the nothing or this element
             // (this is to exclude textboxes)
@@ -107,14 +113,28 @@ export default {
         }
     },
     methods: {
+        focusWatcher() {
+            // 
+            // don't let focus stay on YouTube player
+            // 
+            let iframe = get(this.player, ["elements", "wrapper", "children", 0], undefined)
+            // we don't want to focus on the iframe ever
+            if (document.activeElement === iframe) {
+                // delayed recurse just as a check
+                setTimeout(this.focusWatcher, 0)
+                // focusing on nothing to move the focus to the body
+                document.activeElement.blur()
+                // alternatively focus directly on the player itself
+                // this.player.elements.buttons.play[0].focus()
+                // this.player.elements.buttons.play[1].focus()
+            }
+        },
         loadVideo() {
             const newVideoId = this.videoId
             let safteyCheck = (reject) => (this.videoId != newVideoId) && reject()
             // 
             // reset existing data  
             // 
-            this.player && this.player.destroy()
-            this.player = null
             this.externalData.duration = null
             this.externalData.currentTime = null
             
@@ -162,9 +182,13 @@ export default {
                         this.media.currentTime = Math.min(input, this.duration)
                         let location = (input / this.duration) * 100
                         setTimeout(() => {
-                            this.elements.inputs.seek.setAttribute("value", location)
-                            this.elements.inputs.seek.setAttribute("aria-valuenow", location)
-                            this.elements.inputs.seek.style.setProperty("--value", `${location}%`)
+                            try {
+                                this.elements.inputs.seek.setAttribute("value", location)
+                                this.elements.inputs.seek.setAttribute("aria-valuenow", location)
+                                this.elements.inputs.seek.style.setProperty("--value", `${location}%`)
+                            } catch (error) {
+                                console.error(error)
+                            }
                         }, 0)
                     }
                     // Logging
@@ -181,25 +205,6 @@ export default {
             this.player.on("timeupdate", updateCurrentTime)
             this.player.on("play", updateCurrentTime)
             this.player.on("pause", updateCurrentTime)
-            
-            // 
-            // don't let focus stay on YouTube player
-            // 
-            let focusWatcher = () => {
-                let iframe = this.player.elements.wrapper.children[0]
-                // we don't want to focus on the iframe ever
-                if (document.activeElement == iframe) {
-                    // delayed recurse just as a check
-                    setTimeout(focusWatcher, 0)
-                    // focusing on nothing to move the focus to the body
-                    document.activeElement.blur()
-                    // alternatively focus directly on the player itself
-                    // this.player.elements.buttons.play[0].focus()
-                    // this.player.elements.buttons.play[1].focus()
-                }
-            }
-            window.addEventListener("focus",focusWatcher)
-            window.addEventListener("blur",focusWatcher)
         },
         // 
         // actions

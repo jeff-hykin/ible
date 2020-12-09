@@ -177,6 +177,7 @@ export default RootComponent = {
                     // make sure to toggle the label
                     if (isObject(label)) {
                         label.selected = true
+                        this.labels = {...this.labels}
                     }
                 }
             
