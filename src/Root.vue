@@ -225,24 +225,6 @@ export default RootComponent = {
             this.pushChangeToHistory = true
             this.routeData$ = {...this.routeData$, ...data}
         },
-        relatedVideos() {
-            let output = []
-            if (this.selectedLabel instanceof Object && this.selectedLabel.videos instanceof Object) {
-                output = Object.keys(this.selectedLabel.videos)
-            }
-            // don't show the current video in the related videos list
-            if (this.selectedVideo instanceof Object) {
-                if (this.selectedVideo.$id) {
-                    output = output.filter(each=>each != this.selectedVideo.$id)
-                }
-            }
-            // TODO: fix this by using dynamic loading
-            const maxRelatedVideoNumber = 1000
-            if (output.length > maxRelatedVideoNumber) {
-                output = output.slice(0,maxRelatedVideoNumber)
-            }
-            return output
-        },
         getCachedVideoObject(id) {
             // if video isn't cached
             if (!(this.$root.videos[id] instanceof Object)) {

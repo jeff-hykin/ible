@@ -146,7 +146,6 @@ let { backend } = require('../iilvd-api')
 let { getColor, currentFixedSizeOfYouTubeVideoId } = require("../utils")
 const namePattern = /^[a-zA-Z0-9_\-.]+$/
 export default {
-    // BACKTRACK: fix the start/end buttons
     props: [
         "currentTime",
         "duration",

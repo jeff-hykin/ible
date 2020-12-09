@@ -125,7 +125,6 @@ export default {
                 // if theres no duration then the visual segments can't be generated
                 // (wait for duration to change)
                 if (!this.videoDuration) {
-                    // BACKTRACK: make the video player 
                     console.debug(`SegmentDisplay: this.videoDuration wasn't available`)
                     return
                 }
