@@ -55,7 +55,7 @@
                             | Delete
                 transition(name="fade")
                     ui-button.cancel-button(
-                        v-if="!noSegment() || editing" 
+                        v-if="editing" 
                         @click="onCancelEdit"
                         icon="cancel"
                         color="accent"
@@ -70,7 +70,7 @@
                                 label="Start Time (seconds)"
                                 :placeholder="`${observationData.startTime}`"
                                 v-model.number="observationData.startTime"
-                                :invalid="observationData.startTime < 0 || observationData.startTime > observationData.endTime"
+                                :invalid="!isValid.startTime"
                                 type="number"
                             )
                             ui-button.set-to-current-time-button(
@@ -90,6 +90,7 @@
                                 label="End Time (seconds)"
                                 :placeholder="`${observationData.endTime}`"
                                 v-model.number="observationData.endTime"
+                                :invalid="!isValid.endTime"
                                 type="number"
                             )
                             ui-button.set-to-current-time-button(
@@ -108,25 +109,28 @@
                             :disabled="!editing"
                             floating-label
                             label="Label"
-                            :invalid="!observationData.label.match(/^[a-zA-Z0-9\._\-]+$/)"
+                            :invalid="!isValid.label"
                             v-model="observationData.label"
                         )
                         ui-textbox(
                             :disabled="!editing"
                             floating-label
                             label="Label Confidence"
+                            :invalid="!isValid.labelConfidence"
                             v-model="observationData.labelConfidence"
                         )
                         ui-textbox(
                             :disabled="!editing"
                             floating-label
                             label="Observer (username)"
+                            :invalid="!isValid.observer"
                             v-model="observationData.observer"
                         )
                         ui-textbox(
                             :disabled="!editing"
                             floating-label
                             label="Video Id"
+                            :invalid="!isValid.videoId"
                             v-model="observationData.videoId"
                         )
                         UiSwitch(:disabled="!editing" v-model="observationData.isHuman")
@@ -139,12 +143,13 @@
 
 <script>
 let { backend } = require('../iilvd-api')
-let { getColor } = require("../utils")
-
+let { getColor, currentFixedSizeOfYouTubeVideoId } = require("../utils")
+const namePattern = /^[a-zA-Z0-9_\-.]+$/
 export default {
     // BACKTRACK: fix the start/end buttons
     props: [
-        "videoPlayer"
+        "currentTime",
+        "duration",
     ],
     components: {
         UiSwitch: require("../atoms/UiSwitch").default,
@@ -173,6 +178,24 @@ export default {
         // bascially init the data
         if (!(this.$root.selectedSegment instanceof Object)) {
             this.resetData()
+        }
+    },
+    computed: {
+        // TODO: check this before submitting to backend
+        allValid() {
+            // not("some of them are invalid")
+            return !Object.values(this.valid).some(value=>!value)
+        },
+        isValid() {
+            let observationData = this.observationData
+            return {
+                startTime: observationData.startTime >= 0 && observationData.startTime < observationData.endTime,
+                endTime: observationData.endTime > 0 && observationData.startTime < observationData.endTime && observationData.endTime <= this.duration,
+                label: get(observationData, ["label"], "").match(namePattern),
+                observer: get(observationData, ["observer"], "").match(namePattern),
+                labelConfidence: observationData.labelConfidence < 1 && observationData.labelConfidence > -1,
+                videoId: isString(observationData.videoId) && observationData.videoId.length == currentFixedSizeOfYouTubeVideoId
+            }
         }
     },
     rootHooks: {
@@ -287,7 +310,7 @@ export default {
                 this.$toasted.show(`New label added, refreshing to retrive data`).goAway(2500)
                 this.$root.routeData$.videoId = this.observationData.videoId
                 this.$root.routeData$.labelName = this.observationData.label
-                this.$root.selectedVideo.keySegments = []
+                this.$root.selectedVideo.keySegments = [...this.$root.selectedVideo.keySegments]
             } else {
                 this.$toasted.show(`Data has been set`).goAway(2500)
             }
@@ -295,33 +318,35 @@ export default {
         },
         async onDelete() {
             this.editing = false
-            this.resetData()
             if (this.uuidOfSelectedSegment) {
                 (await this.backend).mongoInterface.delete({
                     keyList:[this.uuidOfSelectedSegment],
                     from: "observations",
                 })
-                this.$toasted.show(`Data has been deleted, refresh to confirm`).goAway(2500)
+                this.$root.selectedVideo.keySegments = [...this.$root.selectedVideo.keySegments].filter(each=>each.$uuid != this.uuidOfSelectedSegment)
+                this.resetData()
+                window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
+                this.$toasted.show(`Data has been deleted`).goAway(2500)
             }
         },
         resetData() {
             this.observationData = {
                 videoId: (this.$root.selectedVideo)&&this.$root.selectedVideo.$id,
-                startTime: this.$root.currentTime || 0,
-                endTime: this.$root.currentTime || 0,
+                startTime: this.currentTime || 0,
+                endTime: this.currentTime || this.duration || 0,
                 observer: window.storageObject.observer || "",
-                label: this.$root.getSelectedLabelName() || "",
-                labelConfidence: 0.99,
+                label: get(this,["$root", "selectedLabel", "name"], ""),
+                labelConfidence: 0.95,
                 confirmedBySomeone: false,
                 rejectedBySomeone:  false,
                 isHuman: true,
             }
         },
         setStartToCurrentTime() {
-            this.observationData.startTime = this.$root.currentTime
+            this.observationData.startTime = this.currentTime
         },
         setEndToCurrentTime() {
-            this.observationData.endTime = this.$root.currentTime
+            this.observationData.endTime = this.currentTime
         },
     },
 }

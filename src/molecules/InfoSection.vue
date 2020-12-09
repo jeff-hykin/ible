@@ -1,50 +1,39 @@
 <template lang="pug">
-    span.info-section(v-if='$root.getVideoId()')
-        | Selected Label: {{$root.getSelectedLabelName()}}
+    span.info-section
+        | Selected Label: {{labelName}}
         br
-        | Current Video ID: {{$root.getVideoId()}}
+        | Current Video ID: {{videoId}}
         br
-        | Pause Time: {{$root.currentTime}} sec
+        | Pause Time: {{displayTime && displayTime.toFixed(2)}} sec
         br
-        | {{getSegmentUuid() && `Selected Segment UUID:`}}
+        | {{segmentUuid && `Selected Segment UUID:`}}
         span.uuid 
-            | {{getSegmentUuid() && $root.selectedSegment.$uuid}}
+            | {{segmentUuid}}
 </template>
-
 <script>
 export default {
+    props: [
+        "videoId",
+        "labelName",
+        "currentTime",
+        "segmentUuid",
+    ],
     data: ()=>({
-        currentTime: 0,
+        displayTime: null,
+        throttledDisplayUpdater: ()=>0,
     }),
-    mounted() {
-        // update the time periodically
-        setInterval(() => {
-            if (window.player && window.player.getCurrentTime instanceof Function) {
-                this.setTime()
-            } else {
-                this.$root.currentTime = null
-            }
-        }, 700)
+    created() {
+        const updateEveryMiliseconds = 100
+        this.throttledDisplayUpdater = throttle(
+            ()=>this.displayTime = this.currentTime,
+            updateEveryMiliseconds,
+            // fire at the very end
+            { trailing: true },
+        )
     },
-    methods: {
-        setTime(){
-            // TODO: stop using globals
-            try {
-                this.$root.currentTime = window.player.getCurrentTime().toFixed(3)
-            } catch (error) {
-                window.centerStage.player.getCurrentTime().toFixed(3)
-            }
-        },
-        getSegmentUuid() {
-            return $root.selectedSegment && $root.selectedSegment.$uuid
-        },
-        getVideoUrl() {
-            return window.player && window.player.getVideoUrl instanceof Function && window.player.getVideoUrl()
-        }
-    },
-    windowListeners: {
-        "CenterStage: videoWasPaused": function() {
-            this.setTime()
+    watch: {
+        currentTime() {
+            this.throttledDisplayUpdater()
         }
     }
 }

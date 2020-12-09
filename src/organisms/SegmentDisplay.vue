@@ -55,7 +55,6 @@ export default {
     props: [
         "jumpSegment",
         "videoDuration",
-        "player",
     ],
     components: {
         SideButton: require("../atoms/SideButton").default,
@@ -71,7 +70,7 @@ export default {
         window.SegmentDisplay = this
     },
     watch: {
-        player() { this.updateSegments() }
+        videoDuration() { this.updateSegments() }
     },
     rootHooks: {
         watch: {
@@ -89,6 +88,11 @@ export default {
                 this.$root.selectedSegment = null
                 this.updateSegments()
             },
+        }
+    },
+    windowListeners: {
+        "SegmentDisplay-updateSegments": function() {
+            this.updateSegments()
         }
     },
     methods: {
@@ -115,13 +119,14 @@ export default {
                 keySegments = Object.entries(keySegments).map(
                     ([eachKey, eachValue])=>(eachValue.$uuid=eachKey,eachValue)
                 )
-                // if there isn't a player, then wait for there to be one
-                if (!this.player) {
+                // if theres no duration then the visual segments can't be generated
+                // (wait for duration to change)
+                if (!this.videoDuration) {
                     // BACKTRACK: make the video player 
-                    console.debug(`SegmentDisplay: this.player wasn't available`)
+                    console.debug(`SegmentDisplay: this.videoDuration wasn't available`)
                     return
                 }
-                let duration = this.player.duration
+                let duration = this.videoDuration
                 // check then assign
                 if (originalVideoId == get(this.$root, ['routeData$', 'videoId'], null)) {
                     this.$root.selectedVideo.keySegments = this.processNewSegments({ duration, keySegments })

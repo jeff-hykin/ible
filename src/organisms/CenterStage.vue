@@ -18,17 +18,25 @@
                         //- Video area
                         column(align-v="top").video-width-sizer
                             row(width="96%" position="relative")
-                                VideoPlayer(ref="videoPlayer" :videoId="get($root, ['routeData$', 'videoId'], false)" :eventLine="videoActions" @VideoPlayer-loaded="videoLoaded")
+                                VideoPlayer(ref="videoPlayer" v-model="videoData" :videoId="get($root, ['routeData$', 'videoId'], false)")
                             container.below-video
                                 //- BACK
                                 SideButton.left-side-button(left @click='decrementIndex')
                                 //- segments
-                                SegmentDisplay(:jumpSegment="jumpSegment" :player="get($refs, ['videoPlayer', 'player'], null)" :videoDuration="videoDuration" @SegmentDisplay-segementsRetrived="seekToSegmentStart")
+                                SegmentDisplay(:jumpSegment="jumpSegment" :videoDuration="videoData.duration" @SegmentDisplay-segementsRetrived="seekToSegmentStart")
                                 //- NEXT
                                 SideButton.right-side-button(right @click='incrementIndex')
                 column.side-container(align-v="top" padding-top="3rem" overflow="visible" min-height="50rem" width="fit-content")
-                    ObservationEditor
-                    InfoSection.info-section(:player="get($refs, ['videoPlayer', 'player'], null)")
+                    ObservationEditor(
+                        :currentTime="videoData.currentTime"
+                        :duration="videoData.duration"
+                    )
+                    InfoSection.info-section(
+                        :labelName="get($root, ['selectedLabel', 'name'])"
+                        :videoId="get($root, ['routeData$', 'videoId'], null)"
+                        :segmentUuid="get($root, ['selectedSegment', '$uuid'], null)"
+                        :currentTime="videoData.currentTime"
+                    )
 </template>
 <script>
 const { wrapIndex } = require('../utils')
@@ -47,24 +55,20 @@ export default {
     data() {
         return {
             get,
-            videoActions: [],
-            // BACKTRACK: remove this
-            // a promise that keeps delaying itself until its replaced with a value
-            videoDuration: new Promise((resolve, reject)=>{
-                setTimeout(()=>this.videoDuration.then(resolve).catch(reject), 0)
-            }),
+            videoData: {
+                duration: null,
+                currentTime: null,
+            },
         }
     },
     mounted() {
         window.centerStage = this
     },
-    rootHooks: {
-        watch: {
-            // BACKTRACK fix current time
-            selectedVideo() {
-                this.duration = null
-            },
-        }
+    watch: {
+        "videoData.duration": function() {
+            console.debug(`[watch] this.videoData.duration is:`,this.videoData.duration)
+            this.seekToSegmentStart()
+        },
     },
     methods: {
         seekToSegmentStart() {
@@ -72,8 +76,10 @@ export default {
             // go to the start of the selected segment
             if (this.$root.selectedSegment) {
                 if (typeof this.$root.selectedSegment.startTime == 'number') {
-                    console.log(`pushing seekTo action`)
-                    this.videoActions.push({function:"seekTo", args: [this.$root.selectedSegment.startTime] })
+                    if (this.duration) {
+                        let seekTo = get(this, ["$refs", "videoPlayer", "seekTo"], ()=>0)
+                        seekTo(this.$root.selectedSegment.startTime)
+                    }
                 }
             }
         },
@@ -119,12 +125,8 @@ export default {
             console.debug(`[jumpSegment] this.$root.selectedSegment is:`,this.$root.selectedSegment)
             if (this.$root.selectedSegment instanceof Object) {
                 console.debug(`[jumpSegment] seeking to segment start since a new index was found`)
-                await this.seekToSegmentStart()
+                this.seekToSegmentStart()
             }
-        },
-        videoLoaded(player) {
-            console.debug(`videoLoaded is:`,player.duration)
-            this.videoDuration = new Promise((resolve, reject)=>resolve(player.duration))
         },
     }
 }

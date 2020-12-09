@@ -132,7 +132,6 @@ export default {
                 let checkForPlayer = (resolve, reject) => () => {
                     safteyCheck(reject)
                     if (get(this, ["$refs", "videoPlayer", "plyr", "duration"], 0) !== 0) {
-                        console.debug(`get(this, ["$refs", "videoPlayer", "plyr", "currentTime"], 0) is:`,get(this, ["$refs", "videoPlayer", "plyr", "currentTime"], null))
                         this.player = this.$refs.videoPlayer.plyr
                         this.setupPlayer(this.player)
                         this.$emit("VideoPlayer-loaded", this.$refs.videoPlayer.plyr)
@@ -210,8 +209,6 @@ export default {
             await this.videoLoading
             // if the video hasn't changed
             if (videoId == this.videoId) {
-                console.debug(`startTime is:`,startTime)
-                console.debug(`this.player.duration is:`,this.player.duration)
                 this.player.currentTime = startTime
             }
         },
@@ -219,15 +216,16 @@ export default {
 }
 </script>
 
-<style lang='sass'>
+<style lang='sass' scoped>
 .message
     position: absolute
     bottom: 2rem
+    color: gray
 
-.plyr
+::v-deep.plyr
     width: 100%
 
-.plyr__poster
+::v-deep.plyr__poster
     z-index: -1 !important
 
 </style>
