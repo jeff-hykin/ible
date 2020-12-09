@@ -2,9 +2,9 @@
     column.search-card(shadow=1 align-h="left" :background-color="label.color")
         h5(style="text-decoration: underline") {{labelName}}
         column(width='max-content' padding='0.5rem')
-            | total number of clips: {{label.segmentCount}}
+            | total number of clips: {{label.segmentCount||0}}
             br
-            | total number of videos: {{label.videoCount}}
+            | total number of videos: {{label.videoCount||0}}
         column.show-samples(@click="selectLabel(labelName, label)")
             | See Clips ▲
 </template>

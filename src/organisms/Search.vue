@@ -181,6 +181,10 @@ export default {
     },
     rootHooks: {
         watch: {
+            routeData$() {
+                this.$root.searchResults.finishedComputing = false
+                this.debouncedSubmitSearch()
+            },
             filterAndSort() {
                 this.$root.searchResults.finishedComputing = false
                 this.debouncedSubmitSearch()

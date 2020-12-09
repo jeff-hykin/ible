@@ -1,7 +1,7 @@
 <template lang="pug">
     column.video-list-container(width="100%" padding="1rem" align-v="top")
-        span(v-if="$root.searchResults.videos.size == 0")
-            | (Loading or no other videos with this label)
+        span(v-if="videoResults.length == 0")
+            | (No other videos matching this search)
         column.video-list-element(v-for="eachVideoId in videoResults" @click="selectVideo($event, eachVideoId)")
             row.thumbnail(width="100%" height="100%" :background-image="`url(http://img.youtube.com/vi/${eachVideoId}/mqdefault.jpg)`" position="relative")
 </template>
