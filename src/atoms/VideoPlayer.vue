@@ -1,10 +1,12 @@
 <template lang="pug">
     row(width="100%")
-        row.message(v-if='!videoId')
-            | No Video Selected
-        row.message(v-if='videoId && !videoLoaded')
-            | Video Loading...
-        vue-plyr(ref="vuePlyr" :style="`opacity: ${videoId && videoLoaded ? 1 : 0}`" :key="videoId")
+        transition(name="fade")
+            row.message(v-if='!videoId')
+                | No Video Selected
+        transition(name="fade")
+            row.message(v-if='videoId && !player')
+                | Video Loading...
+        vue-plyr(ref="vuePlyr" :style="`transition: all ease 0.6s; opacity: ${videoId && player ? 1 : 0}`" :key="videoId")
             div.plyr__video-embed
                 iframe(
                     ref="videoPlayer"
@@ -18,6 +20,7 @@
 // TODO: fix the fullscreen mode
 export default {
     props: [
+        "value",
         "videoId",
         "eventLine",
     ],
@@ -26,12 +29,26 @@ export default {
     data() {
         return {
             player: null,
-            // BACKTRACK: remove this promise
             videoLoading: new Promise((resolve, reject)=>setTimeout(()=>this.videoLoading.then(resolve).catch(reject), 0)),
-            videoLoaded: false,
+        }
+    },
+    computed: {
+        externalData: {
+            get() {
+                return this.value
+            },
+            set(value) {
+                this.$emit("input", value)
+            }
         }
     },
     watch: {
+        externalData: {
+            deep: true,
+            handler() {
+                this.$emit("input", this.externalData)
+            }
+        },
         videoId() {
             console.log(`videoId for video player changed`)
             this.loadVideo()
@@ -93,60 +110,32 @@ export default {
         loadVideo() {
             const newVideoId = this.videoId
             let safteyCheck = (reject) => (this.videoId != newVideoId) && reject()
-            this.videoLoaded = false
+            // 
+            // reset existing data  
+            // 
             this.player && this.player.destroy()
             this.player = null
+            this.externalData.duration = null
+            this.externalData.currentTime = null
             
+            // if video is un-selected, reset was the only thing needed
             if (typeof this.videoId != "string" || this.videoId.length == 0) {
                 return
             }
             
             // 
-            // wait for the player to load
+            // start waiting for the player to load
             // 
+            // starting with the next update, keep checking until the video has loaded
             this.videoLoading = new Promise(async (resolve, reject) => {
+                // a seperate function is needed so that recursion is possible
                 let checkForPlayer = (resolve, reject) => () => {
                     safteyCheck(reject)
-                    if (this.$refs.videoPlayer && this.$refs.videoPlayer.plyr && this.$refs.videoPlayer.plyr.duration) {
+                    if (get(this, ["$refs", "videoPlayer", "plyr", "duration"], 0) !== 0) {
+                        console.debug(`get(this, ["$refs", "videoPlayer", "plyr", "currentTime"], 0) is:`,get(this, ["$refs", "videoPlayer", "plyr", "currentTime"], null))
                         this.player = this.$refs.videoPlayer.plyr
-                        let focusWatcher = () => {
-                            let iframe = this.player.elements.wrapper.children[0]
-                            // we don't want to focus on the iframe ever
-                            if (document.activeElement == iframe) {
-                                // delayed recurse just as a check
-                                setTimeout(focusWatcher, 0)
-                                // focusing on nothing to move the focus to the body
-                                document.activeElement.blur()
-                                // alternatively focus directly on the player itself
-                                // this.player.elements.buttons.play[0].focus()
-                                // this.player.elements.buttons.play[1].focus()
-                            }
-                        }
-                        window.addEventListener("focus",focusWatcher)
-                        window.addEventListener("blur",focusWatcher)
-                        Object.defineProperty(Object.getPrototypeOf(this.player), "currentTime", {
-                            set(input) {
-                                // Bail if media duration isn't available yet
-                                if (!this.duration) { return }
-                                // Validate input
-                                input = input-0
-                                const inputIsValid = (input == input) && input >= 0
-                                if (inputIsValid) {
-                                    // Set
-                                    this.media.currentTime = Math.min(input, this.duration)
-                                    let location = (input / this.duration) * 100
-                                    setTimeout(() => {
-                                        this.elements.inputs.seek.setAttribute("value", location)
-                                        this.elements.inputs.seek.setAttribute("aria-valuenow", location)
-                                        this.elements.inputs.seek.style.setProperty("--value", `${location}%`)
-                                    }, 0)
-                                }
-                                // Logging
-                                this.debug.log(`Seeking to ${this.currentTime} seconds`)
-                            }
-                        })
+                        this.setupPlayer(this.player)
                         this.$emit("VideoPlayer-loaded", this.$refs.videoPlayer.plyr)
-                        this.videoLoaded = true
                         resolve(this.player)
                     } else {
                         // recursively wait because theres no callback API
@@ -157,6 +146,61 @@ export default {
                 this.$once("VideoPlayer-updated", checkForPlayer(resolve, reject))
                 this.$forceUpdate()
             })
+        },
+        setupPlayer(player) {
+            // 
+            // fix the scubber update issue
+            // 
+            Object.defineProperty(Object.getPrototypeOf(this.player), "currentTime", {
+                set(input) {
+                    // Bail if media duration isn't available yet
+                    if (!this.duration) { return }
+                    // Validate input
+                    input = input-0
+                    const inputIsValid = (input == input) && input >= 0
+                    if (inputIsValid) {
+                        // Set
+                        this.media.currentTime = Math.min(input, this.duration)
+                        let location = (input / this.duration) * 100
+                        setTimeout(() => {
+                            this.elements.inputs.seek.setAttribute("value", location)
+                            this.elements.inputs.seek.setAttribute("aria-valuenow", location)
+                            this.elements.inputs.seek.style.setProperty("--value", `${location}%`)
+                        }, 0)
+                    }
+                    // Logging
+                    this.debug.log(`Seeking to ${this.currentTime} seconds`)
+                }
+            })
+            
+            // 
+            // add listeners to the player
+            //
+            this.externalData.duration = this.player.duration
+            let updateCurrentTime = ()=>{this.externalData.currentTime = get(this, ['player', 'currentTime'], null)}
+            updateCurrentTime()
+            this.player.on("timeupdate", updateCurrentTime)
+            this.player.on("play", updateCurrentTime)
+            this.player.on("pause", updateCurrentTime)
+            
+            // 
+            // don't let focus stay on YouTube player
+            // 
+            let focusWatcher = () => {
+                let iframe = this.player.elements.wrapper.children[0]
+                // we don't want to focus on the iframe ever
+                if (document.activeElement == iframe) {
+                    // delayed recurse just as a check
+                    setTimeout(focusWatcher, 0)
+                    // focusing on nothing to move the focus to the body
+                    document.activeElement.blur()
+                    // alternatively focus directly on the player itself
+                    // this.player.elements.buttons.play[0].focus()
+                    // this.player.elements.buttons.play[1].focus()
+                }
+            }
+            window.addEventListener("focus",focusWatcher)
+            window.addEventListener("blur",focusWatcher)
         },
         // 
         // actions
