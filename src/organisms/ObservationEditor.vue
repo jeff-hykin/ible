@@ -20,8 +20,8 @@
                 | New Observation
         container(height="20px")
         transition(name="fade")
-            column.observation-widget(min-height="38rem")
-                h5(v-if="noSegment()")
+            column.observation-widget(min-height="38rem" position="relative")
+                row(v-if="noSegment()" style="position: absolute; width: 100%; height: 100%; font-size: 1.476rem; color: gray;")
                     | No Segment Selected
                 
                 transition(name="fade")
