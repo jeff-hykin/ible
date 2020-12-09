@@ -23,7 +23,7 @@
                                 //- BACK
                                 SideButton.left-side-button(left @click='decrementIndex')
                                 //- segments
-                                SegmentDisplay(:jumpSegment="jumpSegment" :videoDuration="videoData.duration" @SegmentDisplay-segementsRetrived="seekToSegmentStart")
+                                SegmentDisplay(:jumpSegment="jumpSegment" :videoDuration="videoData.duration" @SegmentDisplay-segementsRetrived="attemptSeekToSegmentStart")
                                 //- NEXT
                                 SideButton.right-side-button(right @click='incrementIndex')
                 column.side-container(align-v="top" padding-top="3rem" overflow="visible" min-height="50rem" width="fit-content")
@@ -67,20 +67,26 @@ export default {
     watch: {
         "videoData.duration": function() {
             console.debug(`[watch] this.videoData.duration is:`,this.videoData.duration)
-            this.seekToSegmentStart()
+            this.attemptSeekToSegmentStart()
         },
     },
+    rootHooks: {
+        watch: {
+            selectedSegment() {
+                console.debug(`this is:`,this)
+                this.attemptSeekToSegmentStart()
+            },
+        }
+    },
     methods: {
-        seekToSegmentStart() {
-            console.log(`trying to seekToSegmentStart`)
+        attemptSeekToSegmentStart() {
+            console.log(`trying to attemptSeekToSegmentStart`)
             // go to the start of the selected segment
-            if (this.$root.selectedSegment) {
-                if (typeof this.$root.selectedSegment.startTime == 'number') {
-                    if (this.duration) {
-                        let seekTo = get(this, ["$refs", "videoPlayer", "seekTo"], ()=>0)
-                        seekTo(this.$root.selectedSegment.startTime)
-                    }
-                }
+            let startTime = get(this.$root, ["selectedSegment", "startTime"], null)
+            if (isFinite(startTime) && this.videoData.duration) {
+                let seekTo = get(this, ["$refs", "videoPlayer", "seekTo"], ()=>0)
+                console.log(`calling seekTo`)
+                seekTo(startTime)
             }
         },
         incrementIndex() {
@@ -125,7 +131,7 @@ export default {
             console.debug(`[jumpSegment] this.$root.selectedSegment is:`,this.$root.selectedSegment)
             if (this.$root.selectedSegment instanceof Object) {
                 console.debug(`[jumpSegment] seeking to segment start since a new index was found`)
-                this.seekToSegmentStart()
+                this.attemptSeekToSegmentStart()
             }
         },
     }

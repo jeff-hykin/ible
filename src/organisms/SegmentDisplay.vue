@@ -70,7 +70,10 @@ export default {
         window.SegmentDisplay = this
     },
     watch: {
-        videoDuration() { this.updateSegments() }
+        videoDuration() {
+            console.log(`[SegmentDisplay] videoDuration changed`)
+            this.updateSegments()
+        }
     },
     rootHooks: {
         watch: {
