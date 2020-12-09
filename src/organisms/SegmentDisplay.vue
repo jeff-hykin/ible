@@ -241,6 +241,8 @@ export default {
             for (let [eachKey, eachValue] of Object.entries(this.$root.labels)) {
                 if (eachKey != get(this.$root, ["routeData$", "labelName"], null)) {
                     eachValue.selected = this.allLabelsOn
+                } else {
+                    eachValue.selected = true
                 }
             }
         },
