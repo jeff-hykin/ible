@@ -97,7 +97,6 @@ export default RootComponent = {
             label: null,
             minlabelConfidence: null,
             observer: null,
-            videoId: null,
             kindOfObserver: 'Either',
             validation: 'Any',
         },

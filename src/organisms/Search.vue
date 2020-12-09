@@ -28,11 +28,6 @@
                     placeholder="(Any)"
                     v-model="$root.filterAndSort.observer"
                 )
-                ui-textbox(
-                    label="Video Id"
-                    placeholder="(Any)"
-                    v-model="$root.filterAndSort.videoId"
-                )
                 br
                 ui-radio-group(
                     name="Kind of Observer"
@@ -124,7 +119,6 @@ export default {
             if (this.$root.routeData$.labelName                            ) { where.push({ valueOf: ['observation', 'label'             ], is:                     this.$root.routeData$.labelName            , }) }
             if (this.$root.filterAndSort.minlabelConfidence                ) { where.push({ valueOf: ['observation', 'minlabelConfidence'], isGreaterThanOrEqualTo: this.$root.filterAndSort.minlabelConfidence, }) }
             if (this.$root.filterAndSort.observer                          ) { where.push({ valueOf: ['observer'                         ], is:                     this.$root.filterAndSort.observer          , }) }
-            if (this.$root.filterAndSort.videoId                           ) { where.push({ valueOf: ['videoId'                          ], is:                     this.$root.filterAndSort.videoId           , }) }
             if (this.$root.filterAndSort.kindOfObserver == "Only Humans"   ) { where.push({ valueOf: ['isHuman'                          ], is:                     true                          , }) }
             if (this.$root.filterAndSort.kindOfObserver == "Only Robots"   ) { where.push({ valueOf: ['isHuman'                          ], is:                     false                         , }) }
             if (this.$root.filterAndSort.validation     == "Confirmed"     ) { where.push({ valueOf: ['confirmedBySomeone'               ], is:                     true                          , }) }
