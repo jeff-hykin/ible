@@ -7,7 +7,6 @@
         min-width="100vw"
         height="100vh"
         overflow="hidden"
-        :class="{labelSelected: !!$root.selectedLabel}"
     )
         
         LabelPicker

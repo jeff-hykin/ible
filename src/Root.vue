@@ -137,7 +137,6 @@ export default RootComponent = {
             },
         },
         selectedVideo: null,
-        selectedLabel: null,
         selectedSegment: null,
         labels: {},
         videos: {},
@@ -173,8 +172,13 @@ export default RootComponent = {
                 // 
                 // select label
                 // 
-                if (isString(this.routeData$.labelName) && this.routeData$.labelName.length > 0) {
-                    this.$root.selectedLabel = get(this, [ "labels", this.routeData$.labelName ], null)
+                if (isString(this.routeData$.labelName) && !isEmpty(this.routeData$.labelName)) {
+                    // if label exists
+                    let label = (this, [ "labels", this.routeData$.labelName ], null)
+                    // make sure to toggle the label
+                    if (isObject(label)) {
+                        label.selected = true
+                    }
                 }
             
                 // 
@@ -198,10 +202,6 @@ export default RootComponent = {
                 }
                 this.pushChangeToHistory = false
             },
-        },
-        selectedLabel(newValue, oldValue) {
-            oldValue && (oldValue.selected = false)
-            newValue && (newValue.selected = true)
         },
         labels() {
             // run the route handler to update the selected label

@@ -32,7 +32,7 @@
                         :duration="videoData.duration"
                     )
                     InfoSection.info-section(
-                        :labelName="get($root, ['selectedLabel', 'name'])"
+                        :labelName="get($root, ['routeData$', 'labelName'], '')"
                         :videoId="get($root, ['routeData$', 'videoId'], null)"
                         :segmentUuid="get($root, ['selectedSegment', '$uuid'], null)"
                         :currentTime="videoData.currentTime"

@@ -77,7 +77,6 @@ export default {
     },
     rootHooks: {
         watch: {
-            selectedLabel() { this.updateSegments() },
             labels() {
                 this.updateSegments()
                 // if no labels are selected
@@ -235,7 +234,7 @@ export default {
             this.allLabelsOn = !this.allLabelsOn
             // assign
             for (let [eachKey, eachValue] of Object.entries(this.$root.labels)) {
-                if (eachKey != get(this.$root, ["selectedLabel", "name"], null)) {
+                if (eachKey != get(this.$root, ["routeData$", "labelName"], null)) {
                     eachValue.selected = this.allLabelsOn
                 }
             }
