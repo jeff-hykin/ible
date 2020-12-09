@@ -146,16 +146,16 @@ export default RootComponent = {
     mounted() {
         // initilize routeData$
         this.$withoutWatchers("root-init", ()=>{
-            prevRouteDataJson = get(this.$route, ["query", "_"], "{}")
-            for (const [eachKey, eachValue] of Object.entries(JSON.parse(prevRouteDataJson))) {
-                if (eachValue != null) {
-                    this.routeData$[eachKey] = eachValue
-                }
-            }
+            this.importDataFromUrl()
         })
-        // BACKTRACK: load label filter from URL
     },
     watch: {
+        $route: {
+            deep: true,
+            handler() {
+                this.importDataFromUrl()
+            }
+        },
         routeData$: {
             deep: true,
             handler() {
@@ -196,6 +196,7 @@ export default RootComponent = {
                 // change route
                 // 
                 if (this.pushChangeToHistory) {
+                    console.log(`pushing route changes to history`)
                     this.$router.push({ name: this.$route.name, query: {"_":currentJson} })
                 } else {
                     this.$router.replace({ name: this.$route.name, query: {"_":currentJson} })
@@ -212,6 +213,14 @@ export default RootComponent = {
         labelsResolved() {}
     },
     methods: {
+        importDataFromUrl() {
+            prevRouteDataJson = get(this.$route, ["query", "_"], "{}")
+            for (const [eachKey, eachValue] of Object.entries(JSON.parse(prevRouteDataJson))) {
+                if (eachValue != null) {
+                    this.routeData$[eachKey] = eachValue
+                }
+            }
+        },
         setVideoObject() {
             let videoId = get(this, ["routeData$", "videoId"], null)
             if (isString(videoId) && videoId.length > 0) {

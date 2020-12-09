@@ -7,7 +7,6 @@
 </template>
 
 <script>
-// BACKTRACK: prevent from showing self 
 export default {
     data: ()=>({
         get
@@ -49,9 +48,7 @@ export default {
             }
         },
         selectVideo(eventObj, videoId) {
-            console.log(`changing selected video from VideoPicker`)
-            console.debug(`videoId of selected is:`,videoId)
-            this.$root.routeData$.videoId = videoId
+            this.$root.push({videoId})
         },
     }
 }
