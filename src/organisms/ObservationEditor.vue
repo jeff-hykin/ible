@@ -221,6 +221,8 @@ export default {
                         labelConfidence: selectedSegment.observation.labelConfidence,
                     }
                 }
+                console.log(`force updating`)
+                // this.$forceUpdate()
             },
             selectedVideo() {
                 this.resetData()

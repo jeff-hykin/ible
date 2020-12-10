@@ -52,15 +52,13 @@ export default {
         Card: require("../molecules/Card").default,
         VideoLister: require("../organisms/VideoLister").default,
     },
-    data() {
-        return {
-            get,
-            videoData: {
-                duration: null,
-                currentTime: null,
-            },
-        }
-    },
+    data: ()=>({
+        get,
+        videoData: {
+            duration: null,
+            currentTime: null,
+        },
+    }),
     mounted() {
         window.centerStage = this
     },
@@ -68,6 +66,17 @@ export default {
         "videoData.duration": function() {
             console.debug(`[watch] this.videoData.duration is:`,this.videoData.duration)
             this.attemptSeekToSegmentStart()
+        },
+        "videoData.currentTime": function(value, prevValue) {
+            let playing = get(this.$refs, ["videoPlayer","player","playing"], false)
+            if (playing) {
+                let endTime = get(this.$root, ["selectedSegment", "endTime",], Infinity)
+                if (value >= endTime && prevValue < endTime) {
+                    // pause video
+                    this.$refs.videoPlayer.player.pause()
+                    this.$toasted.show(`(End of Clip)`).goAway(2000)
+                }
+            }
         },
     },
     rootHooks: {
