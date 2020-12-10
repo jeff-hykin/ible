@@ -168,18 +168,44 @@ export default {
         },
         setupPlayer(player) {
             // 
+            // add listeners to the player
+            //
+            this.externalData.duration = this.player.duration
+            let updateCurrentTime = (...args) => {
+                console.debug(`args is:`,args)
+                this.externalData.currentTime = get(this, ['player', 'media', 'currentTime'], null)
+                setTimeout(() => {
+                    this.externalData.currentTime = get(this, ['player', 'media', 'currentTime'], null)
+                }, 50)
+            }
+            updateCurrentTime()
+            this.player.on("seeked", updateCurrentTime)
+            this.player.on("seeking", updateCurrentTime)
+            this.player.on("timeupdate", updateCurrentTime)
+            this.player.on("play", updateCurrentTime)
+            this.player.on("pause", updateCurrentTime)
+            
+            // 
             // fix the scubber update issue
             // 
+            let that = this
             Object.defineProperty(Object.getPrototypeOf(this.player), "currentTime", {
                 set(input) {
                     // Bail if media duration isn't available yet
                     if (!this.duration) { return }
                     // Validate input
                     input = input-0
+                    if (input < 0) {
+                        input = 0
+                    }
                     const inputIsValid = (input == input) && input >= 0
                     if (inputIsValid) {
                         // Set
                         this.media.currentTime = Math.min(input, this.duration)
+                        that.externalData.currentTime = this.media.currentTime
+                        setTimeout(() => that.externalData.currentTime = this.media.currentTime, 0)
+                        setTimeout(() => that.externalData.currentTime = this.media.currentTime, 50)
+                        setTimeout(() => that.externalData.currentTime = this.media.currentTime, 150)
                         let location = (input / this.duration) * 100
                         setTimeout(() => {
                             try {
@@ -196,15 +222,6 @@ export default {
                 }
             })
             
-            // 
-            // add listeners to the player
-            //
-            this.externalData.duration = this.player.duration
-            let updateCurrentTime = ()=>{this.externalData.currentTime = get(this, ['player', 'currentTime'], null)}
-            updateCurrentTime()
-            this.player.on("timeupdate", updateCurrentTime)
-            this.player.on("play", updateCurrentTime)
-            this.player.on("pause", updateCurrentTime)
         },
         // 
         // actions
