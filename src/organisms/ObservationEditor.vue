@@ -149,6 +149,7 @@ export default {
     props: [
         "currentTime",
         "duration",
+        "jumpSegment",
     ],
     components: {
         UiSwitch: require("../atoms/UiSwitch").default,
@@ -221,8 +222,6 @@ export default {
                         labelConfidence: selectedSegment.observation.labelConfidence,
                     }
                 }
-                console.log(`force updating`)
-                // this.$forceUpdate()
             },
             selectedVideo() {
                 this.resetData()
@@ -323,6 +322,7 @@ export default {
         },
         async onDelete() {
             this.editing = false
+            let index = this.$root.selectedSegment.$displayIndex
             if (this.uuidOfSelectedSegment) {
                 (await this.backend).mongoInterface.delete({
                     keyList:[this.uuidOfSelectedSegment],
@@ -333,6 +333,9 @@ export default {
                 window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
                 this.$toasted.show(`Data has been deleted`).goAway(2500)
             }
+            this.$root.selectedSegment = {}
+            // go to next segment
+            this.jumpSegment(index+1)
         },
         resetData() {
             this.observationData = {

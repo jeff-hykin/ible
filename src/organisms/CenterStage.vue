@@ -28,6 +28,7 @@
                                 SideButton.right-side-button(right @click='incrementIndex')
                 column.side-container(align-v="top" overflow="visible" min-height="50rem" width="fit-content")
                     ObservationEditor(
+                        :jumpSegment="jumpSegment"
                         :currentTime="videoData.currentTime"
                         :duration="videoData.duration"
                     )
