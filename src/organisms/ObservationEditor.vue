@@ -175,6 +175,7 @@ export default {
         
     },
     mounted() {
+        window.Editor = this // debugging
         this.resetData()
     },
     computed: {

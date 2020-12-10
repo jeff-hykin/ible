@@ -172,7 +172,6 @@ export default {
             //
             this.externalData.duration = this.player.duration
             let updateCurrentTime = (...args) => {
-                console.debug(`args is:`,args)
                 this.externalData.currentTime = get(this, ['player', 'media', 'currentTime'], null)
                 setTimeout(() => {
                     this.externalData.currentTime = get(this, ['player', 'media', 'currentTime'], null)

@@ -122,6 +122,7 @@ export default {
         },
         async onUploadObservation(eventObject) {
             let fileText = await eventObject[0].text()
+            const approximateMaxFileSize = 102391
             let newObservations, newUuids
             try {
                 newObservations = JSON.parse(fileText)
@@ -132,6 +133,14 @@ export default {
             } catch (error) {
                 this.$toasted.show(`Processing Error`).goAway(2500)
                 this.$toasted.show(`Are you sure the file is valid JSON?`).goAway(6500)
+                return
+            }
+            let size = JSON.stringify(newObservations).length
+            if (size > approximateMaxFileSize) {
+                this.$toasted.show(`<pre style="max-width: 70vw;overflow: auto;white-space: pre-wrap;">The file being uploaded is ${size} characters compressed\nThe limit is approximately ${approximateMaxFileSize}\nWhich is about ~345 observations\n(this will hopefully be increased in the future)<pre>`,{
+                    closeOnSwipe: false,
+                    action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
+                })
                 return
             }
             try {
