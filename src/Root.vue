@@ -94,7 +94,6 @@ export default RootComponent = {
             labelName: null,
         },
         filterAndSort: {
-            label: null,
             minlabelConfidence: null,
             observer: null,
             kindOfObserver: 'Either',
@@ -150,6 +149,16 @@ export default RootComponent = {
         })
     },
     watch: {
+        "searchResults.videos": {
+            deep: true,
+            handler() {
+                if (this.$root.routeData$.videoId == null) {
+                    if (!isEmpty(this.searchResults.videos)) {
+                        this.$root.routeData$.videoId = ([...this.searchResults.videos])[0]
+                    }
+                }
+            }
+        },
         $route: {
             deep: true,
             handler() {
