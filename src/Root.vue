@@ -94,6 +94,7 @@ export default RootComponent = {
             labelName: null,
         },
         filterAndSort: {
+            maxlabelConfidence: null,
             minlabelConfidence: null,
             observer: null,
             kindOfObserver: 'Either',

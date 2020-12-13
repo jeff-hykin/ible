@@ -9,44 +9,8 @@
             height="min-content"
             width="100%"
         )
-            column.card.search-observation(align-h="left" min-height="fit-content")
-                h5
-                    | Search Filters
-                br
-                ui-textbox(
-                    label="Label"
-                    placeholder="(Any)"
-                    v-model="$root.routeData$.labelName"
-                )
-                ui-textbox(
-                    label="Minium Label Confidence"
-                    placeholder="(Any)"
-                    v-model="$root.filterAndSort.minlabelConfidence"
-                )
-                ui-textbox(
-                    label="Observer (username)"
-                    placeholder="(Any)"
-                    v-model="$root.filterAndSort.observer"
-                )
-                br
-                row(align-h="space-between" align-v="top")
-                    ui-radio-group(
-                        name="validation"
-                        :options="[ 'Any', 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement']"
-                        v-model="$root.filterAndSort.validation"
-                        vertical
-                    )
-                        | Validation
-                    row(width="2rem")
-                    ui-radio-group(
-                        name="Kind of Observer"
-                        :options="['Only Humans', 'Either', 'Only Robots']"
-                        v-model="$root.filterAndSort.kindOfObserver"
-                        vertical
-                    )
-                        | Kind of Observer
-            
-            
+            column.card(width="26rem" padding="0.6rem 1rem")
+                LabelLister
             column.card(width="32rem" flex-grow="0.3")
                 h3(style="ont-weight: 100; margin-top: -10px; border-bottom: black solid 2px;")
                     | Stats
@@ -55,8 +19,6 @@
                 row.text-grid(:wrap="true" align-h="left")
                     h5
                         | Total Videos: {{$root.searchResults.videos.size}}
-                    //- h5
-                    //-     | Total Clips: {{$root.searchResults.counts.total}}
                     h5
                         | False Positive Ratio: {{falsePositiveRatio()}}
                 br
@@ -76,9 +38,50 @@
                         :series="Object.values($root.searchResults.labels)"
                         :labels="Object.keys($root.searchResults.labels)"
                     )
+
+            column.card.search-observation(align-h="left" min-height="fit-content")
+                h5
+                    | Search Filters
+                br
+                ui-textbox(
+                    label="Observer (username)"
+                    placeholder="(Any)"
+                    v-model="$root.filterAndSort.observer"
+                )
+                row(align-h="space-between")
+                    ui-textbox(
+                        label="Minium Confidence"
+                        placeholder="(Any)"
+                        v-model="$root.filterAndSort.minlabelConfidence"
+                    )
+                    ui-textbox(
+                        label="Max Confidence"
+                        placeholder="(Any)"
+                        v-model="$root.filterAndSort.maxlabelConfidence"
+                    )
+                ui-textbox(
+                    label="Label"
+                    placeholder="(Any)"
+                    v-model="$root.routeData$.labelName"
+                )
+                br
+                row(align-h="space-between" align-v="top")
+                    ui-radio-group(
+                        name="validation"
+                        :options="[ 'Any', 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement']"
+                        v-model="$root.filterAndSort.validation"
+                        vertical
+                    )
+                        | Validation
+                    row(width="2rem")
+                    ui-radio-group(
+                        name="Kind of Observer"
+                        :options="['Only Humans', 'Either', 'Only Robots']"
+                        v-model="$root.filterAndSort.kindOfObserver"
+                        vertical
+                    )
+                        | Kind of Observer
             
-            column.card(width="26rem" padding="0.6rem 1rem")
-                LabelLister
             
 </template>
 
@@ -120,7 +123,8 @@ export default {
             // build the backend query
             // 
             if (this.$root.routeData$.labelName                            ) { where.push({ valueOf: ['observation', 'label'             ], is:                     this.$root.routeData$.labelName            , }) }
-            if (this.$root.filterAndSort.minlabelConfidence                ) { where.push({ valueOf: ['observation', 'minlabelConfidence'], isGreaterThanOrEqualTo: this.$root.filterAndSort.minlabelConfidence, }) }
+            if (isNumber(this.$root.filterAndSort.maxlabelConfidence)      ) { where.push({ valueOf: ['observation', 'labelConfidence'   ], isLessThanOrEqualTo:    this.$root.filterAndSort.maxlabelConfidence, }) }
+            if (isNumber(this.$root.filterAndSort.minlabelConfidence)      ) { where.push({ valueOf: ['observation', 'labelConfidence'   ], isGreaterThanOrEqualTo: this.$root.filterAndSort.minlabelConfidence, }) }
             if (this.$root.filterAndSort.observer                          ) { where.push({ valueOf: ['observer'                         ], is:                     this.$root.filterAndSort.observer          , }) }
             if (this.$root.filterAndSort.kindOfObserver == "Only Humans"   ) { where.push({ valueOf: ['isHuman'                          ], is:                     true                          , }) }
             if (this.$root.filterAndSort.kindOfObserver == "Only Robots"   ) { where.push({ valueOf: ['isHuman'                          ], is:                     false                         , }) }
@@ -138,6 +142,14 @@ export default {
                     ...where,
                 ]
             })
+            
+            // this is so weird because of the dumb ways Javascript handles string->number
+            // it behaves like if ($root.filterAndSort.minlabelConfidence) then min = $root.filterAndSort.minlabelConfidence
+            let min = `${this.$root.filterAndSort.minlabelConfidence}`; min = min.length>0 && isFinite(min-0) ? min-0 : -Infinity
+            let max = `${this.$root.filterAndSort.maxlabelConfidence}`; max = max.length>0 && isFinite(max-0) ? max-0 : Infinity
+            // TODO: fix this, this is a patch/hack the backend should handle this
+            observationEntries = observationEntries.filter(each => (each.observation.labelConfidence >= min) && (each.observation.labelConfidence <= max))
+            
             console.debug(`observationEntries is:`,observationEntries)
             let results = {
                 finishedComputing: true,
@@ -158,13 +170,19 @@ export default {
                 results.labels[each.observation.label] += 1
                 results.videos.add(each.videoId)
                 
+                // this looks like is does nothing but sadly it does
+                // however it should be removed once the corrupt data from teh database is fixed
+                each.isHuman = each.isHuman == true
+                each.confirmedBySomeone = each.confirmedBySomeone == true
+                each.rejectedBySomeone = each.rejectedBySomeone == true
+                
                 if (each.isHuman) {
                     results.counts.fromHuman += 1 
                 } else {
-                    if (each.confirmedBySomeone) {
+                    if (each.confirmedBySomeone == true) {
                         results.counts.confirmed += 1
                     }
-                    if (each.rejectedBySomeone) {
+                    if (each.rejectedBySomeone == true) {
                         results.counts.rejected  += 1 
                         results.rejected.push(each)
                     }
