@@ -44,7 +44,7 @@ export default RootComponent = {
         routes: [
             {
                 name: "video",
-                path: '/video/:videoId/:labelName?',
+                path: '/video/*',
                 component: pages.Home.default
             },
             // load up anything in the pages section
