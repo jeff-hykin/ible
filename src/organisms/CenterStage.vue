@@ -12,7 +12,7 @@
             h5 No Video Selected
             
         transition(name="fade")
-            row.center-stage(v-if="get($root, ['routeData$', 'videoId'], false)" align-v="top" align-h="center" padding-top="8rem")
+            row.center-stage(v-show="get($root, ['routeData$', 'videoId'], false)" align-v="top" align-h="center" padding-top="8rem")
                 column.main-container(flex-grow=1 align-v="top")
                     row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top" :opacity="get($root, ['routeData$', 'videoId'], false)? 1 : 0")
                         //- Video area
@@ -83,7 +83,6 @@ export default {
     rootHooks: {
         watch: {
             selectedSegment() {
-                console.debug(`this is:`,this)
                 this.attemptSeekToSegmentStart()
             },
         }
