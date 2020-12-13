@@ -89,6 +89,15 @@ export default {
     rootHooks: {
         watch: {
             labels() {
+                // make sure the label is still valid
+                let label = get(this.$root, ["selectedSegment", "label"], null)
+                if (label) {
+                    // if no longer selected
+                    if (!get(this.$root, ["labels", label, "selected"], false)) {
+                        // reset the selected segment
+                        this.$root.selectedSegment = null
+                    }
+                }
                 this.updateSegments()
             },
             selectedVideo() {
