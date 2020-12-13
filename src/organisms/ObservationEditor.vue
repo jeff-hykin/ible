@@ -209,7 +209,7 @@ export default {
             selectedSegment() {
                 let selectedSegment = this.$root.selectedSegment
                 console.debug(`selectedSegment is:`,selectedSegment)
-                if (this.$root.selectedSegment instanceof Object) {
+                if (selectedSegment instanceof Object) {
                     this.uuidOfSelectedSegment = selectedSegment.$uuid
                     this.observationData = {
                         videoId:   selectedSegment.videoId,
@@ -312,6 +312,7 @@ export default {
                     selected: true,
                 }
             }
+            this.$root.selectedSegment = observation
             
             // enable the label if it wasn't already
             this.$root.labels[this.observationData.label] = { ...this.$root.labels[this.observationData.label], selected: true }
@@ -339,6 +340,7 @@ export default {
             this.jumpSegment(index+1)
         },
         resetData() {
+            this.$root.selectedSegment = null
             this.observationData = {
                 videoId: (this.$root.selectedVideo)&&this.$root.selectedVideo.$id,
                 startTime: this.currentTime || 0,
