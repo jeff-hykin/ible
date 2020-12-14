@@ -98,7 +98,7 @@ export default RootComponent = {
             minlabelConfidence: null,
             observer: null,
             kindOfObserver: 'Either',
-            validation: 'Any',
+            validation: [ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement' ],
         },
         searchResults: {
             finishedComputing: false,

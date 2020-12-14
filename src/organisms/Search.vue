@@ -67,20 +67,20 @@
                 br
                 row(align-h="space-between" align-v="top")
                     ui-radio-group(
-                        name="validation"
-                        :options="[ 'Any', 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement']"
-                        v-model="$root.filterAndSort.validation"
-                        vertical
-                    )
-                        | Validation
-                    row(width="2rem")
-                    ui-radio-group(
                         name="Kind of Observer"
                         :options="['Only Humans', 'Either', 'Only Robots']"
                         v-model="$root.filterAndSort.kindOfObserver"
                         vertical
                     )
                         | Kind of Observer
+                    row(width="2rem")
+                    ui-checkbox-group(
+                        name="validation"
+                        :options="[ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement' ]"
+                        v-model="$root.filterAndSort.validation"
+                        vertical
+                    )
+                        | Validation
             
             
 </template>
@@ -122,18 +122,18 @@ export default {
             // 
             // build the backend query
             // 
-            if (this.$root.routeData$.labelName                            ) { where.push({ valueOf: ['observation', 'label'             ], is:                     this.$root.routeData$.labelName            , }) }
-            if (isNumber(this.$root.filterAndSort.maxlabelConfidence)      ) { where.push({ valueOf: ['observation', 'labelConfidence'   ], isLessThanOrEqualTo:    this.$root.filterAndSort.maxlabelConfidence, }) }
-            if (isNumber(this.$root.filterAndSort.minlabelConfidence)      ) { where.push({ valueOf: ['observation', 'labelConfidence'   ], isGreaterThanOrEqualTo: this.$root.filterAndSort.minlabelConfidence, }) }
-            if (this.$root.filterAndSort.observer                          ) { where.push({ valueOf: ['observer'                         ], is:                     this.$root.filterAndSort.observer          , }) }
-            if (this.$root.filterAndSort.kindOfObserver == "Only Humans"   ) { where.push({ valueOf: ['isHuman'                          ], is:                     true                          , }) }
-            if (this.$root.filterAndSort.kindOfObserver == "Only Robots"   ) { where.push({ valueOf: ['isHuman'                          ], is:                     false                         , }) }
-            if (this.$root.filterAndSort.validation     == "Confirmed"     ) { where.push({ valueOf: ['confirmedBySomeone'               ], is:                     true                          , }) }
-            if (this.$root.filterAndSort.validation     == "Rejected"      ) { where.push({ valueOf: ['rejectedBySomeone'                ], is:                     true                          , }) }
-            if (this.$root.filterAndSort.validation     == "Disagreement"  ) { where.push({ valueOf: ['rejectedBySomeone'                ], is:                     true                          , }) 
-                                                                               where.push({ valueOf: ['confirmedBySomeone'               ], is:                     true                          , }) }
-            if (this.$root.filterAndSort.validation     == "Unchecked"     ) { where.push({ valueOf: ['rejectedBySomeone'                ], is:                     false                         , }) 
-                                                                               where.push({ valueOf: ['confirmedBySomeone'               ], is:                     false                         , }) }
+            if (this.$root.routeData$.labelName                               ) { where.push({ valueOf: ['observation', 'label'             ], is:                     this.$root.routeData$.labelName            , }) }
+            if (isNumber(this.$root.filterAndSort.maxlabelConfidence)         ) { where.push({ valueOf: ['observation', 'labelConfidence'   ], isLessThanOrEqualTo:    this.$root.filterAndSort.maxlabelConfidence, }) }
+            if (isNumber(this.$root.filterAndSort.minlabelConfidence)         ) { where.push({ valueOf: ['observation', 'labelConfidence'   ], isGreaterThanOrEqualTo: this.$root.filterAndSort.minlabelConfidence, }) }
+            if (this.$root.filterAndSort.observer                             ) { where.push({ valueOf: ['observer'                         ], is:                     this.$root.filterAndSort.observer          , }) }
+            if (this.$root.filterAndSort.kindOfObserver == "Only Humans"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     true                          , }) }
+            if (this.$root.filterAndSort.kindOfObserver == "Only Robots"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     false                         , }) }
+            if (!this.$root.filterAndSort.validation.includes("Confirmed")    ) { where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
+            if (!this.$root.filterAndSort.validation.includes("Rejected")     ) { where.push({ valueOf: ['rejectedBySomeone'                ], isNot:                  true                          , }) }
+            // if (!this.$root.filterAndSort.validation.includes("Unchecked")    ) { where.push({ valueOf: ['rejectedBySomeone'                ], is:                     false                         , }) 
+            //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], is:                     false                         , }) }
+            // if (!this.$root.filterAndSort.validation.includes("Disagreement") ) { where.push({ valueOf: ['rejectedBySomeone'                ], isNot:                  true                          , }) 
+            //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
             console.log(`querying the backend`)
             let observationEntries = await backend.mongoInterface.getAll({
                 from: 'observations',
@@ -143,12 +143,30 @@ export default {
                 ]
             })
             
+            // 
+            // this looks like is does nothing but sadly it does
+            // however it should be removed once the corrupt data from the database is fixed
+            observationEntries = observationEntries.map(each => ({
+                ...each,
+                isHuman: each.isHuman == true,
+                confirmedBySomeone: each.confirmedBySomeone == true,
+                rejectedBySomeone: each.rejectedBySomeone == true,
+            }))
+            
             // this is so weird because of the dumb ways Javascript handles string->number
             // it behaves like if ($root.filterAndSort.minlabelConfidence) then min = $root.filterAndSort.minlabelConfidence
             let min = `${this.$root.filterAndSort.minlabelConfidence}`; min = min.length>0 && isFinite(min-0) ? min-0 : -Infinity
             let max = `${this.$root.filterAndSort.maxlabelConfidence}`; max = max.length>0 && isFinite(max-0) ? max-0 : Infinity
             // TODO: fix this, this is a patch/hack the backend should handle this
             observationEntries = observationEntries.filter(each => (each.observation.labelConfidence >= min) && (each.observation.labelConfidence <= max))
+            // TODO: backend should be handling this too
+            if (!this.$root.filterAndSort.validation.includes("Unchecked")) {
+                observationEntries = observationEntries.filter(each => each.confirmedBySomeone || each.rejectedBySomeone)
+            }
+            // TODO: backend should be handling this too
+            if (!this.$root.filterAndSort.validation.includes("Disagreement")) {
+                observationEntries = observationEntries.filter(each => !(each.confirmedBySomeone && each.rejectedBySomeone))
+            }
             
             console.debug(`observationEntries is:`,observationEntries)
             let results = {
@@ -169,12 +187,6 @@ export default {
                 if (!results.labels[each.observation.label]) { results.labels[each.observation.label] = 0 }
                 results.labels[each.observation.label] += 1
                 results.videos.add(each.videoId)
-                
-                // this looks like is does nothing but sadly it does
-                // however it should be removed once the corrupt data from teh database is fixed
-                each.isHuman = each.isHuman == true
-                each.confirmedBySomeone = each.confirmedBySomeone == true
-                each.rejectedBySomeone = each.rejectedBySomeone == true
                 
                 if (each.isHuman) {
                     results.counts.fromHuman += 1 
