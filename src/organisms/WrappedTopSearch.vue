@@ -37,7 +37,7 @@ export default {
     height: 10000vh
     top: -10000vh
     left: 0
-    z-index: 99999
+    z-index: 999
     background: rgba(0, 0, 0, 0)
     transition: all ease 0.3s
     
@@ -47,7 +47,7 @@ export default {
         background: rgba(0, 0, 0, 0.5)
     
     .search-positioner
-        z-index: 99999
+        z-index: 999
         position: fixed
         width: 100vw
         top: 0

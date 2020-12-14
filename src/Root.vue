@@ -318,4 +318,7 @@ export default RootComponent = {
     .fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */ {
         opacity: 0
     }   
+    .tippy-popper {
+        z-index: 999999999 !important;
+    }
 </style>

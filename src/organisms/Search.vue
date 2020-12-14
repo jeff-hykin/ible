@@ -1,7 +1,20 @@
 <template lang="pug">
     column.search(align-v="top" width="100%")
         row.video-wrapper(style="min-width: 100%; margin-top: 1rem;")
+            ui-button.delete-button(
+                icon="download"
+                color="red"
+            )
+                | Delete
             VideoIdSearch
+            ui-button.download-button(
+                @click="download"
+                icon="download"
+                color="primary"
+                tooltipPosition="top"
+                :tooltip="`Download all ${$root.searchResults.counts.total} results as JSON`"
+            )
+                | Download
         row.search-summary(
             align-v="top"
             align-h="space-around"
@@ -84,10 +97,9 @@
             
             
 </template>
-
 <script>
-let { colors, debounce } = require("../utils")
-
+let { colors, debounce, download } = require("../utils")
+let observationEntries
 export default {
     components: {
         UiSwitch: require("../atoms/UiSwitch").default,
@@ -106,6 +118,10 @@ export default {
     computed: {
     },
     methods: {
+        download() {
+            console.log(`download clicked`)
+            download("data.json", JSON.stringify(observationEntries))
+        },
         falsePositiveRatio() {
             try {
                 let answer = this.$root.searchResults.counts.rejected/this.$root.searchResults.counts.confirmed
@@ -135,7 +151,7 @@ export default {
             // if (!this.$root.filterAndSort.validation.includes("Disagreement") ) { where.push({ valueOf: ['rejectedBySomeone'                ], isNot:                  true                          , }) 
             //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
             console.log(`querying the backend`)
-            let observationEntries = await backend.mongoInterface.getAll({
+            observationEntries = await backend.mongoInterface.getAll({
                 from: 'observations',
                 where: [
                     { valueOf: ['type'], is:'segment' },
@@ -223,10 +239,22 @@ export default {
     }
 }
 </script>
-
 <style lang="sass" scoped>
-
 .search
+    .delete-button
+        opacity: 0
+    
+    .download-button
+        transition: all 0.3s ease
+        box-shadow: var(--shadow-1)
+        border-radius: 1rem
+        border: var(--text-color) 2px solid
+        color: var(--text-color)
+        &:not(:hover)
+            --text-color: whitesmoke
+        &:hover
+            --text-color: white
+        
     .text-grid
         h5
             width: 50%
