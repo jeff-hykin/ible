@@ -17,6 +17,9 @@ export default {
         VueApexCharts: VueApexCharts,
     },
     props: {
+        showTotal: {
+            default: ()=>false,
+        },
         scaler: {
             type: Number,
             default: ()=>1,
@@ -109,8 +112,8 @@ export default {
                                     }
                                 },
                                 total: {
-                                    show: true,
-                                    showAlways: true,
+                                    show: false,
+                                    showAlways: false,
                                     label: 'Total',
                                     fontSize: `${fontSize*25}px`,
                                     fontFamily: 'Helvetica, Arial, sans-serif',
@@ -145,6 +148,10 @@ export default {
             },
         },
     }),
+    mounted() {
+        this.chartOptions.plotOptions.pie.donut.labels.total.show       = this.showTotal == "showTotal"
+        this.chartOptions.plotOptions.pie.donut.labels.total.showAlways = this.showTotal == "showTotal"
+    },
     methods: {
         // a hack to fix the terrible scaling Apex Charts has
         calculateScaling(){
