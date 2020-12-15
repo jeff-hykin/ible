@@ -38,11 +38,20 @@
                 br
                 .pie-wrapper(v-if="$root.searchResults.finishedComputing")
                     PieChart(
+                        showTotal
                         :series="[$root.searchResults.counts.fromHuman, $root.searchResults.counts.rejected, $root.searchResults.uncheckedObservations.length, $root.searchResults.counts.confirmed, $root.searchResults.counts.disagreement]"
                         :labels="['Human','Rejected','Unchecked','Confirmed', 'Disagreement']"
                         :colors="[ colors.blue, colors.red, colors.purple, colors.green, colors.yellow, ]"
                     )
 
+                h5
+                    | Observers
+                br
+                .pie-wrapper(v-if="$root.searchResults.finishedComputing")
+                    PieChart(
+                        :series="Object.values($root.searchResults.observers)"
+                        :labels="Object.keys($root.searchResults.observers)"
+                    )
                 h5
                     | Labels
                 br
@@ -190,6 +199,7 @@ export default {
                 uncheckedObservations: [],
                 rejected: [],
                 labels: {},
+                observers: {},
                 videos: new Set(),
                 counts: {
                     total: observationEntries.length,
@@ -200,8 +210,12 @@ export default {
                 },
             }
             for (let each of observationEntries) {
+                if (!results.observers[each.observer]) { results.observers[each.observer] = 0 }
+                results.observers[each.observer] += 1
+                
                 if (!results.labels[each.observation.label]) { results.labels[each.observation.label] = 0 }
                 results.labels[each.observation.label] += 1
+                
                 results.videos.add(each.videoId)
                 
                 if (each.isHuman) {
