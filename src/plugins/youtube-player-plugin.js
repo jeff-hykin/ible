@@ -4,6 +4,7 @@ import 'vue-plyr/dist/vue-plyr.css'
 
 Vue.use(VuePlyr, {
     plyr: {
+        seekTime: 5, // default skip amount is 5 seconds
         hideControls: false,
         keyboard: {
             focused: true,

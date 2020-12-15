@@ -81,35 +81,8 @@ export default {
         blur(...args) {
             this.focusWatcher(...args)
         },
-        keydown(eventObj) {
-            // only when focused on the nothing or this element
-            // (this is to exclude textboxes)
-            if (eventObj.target == this.$el || eventObj.target == document.body) {
-                // 
-                // key controls
-                // 
-                switch (eventObj.key) {
-                    case ".":
-                        eventObj.preventDefault()
-                        try {
-                            // skip ahead 1 frame
-                            this.player.forward(1/32)
-                        } catch (err) {}
-                        // this.incrementIndex()
-                        break
-                    case ",":
-                        eventObj.preventDefault()
-                        try {
-                            // skip back 1 frame
-                            this.player.rewind(1/32)
-                        } catch (err) {}
-                        eventObj.preventDefault()
-                        break
-                    default:
-                        // we dont care about other keys
-                        break
-                }
-            }
+        keydown(eventObject) {
+            this.keydownControls(eventObject)
         }
     },
     methods: {
@@ -221,6 +194,62 @@ export default {
                 }
             })
             
+            // 
+            // add custom controls
+            //
+            this.player.elements.container.addEventListener("keydown", this.keydownControls)
+        },
+        keydownControls(eventObject) {
+            console.debug(`eventObject is:`,eventObject)
+            // only when focused on the nothing or this element
+            // (this is to exclude textboxes)
+            if (eventObject.target == document.body || event.path.includes(this.$el)) {
+                console.log(`focused on correct element`)
+                // 
+                // key controls
+                // 
+                switch (eventObject.key) {
+                    case ".":
+                        eventObject.preventDefault()
+                        this.player.foward(1/32)
+                        break
+                    case ",":
+                        eventObject.preventDefault()
+                        this.player.rewind(1/32)
+                        break
+                    case "ArrowRight":
+                        if (event.shiftKey) {
+                            console.log(`going forward`)
+                            eventObject.preventDefault()
+                            this.player.forward(1/32)
+                        } else if (event.altKey) {
+                            eventObject.preventDefault()
+                            this.player.forward(10)
+                        }
+                        break
+                    case "ArrowLeft":
+                        if (event.shiftKey) {
+                            eventObject.preventDefault()
+                            this.player.rewind(1/32)
+                        } else if (event.altKey) {
+                            eventObject.preventDefault()
+                            this.player.rewind(10)
+                        }
+                        break
+                    case "ArrowUp":
+                        if (event.shiftKey) {
+                            eventObject.preventDefault()
+                            this.player.speed += 0.5
+                        }
+                        break
+                    case "ArrowDown":
+                        if (event.shiftKey) {
+                            eventObject.preventDefault()
+                            this.player.speed -= 0.5
+                        }
+                        break
+                }
+            }
         },
         // 
         // actions
