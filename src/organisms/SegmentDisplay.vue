@@ -295,7 +295,7 @@ export default {
         width: 96%
         margin-bottom: 0.5rem
     
-    --max-label-size: 8rem
+    --max-label-size: 10rem
     .labels
         margin: 1rem
         margin-top: 0.5rem
