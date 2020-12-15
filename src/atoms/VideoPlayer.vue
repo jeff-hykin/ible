@@ -200,11 +200,9 @@ export default {
             this.player.elements.container.addEventListener("keydown", this.keydownControls)
         },
         keydownControls(eventObject) {
-            console.debug(`eventObject is:`,eventObject)
             // only when focused on the nothing or this element
             // (this is to exclude textboxes)
             if (eventObject.target == document.body || event.path.includes(this.$el)) {
-                console.log(`focused on correct element`)
                 // 
                 // key controls
                 // 
