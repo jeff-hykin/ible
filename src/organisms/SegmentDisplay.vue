@@ -48,7 +48,7 @@
                 | Toggle All
         container.labels
             container(
-                v-if="eachLabelName != '(No Segments)'"
+                v-if="eachLabelName != '(no segments)'"
                 v-for="(eachLevel, eachLabelName) in $root.labels"
                 :style="`--label-color: ${$root.labels[eachLabelName].selected ? $root.labels[eachLabelName].color : 'gray'}; align-items: flex-start;`"
             )
