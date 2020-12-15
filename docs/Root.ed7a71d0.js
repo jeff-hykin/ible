@@ -38893,51 +38893,13 @@ let ezRpc = require("ez-rpc-frontend"); // const databaseUrl = "http://192.168.8
 // const databaseUrl = "http://localhost:3000"
 // const databaseUrl = "http://paradise.cs.tamu.edu:3000"
 // const databaseUrl = "http://192.168.192.57:3000"
-
-
-const ezRpcUrl = "http://192.168.86.222:6283"; // my desktop db 
+// const ezRpcUrl = "http://192.168.86.222:6283" // my desktop db 
 // const ezRpcUrl = "http://128.194.4.15:3000" // csce-jiang1.engr.tamu.edu:3000
-// const ezRpcUrl = "http://128.194.4.15:6283" // csce-jiang1.engr.tamu.edu:6283
+
+
+const ezRpcUrl = "http://128.194.4.15:6283"; // csce-jiang1.engr.tamu.edu:6283
 
 const key = "4a75cfe3cdc1164b67aae6b413c9714280d2f102";
-
-function clean(observations) {
-  let output = [];
-
-  for (let each of observations) {
-    // skip those with an empty label
-    if (each.observation.label.length == 0) {
-      continue;
-    }
-
-    if (each.observer.length == 0) {
-      continue;
-    }
-
-    if (each.startTime === each.endTime) {
-      continue;
-    }
-
-    output.push({
-      type: "segment",
-      videoId: each.videoId,
-      startTime: (each.startTime - 0).toFixed(4) - 0,
-      endTime: (each.endTime - 0).toFixed(4) - 0,
-      observer: each.observer.replace(/ /, "_").replace(/'/, ""),
-      isHuman: each.isHuman == true,
-      confirmedBySomeone: each.confirmedBySomeone == true,
-      rejectedBySomeone: each.rejectedBySomeone == true,
-      uploadTime: each.uploadTime,
-      observation: {
-        label: each.observation.label.toLowerCase().replace(/ /, "-"),
-        labelConfidence: each.observation.labelConfidence - 0
-      }
-    });
-  }
-
-  return output;
-}
-
 window.backend = ezRpc.buildInterfaceFor(ezRpcUrl);
 module.exports = {
   backend,
