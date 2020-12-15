@@ -137,10 +137,7 @@ export default {
             }
             let size = JSON.stringify(newObservations).length
             if (size > approximateMaxFileSize) {
-                this.$toasted.show(`<pre style="max-width: 70vw;overflow: auto;white-space: pre-wrap;">The file being uploaded is ${size} characters compressed\nThe limit is approximately ${approximateMaxFileSize}\nWhich is about ~345 observations\n(this will hopefully be increased in the future)<pre>`,{
-                    closeOnSwipe: false,
-                    action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
-                })
+                this.$root.bigMessage(`The file being uploaded is ${size} characters compressed\nThe limit is approximately ${approximateMaxFileSize}\n(that limit is about ~345 observations)\n(this will hopefully be increased in the future)\nPlease reduce the number of observations then try re-uploading`)
                 return
             }
             try {
@@ -157,10 +154,7 @@ export default {
                 if (JSON.stringify(error.arguments).length > maxLength) {
                     error.arguments = JSON.stringify(error.arguments).slice(0,maxLength)
                 }
-                this.$toasted.show(`Full Details:<br><pre style="max-width: 70vw;overflow: auto;white-space: pre-wrap;">${JSON.stringify(error,0,3).replace(/\\n/g,"<br>")}<pre>`,{
-                    closeOnSwipe: false,
-                    action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
-                })
+                this.$root.bigMessage(`Full Details:\n\n${JSON.stringify(error,0,3)}`)
                 return
             }
             this.$toasted.show(`Success! Refresh to see changes`).goAway(2500)

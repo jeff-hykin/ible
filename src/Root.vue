@@ -220,6 +220,15 @@ export default RootComponent = {
         }
     },
     methods: {
+        bigMessage(message) {
+            this.$toasted.show(`<pre style="max-width: 70vw;overflow: auto;white-space: pre-wrap;">${escape(message)}<pre>`,{
+                closeOnSwipe: false,
+                action: {
+                    text:'Close',
+                    onClick: (e, toastObject)=>{toastObject.goAway(0)}
+                },
+            })
+        },
         importDataFromUrl() {
             prevRouteDataJson = get(this.$route, ["query", "_"], "{}")
             for (const [eachKey, eachValue] of Object.entries(JSON.parse(prevRouteDataJson))) {
