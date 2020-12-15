@@ -21,6 +21,10 @@
         container(height="20px")
         transition(name="fade")
             column.observation-widget(min-height="38rem" position="relative")
+                row(v-if="!noSegment() && !editing" style="position: absolute; font-size: 1rem; color: gray; right: 0.9rem; top: 0.7rem; cursor: pointer; opacity: 0.5;" @click="deSelectSegment")
+                    | X
+                    ui-tooltip(position="top" animation="fade")
+                        | De-Select this segment
                 row(v-if="noSegment()" style="position: absolute; width: 100%; height: 100%; font-size: 1.476rem; color: gray;")
                     | No Segment Selected
                 
@@ -232,6 +236,9 @@ export default {
     methods: {
         noSegment() {
             return !this.$root.selectedSegment && !this.editing
+        },
+        deSelectSegment() {
+            this.$root.selectedSegment = null
         },
         async onNewObservation() {
             if (!this.editing) {
