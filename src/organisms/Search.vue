@@ -6,7 +6,7 @@
                 color="red"
             )
                 | Delete
-            VideoIdSearch
+            VideoIdSearch(@goToVideo='goToVideo')
             ui-button.download-button(
                 @click="download"
                 icon="download"
@@ -127,6 +127,10 @@ export default {
     computed: {
     },
     methods: {
+        goToVideo(data) {
+            console.log(`goToVideo event`)
+            this.$emit("goToVideo", data)
+        },
         download() {
             console.log(`download clicked`)
             download("data.json", JSON.stringify(observationEntries))

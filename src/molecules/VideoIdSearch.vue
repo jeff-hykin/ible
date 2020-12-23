@@ -1,12 +1,12 @@
 <template lang="pug">
     //- search for video
-    ui-autocomplete.rounded-search(
+    ui-textbox.rounded-search(
         placeholder="Enter YouTube url or Video ID"
         @focus="selectSearchText"
-        @select="videoSelect"
+        @keydown.enter="videoSelect"
         @change="videoSelect"
+        @paste="videoSelect"
         v-model="searchTerm"
-        :suggestions="suggestions"
     )
 </template>
 
@@ -21,6 +21,7 @@ export default {
     },
     data: ()=>({
         searchTerm: null,
+        // TODO: remove or add back suggestions feature
         suggestions: [],
     }),
     mounted() {
@@ -86,6 +87,8 @@ export default {
                 if (newVideoId.length == currentFixedSizeOfYouTubeVideoId) {
                     // pushing searched video route
                     this.$root.routeData$.videoId = newVideoId
+                    // emit video event
+                    this.$emit("goToVideo", newVideoId)
                 } else {
                     this.$toasted.show(`It looks like that video id isn't valid\n(its not 11 characters)\nWould you like to try and load it anyways?`, {
                         keepOnHover:true,
@@ -106,9 +109,9 @@ export default {
 </script>
 
 <style lang='sass' scoped>
-.rounded-search
+.ui-textbox.rounded-search
     width: 25rem
-    max-width: 85%
+    max-width: 25rem
     margin: 1.2rem
     padding: 0.7rem 2rem 1rem
     background-color: white
