@@ -52,7 +52,7 @@ export default {
         top: 0
         left: 0
         transform: translateY(-100%)
-        transition: all ease-out 0.4s
+        transition: all ease-out 0.3s
         will-change: transform
     
     &:not([hide=true])
