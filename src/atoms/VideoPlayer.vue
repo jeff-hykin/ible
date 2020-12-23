@@ -258,6 +258,8 @@ export default {
             // if the video hasn't changed
             if (videoId == this.videoId) {
                 this.player.currentTime = startTime
+                // always focus on the video immediately after seeking
+                document.activeElement.blur()
             }
         },
     }
