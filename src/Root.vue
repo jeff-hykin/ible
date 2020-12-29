@@ -96,7 +96,7 @@ export default RootComponent = {
         filterAndSort: {
             maxlabelConfidence: null,
             minlabelConfidence: null,
-            observer: null,
+            observer: storageObject.observer,
             kindOfObserver: 'Either',
             validation: [ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement' ],
         },
