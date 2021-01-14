@@ -29,12 +29,10 @@ class EventEmitter {
 
 window.storageObject = new Proxy(window.localStorage, {
     get: function(target, key) {
-        let item = target.getItem(key)
-        if (!item) {
-            return undefined
-        // if it exists, parse it first
-        } else {
+        try {
             return JSON.parse(target.getItem(key))
+        } catch (error) {
+            return undefined
         }
     },
     set: function (target, key, value) {
