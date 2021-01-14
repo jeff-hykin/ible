@@ -26,7 +26,7 @@
                     ui-tooltip(position="top" animation="fade")
                         | De-Select this segment
                 row(v-if="noSegment()" style="position: absolute; width: 100%; height: 100%; font-size: 1.476rem; color: gray;")
-                    | No Segment Selected
+                    | No Observation Selected
                 
                 transition(name="fade")
                     row(v-if="!noSegment()" align-h="space-between" width="100%")
