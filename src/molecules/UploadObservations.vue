@@ -78,11 +78,11 @@ export default {
             "type": "segment",
             "startTime": 125.659,
             "endTime": 127.661,
-            "observer": "jimbob",
+            "observer": "CSCE636-Spring2021-WuAiSeDUdl-v1",
             "isHuman": true,
             "observation": {
-                "label": "Happy",
-                "labelConfidence": 0.99
+                "label": "happy",
+                "labelConfidence": -0.99
             }
         },
         dummyData2: {
@@ -90,12 +90,12 @@ export default {
             "type": "segment",
             "startTime": 92.433,
             "endTime": 96.193,
-            "observer": "YOLO-v4-001",
+            "observer": "CSCE636-Spring2021-WuAiSeDUdl-YOLOv3-v12",
             "isHuman": false,
             "confirmedBySomeone": false,
             "rejectedBySomeone": false,
             "observation": {
-                "label": "Sad",
+                "label": "sad",
                 "labelConfidence": 0.85
             }
         },
@@ -181,6 +181,7 @@ export default {
             
         .json-tree
             min-width: 100%
+            max-width: 100%
             
             ::v-deep .json-tree-sign
                 visibility: hidden
