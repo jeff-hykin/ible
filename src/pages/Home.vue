@@ -15,11 +15,12 @@
         
         VideoPicker
         
-        UploadObservations.upload-button
+        UploadObservations.upload-button(ref="uploadObservations")
         
 </template>
 <script>
 let Fuse = require("fuse.js").default
+let _ = require("lodash")
 
 export default {
     name: "HomePage",
@@ -31,6 +32,11 @@ export default {
         Card: require("../molecules/Card").default,
     },
     mounted() {
+        if (this.$root.routeData$.initWithHelp) {
+            attempt(async ()=>{
+                (await this.$child("uploadObservations", "helpModal")).open()
+            })
+        }
         this.$root.setVideoObject()
     },
 }

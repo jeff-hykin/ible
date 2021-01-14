@@ -21,51 +21,51 @@
             ui-fileupload(name="file" type="secondary" @change="onUploadObservation")
         
         //- help message
-        ui-modal.modal(ref="helpModal" title="Example Upload" transition="scale-up")
-            row(align-h="space-evenly" align-v="top")
-                column(align-v="top")
-                    br 
-                    | Try editing them! Then look at the code →
-                    row(align-h="space-between" padding="2rem 1rem" align-v="top")
-                        column
-                            h5
-                                | Observation 1
-                            container(height="1rem")
-                            DummyObservation(:observationData="dummyData1")
-                        container(min-width="3rem")
-                        column
-                            h5
-                                | Observation 2
-                            container(height="1rem")
-                            DummyObservation(:observationData="dummyData2")
-                
-                container(width="2rem")
-                
-                column(flex-basis="50%" max-width="31rem" align-v="top")
-                    span
-                        br
-                        | To upload these observations
-                        br
-                        br
-                        | 1. Create a file ending with
-                        code
-                            |  .json 
-                        br
-                        br
-                        | 2. Then add the following text to that file.
-                        br
-                        br
-                    JsonTree.json-tree(:data="[dummyData1, dummyData2]")
-                    span
-                        br
-                        | 3. Then simply use the upload button to upload the file.
-                        br
-                        br
-                        | The JSON file is just a list of each observation represented as a kind of dictionary.
+        portal(to="model-popups")
+            ui-modal.modal(fj20485gh93oi53g ref="helpModal" title="Example Upload" transition="scale-up")
+                row(align-h="space-evenly" align-v="top")
+                    column(align-v="top")
+                        br 
+                        | Try editing them! Then look at the code →
+                        row(align-h="space-between" padding="2rem 1rem" align-v="top")
+                            column
+                                h5
+                                    | Observation 1
+                                container(height="1rem")
+                                DummyObservation(:observationData="dummyData1")
+                            container(min-width="3rem")
+                            column
+                                h5
+                                    | Observation 2
+                                container(height="1rem")
+                                DummyObservation(:observationData="dummyData2")
+                    
+                    container(width="2rem")
+                    
+                    column(flex-basis="50%" max-width="31rem" align-v="top")
+                        span
+                            br
+                            | To upload these observations
+                            br
+                            br
+                            | 1. Create a file ending with
+                            code
+                                |  .json 
+                            br
+                            br
+                            | 2. Then add the following text to that file.
+                            br
+                            br
+                        JsonTree.json-tree(:data="[dummyData1, dummyData2]")
+                        span
+                            br
+                            | 3. Then simply use the upload button to upload the file.
+                            br
+                            br
+                            | The JSON file is just a list of each observation represented as a kind of dictionary.
     
 </template>
 <script>
-
 
 export default {
     components: {
@@ -165,6 +165,20 @@ export default {
 </script>
 <style lang="sass" scoped>
 
+.modal[fj20485gh93oi53g=fj20485gh93oi53g]
+    font-size: 14pt
+    z-index: 99999
+    
+    ::v-deep .ui-modal__container
+        width: fit-content
+        
+    .json-tree
+        min-width: 100%
+        max-width: 100%
+        
+        ::v-deep .json-tree-sign
+            visibility: hidden
+    
 .upload-wrapper
     padding: 1rem
     --size: 3.9rem
@@ -172,19 +186,6 @@ export default {
     h5
         text-decoration: underline
         color: gray
-    
-    .modal
-        font-size: 14pt
-        
-        ::v-deep .ui-modal__container
-            width: fit-content
-            
-        .json-tree
-            min-width: 100%
-            max-width: 100%
-            
-            ::v-deep .json-tree-sign
-                visibility: hidden
     
     .upload-button
         transition: all ease 0.3s
