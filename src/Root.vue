@@ -2,7 +2,8 @@
     #vue-root
         //- [ Put stuff you always want to exist here (like a nav bar) ]
         //- This (below) will load to the Home page by default 
-        router-view
+        portal-target(name="model-popups")
+        router-view(ref="router")
         LeftSidePanel
         RightSidePanel
 </template>
@@ -14,20 +15,23 @@ import plugins from "./plugins/*.js"
 import pages from "./pages/*.vue"
 import {getColor} from "./utils"
 
-import { Router } from './plugins/router-plugin'
+// make lodash global because I like to live dangerously
+for (const [eachKey, eachValue] of Object.entries(require("lodash"))) { window[eachKey] = eachValue }
+
 let { backend } = require("./iilvd-api")
 
+//
+// Routing Init
+//
+import { Router } from './plugins/router-plugin'
+let prevRouteDataJson = "{}"
 // make sure home page exists
 if (!("Home" in pages)) {
     throw Error("Hey, this template expects there to be a 'Home.vue' page.\nIf you don't want one that's fine. Just change the router in the App.vue file so it doesn't expect/need one")
 }
-// make lodash global because I like to live dangerously
-for (const [eachKey, eachValue] of Object.entries(require("lodash"))) { window[eachKey] = eachValue }
-let RootComponent
+
 // create Root instance and attach it (executed after this file loads)
-setTimeout(()=>(new (Vue.extend(RootComponent))).$mount('#vue-root'),0)
-// actually create the App, user router to pick main pages
-let prevRouteDataJson = "{}"
+let RootComponent; setTimeout(()=>(new (Vue.extend(RootComponent))).$mount('#vue-root'), 0)
 export default RootComponent = {
     name: 'RootComponent',
     components: {
@@ -85,69 +89,79 @@ export default RootComponent = {
     // 
     // global data
     // 
-    data: ()=>({
-        needToLoad$: {
-            backend,
+    data() {
+            // 
+            // calculate route
+            // 
+            let initialRouteData = {
+                videoId: null,
+                labelName: null,
+                initWithHelp: false,
+            }
+            prevRouteDataJson = get(this.$route, ["query", "_"], "{}")
+            for (const [eachKey, eachValue] of Object.entries(JSON.parse(prevRouteDataJson))) {
+                if (eachValue != null) {
+                    initialRouteData[eachKey] = eachValue
+                }
+            }
+            
+            return {
+                needToLoad$: {
+                    backend,
+                },
+                routeData$: initialRouteData,
+                filterAndSort: {
+                    maxlabelConfidence: null,
+                    minlabelConfidence: null,
+                    observer: storageObject.observer,
+                    kindOfObserver: 'Either',
+                    validation: [ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement' ],
+                },
+                searchResults: {
+                    finishedComputing: false,
+                    videos: new Set(),
+                    uncheckedObservations: [0],
+                    // this hardcoded value is only for initilization and is
+                    // immediately replaced with the result of a backend call
+                    // TODO: should probably still remove this
+                    labels: {
+                        "Uncertain": 2,
+                        "Happy": 36,
+                        "Neutral": 13,
+                        "Surprise": 2,
+                        "Disgust": 2,
+                        "Contempt": 2,
+                        "Anger": 3,
+                        "non-face": 1,
+                        "Sad": 2,
+                        "headache": 182,
+                        "Smoking": 49,
+                        "Shaking Head": 21,
+                        "Fall": 119,
+                        "Angry": 14,
+                        "Hand Rotation": 3,
+                        "Hand Swipe": 11,
+                        "Heart-Attack": 27,
+                        "chest pain": 29
+                    },
+                    counts: {
+                        total: 1,
+                        fromHuman: 0,
+                        rejected: 0,
+                        confirmed: 0,
+                        disagreement: 0,
+                    },
+                },
+                selectedVideo: null,
+                selectedSegment: null,
+                labels: {},
+                videos: {},
+                needToLoad$: {
+                    backend,
+                },
+            }
         },
-        routeData$: {
-            videoId: null,
-            labelName: null,
-        },
-        filterAndSort: {
-            maxlabelConfidence: null,
-            minlabelConfidence: null,
-            observer: storageObject.observer,
-            kindOfObserver: 'Either',
-            validation: [ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement' ],
-        },
-        searchResults: {
-            finishedComputing: false,
-            videos: new Set(),
-            uncheckedObservations: [0],
-            // this hardcoded value is only for initilization and is
-            // immediately replaced with the result of a backend call
-            // TODO: should probably still remove this
-            labels: {
-                "Uncertain": 2,
-                "Happy": 36,
-                "Neutral": 13,
-                "Surprise": 2,
-                "Disgust": 2,
-                "Contempt": 2,
-                "Anger": 3,
-                "non-face": 1,
-                "Sad": 2,
-                "headache": 182,
-                "Smoking": 49,
-                "Shaking Head": 21,
-                "Fall": 119,
-                "Angry": 14,
-                "Hand Rotation": 3,
-                "Hand Swipe": 11,
-                "Heart-Attack": 27,
-                "chest pain": 29
-            },
-            counts: {
-                total: 1,
-                fromHuman: 0,
-                rejected: 0,
-                confirmed: 0,
-                disagreement: 0,
-            },
-        },
-        selectedVideo: null,
-        selectedSegment: null,
-        labels: {},
-        videos: {},
-        needToLoad$: {
-            backend,
-        },
-    }),
     mounted() {
-        // initilize routeData$
-        this.$withoutWatchers("root-init", ()=>{
-            this.importDataFromUrl()
-        })
     },
     watch: {
         "searchResults.videos": {
@@ -169,7 +183,7 @@ export default RootComponent = {
         routeData$: {
             deep: true,
             handler() {
-                console.log(`routeData$ changed`)
+                console.debug(`routeData$ changed:`, JSON.stringify(this.routeData$))
                 // remove null's
                 let routeDataNoNull = {...this.routeData$}
                 for (const [eachKey, eachValue] of Object.entries(routeDataNoNull)) {
@@ -231,11 +245,13 @@ export default RootComponent = {
         },
         importDataFromUrl() {
             prevRouteDataJson = get(this.$route, ["query", "_"], "{}")
+            let newObject = {}
             for (const [eachKey, eachValue] of Object.entries(JSON.parse(prevRouteDataJson))) {
                 if (eachValue != null) {
-                    this.routeData$[eachKey] = eachValue
+                    newObject[eachKey] = eachValue
                 }
             }
+            this.routeData$ = newObject
         },
         setVideoObject() {
             let videoId = get(this, ["routeData$", "videoId"], null)
