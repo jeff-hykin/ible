@@ -38,6 +38,7 @@
     --material-blue: #2195f3;
     --blue: #60a5de;
     --red: #e57373;
+    --break-tag-height: 18px;
 }
 body {
     background: radial-gradient(circle, rgb(245, 245, 245) 0%, rgb(218, 218, 218) 100%);
@@ -68,6 +69,16 @@ body .outline-button:hover {
 }   
 .tippy-popper {
     z-index: 999999999 !important;
+}
+body br {
+    display: block;
+    content: "";
+    border-bottom: var(--break-tag-height) solid transparent;
+}
+@-moz-document url-prefix() {
+    body br {
+        margin-bottom: var(--break-tag-height);
+    }
 }@-ms-viewport {
   width: device-width;
 }
@@ -5774,7 +5785,6 @@ div[data-fjio3y598t3hi2] .add-observation-area .new-observation-button, div[data
   --text-color: white;
 }
 .search .text-grid h5[data-v-cdd074] {
-  width: 50%;
   min-width: fit-content;
   margin-top: 9px;
 }
