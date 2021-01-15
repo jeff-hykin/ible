@@ -29,7 +29,7 @@
                     | Stats
                 br
                 br
-                row.text-grid(:wrap="true" align-h="left")
+                column.text-grid(align-h="left" width="90%")
                     h5
                         | Total Videos: {{$root.searchResults.videos.size}}
                     h5
@@ -276,7 +276,6 @@ export default {
         
     .text-grid
         h5
-            width: 50%
             min-width: fit-content
             margin-top: 9px
         
