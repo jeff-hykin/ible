@@ -90,77 +90,77 @@ export default RootComponent = {
     // global data
     // 
     data() {
-            // 
-            // calculate route
-            // 
-            let initialRouteData = {
-                videoId: null,
-                labelName: null,
-                initWithHelp: false,
+        // 
+        // calculate route
+        // 
+        let initialRouteData = {
+            videoId: null,
+            labelName: null,
+            initWithHelp: false,
+        }
+        prevRouteDataJson = get(this.$route, ["query", "_"], "{}")
+        for (const [eachKey, eachValue] of Object.entries(JSON.parse(prevRouteDataJson))) {
+            if (eachValue != null) {
+                initialRouteData[eachKey] = eachValue
             }
-            prevRouteDataJson = get(this.$route, ["query", "_"], "{}")
-            for (const [eachKey, eachValue] of Object.entries(JSON.parse(prevRouteDataJson))) {
-                if (eachValue != null) {
-                    initialRouteData[eachKey] = eachValue
-                }
-            }
-            
-            return {
-                needToLoad$: {
-                    backend,
+        }
+        
+        return {
+            needToLoad$: {
+                backend,
+            },
+            routeData$: initialRouteData,
+            filterAndSort: {
+                maxlabelConfidence: null,
+                minlabelConfidence: null,
+                observer: storageObject.observer,
+                kindOfObserver: 'Either',
+                validation: [ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement' ],
+            },
+            searchResults: {
+                finishedComputing: false,
+                videos: new Set(),
+                uncheckedObservations: [0],
+                // this hardcoded value is only for initilization and is
+                // immediately replaced with the result of a backend call
+                // TODO: should probably still remove this
+                labels: {
+                    "Uncertain": 2,
+                    "Happy": 36,
+                    "Neutral": 13,
+                    "Surprise": 2,
+                    "Disgust": 2,
+                    "Contempt": 2,
+                    "Anger": 3,
+                    "non-face": 1,
+                    "Sad": 2,
+                    "headache": 182,
+                    "Smoking": 49,
+                    "Shaking Head": 21,
+                    "Fall": 119,
+                    "Angry": 14,
+                    "Hand Rotation": 3,
+                    "Hand Swipe": 11,
+                    "Heart-Attack": 27,
+                    "chest pain": 29
                 },
-                routeData$: initialRouteData,
-                filterAndSort: {
-                    maxlabelConfidence: null,
-                    minlabelConfidence: null,
-                    observer: storageObject.observer,
-                    kindOfObserver: 'Either',
-                    validation: [ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement' ],
+                counts: {
+                    total: 1,
+                    fromHuman: 0,
+                    rejected: 0,
+                    confirmed: 0,
+                    disagreement: 0,
                 },
-                searchResults: {
-                    finishedComputing: false,
-                    videos: new Set(),
-                    uncheckedObservations: [0],
-                    // this hardcoded value is only for initilization and is
-                    // immediately replaced with the result of a backend call
-                    // TODO: should probably still remove this
-                    labels: {
-                        "Uncertain": 2,
-                        "Happy": 36,
-                        "Neutral": 13,
-                        "Surprise": 2,
-                        "Disgust": 2,
-                        "Contempt": 2,
-                        "Anger": 3,
-                        "non-face": 1,
-                        "Sad": 2,
-                        "headache": 182,
-                        "Smoking": 49,
-                        "Shaking Head": 21,
-                        "Fall": 119,
-                        "Angry": 14,
-                        "Hand Rotation": 3,
-                        "Hand Swipe": 11,
-                        "Heart-Attack": 27,
-                        "chest pain": 29
-                    },
-                    counts: {
-                        total: 1,
-                        fromHuman: 0,
-                        rejected: 0,
-                        confirmed: 0,
-                        disagreement: 0,
-                    },
-                },
-                selectedVideo: null,
-                selectedSegment: null,
-                labels: {},
-                videos: {},
-                needToLoad$: {
-                    backend,
-                },
-            }
-        },
+            },
+            selectedVideo: null,
+            selectedSegment: null,
+            labels: {},
+            videos: {},
+            needToLoad$: {
+                backend,
+            },
+        }
+    },
     mounted() {
     },
     watch: {
@@ -315,6 +315,7 @@ export default RootComponent = {
         --material-blue: #2195f3;
         --blue: #60a5de;
         --red: #e57373;
+        --break-tag-height: 18px;
     }
     body {
         background: radial-gradient(circle, rgb(245, 245, 245) 0%, rgb(218, 218, 218) 100%);
@@ -345,5 +346,15 @@ export default RootComponent = {
     }   
     .tippy-popper {
         z-index: 999999999 !important;
+    }
+    body br {
+        display: block;
+        content: "";
+        border-bottom: var(--break-tag-height) solid transparent;
+    }
+    @-moz-document url-prefix() {
+        body br {
+            margin-bottom: var(--break-tag-height);
+        }
     }
 </style>
