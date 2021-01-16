@@ -202,7 +202,7 @@ export default {
         keydownControls(eventObject) {
             // only when focused on the nothing or this element
             // (this is to exclude textboxes)
-            if (eventObject.target == document.body || event.path.includes(this.$el)) {
+            if (eventObject.target == document.body || eventObject.path.includes(this.$el)) {
                 // 
                 // key controls
                 // 
