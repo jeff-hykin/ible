@@ -54,14 +54,12 @@ export default {
                         extractHidden: [ '_id']
                     },
                 })
-                console.debug(`setting suggestions`)
                 this.suggestions = [...new Set(possibleVideoIds.concat(this.suggestions))]
             }
         }
     },
     methods: {
         selectSearchText(eventObject) {
-            console.debug(`eventObject is:`,eventObject)
             eventObject.target.select()
         },
         extractVideoIdIfPossible(newVideoId) {
@@ -83,25 +81,25 @@ export default {
             newVideoId = this.extractVideoIdIfPossible(newVideoId)
             if (newVideoId == get(this.$root, ['routeData$', 'videoId'], null)) {
                 this.$toasted.show(`Video is already open`).goAway(2500)
+            }
+            
+            if (newVideoId.length == currentFixedSizeOfYouTubeVideoId) {
+                // pushing searched video route
+                this.$root.routeData$.videoId = newVideoId
+                // emit video event
+                this.$emit("goToVideo", newVideoId)
             } else {
-                if (newVideoId.length == currentFixedSizeOfYouTubeVideoId) {
-                    // pushing searched video route
-                    this.$root.routeData$.videoId = newVideoId
-                    // emit video event
-                    this.$emit("goToVideo", newVideoId)
-                } else {
-                    this.$toasted.show(`It looks like that video id isn't valid\n(its not 11 characters)\nWould you like to try and load it anyways?`, {
-                        keepOnHover:true,
-                        action: [
-                            {
-                                text : 'Load Anyways',
-                                onClick : (eventData, toastObject) => {
-                                    this.$root.routeData$.videoId = newVideoId
-                                },
+                this.$toasted.show(`It looks like that video id isn't valid\n(its not 11 characters)\nWould you like to try and load it anyways?`, {
+                    keepOnHover:true,
+                    action: [
+                        {
+                            text : 'Load Anyways',
+                            onClick : (eventData, toastObject) => {
+                                this.$root.routeData$.videoId = newVideoId
                             },
-                        ]
-                    })
-                }
+                        },
+                    ]
+                })
             }
         },
     }

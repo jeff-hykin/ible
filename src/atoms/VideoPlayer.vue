@@ -69,10 +69,14 @@ export default {
         window.VideoPlayer = this // debugging
         // init
         this.loadVideo()
+        this.intervalId = setInterval(this.focusWatcher, 500)
     },
     // allow things to dynamically hook into the updated event
     updated() {
         this.$emit("VideoPlayer-updated")
+    },
+    destroyed() {
+        clearInterval(this.intervalId)
     },
     windowListeners: {
         focus(...args) {
