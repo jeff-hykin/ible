@@ -63236,15 +63236,14 @@ var _default = {
 
       newVideoId = this.extractVideoIdIfPossible(newVideoId);
 
-      if (newVideoId == get(this.$root, ['routeData$', 'videoId'], null)) {
-        this.$toasted.show(`Video is already open`).goAway(2500);
-      }
-
       if (newVideoId.length == currentFixedSizeOfYouTubeVideoId) {
         // pushing searched video route
         this.$root.routeData$.videoId = newVideoId; // emit video event
 
-        this.$emit("goToVideo", newVideoId);
+        this.$emit("goToVideo", newVideoId); // sometimes the changes are not detected
+
+        this.$root.routeData$ = { ...this.$root.routeData$
+        };
       } else {
         this.$toasted.show(`It looks like that video id isn't valid\n(its not 11 characters)\nWould you like to try and load it anyways?`, {
           keepOnHover: true,
