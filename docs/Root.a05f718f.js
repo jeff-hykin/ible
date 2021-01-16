@@ -60559,7 +60559,7 @@ var _default = {
     keydownControls(eventObject) {
       // only when focused on the nothing or this element
       // (this is to exclude textboxes)
-      if (eventObject.target == document.body || eventObject.path.includes(this.$el)) {
+      if (eventObject.target == document.body || get(eventObject, ["path"], []).includes(this.$el)) {
         // 
         // key controls
         // 
@@ -63244,6 +63244,7 @@ var _default = {
 
         this.$root.routeData$ = { ...this.$root.routeData$
         };
+        console.debug(`this.$root.routeData$ is:`, JSON.stringify(this.$root.routeData$, 0, 4));
       } else {
         this.$toasted.show(`It looks like that video id isn't valid\n(its not 11 characters)\nWould you like to try and load it anyways?`, {
           keepOnHover: true,
