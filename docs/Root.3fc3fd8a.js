@@ -37378,1696 +37378,7 @@ module.exports = {
   "without-watchers": require("./without-watchers.js"),
   "youtube-player-plugin": require("./youtube-player-plugin.js")
 };
-},{"./child.js":"HT0w","./css-baseline-plugin.js":"xmsx","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./portal-plugin.js":"HMJZ","./resolvables-plugin.js":"mVwj","./root-hooks-plugin.js":"T1YL","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./window-listeners-plugin.js":"XpWL","./without-watchers.js":"aLvM","./youtube-player-plugin.js":"mQXc"}],"i0aF":[function(require,module,exports) {
-var define;
-var global = arguments[3];
-(function(a,b){if("function"==typeof define&&define.amd)define([],b);else if("undefined"!=typeof exports)b();else{b(),a.FileSaver={exports:{}}.exports}})(this,function(){"use strict";function b(a,b){return"undefined"==typeof b?b={autoBom:!1}:"object"!=typeof b&&(console.warn("Deprecated: Expected third argument to be a object"),b={autoBom:!b}),b.autoBom&&/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(a.type)?new Blob(["\uFEFF",a],{type:a.type}):a}function c(b,c,d){var e=new XMLHttpRequest;e.open("GET",b),e.responseType="blob",e.onload=function(){a(e.response,c,d)},e.onerror=function(){console.error("could not download file")},e.send()}function d(a){var b=new XMLHttpRequest;b.open("HEAD",a,!1);try{b.send()}catch(a){}return 200<=b.status&&299>=b.status}function e(a){try{a.dispatchEvent(new MouseEvent("click"))}catch(c){var b=document.createEvent("MouseEvents");b.initMouseEvent("click",!0,!0,window,0,0,0,80,20,!1,!1,!1,!1,0,null),a.dispatchEvent(b)}}var f="object"==typeof window&&window.window===window?window:"object"==typeof self&&self.self===self?self:"object"==typeof global&&global.global===global?global:void 0,a=f.saveAs||("object"!=typeof window||window!==f?function(){}:"download"in HTMLAnchorElement.prototype?function(b,g,h){var i=f.URL||f.webkitURL,j=document.createElement("a");g=g||b.name||"download",j.download=g,j.rel="noopener","string"==typeof b?(j.href=b,j.origin===location.origin?e(j):d(j.href)?c(b,g,h):e(j,j.target="_blank")):(j.href=i.createObjectURL(b),setTimeout(function(){i.revokeObjectURL(j.href)},4E4),setTimeout(function(){e(j)},0))}:"msSaveOrOpenBlob"in navigator?function(f,g,h){if(g=g||f.name||"download","string"!=typeof f)navigator.msSaveOrOpenBlob(b(f,h),g);else if(d(f))c(f,g,h);else{var i=document.createElement("a");i.href=f,i.target="_blank",setTimeout(function(){e(i)})}}:function(a,b,d,e){if(e=e||open("","_blank"),e&&(e.document.title=e.document.body.innerText="downloading..."),"string"==typeof a)return c(a,b,d);var g="application/octet-stream"===a.type,h=/constructor/i.test(f.HTMLElement)||f.safari,i=/CriOS\/[\d]+/.test(navigator.userAgent);if((i||g&&h)&&"object"==typeof FileReader){var j=new FileReader;j.onloadend=function(){var a=j.result;a=i?a:a.replace(/^data:[^;]*;/,"data:attachment/file;"),e?e.location.href=a:location=a,e=null},j.readAsDataURL(a)}else{var k=f.URL||f.webkitURL,l=k.createObjectURL(a);e?e.location=l:location.href=l,e=null,setTimeout(function(){k.revokeObjectURL(l)},4E4)}});f.saveAs=a.saveAs=a,"undefined"!=typeof module&&(module.exports=a)});
-
-//# sourceMappingURL=FileSaver.min.js.map
-},{}],"tXFJ":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-var _default = {
-  name: 'GridLoader',
-  props: {
-    loading: {
-      type: Boolean,
-      default: true
-    },
-    color: {
-      type: String,
-      default: '#5dc596'
-    },
-    size: {
-      type: String,
-      default: '15px'
-    },
-    margin: {
-      type: String,
-      default: '2px'
-    },
-    radius: {
-      type: String,
-      default: '100%'
-    }
-  },
-
-  data() {
-    return {
-      spinnerStyle: {
-        backgroundColor: this.color,
-        width: this.size,
-        height: this.size,
-        margin: this.margin,
-        borderRadius: this.radius
-      }
-    };
-  },
-
-  computed: {
-    animationStyle() {
-      return {
-        animationName: 'v-gridStretchDelay',
-        animationIterationCount: 'infinite',
-        animationTimingFunction: 'ease',
-        animationFillMode: 'both',
-        display: 'inline-block'
-      };
-    },
-
-    animationStyle1() {
-      return {
-        animationDelay: this.delay(),
-        animationDuration: this.duration()
-      };
-    },
-
-    animationStyle2() {
-      return {
-        animationDelay: this.delay(),
-        animationDuration: this.duration()
-      };
-    },
-
-    animationStyle3() {
-      return {
-        animationDelay: this.delay(),
-        animationDuration: this.duration()
-      };
-    },
-
-    animationStyle4() {
-      return {
-        animationDelay: this.delay(),
-        animationDuration: this.duration()
-      };
-    },
-
-    animationStyle5() {
-      return {
-        animationDelay: this.delay(),
-        animationDuration: this.duration()
-      };
-    },
-
-    animationStyle6() {
-      return {
-        animationDelay: this.delay(),
-        animationDuration: this.duration()
-      };
-    },
-
-    animationStyle7() {
-      return {
-        animationDelay: this.delay(),
-        animationDuration: this.duration()
-      };
-    },
-
-    animationStyle8() {
-      return {
-        animationDelay: this.delay(),
-        animationDuration: this.duration()
-      };
-    },
-
-    animationStyle9() {
-      return {
-        animationDelay: this.delay(),
-        animationDuration: this.duration()
-      };
-    },
-
-    containerStyle() {
-      return {
-        width: parseFloat(this.size) * 3 + parseFloat(this.margin) * 6 + 'px',
-        fontSize: 0
-      };
-    }
-
-  },
-  methods: {
-    random(value) {
-      return Math.random() * value;
-    },
-
-    delay() {
-      return this.random(100) / 100 - 0.2 + 's';
-    },
-
-    duration() {
-      return this.random(100) / 100 + 0.6 + 's';
-    }
-
-  }
-};
-exports.default = _default;
-        var $0250c4 = exports.default || module.exports;
-      
-      if (typeof $0250c4 === 'function') {
-        $0250c4 = $0250c4.options;
-      }
-    
-        /* template */
-        Object.assign($0250c4, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{directives:[{name:"show",rawName:"v-show",value:(_vm.loading),expression:"loading"}],staticClass:"v-spinner",style:(_vm.containerStyle)},[_c('div',{staticClass:"v-grid v-grid1",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle1])}),_c('div',{staticClass:"v-grid v-grid2",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle2])}),_c('div',{staticClass:"v-grid v-grid3",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle3])}),_c('div',{staticClass:"v-grid v-grid4",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle4])}),_c('div',{staticClass:"v-grid v-grid5",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle5])}),_c('div',{staticClass:"v-grid v-grid6",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle6])}),_c('div',{staticClass:"v-grid v-grid7",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle7])}),_c('div',{staticClass:"v-grid v-grid8",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle8])}),_c('div',{staticClass:"v-grid v-grid9",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle9])})])}
-var staticRenderFns = []
-
-          return {
-            render: render,
-            staticRenderFns: staticRenderFns,
-            _compiled: true,
-            _scopeId: null,
-            functional: undefined
-          };
-        })());
-      
-},{}],"N6QO":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-//
-//
-//
-//
-//
-//
-//
-var _default = {
-  components: {
-    GridLoader: require('vue-spinner/src/GridLoader.vue').default
-  }
-};
-exports.default = _default;
-        var $e4b511 = exports.default || module.exports;
-      
-      if (typeof $e4b511 === 'function') {
-        $e4b511 = $e4b511.options;
-      }
-    
-        /* template */
-        Object.assign($e4b511, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('row',{attrs:{"align-h":"space-evenly","shadow":"2","background-color":"white","border-radius":"1rem","width":"18rem","padding":"1rem"}},[_c('h5',[_vm._v("Loading ")]),_c('GridLoader')],1)}
-var staticRenderFns = []
-
-          return {
-            render: render,
-            staticRenderFns: staticRenderFns,
-            _compiled: true,
-            _scopeId: "data-v-e4b511",
-            functional: undefined
-          };
-        })());
-      
-},{"vue-spinner/src/GridLoader.vue":"tXFJ"}],"vQbQ":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-function parse(data, depth = 0, last = true, key = undefined) {
-  let kv = {
-    depth,
-    last,
-    primitive: true,
-    key: JSON.stringify(key)
-  };
-
-  if (typeof data !== 'object') {
-    return Object.assign(kv, {
-      type: typeof data,
-      value: JSON.stringify(data)
-    });
-  } else if (data === null) {
-    return Object.assign(kv, {
-      type: 'null',
-      value: 'null'
-    });
-  } else if (Array.isArray(data)) {
-    let value = data.map((item, index) => {
-      return parse(item, depth + 1, index === data.length - 1);
-    });
-    return Object.assign(kv, {
-      primitive: false,
-      type: 'array',
-      value
-    });
-  } else {
-    let keys = Object.keys(data);
-    let value = keys.map((key, index) => {
-      return parse(data[key], depth + 1, index === keys.length - 1, key);
-    });
-    return Object.assign(kv, {
-      primitive: false,
-      type: 'object',
-      value
-    });
-  }
-}
-
-var _default = {
-  name: 'json-tree',
-  props: {
-    level: {
-      type: Number,
-      default: Infinity
-    },
-    kv: {
-      type: Object
-    },
-    raw: {
-      type: String
-    },
-    data: {}
-  },
-
-  data() {
-    return {
-      expanded: true,
-      hovered: false
-    };
-  },
-
-  computed: {
-    parsed() {
-      if (this.kv) {
-        return this.kv;
-      }
-
-      let result;
-
-      try {
-        if (this.raw) {
-          result = JSON.parse(this.raw);
-        } else if (typeof this.data !== 'undefined') {
-          result = this.data;
-        } else {
-          result = '[Vue JSON Tree] No data passed.';
-          console.warn(result);
-        }
-      } catch (e) {
-        result = '[Vue JSON Tree] Invalid raw JSON.';
-        console.warn(result);
-      } finally {
-        return parse(result);
-      }
-    }
-
-  },
-  methods: {
-    format(n) {
-      if (n > 1) return `${n} items`;
-      return n ? '1 item' : 'no items';
-    }
-
-  },
-
-  created() {
-    this.expanded = this.parsed.depth < this.level;
-  }
-
-};
-exports.default = _default;
-        var $8f21d9 = exports.default || module.exports;
-      
-      if (typeof $8f21d9 === 'function') {
-        $8f21d9 = $8f21d9.options;
-      }
-    
-        /* template */
-        Object.assign($8f21d9, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('span',{staticClass:"json-tree",class:{'json-tree-root': _vm.parsed.depth === 0}},[(_vm.parsed.primitive)?_c('span',{staticClass:"json-tree-row"},[_vm._l(((_vm.parsed.depth * 2 + 3)),function(n){return _c('span',{key:n,staticClass:"json-tree-indent"},[_vm._v(" ")])}),_vm._v(" "),(_vm.parsed.key)?_c('span',{staticClass:"json-tree-key"},[_vm._v(_vm._s(_vm.parsed.key))]):_vm._e(),_vm._v(" "),(_vm.parsed.key)?_c('span',{staticClass:"json-tree-colon"},[_vm._v(": ")]):_vm._e(),_vm._v(" "),_c('span',{staticClass:"json-tree-value",class:'json-tree-value-' + _vm.parsed.type,attrs:{"title":("" + (_vm.parsed.value))}},[_vm._v(_vm._s(("" + (_vm.parsed.value))))]),_vm._v(" "),(!_vm.parsed.last)?_c('span',{staticClass:"json-tree-comma"},[_vm._v(",")]):_vm._e(),_vm._v(" "),_c('span',{staticClass:"json-tree-indent"},[_vm._v(" ")])],2):_vm._e(),_vm._v(" "),(!_vm.parsed.primitive)?_c('span',{staticClass:"json-tree-deep"},[_c('span',{staticClass:"json-tree-row json-tree-expando",on:{"click":function($event){_vm.expanded = !_vm.expanded},"mouseover":function($event){_vm.hovered = true},"mouseout":function($event){_vm.hovered = false}}},[_c('span',{staticClass:"json-tree-indent"},[_vm._v(" ")]),_vm._v(" "),_c('span',{staticClass:"json-tree-sign"},[_vm._v(_vm._s(_vm.expanded ? '-' : '+'))]),_vm._v(" "),_vm._l(((_vm.parsed.depth * 2 + 1)),function(n){return _c('span',{key:n,staticClass:"json-tree-indent"},[_vm._v(" ")])}),_vm._v(" "),(_vm.parsed.key)?_c('span',{staticClass:"json-tree-key"},[_vm._v(_vm._s(_vm.parsed.key))]):_vm._e(),_vm._v(" "),(_vm.parsed.key)?_c('span',{staticClass:"json-tree-colon"},[_vm._v(": ")]):_vm._e(),_vm._v(" "),_c('span',{staticClass:"json-tree-open"},[_vm._v(_vm._s(_vm.parsed.type === 'array' ? '[' : '{'))]),_vm._v(" "),_c('span',{directives:[{name:"show",rawName:"v-show",value:(!_vm.expanded),expression:"!expanded"}],staticClass:"json-tree-collapsed"},[_vm._v(" /* "+_vm._s(_vm.format(_vm.parsed.value.length))+" */ ")]),_vm._v(" "),_c('span',{directives:[{name:"show",rawName:"v-show",value:(!_vm.expanded),expression:"!expanded"}],staticClass:"json-tree-close"},[_vm._v(_vm._s(_vm.parsed.type === 'array' ? ']' : '}'))]),_vm._v(" "),_c('span',{directives:[{name:"show",rawName:"v-show",value:(!_vm.expanded && !_vm.parsed.last),expression:"!expanded && !parsed.last"}],staticClass:"json-tree-comma"},[_vm._v(",")]),_vm._v(" "),_c('span',{staticClass:"json-tree-indent"},[_vm._v(" ")])],2),_vm._v(" "),_c('span',{directives:[{name:"show",rawName:"v-show",value:(_vm.expanded),expression:"expanded"}],staticClass:"json-tree-deeper"},_vm._l((_vm.parsed.value),function(item,index){return _c('json-tree',{key:index,attrs:{"kv":item,"level":_vm.level}})}),1),_vm._v(" "),_c('span',{directives:[{name:"show",rawName:"v-show",value:(_vm.expanded),expression:"expanded"}],staticClass:"json-tree-row"},[_c('span',{staticClass:"json-tree-ending",class:{'json-tree-paired': _vm.hovered}},[_vm._l(((_vm.parsed.depth * 2 + 3)),function(n){return _c('span',{key:n,staticClass:"json-tree-indent"},[_vm._v(" ")])}),_vm._v(" "),_c('span',{staticClass:"json-tree-close"},[_vm._v(_vm._s(_vm.parsed.type === 'array' ? ']' : '}'))]),_vm._v(" "),(!_vm.parsed.last)?_c('span',{staticClass:"json-tree-comma"},[_vm._v(",")]):_vm._e(),_vm._v(" "),_c('span',{staticClass:"json-tree-indent"},[_vm._v(" ")])],2)])]):_vm._e()])}
-var staticRenderFns = []
-
-          return {
-            render: render,
-            staticRenderFns: staticRenderFns,
-            _compiled: true,
-            _scopeId: null,
-            functional: undefined
-          };
-        })());
-      
-},{}],"Bh1I":[function(require,module,exports) {
-var bundleURL = null;
-
-function getBundleURLCached() {
-  if (!bundleURL) {
-    bundleURL = getBundleURL();
-  }
-
-  return bundleURL;
-}
-
-function getBundleURL() {
-  // Attempt to find the URL of the current script and use that as the base URL
-  try {
-    throw new Error();
-  } catch (err) {
-    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
-
-    if (matches) {
-      return getBaseURL(matches[0]);
-    }
-  }
-
-  return '/';
-}
-
-function getBaseURL(url) {
-  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)\/[^/]+$/, '$1') + '/';
-}
-
-exports.getBundleURL = getBundleURLCached;
-exports.getBaseURL = getBaseURL;
-},{}],"z1Am":[function(require,module,exports) {
-var getBundleURL = require('./bundle-url').getBundleURL;
-
-function loadBundlesLazy(bundles) {
-  if (!Array.isArray(bundles)) {
-    bundles = [bundles];
-  }
-
-  var id = bundles[bundles.length - 1];
-
-  try {
-    return Promise.resolve(require(id));
-  } catch (err) {
-    if (err.code === 'MODULE_NOT_FOUND') {
-      return new LazyPromise(function (resolve, reject) {
-        loadBundles(bundles.slice(0, -1)).then(function () {
-          return require(id);
-        }).then(resolve, reject);
-      });
-    }
-
-    throw err;
-  }
-}
-
-function loadBundles(bundles) {
-  return Promise.all(bundles.map(loadBundle));
-}
-
-var bundleLoaders = {};
-
-function registerBundleLoader(type, loader) {
-  bundleLoaders[type] = loader;
-}
-
-module.exports = exports = loadBundlesLazy;
-exports.load = loadBundles;
-exports.register = registerBundleLoader;
-var bundles = {};
-
-function loadBundle(bundle) {
-  var id;
-
-  if (Array.isArray(bundle)) {
-    id = bundle[1];
-    bundle = bundle[0];
-  }
-
-  if (bundles[bundle]) {
-    return bundles[bundle];
-  }
-
-  var type = (bundle.substring(bundle.lastIndexOf('.') + 1, bundle.length) || bundle).toLowerCase();
-  var bundleLoader = bundleLoaders[type];
-
-  if (bundleLoader) {
-    return bundles[bundle] = bundleLoader(getBundleURL() + bundle).then(function (resolved) {
-      if (resolved) {
-        module.bundle.register(id, resolved);
-      }
-
-      return resolved;
-    }).catch(function (e) {
-      delete bundles[bundle];
-      throw e;
-    });
-  }
-}
-
-function LazyPromise(executor) {
-  this.executor = executor;
-  this.promise = null;
-}
-
-LazyPromise.prototype.then = function (onSuccess, onError) {
-  if (this.promise === null) this.promise = new Promise(this.executor);
-  return this.promise.then(onSuccess, onError);
-};
-
-LazyPromise.prototype.catch = function (onError) {
-  if (this.promise === null) this.promise = new Promise(this.executor);
-  return this.promise.catch(onError);
-};
-},{"./bundle-url":"Bh1I"}],"iVU1":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = exports.clearAllOldActiveTabs = void 0;
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-let globalActiveHandlers = {};
-let allActiveTabs = [];
-
-let clearAllOldActiveTabs = () => {
-  allActiveTabs.forEach(each => each());
-};
-
-exports.clearAllOldActiveTabs = clearAllOldActiveTabs;
-var _default = {
-  name: "jsonValue",
-  components: {
-    jsonObject: () => require("_bundle_loader")(require.resolve('./jsonObject.vue')),
-    jsonList: () => require("_bundle_loader")(require.resolve('./jsonList.vue'))
-  },
-  data: () => ({
-    currentTypeIndex: 0,
-    value: null,
-    previousValueAsString: "null",
-    // keep a cache for checking
-    // why have separate values?
-    // so that if the type is accidentally toggled
-    // it can be toggled back and the old value will be preserved
-    // FIXME: currently this behavior isn't working because of the virtual dom deleting things
-    numberValue: 0,
-    stringValue: "",
-    listValue: [],
-    objectValue: {},
-    // other
-    type: "Null",
-    isActive: false,
-    isActivating: false,
-    activeHandlers: {},
-    typeOptions: ["Null", "Number", "String", "List", "Object"]
-  }),
-
-  mounted() {
-    let initValue = this.$attrs.initValue;
-
-    if (typeof initValue == "number" || initValue instanceof Number) {
-      this.currentTypeIndex = this.typeOptions.indexOf("Number");
-      this.numberValue = initValue || 0; // gets rid of NaN
-    } else if (typeof initValue == "string" || initValue instanceof String) {
-      this.currentTypeIndex = this.typeOptions.indexOf("String");
-      this.stringValue = initValue;
-    } else if (initValue instanceof Array) {
-      this.currentTypeIndex = this.typeOptions.indexOf("List");
-      this.listValue = initValue;
-    } else if (initValue instanceof Object) {
-      this.currentTypeIndex = this.typeOptions.indexOf("Object");
-      this.objectValue = initValue;
-    } else {
-      this.currentTypeIndex = this.typeOptions.indexOf("Null");
-    }
-
-    if (this.$attrs.isRoot) {
-      // if list was chosen
-      if (this.currentTypeIndex == this.typeOptions.indexOf("List")) {
-        // switch it to the new index for root
-        this.currentTypeIndex = 1; // in all other cases default to using an object
-      } else {
-        this.currentTypeIndex = 0;
-      } // root can only be an object or List
-
-
-      this.typeOptions = ["Object", "List"];
-    } // this will update this.type and this.value
-
-
-    this.attemptToInformParent(); // this is a painful work around to make sure 
-    // that only one type-switcher tab is open/active at one time
-
-    this.activeHandlers = {
-      checkTypeSelector: eventObj => {
-        // prevent the outside-most parent from always activating first
-        eventObj.stopPropagation(); // only listen if the user isn't editing text in an input box
-
-        if (!(eventObj.target.tagName == "INPUT" && eventObj.target.value.length > 0)) {
-          // switch the type with arrow keys
-          if (eventObj.key == "ArrowRight") {
-            this.nextType();
-          } else if (eventObj.key == "ArrowLeft") {
-            this.prevType();
-          }
-        }
-      },
-      tryingToType: eventObj => {
-        // prevent the outside-most parent from always activating first
-        eventObj.stopPropagation();
-
-        if (!(eventObj.target.tagName == "INPUT")) {
-          // TODO: select the key-input box
-          // select one of the normal types
-          if (!this.isKeyed) {
-            if (this.type == "String") {
-              this.$refs.stringInput.focus();
-            } else if (this.type == "Number") {
-              this.$refs.numberInput.focus();
-            }
-          }
-        }
-      }
-    };
-  },
-
-  methods: {
-    displayType() {
-      switch (this.type) {
-        case "Object":
-          return "Named List";
-
-        case "Null":
-          return "N/A";
-
-        case "String":
-          return "Text";
-
-        default:
-          return this.type;
-      }
-    },
-
-    onHover(eventObj) {
-      // prevent the outside-most parent from always activating first
-      eventObj.stopPropagation(); // remove the tab status from all the other jsonValues
-
-      this.isActivating = true;
-      clearAllOldActiveTabs();
-      this.isActive = true;
-      this.isActivating = false; // have all the listeners get forwarded to the active one
-
-      globalActiveHandlers = this.activeHandlers; // attach a callback for deactivation
-
-      allActiveTabs.push(() => {
-        this.isActive = false;
-      });
-    },
-
-    checkTypeSelector(eventObj) {
-      // just forward it to whichever one is active
-      globalActiveHandlers.checkTypeSelector(eventObj);
-    },
-
-    tryingToType(eventObj) {
-      // just forward it to whichever one is active
-      globalActiveHandlers.tryingToType(eventObj);
-    },
-
-    // call parents to deal with delete
-    onDelete() {
-      if (this.$listeners.delete instanceof Function) {
-        this.$listeners.delete();
-      }
-    },
-
-    // 
-    // state management: update
-    // 
-    updateType() {
-      if (this.currentTypeIndex == this.typeOptions.length) {
-        this.currentTypeIndex = 0;
-      } else if (this.currentTypeIndex == -1) {
-        this.currentTypeIndex = this.typeOptions.length - 1;
-      } // in just a moment tell the parent the value just changed
-
-
-      this.type = this.typeOptions[this.currentTypeIndex];
-    },
-
-    updateValue() {
-      this.updateType();
-
-      switch (this.type) {
-        case "Null":
-          this.value = null;
-          break;
-
-        case "Number":
-          this.value = this.numberValue - 0;
-          break;
-
-        case "String":
-          this.value = this.stringValue;
-          break;
-
-        case "List":
-          this.value = this.listValue;
-          break;
-
-        case "Object":
-          this.value = this.objectValue;
-          break;
-      }
-    },
-
-    attemptToInformParent() {
-      this.updateValue();
-      let newValue = this.value;
-      let newValueStringified = JSON.stringify(newValue); // if there is a legitimate change
-
-      if (this.previousValueAsString != newValueStringified) {
-        // update the previous value
-        this.previousValueAsString = newValueStringified; // tell parents something has legit changed
-
-        if (this.$listeners.changeValue instanceof Function) {
-          // then send them the newValue
-          this.$listeners.changeValue(newValue);
-        } else {
-          console.error("ERR: jsonVALUE was called but didn't have a @changeValue listener attached\nthis is a bug with the jsonLib");
-        }
-      }
-    },
-
-    // 
-    // state management: report updates
-    // 
-    nextType() {
-      this.currentTypeIndex++;
-      this.attemptToInformParent();
-    },
-
-    prevType() {
-      this.currentTypeIndex--;
-      this.attemptToInformParent();
-    },
-
-    onNumberInput(eventObj) {
-      let value = eventObj.target.value; // enforce the input to always be a number
-
-      value = value.replace(/[^\d-]*(-?(\d+\.\d*|\d*\.\d+|\d+)).*/, "$1");
-
-      if (value - 0 == value) {
-        this.numberValue = eventObj.target.value = value;
-      } else {
-        this.numberValue = eventObj.target.value = 0;
-      }
-
-      this.attemptToInformParent();
-    },
-
-    incrementListener(eventObj) {
-      if (eventObj.key == "ArrowUp") {
-        this.numberValue = ++eventObj.target.value;
-      } else if (eventObj.key == "ArrowDown") {
-        this.numberValue = --eventObj.target.value;
-      }
-
-      this.attemptToInformParent();
-    },
-
-    onStringInput(eventObj) {
-      this.stringValue = eventObj.target.value;
-      this.attemptToInformParent();
-    },
-
-    updateObjectValue(newValue) {
-      this.objectValue = newValue;
-      this.attemptToInformParent();
-    },
-
-    updateListValue(newValue) {
-      this.listValue = newValue;
-      this.attemptToInformParent();
-    }
-
-  }
-};
-exports.default = _default;
-        var $f35a9c = exports.default || module.exports;
-      
-      if (typeof $f35a9c === 'function') {
-        $f35a9c = $f35a9c.options;
-      }
-    
-        /* template */
-        Object.assign($f35a9c, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{attrs:{"invisible-wrapper-285hg2u44":"","tabindex":"1","isActive":_vm.isActive || _vm.isActivating},on:{"keydown":_vm.checkTypeSelector,"keypress":_vm.tryingToType,"mouseover":_vm.onHover}},[_c('div',{attrs:{"type-picker-wrapper-fni18943":"","isActive":_vm.isActive || _vm.isActivating,"isKeyed":_vm.$attrs.isKeyed}},[_c('div',{attrs:{"type-picker-fni18943":""}},[_c('button',{on:{"click":_vm.nextType}},[_vm._v("←")]),_vm._v(" "),_c('span',[_vm._v(_vm._s(_vm.displayType()))]),_vm._v(" "),_c('button',{on:{"click":_vm.prevType}},[_vm._v("→")])])]),_vm._v(" "),_c('div',{attrs:{"value-bubble-285hg2u44":"","type":_vm.type,"isKeyed":_vm.$attrs.isKeyed}},[_c('div',{attrs:{"isKey":""}},[_vm._t("default")],2),_vm._v(" "),_c('div',{attrs:{"json-value-container-fni18943":"","type":_vm.type}},[(_vm.type == 'Null')?[_c('div',{staticStyle:{"font-weight":"bold"}},[_vm._v("N/A")])]:_vm._e(),_vm._v(" "),(_vm.type == 'Number')?[_c('input',{ref:"numberInput",attrs:{"tabindex":"1"},domProps:{"value":_vm.numberValue},on:{"input":function($event){return _vm.onNumberInput($event)},"keydown":function($event){return _vm.incrementListener($event)},"focus":function($event){return $event.target.select()}}})]:_vm._e(),_vm._v(" "),(_vm.type == 'String')?[_c('input',{ref:"stringInput",attrs:{"type":"text","placeholder":"enter text","tabindex":"1"},domProps:{"value":_vm.stringValue},on:{"input":function($event){return _vm.onStringInput($event)}}})]:_vm._e(),_vm._v(" "),(_vm.type == 'List')?[_c('jsonList',{attrs:{"initValue":_vm.listValue},on:{"changeValue":_vm.updateListValue}})]:_vm._e(),_vm._v(" "),(_vm.type == 'Object')?[_c('jsonObject',{attrs:{"initValue":_vm.objectValue},on:{"changeValue":_vm.updateObjectValue}})]:_vm._e()],2)]),_vm._v(" "),(!_vm.$attrs.isRoot)?_c('button',{attrs:{"delete-button-285hg2u44":""},on:{"click":_vm.onDelete}},[_vm._v("\n        X\n    ")]):_vm._e()])}
-var staticRenderFns = []
-
-          return {
-            render: render,
-            staticRenderFns: staticRenderFns,
-            _compiled: true,
-            _scopeId: null,
-            functional: undefined
-          };
-        })());
-      
-},{"_bundle_loader":"z1Am","./jsonObject.vue":[["jsonObject.838386e9.js","iy5t"],"jsonObject.838386e9.css","iy5t"],"./jsonList.vue":[["jsonList.3e0c8c23.js","yvJ6"],"jsonList.3e0c8c23.css","yvJ6"]}],"ENAU":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _jsonValue = _interopRequireWildcard(require("./jsonValue"));
-
-function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
-//
-//
-//
-//
-//
-//
-//
-var _default = {
-  name: "jsonRoot",
-  components: {
-    jsonValue: _jsonValue.default
-  },
-
-  mounted() {},
-
-  methods: {
-    changeHandler(...args) {
-      if (this.$listeners.changeValue instanceof Function) {
-        this.$listeners.changeValue(...args);
-      }
-    },
-
-    onMouseLeave(eventObj) {
-      (0, _jsonValue.clearAllOldActiveTabs)();
-    }
-
-  }
-};
-exports.default = _default;
-        var $1c3e00 = exports.default || module.exports;
-      
-      if (typeof $1c3e00 === 'function') {
-        $1c3e00 = $1c3e00.options;
-      }
-    
-        /* template */
-        Object.assign($1c3e00, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{attrs:{"json-root-fni18943":"","override-fni18943":""},on:{"mouseleave":_vm.onMouseLeave}},[_c('jsonValue',{attrs:{"initValue":_vm.$attrs.initValue,"isRoot":"true"},on:{"changeValue":_vm.changeHandler}})],1)}
-var staticRenderFns = []
-
-          return {
-            render: render,
-            staticRenderFns: staticRenderFns,
-            _compiled: true,
-            _scopeId: null,
-            functional: undefined
-          };
-        })());
-      
-},{"./jsonValue":"iVU1"}],"UPxk":[function(require,module,exports) {
-// api
-//     loadedAll$
-//     needToLoad$
-// side effects
-//     if value is in $data with the same name, it will be replaced with the awaited value ASAP
-module.exports = {
-  data: () => ({
-    loadedAll$: false,
-    needToLoad$: {}
-  }),
-
-  created() {
-    setTimeout(async () => {
-      // resolve each individually
-      Object.keys(this.needToLoad$).forEach(async eachName => {
-        let awaitedValue = await this.needToLoad$[eachName]; // if its saved on data, then go ahead and replace it
-
-        if (this.$data[eachName] == this.needToLoad$[eachName]) {
-          this.$data[eachName] = awaitedValue;
-        }
-      }); // check all of them
-
-      for (let each in this.$data.needToLoad$) {
-        await this.$data.needToLoad$[each];
-      }
-
-      this.$emit("loadedAll$", this.needToLoad$);
-      this.loadedAll$ = true;
-    }, 0);
-  }
-
-};
-},{}],"BNOB":[function(require,module,exports) {
-module.exports = {
-    /**
-     * Safely get nested values
-     *
-     * @param {any} obj.from - what object/value you're extracting from
-     * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
-     * @param {any} obj.failValue - what to return in the event of an error
-     * @return {any} either the failValue or the actual value
-     *
-     * @example
-     *     let obj = { key1: {} }
-     *     // equivlent to obj.key1.subKey.subSubKey
-     *     get({
-     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
-     *         from: obj,
-     *     })
-     *     get({
-     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
-     *         from: null,
-     *     })
-     *     get({
-     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
-     *         from: null,
-     *         failValue: 0
-     *     })
-     */
-    get({ from, keyList, failValue }) {
-        // iterate over nested values
-        try {
-            for (var each of keyList) {
-                if (from instanceof Object && each in from) {
-                    from = from[each]
-                } else {
-                    return failValue
-                }
-            }
-        } catch (error) {
-            return failValue
-        }
-        return from
-    },
-    /**
-     * Forcefully set nested values
-     *
-     * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
-     * @param {any} obj.to - what the new value should be
-     * @param {any} obj.on - what object/value you're modifying
-     * @return {Object} - the object given (object is still mutated)
-     * @error
-     * only if the argument is not an object
-     *
-     * @example
-     *     let obj = { key1: {} }
-     *     // equivlent to obj.key1.subKey.subSubKey
-     *     set({
-     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
-     *         to: 10,
-     *         on: obj,
-     *     })
-     *     set({
-     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
-     *         to: 10,
-     *         on: obj,
-     *     })
-     */
-    set({ keyList, on, to }) {
-        let originalKeyList = keyList
-        try {
-            keyList = [...keyList]
-            let lastAttribute = keyList.pop()
-            for (var key of keyList) {
-                // create each parent if it doesnt exist
-                if (!(on[key] instanceof Object)) {
-                    on[key] = {}
-                }
-                // change the object reference be the nested element
-                on = on[key]
-            }
-            on[lastAttribute] = to
-        } catch (error) {
-            throw new Error(`\nthe set function was unable to set the value for some reason\n    the set obj was: ${JSON.stringify(on)}\n    the keyList was: ${JSON.stringify(originalKeyList)}\n    the value was: ${JSON.stringify(to)}\nthe original error message was:\n\n`, error)
-        }
-        return on
-    },
-    /**
-     * Safely delete nested values
-     *
-     * @param {any} obj.from - what object/value you're extracting from
-     * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
-     * @return {undefined}
-     *
-     * @example
-     *     let obj = { key1: {} }
-     *     // equivlent to obj.key1.subKey.subSubKey
-     *     delete({
-     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
-     *         from: obj,
-     *     })
-     */
-    delete({ keyList, from }) {
-        if (keyList.length == 1) {
-            try {
-                delete from[keyList[0]]
-            } catch (error) {
-                return false
-            }
-        } else if (keyList.length > 1) {
-            keyList = [...keyList]
-            let last = keyList.pop()
-            let parentObj = module.exports.get({ keyList, from })
-            return module.exports.delete({ keyList: [last], from: parentObj })
-        }
-    },
-    merge({ oldData, newData }) {
-        // if its not an object, then it immediately overwrites the value
-        if (!(newData instanceof Object) || !(oldData instanceof Object)) {
-            return newData
-        }
-        // default value for all keys is the original object
-        let output = {}
-        newData instanceof Array && (output = [])
-        Object.assign(output, oldData)
-        for (const key in newData) {
-            // if no conflict, then assign as normal
-            if (!(key in output)) {
-                output[key] = newData[key]
-                // if there is a conflict, then be recursive
-            } else {
-                output[key] = module.exports.merge(oldData[key], newData[key])
-            }
-        }
-        return output
-    },
-    /**
-     * Function to sort alphabetically an array of objects by some specific key.
-     *
-     * @param {string[]} obj.keyList list of keys of which property to sort by
-     * @param {string[]} [obj.largestFirst=false] decending order
-     * @example
-     * let listOfObjects = [ { a:1 }, { a:3 }, { a:2 }, ]
-     * listOfObjects.sort(
-     *     compareProperty({keyList:['a']})
-     * )
-     * //  [ { a: 1 }, { a: 2 }, { a: 3 } ]
-     *
-     * listOfObjects.sort(
-     *   compareProperty({
-     *     keyList:['a'],
-     *     largestFirst:true
-     *   })
-     * )
-     * //  [ { a: 3 }, { a: 2 }, { a: 1 } ]
-     */
-    compareProperty({ keyList, largestFirst = false }) {
-        let comparison = (a, b) => {
-            let aValue = module.exports.get({ keyList, from: a, failValue: -Infinity })
-            let bValue = module.exports.get({ keyList, from: b, failValue: -Infinity })
-            if (typeof aValue == "number") {
-                return aValue - bValue
-            } else {
-                return aValue.localeCompare(bValue)
-            }
-        }
-        if (largestFirst) {
-            oldComparison = comparison
-            comparison = (b, a) => oldComparison(a, b)
-        }
-        return comparison
-    },
-    /**
-     * Deep iterate objects
-     *
-     * @param {Object} obj - Any object
-     * @return {string[][]} lists of key-lists
-     *
-     * @example
-     *
-     *     recursivelyAllAttributesOf({ a: { b: 1} })
-     *     >>> [
-     *         [ 'a', ],
-     *         [ 'a', 'b' ],
-     *     ]
-     */
-    recursivelyAllAttributesOf(obj) {
-        // if not an object then add no attributes
-        if (!(obj instanceof Object)) {
-            return []
-        }
-        // else check all keys for sub-attributes
-        let output = []
-        for (let eachKey of Object.keys(obj)) {
-            // add the key itself (alone)
-            output.push([eachKey])
-            // add all of its children
-            let newAttributes = module.exports.recursivelyAllAttributesOf(obj[eachKey])
-            // if nested
-            for (let eachNewAttributeList of newAttributes) {
-                // add the parent key
-                eachNewAttributeList.unshift(eachKey)
-                output.push(eachNewAttributeList)
-            }
-        }
-        return output
-    },
-}
-
-},{}],"z2hx":[function(require,module,exports) {
-
-"use strict"; // ref: https://github.com/tc39/proposal-global
-
-var getGlobal = function () {
-  // the only reliable means to get the global object is
-  // `Function('return this')()`
-  // However, this causes CSP violations in Chrome apps.
-  if (typeof self !== 'undefined') {
-    return self;
-  }
-
-  if (typeof window !== 'undefined') {
-    return window;
-  }
-
-  if (typeof global !== 'undefined') {
-    return global;
-  }
-
-  throw new Error('unable to locate global object');
-};
-
-var global = getGlobal();
-module.exports = exports = global.fetch; // Needed for TypeScript and Webpack.
-
-if (global.fetch) {
-  exports.default = global.fetch.bind(global);
-}
-
-exports.Headers = global.Headers;
-exports.Request = global.Request;
-exports.Response = global.Response;
-},{}],"zuT8":[function(require,module,exports) {
-// use libs since node doesn't have fetch
-if (typeof document == 'undefined') {
-    fetch = require("node-fetch")
-}
-
-module.exports = {
-    curl(url) {
-        return new Promise((resolve) =>
-            fetch(url)
-                .then((res) => res.text())
-                .then((body) => resolve(body))
-        )
-    },
-    getJson(url) {
-        return new Promise((resolve, reject) =>
-            fetch(url)
-                .then(function (response) {
-                    return response.json()
-                })
-                .then(function (data) {
-                    resolve(data)
-                })
-                .catch(function () {
-                    reject()
-                })
-        )
-    },
-    async postJson({ data = null, to = null }) {
-        return (await fetch(to, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })).json()
-    },
-}
-
-},{"node-fetch":"z2hx"}],"Noob":[function(require,module,exports) {
-module.exports = {
-    capitalize: (string) => string.replace(/\b\w/g, chr=>chr.toUpperCase()),
-    indent: ({string, by="    "}) => by + string.replace(/\n/g,"\n"+by),
-    snakeToCamelCase: (baseName) => (baseName.toLowerCase().replace(/_/," ")).replace(/.\b\w/g, aChar=>aChar.toUpperCase()).replace(" ",""),
-    varnameToTitle: (string) => string.replace(/_/," ").replace(/\b\w/g, chr=>chr.toUpperCase()),
-    findAll(regexPattern, sourceString) {
-        let output = []
-        let match
-        // make sure the pattern has the global flag
-        let regexPatternWithGlobal = RegExp(regexPattern, [...new Set("g"+regexPattern.flags)].join(""))
-        while (match = regexPatternWithGlobal.exec(sourceString)) {
-            // get rid of the string copy
-            delete match.input
-            // store the match data
-            output.push(match)
-        } 
-        return output
-    },
-}
-},{}],"HeEn":[function(require,module,exports) {
-module.exports = {
-    /**
-     * Checks type according to English
-     *
-     * @param {Object} args.value - any possible value 
-     * @param {Object} args.is - a class or string-description Object, Array, null, "nullish", "number", Number, Boolean, Function
-     * @return {Boolean} the legitmate/intuitive answer
-     * 
-     * @note
-     *     Object means can-be-a JSON-object
-     * 
-     * @example
-     *     checkIf({value: undefined , is: null     }) // false
-     *     checkIf({value: undefined , is: String   }) // false
-     *     checkIf({value: undefined , is: 'nullish'}) // true
-     *     checkIf({value: null      , is: 'nullish'}) // true
-     *     checkIf({value: NaN       , is: 'nullish'}) // true
-     *     checkIf({value: null      , is: Object   }) // false
-     *     checkIf({value: NaN       , is: NaN      }) // true!
-     *     checkIf({value: NaN       , is: Number   }) // false!
-     *     checkIf({value: ("string"), is: Object   }) // false
-     *     checkIf({value: {blah: 10}, is: Object   }) // true!
-     *     checkIf({value: new Date(), is: Object   }) // false!
-     *     checkIf({value: new CustomClass()         , is: Object}) // true!
-     *     checkIf({value: ()=>{return "imma func"}  , is: Object}) // false
-     *     checkIf({value: ["I", "am", "an", "array"], is: Object}) // false
-     *     checkIf({value: new CustomClass()         , is: Date})   // false
-     */
-    checkIf({ value, is }) {
-        let typeOrClass = is 
-        // 
-        // Check typeOrClass
-        // 
-        // see if typeOrClass is actually a class 
-        if (typeof typeOrClass == 'function') {
-            typeOrClass = typeOrClass.name
-        }
-        // lowercase any string-names
-        if (typeof typeOrClass == 'string') {
-            typeOrClass = typeOrClass.toLowerCase()
-        }
-
-        //
-        // Strict Values
-        //
-        // object (non-null, non-function, non-array)
-        if (typeOrClass === "object") {
-            if (!(value instanceof Object)) {
-                return false
-            } else if (value instanceof Array || value instanceof Function || value instanceof Date) {
-                return false
-            // check if its stringified+parsed form is also an object 
-            // (this is to remove things like BigInt and BigInt64Array and other built-in pseudo-primitives)
-            } else {
-                let stringified = JSON.stringify(value)
-                // note that this is not == '"undefined"'
-                if (stringified === 'undefined') {
-                    return false
-                } else if (JSON.parse(stringified) instanceof Object) {
-                    return true
-                } else {
-                    return false
-                }
-            }
-        }
-        // undefined
-        else if (typeof typeOrClass === 'undefined' || typeOrClass == 'undefined') {
-            return typeof value === 'undefined'
-        }
-        // null
-        else if (typeOrClass === null || typeOrClass == 'null') {
-            return value === null
-        }
-        // NaN
-        else if ((typeOrClass !== typeOrClass && typeof typeOrClass == 'number') || typeOrClass == 'nan') {
-            return value !== value && typeof value == 'number'
-        }
-        // false
-        else if (typeOrClass === false) {
-            return value === false
-        }
-        // true
-        else if (typeOrClass === true) {
-            return value === true
-        }
-        // bool
-        else if (typeOrClass === "bool" || typeOrClass === "boolean") {
-            return value === true || value === false
-        }
-        // empty string
-        else if (typeOrClass === "") {
-            return value === ""
-        }
-        // empty list
-        else if (typeOrClass === "[]" || Array.isArray(typeOrClass) && typeOrClass.length == 0) {
-            return value instanceof Array && value.length == 0
-        }
-        // function
-        else if (typeOrClass === "function") {
-            return typeof value == "function"
-        }
-        // number
-        else if (typeOrClass == "number" || typeOrClass == Number) {
-            if (value !== value) {
-                return false
-            }
-            else {
-                return typeof value == "number" || value instanceof Number
-            }
-        }
-        // string
-        else if (typeOrClass == "string") {
-            return typeof value == "string" || value instanceof String
-        }
-        // array
-        else if (typeOrClass == "array") {
-            return value instanceof Array
-        }
-        // symbol
-        else if (typeOrClass == "symbol") {
-            return typeof value == "symbol"
-        }
-
-        // 
-        // Unstrict values
-        // 
-        // nullish (null, undefined, NaN)
-        else if (typeOrClass === 'nullish') {
-            return value == null || value !== value
-        }
-        // emptyish ({},[],"",null,undefined)
-        else if (typeOrClass === 'emptyish') {
-            if ((value instanceof Array && value.length == 0) || value === "" || value == null) {
-                return true
-            }
-            else if (value instanceof Object) {
-                return Object.keys(value).length == 0
-            }
-            else {
-                return false
-            }
-        }
-        // falsey ("0",0,false,null,undefined,NaN)
-        else if (typeOrClass === 'falsey' || typeOrClass === 'falsy' || typeOrClass === 'falseish' || typeOrClass === 'falsish') {
-            return value == null || value === false || value !== value || value === 0 || value === "0"
-        }
-        // falsey-or-empty ({},[],"","0",0,false,null,undefined,NaN)
-        else if (typeOrClass === 'falsey-or-empty' || typeOrClass === 'falsy-or-empty' || typeOrClass === 'falseish-or-empty' || typeOrClass === 'falsish-or-empty') {
-            // empty array
-            if (value instanceof Array && value.length == 0) {
-                return true
-            }
-            // empty object
-            else if (value instanceof Object) {
-                return Object.keys(value).length == 0
-            }
-            else {
-                return (value ? true : false)
-            }
-        }
-        // numberish 
-        else if (typeOrClass == 'numberish') {
-            return (value != value) || !isNaN(value - 0)
-        }
-        // 
-        // class type
-        // 
-        else if (aClass) {
-            // if no constructor
-            if (value === null || value === undefined) {
-                return false
-            }
-            else {
-                // see if constructors match
-                if (value.constructor.name === typeOrClass) {
-                    return true
-                }
-                // check instanceof 
-                else {
-                    return value instanceof aClass
-                }
-            }
-        }
-        // 
-        // failed to recognize
-        // 
-        else {
-            throw new Error(`when you call checkIf(), I'm not recoginizing the type or class: ${typeOrClass}`)
-        }
-    },
-    /**
-     * Throws error if type requirement isn't met
-     *
-     * @param {Object} args.value - any possible value 
-     * @param {Object} args.is - a class or string-description Object, Array, null, "nullish", "number", Number, Boolean, Function
-     * @param {string} args.failMessage - a string to be added to the top of the error message
-     * @return {undefined}
-     * 
-     * 
-     * @example
-     * // see checkIf() for more argument examples
-     * requireThat({
-     *     value: arg1.size,
-     *     is: Number,
-     *     failMessage: "The size of the first argument needs to be a number"
-     * })
-     */
-    requireThat({ value, is, failMessage }){
-        if (!module.exports.checkIf({ value, is})) {
-            let requiredType = (is instanceof Object) ? is.prototype.constructor.name : is
-            // 
-            // figure out the real type of the object
-            // 
-            let actualType
-            if (value instanceof Object) {
-                actualType = value.constructor.prototype.constructor.name
-            } else {
-                if (value !== value) {
-                    actualType = "NaN"
-                } else if (value === null) {
-                    actualType = "null"
-                } else {
-                    actualType = typeof value
-                }
-            }
-            failMessage = failMessage ? `Error Message: ${failMessage}` : ""
-            throw Error(`Failed to pass a type check created by requireThat()\n    the value is considered to be: ${actualType}\n    which fails to meet the requirement of: ${requiredType}\n    the failing value is: ${value}\n\n${failMessage}`)
-        }
-    }
-}
-},{}],"kwxG":[function(require,module,exports) {
-module.exports = {
-    object: require("./source/object"),
-    network: require("./source/network"),
-    string: require("./source/string"),
-    tests: require("./source/tests"),
-}
-},{"./source/object":"BNOB","./source/network":"zuT8","./source/string":"Noob","./source/tests":"HeEn"}],"YL07":[function(require,module,exports) {
-let { network, object } = require("good-js")
-
-let apiCall = async (url, args=[], metaData)=> {
-    let response = await network.postJson({
-        data: [args, metaData],
-        to: url
-    })
-    if (response.error instanceof Object) {
-        throw response.error
-    }
-    return response.value
-} 
-
-module.exports = {
-    metaKey: Symbol.for("EzRpcMetadata"),
-    buildInterfaceFor(url) {
-        let actualEndpoints = {
-            [module.exports.metaKey]: {}
-        }
-        
-        return new Promise(async (resolve, reject)=>{
-            let result = await network.postJson({ data: [], to: `${url}/interface`})
-            
-            // create all the endpoints
-            for (let eachKeyList of result.interface) {
-                const endpointUrl = `${url}/call/${eachKeyList.join("/")}`
-                object.set({
-                    keyList: eachKeyList,
-                    on: actualEndpoints,
-                    to: (...args)=>apiCall(endpointUrl, args, actualEndpoints[module.exports.metaKey])
-                })
-            }
-            
-            resolve(actualEndpoints)
-        })
-    }
-}
-},{"good-js":"kwxG"}],"AC5t":[function(require,module,exports) {
-let Vue = require("vue").default;
-
-let ezRpc = require("ez-rpc-frontend"); // const databaseUrl = "http://192.168.86.198:3000"
-// const databaseUrl = "http://localhost:3000"
-// const databaseUrl = "http://paradise.cs.tamu.edu:3000"
-// const databaseUrl = "http://192.168.192.57:3000"
-// const ezRpcUrl = "http://192.168.86.222:6283" // my desktop db 
-// const ezRpcUrl = "http://128.194.4.15:3000" // csce-jiang1.engr.tamu.edu:3000
-
-
-const ezRpcUrl = "http://128.194.4.15:6283"; // csce-jiang1.engr.tamu.edu:6283
-
-const key = "4a75cfe3cdc1164b67aae6b413c9714280d2f102";
-window.backend = ezRpc.buildInterfaceFor(ezRpcUrl);
-module.exports = {
-  backend,
-  mixin: {
-    data: () => ({
-      backend
-    })
-  }
-}; // add the backend to all of the components
-
-Vue.mixin(module.exports.mixin);
-},{"vue":"NtAQ","ez-rpc-frontend":"YL07"}],"CmfW":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-const FileSaver = require('file-saver');
-
-var _default = {
-  name: "ApiExplore",
-  components: {
-    Loader: require('../atoms/Loader').default,
-    JsonTree: require('vue-json-tree').default,
-    jsonRoot: require("edit-json-vue/src/jsonRoot.vue").default
-  },
-  mixins: [require("../mixins/loader"), require("../iilvd-api").mixin],
-  data: () => ({
-    needToLoad$: {},
-    searchTerm: null,
-    whichCollection: null,
-    searchOptions: {},
-    collections: [],
-    suggestions: [],
-    searchResult: null
-  }),
-  windowListeners: {
-    keydown({
-      key
-    }) {
-      if (key == "Enter") {
-        this.submitSearch();
-      }
-    }
-
-  },
-
-  created() {
-    this.$once("loadedAll$", async () => {
-      this.collections = await (await this.backend).collectionNames();
-    });
-  },
-
-  methods: {
-    newJsonValue(value) {
-      this.searchOptions = value;
-    },
-
-    async submitSearch() {
-      this.$toasted.show(`Searching`).goAway(2500);
-      let result = await (await this.backend).mongoInterface.getAll(this.searchOptions);
-      window.apiResult = result; // DEBUGGING
-
-      const numberOfCharsFoundToReallyReallyReallySlowTheUIDown = 24956;
-
-      if (JSON.stringify(result).length < numberOfCharsFoundToReallyReallyReallySlowTheUIDown) {
-        this.$toasted.show(`Search results returned`).goAway(2500);
-        this.searchResult = result;
-      } else {
-        this.searchResult = {};
-        this.$toasted.show(`Results are too large (UI will freeze)`, {
-          action: [{
-            text: 'Save Results To File?',
-            onClick: (eventData, toastObject) => {
-              FileSaver.saveAs(new Blob([JSON.stringify(result, 0, 4)], {
-                type: "text/plain;charset=utf-8"
-              }), "result.json");
-            }
-          }]
-        }).goAway(6500);
-      }
-    }
-
-  }
-};
-exports.default = _default;
-        var $7c5ede = exports.default || module.exports;
-      
-      if (typeof $7c5ede === 'function') {
-        $7c5ede = $7c5ede.options;
-      }
-    
-        /* template */
-        Object.assign($7c5ede, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"align-v":"top","width":"100%","flex-grow":"1"}},[(!_vm.loadedAll$)?_c('Loader'):_vm._e(),(_vm.loadedAll$)?_c('column',{attrs:{"padding":"1.2rem"}},[_c('row',[_c('column',[_c('h5',[_vm._v("Search Options")]),_c('jsonRoot',{staticClass:"json-root-class",attrs:{"initValue":{from: 'videos', maxNumberOfResults: 10}},on:{"changeValue":_vm.newJsonValue}})],1)],1),_c('column',[_c('h5',[_vm._v("Search Results")]),_c('JsonTree',{attrs:{"data":_vm.searchResult}})],1)],1):_vm._e()],1)}
-var staticRenderFns = []
-
-          return {
-            render: render,
-            staticRenderFns: staticRenderFns,
-            _compiled: true,
-            _scopeId: null,
-            functional: undefined
-          };
-        })());
-      
-},{"file-saver":"i0aF","../atoms/Loader":"N6QO","vue-json-tree":"vQbQ","edit-json-vue/src/jsonRoot.vue":"ENAU","../mixins/loader":"UPxk","../iilvd-api":"AC5t"}],"jqRt":[function(require,module,exports) {
+},{"./child.js":"HT0w","./css-baseline-plugin.js":"xmsx","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./portal-plugin.js":"HMJZ","./resolvables-plugin.js":"mVwj","./root-hooks-plugin.js":"T1YL","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./window-listeners-plugin.js":"XpWL","./without-watchers.js":"aLvM","./youtube-player-plugin.js":"mQXc"}],"jqRt":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -60739,7 +59050,608 @@ var staticRenderFns = []
           };
         })());
       
-},{}],"iTmx":[function(require,module,exports) {
+},{}],"BNOB":[function(require,module,exports) {
+module.exports = {
+    /**
+     * Safely get nested values
+     *
+     * @param {any} obj.from - what object/value you're extracting from
+     * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
+     * @param {any} obj.failValue - what to return in the event of an error
+     * @return {any} either the failValue or the actual value
+     *
+     * @example
+     *     let obj = { key1: {} }
+     *     // equivlent to obj.key1.subKey.subSubKey
+     *     get({
+     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+     *         from: obj,
+     *     })
+     *     get({
+     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+     *         from: null,
+     *     })
+     *     get({
+     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+     *         from: null,
+     *         failValue: 0
+     *     })
+     */
+    get({ from, keyList, failValue }) {
+        // iterate over nested values
+        try {
+            for (var each of keyList) {
+                if (from instanceof Object && each in from) {
+                    from = from[each]
+                } else {
+                    return failValue
+                }
+            }
+        } catch (error) {
+            return failValue
+        }
+        return from
+    },
+    /**
+     * Forcefully set nested values
+     *
+     * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
+     * @param {any} obj.to - what the new value should be
+     * @param {any} obj.on - what object/value you're modifying
+     * @return {Object} - the object given (object is still mutated)
+     * @error
+     * only if the argument is not an object
+     *
+     * @example
+     *     let obj = { key1: {} }
+     *     // equivlent to obj.key1.subKey.subSubKey
+     *     set({
+     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+     *         to: 10,
+     *         on: obj,
+     *     })
+     *     set({
+     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+     *         to: 10,
+     *         on: obj,
+     *     })
+     */
+    set({ keyList, on, to }) {
+        let originalKeyList = keyList
+        try {
+            keyList = [...keyList]
+            let lastAttribute = keyList.pop()
+            for (var key of keyList) {
+                // create each parent if it doesnt exist
+                if (!(on[key] instanceof Object)) {
+                    on[key] = {}
+                }
+                // change the object reference be the nested element
+                on = on[key]
+            }
+            on[lastAttribute] = to
+        } catch (error) {
+            throw new Error(`\nthe set function was unable to set the value for some reason\n    the set obj was: ${JSON.stringify(on)}\n    the keyList was: ${JSON.stringify(originalKeyList)}\n    the value was: ${JSON.stringify(to)}\nthe original error message was:\n\n`, error)
+        }
+        return on
+    },
+    /**
+     * Safely delete nested values
+     *
+     * @param {any} obj.from - what object/value you're extracting from
+     * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
+     * @return {undefined}
+     *
+     * @example
+     *     let obj = { key1: {} }
+     *     // equivlent to obj.key1.subKey.subSubKey
+     *     delete({
+     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+     *         from: obj,
+     *     })
+     */
+    delete({ keyList, from }) {
+        if (keyList.length == 1) {
+            try {
+                delete from[keyList[0]]
+            } catch (error) {
+                return false
+            }
+        } else if (keyList.length > 1) {
+            keyList = [...keyList]
+            let last = keyList.pop()
+            let parentObj = module.exports.get({ keyList, from })
+            return module.exports.delete({ keyList: [last], from: parentObj })
+        }
+    },
+    merge({ oldData, newData }) {
+        // if its not an object, then it immediately overwrites the value
+        if (!(newData instanceof Object) || !(oldData instanceof Object)) {
+            return newData
+        }
+        // default value for all keys is the original object
+        let output = {}
+        newData instanceof Array && (output = [])
+        Object.assign(output, oldData)
+        for (const key in newData) {
+            // if no conflict, then assign as normal
+            if (!(key in output)) {
+                output[key] = newData[key]
+                // if there is a conflict, then be recursive
+            } else {
+                output[key] = module.exports.merge(oldData[key], newData[key])
+            }
+        }
+        return output
+    },
+    /**
+     * Function to sort alphabetically an array of objects by some specific key.
+     *
+     * @param {string[]} obj.keyList list of keys of which property to sort by
+     * @param {string[]} [obj.largestFirst=false] decending order
+     * @example
+     * let listOfObjects = [ { a:1 }, { a:3 }, { a:2 }, ]
+     * listOfObjects.sort(
+     *     compareProperty({keyList:['a']})
+     * )
+     * //  [ { a: 1 }, { a: 2 }, { a: 3 } ]
+     *
+     * listOfObjects.sort(
+     *   compareProperty({
+     *     keyList:['a'],
+     *     largestFirst:true
+     *   })
+     * )
+     * //  [ { a: 3 }, { a: 2 }, { a: 1 } ]
+     */
+    compareProperty({ keyList, largestFirst = false }) {
+        let comparison = (a, b) => {
+            let aValue = module.exports.get({ keyList, from: a, failValue: -Infinity })
+            let bValue = module.exports.get({ keyList, from: b, failValue: -Infinity })
+            if (typeof aValue == "number") {
+                return aValue - bValue
+            } else {
+                return aValue.localeCompare(bValue)
+            }
+        }
+        if (largestFirst) {
+            oldComparison = comparison
+            comparison = (b, a) => oldComparison(a, b)
+        }
+        return comparison
+    },
+    /**
+     * Deep iterate objects
+     *
+     * @param {Object} obj - Any object
+     * @return {string[][]} lists of key-lists
+     *
+     * @example
+     *
+     *     recursivelyAllAttributesOf({ a: { b: 1} })
+     *     >>> [
+     *         [ 'a', ],
+     *         [ 'a', 'b' ],
+     *     ]
+     */
+    recursivelyAllAttributesOf(obj) {
+        // if not an object then add no attributes
+        if (!(obj instanceof Object)) {
+            return []
+        }
+        // else check all keys for sub-attributes
+        let output = []
+        for (let eachKey of Object.keys(obj)) {
+            // add the key itself (alone)
+            output.push([eachKey])
+            // add all of its children
+            let newAttributes = module.exports.recursivelyAllAttributesOf(obj[eachKey])
+            // if nested
+            for (let eachNewAttributeList of newAttributes) {
+                // add the parent key
+                eachNewAttributeList.unshift(eachKey)
+                output.push(eachNewAttributeList)
+            }
+        }
+        return output
+    },
+}
+
+},{}],"z2hx":[function(require,module,exports) {
+
+"use strict"; // ref: https://github.com/tc39/proposal-global
+
+var getGlobal = function () {
+  // the only reliable means to get the global object is
+  // `Function('return this')()`
+  // However, this causes CSP violations in Chrome apps.
+  if (typeof self !== 'undefined') {
+    return self;
+  }
+
+  if (typeof window !== 'undefined') {
+    return window;
+  }
+
+  if (typeof global !== 'undefined') {
+    return global;
+  }
+
+  throw new Error('unable to locate global object');
+};
+
+var global = getGlobal();
+module.exports = exports = global.fetch; // Needed for TypeScript and Webpack.
+
+if (global.fetch) {
+  exports.default = global.fetch.bind(global);
+}
+
+exports.Headers = global.Headers;
+exports.Request = global.Request;
+exports.Response = global.Response;
+},{}],"zuT8":[function(require,module,exports) {
+// use libs since node doesn't have fetch
+if (typeof document == 'undefined') {
+    fetch = require("node-fetch")
+}
+
+module.exports = {
+    curl(url) {
+        return new Promise((resolve) =>
+            fetch(url)
+                .then((res) => res.text())
+                .then((body) => resolve(body))
+        )
+    },
+    getJson(url) {
+        return new Promise((resolve, reject) =>
+            fetch(url)
+                .then(function (response) {
+                    return response.json()
+                })
+                .then(function (data) {
+                    resolve(data)
+                })
+                .catch(function () {
+                    reject()
+                })
+        )
+    },
+    async postJson({ data = null, to = null }) {
+        return (await fetch(to, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })).json()
+    },
+}
+
+},{"node-fetch":"z2hx"}],"Noob":[function(require,module,exports) {
+module.exports = {
+    capitalize: (string) => string.replace(/\b\w/g, chr=>chr.toUpperCase()),
+    indent: ({string, by="    "}) => by + string.replace(/\n/g,"\n"+by),
+    snakeToCamelCase: (baseName) => (baseName.toLowerCase().replace(/_/," ")).replace(/.\b\w/g, aChar=>aChar.toUpperCase()).replace(" ",""),
+    varnameToTitle: (string) => string.replace(/_/," ").replace(/\b\w/g, chr=>chr.toUpperCase()),
+    findAll(regexPattern, sourceString) {
+        let output = []
+        let match
+        // make sure the pattern has the global flag
+        let regexPatternWithGlobal = RegExp(regexPattern, [...new Set("g"+regexPattern.flags)].join(""))
+        while (match = regexPatternWithGlobal.exec(sourceString)) {
+            // get rid of the string copy
+            delete match.input
+            // store the match data
+            output.push(match)
+        } 
+        return output
+    },
+}
+},{}],"HeEn":[function(require,module,exports) {
+module.exports = {
+    /**
+     * Checks type according to English
+     *
+     * @param {Object} args.value - any possible value 
+     * @param {Object} args.is - a class or string-description Object, Array, null, "nullish", "number", Number, Boolean, Function
+     * @return {Boolean} the legitmate/intuitive answer
+     * 
+     * @note
+     *     Object means can-be-a JSON-object
+     * 
+     * @example
+     *     checkIf({value: undefined , is: null     }) // false
+     *     checkIf({value: undefined , is: String   }) // false
+     *     checkIf({value: undefined , is: 'nullish'}) // true
+     *     checkIf({value: null      , is: 'nullish'}) // true
+     *     checkIf({value: NaN       , is: 'nullish'}) // true
+     *     checkIf({value: null      , is: Object   }) // false
+     *     checkIf({value: NaN       , is: NaN      }) // true!
+     *     checkIf({value: NaN       , is: Number   }) // false!
+     *     checkIf({value: ("string"), is: Object   }) // false
+     *     checkIf({value: {blah: 10}, is: Object   }) // true!
+     *     checkIf({value: new Date(), is: Object   }) // false!
+     *     checkIf({value: new CustomClass()         , is: Object}) // true!
+     *     checkIf({value: ()=>{return "imma func"}  , is: Object}) // false
+     *     checkIf({value: ["I", "am", "an", "array"], is: Object}) // false
+     *     checkIf({value: new CustomClass()         , is: Date})   // false
+     */
+    checkIf({ value, is }) {
+        let typeOrClass = is 
+        // 
+        // Check typeOrClass
+        // 
+        // see if typeOrClass is actually a class 
+        if (typeof typeOrClass == 'function') {
+            typeOrClass = typeOrClass.name
+        }
+        // lowercase any string-names
+        if (typeof typeOrClass == 'string') {
+            typeOrClass = typeOrClass.toLowerCase()
+        }
+
+        //
+        // Strict Values
+        //
+        // object (non-null, non-function, non-array)
+        if (typeOrClass === "object") {
+            if (!(value instanceof Object)) {
+                return false
+            } else if (value instanceof Array || value instanceof Function || value instanceof Date) {
+                return false
+            // check if its stringified+parsed form is also an object 
+            // (this is to remove things like BigInt and BigInt64Array and other built-in pseudo-primitives)
+            } else {
+                let stringified = JSON.stringify(value)
+                // note that this is not == '"undefined"'
+                if (stringified === 'undefined') {
+                    return false
+                } else if (JSON.parse(stringified) instanceof Object) {
+                    return true
+                } else {
+                    return false
+                }
+            }
+        }
+        // undefined
+        else if (typeof typeOrClass === 'undefined' || typeOrClass == 'undefined') {
+            return typeof value === 'undefined'
+        }
+        // null
+        else if (typeOrClass === null || typeOrClass == 'null') {
+            return value === null
+        }
+        // NaN
+        else if ((typeOrClass !== typeOrClass && typeof typeOrClass == 'number') || typeOrClass == 'nan') {
+            return value !== value && typeof value == 'number'
+        }
+        // false
+        else if (typeOrClass === false) {
+            return value === false
+        }
+        // true
+        else if (typeOrClass === true) {
+            return value === true
+        }
+        // bool
+        else if (typeOrClass === "bool" || typeOrClass === "boolean") {
+            return value === true || value === false
+        }
+        // empty string
+        else if (typeOrClass === "") {
+            return value === ""
+        }
+        // empty list
+        else if (typeOrClass === "[]" || Array.isArray(typeOrClass) && typeOrClass.length == 0) {
+            return value instanceof Array && value.length == 0
+        }
+        // function
+        else if (typeOrClass === "function") {
+            return typeof value == "function"
+        }
+        // number
+        else if (typeOrClass == "number" || typeOrClass == Number) {
+            if (value !== value) {
+                return false
+            }
+            else {
+                return typeof value == "number" || value instanceof Number
+            }
+        }
+        // string
+        else if (typeOrClass == "string") {
+            return typeof value == "string" || value instanceof String
+        }
+        // array
+        else if (typeOrClass == "array") {
+            return value instanceof Array
+        }
+        // symbol
+        else if (typeOrClass == "symbol") {
+            return typeof value == "symbol"
+        }
+
+        // 
+        // Unstrict values
+        // 
+        // nullish (null, undefined, NaN)
+        else if (typeOrClass === 'nullish') {
+            return value == null || value !== value
+        }
+        // emptyish ({},[],"",null,undefined)
+        else if (typeOrClass === 'emptyish') {
+            if ((value instanceof Array && value.length == 0) || value === "" || value == null) {
+                return true
+            }
+            else if (value instanceof Object) {
+                return Object.keys(value).length == 0
+            }
+            else {
+                return false
+            }
+        }
+        // falsey ("0",0,false,null,undefined,NaN)
+        else if (typeOrClass === 'falsey' || typeOrClass === 'falsy' || typeOrClass === 'falseish' || typeOrClass === 'falsish') {
+            return value == null || value === false || value !== value || value === 0 || value === "0"
+        }
+        // falsey-or-empty ({},[],"","0",0,false,null,undefined,NaN)
+        else if (typeOrClass === 'falsey-or-empty' || typeOrClass === 'falsy-or-empty' || typeOrClass === 'falseish-or-empty' || typeOrClass === 'falsish-or-empty') {
+            // empty array
+            if (value instanceof Array && value.length == 0) {
+                return true
+            }
+            // empty object
+            else if (value instanceof Object) {
+                return Object.keys(value).length == 0
+            }
+            else {
+                return (value ? true : false)
+            }
+        }
+        // numberish 
+        else if (typeOrClass == 'numberish') {
+            return (value != value) || !isNaN(value - 0)
+        }
+        // 
+        // class type
+        // 
+        else if (aClass) {
+            // if no constructor
+            if (value === null || value === undefined) {
+                return false
+            }
+            else {
+                // see if constructors match
+                if (value.constructor.name === typeOrClass) {
+                    return true
+                }
+                // check instanceof 
+                else {
+                    return value instanceof aClass
+                }
+            }
+        }
+        // 
+        // failed to recognize
+        // 
+        else {
+            throw new Error(`when you call checkIf(), I'm not recoginizing the type or class: ${typeOrClass}`)
+        }
+    },
+    /**
+     * Throws error if type requirement isn't met
+     *
+     * @param {Object} args.value - any possible value 
+     * @param {Object} args.is - a class or string-description Object, Array, null, "nullish", "number", Number, Boolean, Function
+     * @param {string} args.failMessage - a string to be added to the top of the error message
+     * @return {undefined}
+     * 
+     * 
+     * @example
+     * // see checkIf() for more argument examples
+     * requireThat({
+     *     value: arg1.size,
+     *     is: Number,
+     *     failMessage: "The size of the first argument needs to be a number"
+     * })
+     */
+    requireThat({ value, is, failMessage }){
+        if (!module.exports.checkIf({ value, is})) {
+            let requiredType = (is instanceof Object) ? is.prototype.constructor.name : is
+            // 
+            // figure out the real type of the object
+            // 
+            let actualType
+            if (value instanceof Object) {
+                actualType = value.constructor.prototype.constructor.name
+            } else {
+                if (value !== value) {
+                    actualType = "NaN"
+                } else if (value === null) {
+                    actualType = "null"
+                } else {
+                    actualType = typeof value
+                }
+            }
+            failMessage = failMessage ? `Error Message: ${failMessage}` : ""
+            throw Error(`Failed to pass a type check created by requireThat()\n    the value is considered to be: ${actualType}\n    which fails to meet the requirement of: ${requiredType}\n    the failing value is: ${value}\n\n${failMessage}`)
+        }
+    }
+}
+},{}],"kwxG":[function(require,module,exports) {
+module.exports = {
+    object: require("./source/object"),
+    network: require("./source/network"),
+    string: require("./source/string"),
+    tests: require("./source/tests"),
+}
+},{"./source/object":"BNOB","./source/network":"zuT8","./source/string":"Noob","./source/tests":"HeEn"}],"YL07":[function(require,module,exports) {
+let { network, object } = require("good-js")
+
+let apiCall = async (url, args=[], metaData)=> {
+    let response = await network.postJson({
+        data: [args, metaData],
+        to: url
+    })
+    if (response.error instanceof Object) {
+        throw response.error
+    }
+    return response.value
+} 
+
+module.exports = {
+    metaKey: Symbol.for("EzRpcMetadata"),
+    buildInterfaceFor(url) {
+        let actualEndpoints = {
+            [module.exports.metaKey]: {}
+        }
+        
+        return new Promise(async (resolve, reject)=>{
+            let result = await network.postJson({ data: [], to: `${url}/interface`})
+            
+            // create all the endpoints
+            for (let eachKeyList of result.interface) {
+                const endpointUrl = `${url}/call/${eachKeyList.join("/")}`
+                object.set({
+                    keyList: eachKeyList,
+                    on: actualEndpoints,
+                    to: (...args)=>apiCall(endpointUrl, args, actualEndpoints[module.exports.metaKey])
+                })
+            }
+            
+            resolve(actualEndpoints)
+        })
+    }
+}
+},{"good-js":"kwxG"}],"AC5t":[function(require,module,exports) {
+let Vue = require("vue").default;
+
+let ezRpc = require("ez-rpc-frontend"); // const databaseUrl = "http://192.168.86.198:3000"
+// const databaseUrl = "http://localhost:3000"
+// const databaseUrl = "http://paradise.cs.tamu.edu:3000"
+// const databaseUrl = "http://192.168.192.57:3000"
+// const ezRpcUrl = "http://192.168.86.222:6283" // my desktop db 
+// const ezRpcUrl = "http://128.194.4.15:3000" // csce-jiang1.engr.tamu.edu:3000
+
+
+const ezRpcUrl = "http://128.194.4.15:6283"; // csce-jiang1.engr.tamu.edu:6283
+
+const key = "4a75cfe3cdc1164b67aae6b413c9714280d2f102";
+window.backend = ezRpc.buildInterfaceFor(ezRpcUrl);
+module.exports = {
+  backend,
+  mixin: {
+    data: () => ({
+      backend
+    })
+  }
+}; // add the backend to all of the components
+
+Vue.mixin(module.exports.mixin);
+},{"vue":"NtAQ","ez-rpc-frontend":"YL07"}],"iTmx":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -63306,7 +62218,224 @@ var staticRenderFns = []
           };
         })());
       
-},{"../utils":"K0yk"}],"nE3y":[function(require,module,exports) {
+},{"../utils":"K0yk"}],"tXFJ":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+var _default = {
+  name: 'GridLoader',
+  props: {
+    loading: {
+      type: Boolean,
+      default: true
+    },
+    color: {
+      type: String,
+      default: '#5dc596'
+    },
+    size: {
+      type: String,
+      default: '15px'
+    },
+    margin: {
+      type: String,
+      default: '2px'
+    },
+    radius: {
+      type: String,
+      default: '100%'
+    }
+  },
+
+  data() {
+    return {
+      spinnerStyle: {
+        backgroundColor: this.color,
+        width: this.size,
+        height: this.size,
+        margin: this.margin,
+        borderRadius: this.radius
+      }
+    };
+  },
+
+  computed: {
+    animationStyle() {
+      return {
+        animationName: 'v-gridStretchDelay',
+        animationIterationCount: 'infinite',
+        animationTimingFunction: 'ease',
+        animationFillMode: 'both',
+        display: 'inline-block'
+      };
+    },
+
+    animationStyle1() {
+      return {
+        animationDelay: this.delay(),
+        animationDuration: this.duration()
+      };
+    },
+
+    animationStyle2() {
+      return {
+        animationDelay: this.delay(),
+        animationDuration: this.duration()
+      };
+    },
+
+    animationStyle3() {
+      return {
+        animationDelay: this.delay(),
+        animationDuration: this.duration()
+      };
+    },
+
+    animationStyle4() {
+      return {
+        animationDelay: this.delay(),
+        animationDuration: this.duration()
+      };
+    },
+
+    animationStyle5() {
+      return {
+        animationDelay: this.delay(),
+        animationDuration: this.duration()
+      };
+    },
+
+    animationStyle6() {
+      return {
+        animationDelay: this.delay(),
+        animationDuration: this.duration()
+      };
+    },
+
+    animationStyle7() {
+      return {
+        animationDelay: this.delay(),
+        animationDuration: this.duration()
+      };
+    },
+
+    animationStyle8() {
+      return {
+        animationDelay: this.delay(),
+        animationDuration: this.duration()
+      };
+    },
+
+    animationStyle9() {
+      return {
+        animationDelay: this.delay(),
+        animationDuration: this.duration()
+      };
+    },
+
+    containerStyle() {
+      return {
+        width: parseFloat(this.size) * 3 + parseFloat(this.margin) * 6 + 'px',
+        fontSize: 0
+      };
+    }
+
+  },
+  methods: {
+    random(value) {
+      return Math.random() * value;
+    },
+
+    delay() {
+      return this.random(100) / 100 - 0.2 + 's';
+    },
+
+    duration() {
+      return this.random(100) / 100 + 0.6 + 's';
+    }
+
+  }
+};
+exports.default = _default;
+        var $0250c4 = exports.default || module.exports;
+      
+      if (typeof $0250c4 === 'function') {
+        $0250c4 = $0250c4.options;
+      }
+    
+        /* template */
+        Object.assign($0250c4, (function () {
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{directives:[{name:"show",rawName:"v-show",value:(_vm.loading),expression:"loading"}],staticClass:"v-spinner",style:(_vm.containerStyle)},[_c('div',{staticClass:"v-grid v-grid1",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle1])}),_c('div',{staticClass:"v-grid v-grid2",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle2])}),_c('div',{staticClass:"v-grid v-grid3",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle3])}),_c('div',{staticClass:"v-grid v-grid4",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle4])}),_c('div',{staticClass:"v-grid v-grid5",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle5])}),_c('div',{staticClass:"v-grid v-grid6",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle6])}),_c('div',{staticClass:"v-grid v-grid7",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle7])}),_c('div',{staticClass:"v-grid v-grid8",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle8])}),_c('div',{staticClass:"v-grid v-grid9",style:([_vm.spinnerStyle,_vm.animationStyle,_vm.animationStyle9])})])}
+var staticRenderFns = []
+
+          return {
+            render: render,
+            staticRenderFns: staticRenderFns,
+            _compiled: true,
+            _scopeId: null,
+            functional: undefined
+          };
+        })());
+      
+},{}],"N6QO":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+//
+//
+//
+//
+//
+//
+//
+var _default = {
+  components: {
+    GridLoader: require('vue-spinner/src/GridLoader.vue').default
+  }
+};
+exports.default = _default;
+        var $e4b511 = exports.default || module.exports;
+      
+      if (typeof $e4b511 === 'function') {
+        $e4b511 = $e4b511.options;
+      }
+    
+        /* template */
+        Object.assign($e4b511, (function () {
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('row',{attrs:{"align-h":"space-evenly","shadow":"2","background-color":"white","border-radius":"1rem","width":"18rem","padding":"1rem"}},[_c('h5',[_vm._v("Loading ")]),_c('GridLoader')],1)}
+var staticRenderFns = []
+
+          return {
+            render: render,
+            staticRenderFns: staticRenderFns,
+            _compiled: true,
+            _scopeId: "data-v-e4b511",
+            functional: undefined
+          };
+        })());
+      
+},{"vue-spinner/src/GridLoader.vue":"tXFJ"}],"nE3y":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -63362,6 +62491,39 @@ var staticRenderFns = []
           };
         })());
       
+},{}],"UPxk":[function(require,module,exports) {
+// api
+//     loadedAll$
+//     needToLoad$
+// side effects
+//     if value is in $data with the same name, it will be replaced with the awaited value ASAP
+module.exports = {
+  data: () => ({
+    loadedAll$: false,
+    needToLoad$: {}
+  }),
+
+  created() {
+    setTimeout(async () => {
+      // resolve each individually
+      Object.keys(this.needToLoad$).forEach(async eachName => {
+        let awaitedValue = await this.needToLoad$[eachName]; // if its saved on data, then go ahead and replace it
+
+        if (this.$data[eachName] == this.needToLoad$[eachName]) {
+          this.$data[eachName] = awaitedValue;
+        }
+      }); // check all of them
+
+      for (let each in this.$data.needToLoad$) {
+        await this.$data.needToLoad$[each];
+      }
+
+      this.$emit("loadedAll$", this.needToLoad$);
+      this.loadedAll$ = true;
+    }, 0);
+  }
+
+};
 },{}],"vQfD":[function(require,module,exports) {
 "use strict";
 
@@ -64609,7 +63771,176 @@ var staticRenderFns = []
           };
         })());
       
-},{"good-js":"vKem","../templates/LeftSidePanel":"SId6","fuse.js":"jqRt","../atoms/Loader":"N6QO","../molecules/SearchCard":"nE3y","../mixins/loader":"UPxk"}],"ygBg":[function(require,module,exports) {
+},{"good-js":"vKem","../templates/LeftSidePanel":"SId6","fuse.js":"jqRt","../atoms/Loader":"N6QO","../molecules/SearchCard":"nE3y","../mixins/loader":"UPxk"}],"vQbQ":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+function parse(data, depth = 0, last = true, key = undefined) {
+  let kv = {
+    depth,
+    last,
+    primitive: true,
+    key: JSON.stringify(key)
+  };
+
+  if (typeof data !== 'object') {
+    return Object.assign(kv, {
+      type: typeof data,
+      value: JSON.stringify(data)
+    });
+  } else if (data === null) {
+    return Object.assign(kv, {
+      type: 'null',
+      value: 'null'
+    });
+  } else if (Array.isArray(data)) {
+    let value = data.map((item, index) => {
+      return parse(item, depth + 1, index === data.length - 1);
+    });
+    return Object.assign(kv, {
+      primitive: false,
+      type: 'array',
+      value
+    });
+  } else {
+    let keys = Object.keys(data);
+    let value = keys.map((key, index) => {
+      return parse(data[key], depth + 1, index === keys.length - 1, key);
+    });
+    return Object.assign(kv, {
+      primitive: false,
+      type: 'object',
+      value
+    });
+  }
+}
+
+var _default = {
+  name: 'json-tree',
+  props: {
+    level: {
+      type: Number,
+      default: Infinity
+    },
+    kv: {
+      type: Object
+    },
+    raw: {
+      type: String
+    },
+    data: {}
+  },
+
+  data() {
+    return {
+      expanded: true,
+      hovered: false
+    };
+  },
+
+  computed: {
+    parsed() {
+      if (this.kv) {
+        return this.kv;
+      }
+
+      let result;
+
+      try {
+        if (this.raw) {
+          result = JSON.parse(this.raw);
+        } else if (typeof this.data !== 'undefined') {
+          result = this.data;
+        } else {
+          result = '[Vue JSON Tree] No data passed.';
+          console.warn(result);
+        }
+      } catch (e) {
+        result = '[Vue JSON Tree] Invalid raw JSON.';
+        console.warn(result);
+      } finally {
+        return parse(result);
+      }
+    }
+
+  },
+  methods: {
+    format(n) {
+      if (n > 1) return `${n} items`;
+      return n ? '1 item' : 'no items';
+    }
+
+  },
+
+  created() {
+    this.expanded = this.parsed.depth < this.level;
+  }
+
+};
+exports.default = _default;
+        var $8f21d9 = exports.default || module.exports;
+      
+      if (typeof $8f21d9 === 'function') {
+        $8f21d9 = $8f21d9.options;
+      }
+    
+        /* template */
+        Object.assign($8f21d9, (function () {
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('span',{staticClass:"json-tree",class:{'json-tree-root': _vm.parsed.depth === 0}},[(_vm.parsed.primitive)?_c('span',{staticClass:"json-tree-row"},[_vm._l(((_vm.parsed.depth * 2 + 3)),function(n){return _c('span',{key:n,staticClass:"json-tree-indent"},[_vm._v(" ")])}),_vm._v(" "),(_vm.parsed.key)?_c('span',{staticClass:"json-tree-key"},[_vm._v(_vm._s(_vm.parsed.key))]):_vm._e(),_vm._v(" "),(_vm.parsed.key)?_c('span',{staticClass:"json-tree-colon"},[_vm._v(": ")]):_vm._e(),_vm._v(" "),_c('span',{staticClass:"json-tree-value",class:'json-tree-value-' + _vm.parsed.type,attrs:{"title":("" + (_vm.parsed.value))}},[_vm._v(_vm._s(("" + (_vm.parsed.value))))]),_vm._v(" "),(!_vm.parsed.last)?_c('span',{staticClass:"json-tree-comma"},[_vm._v(",")]):_vm._e(),_vm._v(" "),_c('span',{staticClass:"json-tree-indent"},[_vm._v(" ")])],2):_vm._e(),_vm._v(" "),(!_vm.parsed.primitive)?_c('span',{staticClass:"json-tree-deep"},[_c('span',{staticClass:"json-tree-row json-tree-expando",on:{"click":function($event){_vm.expanded = !_vm.expanded},"mouseover":function($event){_vm.hovered = true},"mouseout":function($event){_vm.hovered = false}}},[_c('span',{staticClass:"json-tree-indent"},[_vm._v(" ")]),_vm._v(" "),_c('span',{staticClass:"json-tree-sign"},[_vm._v(_vm._s(_vm.expanded ? '-' : '+'))]),_vm._v(" "),_vm._l(((_vm.parsed.depth * 2 + 1)),function(n){return _c('span',{key:n,staticClass:"json-tree-indent"},[_vm._v(" ")])}),_vm._v(" "),(_vm.parsed.key)?_c('span',{staticClass:"json-tree-key"},[_vm._v(_vm._s(_vm.parsed.key))]):_vm._e(),_vm._v(" "),(_vm.parsed.key)?_c('span',{staticClass:"json-tree-colon"},[_vm._v(": ")]):_vm._e(),_vm._v(" "),_c('span',{staticClass:"json-tree-open"},[_vm._v(_vm._s(_vm.parsed.type === 'array' ? '[' : '{'))]),_vm._v(" "),_c('span',{directives:[{name:"show",rawName:"v-show",value:(!_vm.expanded),expression:"!expanded"}],staticClass:"json-tree-collapsed"},[_vm._v(" /* "+_vm._s(_vm.format(_vm.parsed.value.length))+" */ ")]),_vm._v(" "),_c('span',{directives:[{name:"show",rawName:"v-show",value:(!_vm.expanded),expression:"!expanded"}],staticClass:"json-tree-close"},[_vm._v(_vm._s(_vm.parsed.type === 'array' ? ']' : '}'))]),_vm._v(" "),_c('span',{directives:[{name:"show",rawName:"v-show",value:(!_vm.expanded && !_vm.parsed.last),expression:"!expanded && !parsed.last"}],staticClass:"json-tree-comma"},[_vm._v(",")]),_vm._v(" "),_c('span',{staticClass:"json-tree-indent"},[_vm._v(" ")])],2),_vm._v(" "),_c('span',{directives:[{name:"show",rawName:"v-show",value:(_vm.expanded),expression:"expanded"}],staticClass:"json-tree-deeper"},_vm._l((_vm.parsed.value),function(item,index){return _c('json-tree',{key:index,attrs:{"kv":item,"level":_vm.level}})}),1),_vm._v(" "),_c('span',{directives:[{name:"show",rawName:"v-show",value:(_vm.expanded),expression:"expanded"}],staticClass:"json-tree-row"},[_c('span',{staticClass:"json-tree-ending",class:{'json-tree-paired': _vm.hovered}},[_vm._l(((_vm.parsed.depth * 2 + 3)),function(n){return _c('span',{key:n,staticClass:"json-tree-indent"},[_vm._v(" ")])}),_vm._v(" "),_c('span',{staticClass:"json-tree-close"},[_vm._v(_vm._s(_vm.parsed.type === 'array' ? ']' : '}'))]),_vm._v(" "),(!_vm.parsed.last)?_c('span',{staticClass:"json-tree-comma"},[_vm._v(",")]):_vm._e(),_vm._v(" "),_c('span',{staticClass:"json-tree-indent"},[_vm._v(" ")])],2)])]):_vm._e()])}
+var staticRenderFns = []
+
+          return {
+            render: render,
+            staticRenderFns: staticRenderFns,
+            _compiled: true,
+            _scopeId: null,
+            functional: undefined
+          };
+        })());
+      
+},{}],"ygBg":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -64979,12 +64310,681 @@ var staticRenderFns = []
           };
         })());
       
-},{"fuse.js":"jqRt","lodash":"HJaA","../organisms/CenterStage":"hqcF","../organisms/VideoPicker":"KjYO","../organisms/LabelPicker":"o22L","../molecules/UploadObservations":"d3Es","../molecules/Card":"OSGx"}],"Ka75":[function(require,module,exports) {
-module.exports = {
-  "ApiExplore": require("./ApiExplore.vue"),
-  "Home": require("./Home.vue")
+},{"fuse.js":"jqRt","lodash":"HJaA","../organisms/CenterStage":"hqcF","../organisms/VideoPicker":"KjYO","../organisms/LabelPicker":"o22L","../molecules/UploadObservations":"d3Es","../molecules/Card":"OSGx"}],"i0aF":[function(require,module,exports) {
+var define;
+var global = arguments[3];
+(function(a,b){if("function"==typeof define&&define.amd)define([],b);else if("undefined"!=typeof exports)b();else{b(),a.FileSaver={exports:{}}.exports}})(this,function(){"use strict";function b(a,b){return"undefined"==typeof b?b={autoBom:!1}:"object"!=typeof b&&(console.warn("Deprecated: Expected third argument to be a object"),b={autoBom:!b}),b.autoBom&&/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(a.type)?new Blob(["\uFEFF",a],{type:a.type}):a}function c(b,c,d){var e=new XMLHttpRequest;e.open("GET",b),e.responseType="blob",e.onload=function(){a(e.response,c,d)},e.onerror=function(){console.error("could not download file")},e.send()}function d(a){var b=new XMLHttpRequest;b.open("HEAD",a,!1);try{b.send()}catch(a){}return 200<=b.status&&299>=b.status}function e(a){try{a.dispatchEvent(new MouseEvent("click"))}catch(c){var b=document.createEvent("MouseEvents");b.initMouseEvent("click",!0,!0,window,0,0,0,80,20,!1,!1,!1,!1,0,null),a.dispatchEvent(b)}}var f="object"==typeof window&&window.window===window?window:"object"==typeof self&&self.self===self?self:"object"==typeof global&&global.global===global?global:void 0,a=f.saveAs||("object"!=typeof window||window!==f?function(){}:"download"in HTMLAnchorElement.prototype?function(b,g,h){var i=f.URL||f.webkitURL,j=document.createElement("a");g=g||b.name||"download",j.download=g,j.rel="noopener","string"==typeof b?(j.href=b,j.origin===location.origin?e(j):d(j.href)?c(b,g,h):e(j,j.target="_blank")):(j.href=i.createObjectURL(b),setTimeout(function(){i.revokeObjectURL(j.href)},4E4),setTimeout(function(){e(j)},0))}:"msSaveOrOpenBlob"in navigator?function(f,g,h){if(g=g||f.name||"download","string"!=typeof f)navigator.msSaveOrOpenBlob(b(f,h),g);else if(d(f))c(f,g,h);else{var i=document.createElement("a");i.href=f,i.target="_blank",setTimeout(function(){e(i)})}}:function(a,b,d,e){if(e=e||open("","_blank"),e&&(e.document.title=e.document.body.innerText="downloading..."),"string"==typeof a)return c(a,b,d);var g="application/octet-stream"===a.type,h=/constructor/i.test(f.HTMLElement)||f.safari,i=/CriOS\/[\d]+/.test(navigator.userAgent);if((i||g&&h)&&"object"==typeof FileReader){var j=new FileReader;j.onloadend=function(){var a=j.result;a=i?a:a.replace(/^data:[^;]*;/,"data:attachment/file;"),e?e.location.href=a:location=a,e=null},j.readAsDataURL(a)}else{var k=f.URL||f.webkitURL,l=k.createObjectURL(a);e?e.location=l:location.href=l,e=null,setTimeout(function(){k.revokeObjectURL(l)},4E4)}});f.saveAs=a.saveAs=a,"undefined"!=typeof module&&(module.exports=a)});
+
+//# sourceMappingURL=FileSaver.min.js.map
+},{}],"Bh1I":[function(require,module,exports) {
+var bundleURL = null;
+
+function getBundleURLCached() {
+  if (!bundleURL) {
+    bundleURL = getBundleURL();
+  }
+
+  return bundleURL;
+}
+
+function getBundleURL() {
+  // Attempt to find the URL of the current script and use that as the base URL
+  try {
+    throw new Error();
+  } catch (err) {
+    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
+
+    if (matches) {
+      return getBaseURL(matches[0]);
+    }
+  }
+
+  return '/';
+}
+
+function getBaseURL(url) {
+  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)\/[^/]+$/, '$1') + '/';
+}
+
+exports.getBundleURL = getBundleURLCached;
+exports.getBaseURL = getBaseURL;
+},{}],"z1Am":[function(require,module,exports) {
+var getBundleURL = require('./bundle-url').getBundleURL;
+
+function loadBundlesLazy(bundles) {
+  if (!Array.isArray(bundles)) {
+    bundles = [bundles];
+  }
+
+  var id = bundles[bundles.length - 1];
+
+  try {
+    return Promise.resolve(require(id));
+  } catch (err) {
+    if (err.code === 'MODULE_NOT_FOUND') {
+      return new LazyPromise(function (resolve, reject) {
+        loadBundles(bundles.slice(0, -1)).then(function () {
+          return require(id);
+        }).then(resolve, reject);
+      });
+    }
+
+    throw err;
+  }
+}
+
+function loadBundles(bundles) {
+  return Promise.all(bundles.map(loadBundle));
+}
+
+var bundleLoaders = {};
+
+function registerBundleLoader(type, loader) {
+  bundleLoaders[type] = loader;
+}
+
+module.exports = exports = loadBundlesLazy;
+exports.load = loadBundles;
+exports.register = registerBundleLoader;
+var bundles = {};
+
+function loadBundle(bundle) {
+  var id;
+
+  if (Array.isArray(bundle)) {
+    id = bundle[1];
+    bundle = bundle[0];
+  }
+
+  if (bundles[bundle]) {
+    return bundles[bundle];
+  }
+
+  var type = (bundle.substring(bundle.lastIndexOf('.') + 1, bundle.length) || bundle).toLowerCase();
+  var bundleLoader = bundleLoaders[type];
+
+  if (bundleLoader) {
+    return bundles[bundle] = bundleLoader(getBundleURL() + bundle).then(function (resolved) {
+      if (resolved) {
+        module.bundle.register(id, resolved);
+      }
+
+      return resolved;
+    }).catch(function (e) {
+      delete bundles[bundle];
+      throw e;
+    });
+  }
+}
+
+function LazyPromise(executor) {
+  this.executor = executor;
+  this.promise = null;
+}
+
+LazyPromise.prototype.then = function (onSuccess, onError) {
+  if (this.promise === null) this.promise = new Promise(this.executor);
+  return this.promise.then(onSuccess, onError);
 };
-},{"./ApiExplore.vue":"CmfW","./Home.vue":"gi53"}],"rUmP":[function(require,module,exports) {
+
+LazyPromise.prototype.catch = function (onError) {
+  if (this.promise === null) this.promise = new Promise(this.executor);
+  return this.promise.catch(onError);
+};
+},{"./bundle-url":"Bh1I"}],"iVU1":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = exports.clearAllOldActiveTabs = void 0;
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+let globalActiveHandlers = {};
+let allActiveTabs = [];
+
+let clearAllOldActiveTabs = () => {
+  allActiveTabs.forEach(each => each());
+};
+
+exports.clearAllOldActiveTabs = clearAllOldActiveTabs;
+var _default = {
+  name: "jsonValue",
+  components: {
+    jsonObject: () => require("_bundle_loader")(require.resolve('./jsonObject.vue')),
+    jsonList: () => require("_bundle_loader")(require.resolve('./jsonList.vue'))
+  },
+  data: () => ({
+    currentTypeIndex: 0,
+    value: null,
+    previousValueAsString: "null",
+    // keep a cache for checking
+    // why have separate values?
+    // so that if the type is accidentally toggled
+    // it can be toggled back and the old value will be preserved
+    // FIXME: currently this behavior isn't working because of the virtual dom deleting things
+    numberValue: 0,
+    stringValue: "",
+    listValue: [],
+    objectValue: {},
+    // other
+    type: "Null",
+    isActive: false,
+    isActivating: false,
+    activeHandlers: {},
+    typeOptions: ["Null", "Number", "String", "List", "Object"]
+  }),
+
+  mounted() {
+    let initValue = this.$attrs.initValue;
+
+    if (typeof initValue == "number" || initValue instanceof Number) {
+      this.currentTypeIndex = this.typeOptions.indexOf("Number");
+      this.numberValue = initValue || 0; // gets rid of NaN
+    } else if (typeof initValue == "string" || initValue instanceof String) {
+      this.currentTypeIndex = this.typeOptions.indexOf("String");
+      this.stringValue = initValue;
+    } else if (initValue instanceof Array) {
+      this.currentTypeIndex = this.typeOptions.indexOf("List");
+      this.listValue = initValue;
+    } else if (initValue instanceof Object) {
+      this.currentTypeIndex = this.typeOptions.indexOf("Object");
+      this.objectValue = initValue;
+    } else {
+      this.currentTypeIndex = this.typeOptions.indexOf("Null");
+    }
+
+    if (this.$attrs.isRoot) {
+      // if list was chosen
+      if (this.currentTypeIndex == this.typeOptions.indexOf("List")) {
+        // switch it to the new index for root
+        this.currentTypeIndex = 1; // in all other cases default to using an object
+      } else {
+        this.currentTypeIndex = 0;
+      } // root can only be an object or List
+
+
+      this.typeOptions = ["Object", "List"];
+    } // this will update this.type and this.value
+
+
+    this.attemptToInformParent(); // this is a painful work around to make sure 
+    // that only one type-switcher tab is open/active at one time
+
+    this.activeHandlers = {
+      checkTypeSelector: eventObj => {
+        // prevent the outside-most parent from always activating first
+        eventObj.stopPropagation(); // only listen if the user isn't editing text in an input box
+
+        if (!(eventObj.target.tagName == "INPUT" && eventObj.target.value.length > 0)) {
+          // switch the type with arrow keys
+          if (eventObj.key == "ArrowRight") {
+            this.nextType();
+          } else if (eventObj.key == "ArrowLeft") {
+            this.prevType();
+          }
+        }
+      },
+      tryingToType: eventObj => {
+        // prevent the outside-most parent from always activating first
+        eventObj.stopPropagation();
+
+        if (!(eventObj.target.tagName == "INPUT")) {
+          // TODO: select the key-input box
+          // select one of the normal types
+          if (!this.isKeyed) {
+            if (this.type == "String") {
+              this.$refs.stringInput.focus();
+            } else if (this.type == "Number") {
+              this.$refs.numberInput.focus();
+            }
+          }
+        }
+      }
+    };
+  },
+
+  methods: {
+    displayType() {
+      switch (this.type) {
+        case "Object":
+          return "Named List";
+
+        case "Null":
+          return "N/A";
+
+        case "String":
+          return "Text";
+
+        default:
+          return this.type;
+      }
+    },
+
+    onHover(eventObj) {
+      // prevent the outside-most parent from always activating first
+      eventObj.stopPropagation(); // remove the tab status from all the other jsonValues
+
+      this.isActivating = true;
+      clearAllOldActiveTabs();
+      this.isActive = true;
+      this.isActivating = false; // have all the listeners get forwarded to the active one
+
+      globalActiveHandlers = this.activeHandlers; // attach a callback for deactivation
+
+      allActiveTabs.push(() => {
+        this.isActive = false;
+      });
+    },
+
+    checkTypeSelector(eventObj) {
+      // just forward it to whichever one is active
+      globalActiveHandlers.checkTypeSelector(eventObj);
+    },
+
+    tryingToType(eventObj) {
+      // just forward it to whichever one is active
+      globalActiveHandlers.tryingToType(eventObj);
+    },
+
+    // call parents to deal with delete
+    onDelete() {
+      if (this.$listeners.delete instanceof Function) {
+        this.$listeners.delete();
+      }
+    },
+
+    // 
+    // state management: update
+    // 
+    updateType() {
+      if (this.currentTypeIndex == this.typeOptions.length) {
+        this.currentTypeIndex = 0;
+      } else if (this.currentTypeIndex == -1) {
+        this.currentTypeIndex = this.typeOptions.length - 1;
+      } // in just a moment tell the parent the value just changed
+
+
+      this.type = this.typeOptions[this.currentTypeIndex];
+    },
+
+    updateValue() {
+      this.updateType();
+
+      switch (this.type) {
+        case "Null":
+          this.value = null;
+          break;
+
+        case "Number":
+          this.value = this.numberValue - 0;
+          break;
+
+        case "String":
+          this.value = this.stringValue;
+          break;
+
+        case "List":
+          this.value = this.listValue;
+          break;
+
+        case "Object":
+          this.value = this.objectValue;
+          break;
+      }
+    },
+
+    attemptToInformParent() {
+      this.updateValue();
+      let newValue = this.value;
+      let newValueStringified = JSON.stringify(newValue); // if there is a legitimate change
+
+      if (this.previousValueAsString != newValueStringified) {
+        // update the previous value
+        this.previousValueAsString = newValueStringified; // tell parents something has legit changed
+
+        if (this.$listeners.changeValue instanceof Function) {
+          // then send them the newValue
+          this.$listeners.changeValue(newValue);
+        } else {
+          console.error("ERR: jsonVALUE was called but didn't have a @changeValue listener attached\nthis is a bug with the jsonLib");
+        }
+      }
+    },
+
+    // 
+    // state management: report updates
+    // 
+    nextType() {
+      this.currentTypeIndex++;
+      this.attemptToInformParent();
+    },
+
+    prevType() {
+      this.currentTypeIndex--;
+      this.attemptToInformParent();
+    },
+
+    onNumberInput(eventObj) {
+      let value = eventObj.target.value; // enforce the input to always be a number
+
+      value = value.replace(/[^\d-]*(-?(\d+\.\d*|\d*\.\d+|\d+)).*/, "$1");
+
+      if (value - 0 == value) {
+        this.numberValue = eventObj.target.value = value;
+      } else {
+        this.numberValue = eventObj.target.value = 0;
+      }
+
+      this.attemptToInformParent();
+    },
+
+    incrementListener(eventObj) {
+      if (eventObj.key == "ArrowUp") {
+        this.numberValue = ++eventObj.target.value;
+      } else if (eventObj.key == "ArrowDown") {
+        this.numberValue = --eventObj.target.value;
+      }
+
+      this.attemptToInformParent();
+    },
+
+    onStringInput(eventObj) {
+      this.stringValue = eventObj.target.value;
+      this.attemptToInformParent();
+    },
+
+    updateObjectValue(newValue) {
+      this.objectValue = newValue;
+      this.attemptToInformParent();
+    },
+
+    updateListValue(newValue) {
+      this.listValue = newValue;
+      this.attemptToInformParent();
+    }
+
+  }
+};
+exports.default = _default;
+        var $f35a9c = exports.default || module.exports;
+      
+      if (typeof $f35a9c === 'function') {
+        $f35a9c = $f35a9c.options;
+      }
+    
+        /* template */
+        Object.assign($f35a9c, (function () {
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{attrs:{"invisible-wrapper-285hg2u44":"","tabindex":"1","isActive":_vm.isActive || _vm.isActivating},on:{"keydown":_vm.checkTypeSelector,"keypress":_vm.tryingToType,"mouseover":_vm.onHover}},[_c('div',{attrs:{"type-picker-wrapper-fni18943":"","isActive":_vm.isActive || _vm.isActivating,"isKeyed":_vm.$attrs.isKeyed}},[_c('div',{attrs:{"type-picker-fni18943":""}},[_c('button',{on:{"click":_vm.nextType}},[_vm._v("←")]),_vm._v(" "),_c('span',[_vm._v(_vm._s(_vm.displayType()))]),_vm._v(" "),_c('button',{on:{"click":_vm.prevType}},[_vm._v("→")])])]),_vm._v(" "),_c('div',{attrs:{"value-bubble-285hg2u44":"","type":_vm.type,"isKeyed":_vm.$attrs.isKeyed}},[_c('div',{attrs:{"isKey":""}},[_vm._t("default")],2),_vm._v(" "),_c('div',{attrs:{"json-value-container-fni18943":"","type":_vm.type}},[(_vm.type == 'Null')?[_c('div',{staticStyle:{"font-weight":"bold"}},[_vm._v("N/A")])]:_vm._e(),_vm._v(" "),(_vm.type == 'Number')?[_c('input',{ref:"numberInput",attrs:{"tabindex":"1"},domProps:{"value":_vm.numberValue},on:{"input":function($event){return _vm.onNumberInput($event)},"keydown":function($event){return _vm.incrementListener($event)},"focus":function($event){return $event.target.select()}}})]:_vm._e(),_vm._v(" "),(_vm.type == 'String')?[_c('input',{ref:"stringInput",attrs:{"type":"text","placeholder":"enter text","tabindex":"1"},domProps:{"value":_vm.stringValue},on:{"input":function($event){return _vm.onStringInput($event)}}})]:_vm._e(),_vm._v(" "),(_vm.type == 'List')?[_c('jsonList',{attrs:{"initValue":_vm.listValue},on:{"changeValue":_vm.updateListValue}})]:_vm._e(),_vm._v(" "),(_vm.type == 'Object')?[_c('jsonObject',{attrs:{"initValue":_vm.objectValue},on:{"changeValue":_vm.updateObjectValue}})]:_vm._e()],2)]),_vm._v(" "),(!_vm.$attrs.isRoot)?_c('button',{attrs:{"delete-button-285hg2u44":""},on:{"click":_vm.onDelete}},[_vm._v("\n        X\n    ")]):_vm._e()])}
+var staticRenderFns = []
+
+          return {
+            render: render,
+            staticRenderFns: staticRenderFns,
+            _compiled: true,
+            _scopeId: null,
+            functional: undefined
+          };
+        })());
+      
+},{"_bundle_loader":"z1Am","./jsonObject.vue":[["jsonObject.838386e9.js","iy5t"],"jsonObject.838386e9.css","iy5t"],"./jsonList.vue":[["jsonList.3e0c8c23.js","yvJ6"],"jsonList.3e0c8c23.css","yvJ6"]}],"ENAU":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _jsonValue = _interopRequireWildcard(require("./jsonValue"));
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+//
+//
+//
+//
+//
+//
+//
+var _default = {
+  name: "jsonRoot",
+  components: {
+    jsonValue: _jsonValue.default
+  },
+
+  mounted() {},
+
+  methods: {
+    changeHandler(...args) {
+      if (this.$listeners.changeValue instanceof Function) {
+        this.$listeners.changeValue(...args);
+      }
+    },
+
+    onMouseLeave(eventObj) {
+      (0, _jsonValue.clearAllOldActiveTabs)();
+    }
+
+  }
+};
+exports.default = _default;
+        var $1c3e00 = exports.default || module.exports;
+      
+      if (typeof $1c3e00 === 'function') {
+        $1c3e00 = $1c3e00.options;
+      }
+    
+        /* template */
+        Object.assign($1c3e00, (function () {
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{attrs:{"json-root-fni18943":"","override-fni18943":""},on:{"mouseleave":_vm.onMouseLeave}},[_c('jsonValue',{attrs:{"initValue":_vm.$attrs.initValue,"isRoot":"true"},on:{"changeValue":_vm.changeHandler}})],1)}
+var staticRenderFns = []
+
+          return {
+            render: render,
+            staticRenderFns: staticRenderFns,
+            _compiled: true,
+            _scopeId: null,
+            functional: undefined
+          };
+        })());
+      
+},{"./jsonValue":"iVU1"}],"CmfW":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+const FileSaver = require('file-saver');
+
+var _default = {
+  name: "ApiExplore",
+  components: {
+    Loader: require('../atoms/Loader').default,
+    JsonTree: require('vue-json-tree').default,
+    jsonRoot: require("edit-json-vue/src/jsonRoot.vue").default
+  },
+  mixins: [require("../mixins/loader"), require("../iilvd-api").mixin],
+  data: () => ({
+    needToLoad$: {},
+    searchTerm: null,
+    whichCollection: null,
+    searchOptions: {},
+    collections: [],
+    suggestions: [],
+    searchResult: null
+  }),
+  windowListeners: {
+    keydown({
+      key
+    }) {
+      if (key == "Enter") {
+        this.submitSearch();
+      }
+    }
+
+  },
+
+  created() {
+    this.$once("loadedAll$", async () => {
+      this.collections = await (await this.backend).collectionNames();
+    });
+  },
+
+  methods: {
+    newJsonValue(value) {
+      this.searchOptions = value;
+    },
+
+    async submitSearch() {
+      this.$toasted.show(`Searching`).goAway(2500);
+      let result = await (await this.backend).mongoInterface.getAll(this.searchOptions);
+      window.apiResult = result; // DEBUGGING
+
+      const numberOfCharsFoundToReallyReallyReallySlowTheUIDown = 24956;
+
+      if (JSON.stringify(result).length < numberOfCharsFoundToReallyReallyReallySlowTheUIDown) {
+        this.$toasted.show(`Search results returned`).goAway(2500);
+        this.searchResult = result;
+      } else {
+        this.searchResult = {};
+        this.$toasted.show(`Results are too large (UI will freeze)`, {
+          action: [{
+            text: 'Save Results To File?',
+            onClick: (eventData, toastObject) => {
+              FileSaver.saveAs(new Blob([JSON.stringify(result, 0, 4)], {
+                type: "text/plain;charset=utf-8"
+              }), "result.json");
+            }
+          }]
+        }).goAway(6500);
+      }
+    }
+
+  }
+};
+exports.default = _default;
+        var $7c5ede = exports.default || module.exports;
+      
+      if (typeof $7c5ede === 'function') {
+        $7c5ede = $7c5ede.options;
+      }
+    
+        /* template */
+        Object.assign($7c5ede, (function () {
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"align-v":"top","width":"100%","flex-grow":"1"}},[(!_vm.loadedAll$)?_c('Loader'):_vm._e(),(_vm.loadedAll$)?_c('column',{attrs:{"padding":"1.2rem"}},[_c('row',[_c('column',[_c('h5',[_vm._v("Search Options")]),_c('jsonRoot',{staticClass:"json-root-class",attrs:{"initValue":{from: 'videos', maxNumberOfResults: 10}},on:{"changeValue":_vm.newJsonValue}})],1)],1),_c('column',[_c('h5',[_vm._v("Search Results")]),_c('JsonTree',{attrs:{"data":_vm.searchResult}})],1)],1):_vm._e()],1)}
+var staticRenderFns = []
+
+          return {
+            render: render,
+            staticRenderFns: staticRenderFns,
+            _compiled: true,
+            _scopeId: null,
+            functional: undefined
+          };
+        })());
+      
+},{"file-saver":"i0aF","../atoms/Loader":"N6QO","vue-json-tree":"vQbQ","edit-json-vue/src/jsonRoot.vue":"ENAU","../mixins/loader":"UPxk","../iilvd-api":"AC5t"}],"Ka75":[function(require,module,exports) {
+module.exports = {
+  "Home": require("./Home.vue"),
+  "ApiExplore": require("./ApiExplore.vue")
+};
+},{"./Home.vue":"gi53","./ApiExplore.vue":"CmfW"}],"rUmP":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -65004,6 +65004,10 @@ var _routerPlugin = require("./plugins/router-plugin");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+//
+//
+//
+//
 //
 //
 //
@@ -65041,7 +65045,8 @@ var _default = RootComponent = {
   name: 'RootComponent',
   components: {
     LeftSidePanel: require("./templates/LeftSidePanel").default,
-    RightSidePanel: require("./templates/RightSidePanel").default
+    RightSidePanel: require("./templates/RightSidePanel").default,
+    Card: require("./molecules/Card").default
   },
   mixins: [require("./mixins/loader")],
   // 
@@ -65365,7 +65370,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($0892d1, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{attrs:{"id":"vue-root"}},[_c('portal-target',{attrs:{"name":"modal-popups"}}),_c('router-view',{ref:"router"}),_c('LeftSidePanel'),_c('RightSidePanel')],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{attrs:{"id":"vue-root"}},[_c('Card',{attrs:{"position":"fixed","left":"2rem","bottom":"2rem"}},[_c('h1',{staticStyle:{"font-size":"35pt"}},[_vm._v("WARNING: Upgrade In Progress")]),_vm._v("Website might not behave as expected")]),_c('portal-target',{attrs:{"name":"modal-popups"}}),_c('router-view',{ref:"router"}),_c('LeftSidePanel'),_c('RightSidePanel')],1)}
 var staticRenderFns = []
 
           return {
@@ -65377,7 +65382,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"vue":"NtAQ","./plugins/*.js":"Xeh1","./pages/*.vue":"Ka75","./utils":"K0yk","lodash":"HJaA","./iilvd-api":"AC5t","./plugins/router-plugin":"yBli","./templates/LeftSidePanel":"SId6","./templates/RightSidePanel":"bZ7G","./mixins/loader":"UPxk"}],"ln2R":[function(require,module,exports) {
+},{"vue":"NtAQ","./plugins/*.js":"Xeh1","./pages/*.vue":"Ka75","./utils":"K0yk","lodash":"HJaA","./iilvd-api":"AC5t","./plugins/router-plugin":"yBli","./templates/LeftSidePanel":"SId6","./templates/RightSidePanel":"bZ7G","./molecules/Card":"OSGx","./mixins/loader":"UPxk"}],"ln2R":[function(require,module,exports) {
 module.exports = function loadCSSBundle(bundle) {
   return new Promise(function (resolve, reject) {
     var link = document.createElement('link');
