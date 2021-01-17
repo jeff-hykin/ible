@@ -65371,7 +65371,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($0892d1, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{attrs:{"id":"vue-root"}},[_c('Card',{attrs:{"position":"fixed","left":"2rem","bottom":"2rem","z-index":"99999999999","border":"var(--red) solid 8px","padding":"2rem"}},[_c('h1',{staticStyle:{"font-size":"35pt"}},[_vm._v("WARNING: Upgrade In Progress")]),_c('br'),_vm._v("Website might not behave as expected")]),_c('portal-target',{attrs:{"name":"modal-popups"}}),_c('router-view',{ref:"router"}),_c('LeftSidePanel'),_c('RightSidePanel')],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{attrs:{"id":"vue-root"}},[_c('portal-target',{attrs:{"name":"modal-popups"}}),_c('router-view',{ref:"router"}),_c('LeftSidePanel'),_c('RightSidePanel')],1)}
 var staticRenderFns = []
 
           return {

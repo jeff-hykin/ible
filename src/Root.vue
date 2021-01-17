@@ -2,11 +2,11 @@
     #vue-root
         //- [ Put stuff you always want to exist here (like a nav bar) ]
         //- This (below) will load to the Home page by default 
-        Card(position="fixed" left="2rem" bottom="2rem" z-index="99999999999" border="var(--red) solid 8px" padding="2rem")
-            h1(style="font-size: 35pt")
-                | WARNING: Upgrade In Progress
-            br
-            | Website might not behave as expected
+        //- Card(position="fixed" left="2rem" bottom="2rem" z-index="99999999999" border="var(--red) solid 8px" padding="2rem")
+        //-     h1(style="font-size: 35pt")
+        //-         | WARNING: Upgrade In Progress
+        //-     br
+        //-     | Website might not behave as expected
         portal-target(name="modal-popups")
         router-view(ref="router")
         LeftSidePanel
