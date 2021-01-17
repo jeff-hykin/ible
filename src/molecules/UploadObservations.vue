@@ -171,6 +171,7 @@ export default {
     
     ::v-deep .ui-modal__container
         width: fit-content
+        width: -moz-fit-content
         
     .json-tree
         min-width: 100%
