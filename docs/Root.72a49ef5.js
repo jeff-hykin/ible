@@ -60575,11 +60575,11 @@ var _default = {
             break;
 
           case "ArrowRight":
-            if (event.shiftKey) {
+            if (eventObject.shiftKey) {
               console.log(`going forward`);
               eventObject.preventDefault();
               this.player.forward(1 / 32);
-            } else if (event.altKey) {
+            } else if (eventObject.altKey) {
               eventObject.preventDefault();
               this.player.forward(10);
             }
@@ -60587,10 +60587,10 @@ var _default = {
             break;
 
           case "ArrowLeft":
-            if (event.shiftKey) {
+            if (eventObject.shiftKey) {
               eventObject.preventDefault();
               this.player.rewind(1 / 32);
-            } else if (event.altKey) {
+            } else if (eventObject.altKey) {
               eventObject.preventDefault();
               this.player.rewind(10);
             }
@@ -60598,7 +60598,7 @@ var _default = {
             break;
 
           case "ArrowUp":
-            if (event.shiftKey) {
+            if (eventObject.shiftKey) {
               eventObject.preventDefault();
               this.player.speed += 0.5;
             }
@@ -60606,7 +60606,7 @@ var _default = {
             break;
 
           case "ArrowDown":
-            if (event.shiftKey) {
+            if (eventObject.shiftKey) {
               eventObject.preventDefault();
               this.player.speed -= 0.5;
             }
@@ -64860,7 +64860,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($2cbb07, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"upload-wrapper",attrs:{"akfdjguo3359gip":"akfdjguo3359gip"}},[_c('ui-fab',{staticClass:"help-button",attrs:{"color":"gray","icon":"live_help","raised":"raised","tooltip":"Help with file upload","tooltipPosition":"left"},on:{"click":_vm.showHelp}}),_c('ui-fab',{staticClass:"upload-button",attrs:{"color":"blue","raised":"raised","tooltip":"upload multiple observations","tooltipPosition":"left"}},[_c('ui-icon',[_vm._v("cloud_upload")]),_c('ui-fileupload',{attrs:{"name":"file","type":"secondary"},on:{"change":_vm.onUploadObservation}})],1),_c('portal',{attrs:{"to":"model-popups"}},[_c('ui-modal',{ref:"helpModal",staticClass:"modal",attrs:{"fj20485gh93oi53g":"fj20485gh93oi53g","title":"Example Upload","transition":"scale-up"}},[_c('row',{attrs:{"align-h":"space-evenly","align-v":"top"}},[_c('column',{attrs:{"align-v":"top"}},[_c('br'),_vm._v("Try editing them! Then look at the code →"),_c('row',{attrs:{"align-h":"space-between","padding":"2rem 1rem","align-v":"top"}},[_c('column',[_c('h5',[_vm._v("Observation 1")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData1}})],1),_c('container',{attrs:{"min-width":"3rem"}}),_c('column',[_c('h5',[_vm._v("Observation 2")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData2}})],1)],1)],1),_c('container',{attrs:{"width":"2rem"}}),_c('column',{attrs:{"flex-basis":"50%","max-width":"31rem","align-v":"top"}},[_c('span',[_c('br'),_vm._v("To upload these observations"),_c('br'),_c('br'),_vm._v("1. Create a file ending with"),_c('code',[_vm._v(" .json ")]),_c('br'),_c('br'),_vm._v("2. Then add the following text to that file."),_c('br'),_c('br')]),_c('JsonTree',{staticClass:"json-tree",attrs:{"data":[_vm.dummyData1, _vm.dummyData2]}}),_c('span',[_c('br'),_vm._v("3. Then simply use the upload button to upload the file."),_c('br'),_c('br'),_vm._v("The JSON file is just a list of each observation represented as a kind of dictionary.")])],1)],1)],1)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"upload-wrapper",attrs:{"akfdjguo3359gip":"akfdjguo3359gip"}},[_c('ui-fab',{staticClass:"help-button",attrs:{"color":"gray","icon":"live_help","raised":"raised","tooltip":"Help with file upload","tooltipPosition":"left"},on:{"click":_vm.showHelp}}),_c('ui-fab',{staticClass:"upload-button",attrs:{"color":"blue","raised":"raised","tooltip":"upload multiple observations","tooltipPosition":"left"}},[_c('ui-icon',[_vm._v("cloud_upload")]),_c('ui-fileupload',{attrs:{"name":"file","type":"secondary"},on:{"change":_vm.onUploadObservation}})],1),_c('portal',{attrs:{"to":"modal-popups"}},[_c('ui-modal',{ref:"helpModal",staticClass:"modal",attrs:{"fj20485gh93oi53g":"fj20485gh93oi53g","title":"Example Upload","transition":"scale-up"}},[_c('row',{attrs:{"align-h":"space-evenly","align-v":"top"}},[_c('column',{attrs:{"align-v":"top"}},[_c('br'),_vm._v("Try editing them! Then look at the code →"),_c('row',{attrs:{"align-h":"space-between","padding":"2rem 1rem","align-v":"top"}},[_c('column',[_c('h5',[_vm._v("Observation 1")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData1}})],1),_c('container',{attrs:{"min-width":"3rem"}}),_c('column',[_c('h5',[_vm._v("Observation 2")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData2}})],1)],1)],1),_c('container',{attrs:{"width":"2rem"}}),_c('column',{attrs:{"flex-basis":"50%","max-width":"31rem","align-v":"top"}},[_c('span',[_c('br'),_vm._v("To upload these observations"),_c('br'),_c('br'),_vm._v("1. Create a file ending with"),_c('code',[_vm._v(" .json ")]),_c('br'),_c('br'),_vm._v("2. Then add the following text to that file."),_c('br'),_c('br')]),_c('JsonTree',{staticClass:"json-tree",attrs:{"data":[_vm.dummyData1, _vm.dummyData2]}}),_c('span',[_c('br'),_vm._v("3. Then simply use the upload button to upload the file."),_c('br'),_c('br'),_vm._v("The JSON file is just a list of each observation represented as a kind of dictionary.")])],1)],1)],1)],1)],1)}
 var staticRenderFns = []
 
           return {
@@ -65002,6 +65002,7 @@ if (!("Home" in _2.default)) {
 
 let RootComponent;
 setTimeout(() => new (_vue.default.extend(RootComponent))().$mount('#vue-root'), 0);
+let firstSearchLoad = true;
 
 var _default = RootComponent = {
   name: 'RootComponent',
@@ -65137,9 +65138,19 @@ var _default = RootComponent = {
       deep: true,
 
       handler() {
+        // ignore it the first time
+        if (firstSearchLoad) {
+          firstSearchLoad = false;
+          return;
+        } // then let the video be set each time new search results roll in
+
+
         if (this.$root.routeData$.videoId == null) {
           if (!isEmpty(this.searchResults.videos)) {
-            this.$root.routeData$.videoId = [...this.searchResults.videos][0];
+            this.routeData$.videoId = [...this.searchResults.videos][0]; // Vue isn't detecting deep changes on routeData without this >:(
+
+            this.$root.routeData$ = { ...this.$root.routeData$
+            };
           }
         }
       }
@@ -65321,7 +65332,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($0892d1, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{attrs:{"id":"vue-root"}},[_c('portal-target',{attrs:{"name":"model-popups"}}),_c('router-view',{ref:"router"}),_c('LeftSidePanel'),_c('RightSidePanel')],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{attrs:{"id":"vue-root"}},[_c('portal-target',{attrs:{"name":"modal-popups"}}),_c('router-view',{ref:"router"}),_c('LeftSidePanel'),_c('RightSidePanel')],1)}
 var staticRenderFns = []
 
           return {

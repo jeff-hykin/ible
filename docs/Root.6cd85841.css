@@ -6073,6 +6073,7 @@ span[data-v-6b65b0] {
 }
 .modal[fj20485gh93oi53g=fj20485gh93oi53g][data-v-2cbb07]  .ui-modal__container {
   width: fit-content;
+  width: -moz-fit-content;
 }
 .modal[fj20485gh93oi53g=fj20485gh93oi53g] .json-tree[data-v-2cbb07] {
   min-width: 100%;
