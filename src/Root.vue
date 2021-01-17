@@ -2,7 +2,7 @@
     #vue-root
         //- [ Put stuff you always want to exist here (like a nav bar) ]
         //- This (below) will load to the Home page by default 
-        portal-target(name="model-popups")
+        portal-target(name="modal-popups")
         router-view(ref="router")
         LeftSidePanel
         RightSidePanel

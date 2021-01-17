@@ -21,7 +21,7 @@
             ui-fileupload(name="file" type="secondary" @change="onUploadObservation")
         
         //- help message
-        portal(to="model-popups")
+        portal(to="modal-popups")
             ui-modal.modal(fj20485gh93oi53g ref="helpModal" title="Example Upload" transition="scale-up")
                 row(align-h="space-evenly" align-v="top")
                     column(align-v="top")
