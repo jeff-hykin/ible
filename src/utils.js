@@ -131,6 +131,24 @@ function download(filename, text) {
     document.body.removeChild(element)
 }
 
+function isValidName(value) {
+    const namePattern = /^[a-zA-Z0-9_\-.]+$/
+    if (typeof value == 'string') {
+        return !!value.match(namePattern)
+    }
+    return false
+}
+
+function labelConfidenceCheck(labelConfidence) {
+    if (!(labelConfidence === null || labelConfidence === undefined)) {
+        if (isFinite(labelConfidence)) {
+            if (labelConfidence > 1 || labelConfidence < -1) {
+                return true
+            }
+        }
+    }
+    return false
+}
 const currentFixedSizeOfYouTubeVideoId = 11 // This is not guarenteed to stay this way forever
 
 module.exports = {
@@ -142,6 +160,8 @@ module.exports = {
     debounce,
     Delayable,
     download,
+    isValidName,
+    labelConfidenceCheck,
     currentFixedSizeOfYouTubeVideoId,
     wrapIndex(val, list) {
         if (val < 0) {

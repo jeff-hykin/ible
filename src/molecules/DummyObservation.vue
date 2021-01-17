@@ -13,7 +13,7 @@
         ui-textbox(
             floating-label
             label="Label"
-            :invalid="!observationData.observation.label.match(/^[a-zA-Z0-9]+$/)"
+            :invalid="!isValidName(observationData.observation.label)"
             v-model="observationData.observation.label"
         )
         ui-textbox(
@@ -24,6 +24,7 @@
         ui-textbox(
             floating-label
             label="Observer (username)"
+            :invalid="!isValidName(observationData.observer)"
             v-model="observationData.observer"
         )
         ui-textbox(
@@ -38,8 +39,9 @@
         UiSwitch(v-model="observationData.rejectedBySomeone" v-if="!observationData.isHuman")
             | Rejected By ≥1 Human
 </template>
-
 <script>
+const { isValidName } = require("../utils")
+
 export default {
     props: [
         'observationData',
@@ -48,6 +50,9 @@ export default {
         UiSwitch: require("../atoms/UiSwitch").default,
     },
     data: ()=>({}),
+    methods: {
+        isValidName,
+    },
 }
 </script>
 

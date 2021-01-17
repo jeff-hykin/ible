@@ -147,8 +147,7 @@
 
 <script>
 let { backend } = require('../iilvd-api')
-let { getColor, currentFixedSizeOfYouTubeVideoId } = require("../utils")
-const namePattern = /^[a-zA-Z0-9_\-.]+$/
+let { getColor, currentFixedSizeOfYouTubeVideoId, labelConfidenceCheck, isValidName } = require("../utils")
 export default {
     props: [
         "currentTime",
@@ -193,9 +192,9 @@ export default {
             return {
                 startTime: observationData.startTime >= 0 && observationData.startTime < observationData.endTime,
                 endTime: observationData.endTime > 0 && observationData.startTime < observationData.endTime && observationData.endTime <= this.duration,
-                label: get(observationData, ["label"], "").match(namePattern),
-                observer: get(observationData, ["observer"], "").match(namePattern),
-                labelConfidence: observationData.labelConfidence < 1 && observationData.labelConfidence > -1,
+                label: isValidName(get(observationData, ["label"])),
+                observer: isValidName(get(observationData, ["observer"])),
+                labelConfidence: labelConfidenceCheck(observationData.labelConfidence),
                 videoId: isString(observationData.videoId) && observationData.videoId.length == currentFixedSizeOfYouTubeVideoId
             }
         }
