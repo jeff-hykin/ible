@@ -32,6 +32,7 @@ if (!("Home" in pages)) {
 
 // create Root instance and attach it (executed after this file loads)
 let RootComponent; setTimeout(()=>(new (Vue.extend(RootComponent))).$mount('#vue-root'), 0)
+let firstSearchLoad = true
 export default RootComponent = {
     name: 'RootComponent',
     components: {
@@ -167,9 +168,17 @@ export default RootComponent = {
         "searchResults.videos": {
             deep: true,
             handler() {
+                // ignore it the first time
+                if (firstSearchLoad) {
+                    firstSearchLoad = false
+                    return
+                }
+                // then let the video be set each time new search results roll in
                 if (this.$root.routeData$.videoId == null) {
                     if (!isEmpty(this.searchResults.videos)) {
-                        this.$root.routeData$.videoId = ([...this.searchResults.videos])[0]
+                        this.routeData$.videoId = ([...this.searchResults.videos])[0]
+                        // Vue isn't detecting deep changes on routeData without this >:(
+                        this.$root.routeData$ = {...this.$root.routeData$}
                     }
                 }
             }
