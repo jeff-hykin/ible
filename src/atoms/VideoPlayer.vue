@@ -220,32 +220,32 @@ export default {
                         this.player.rewind(1/32)
                         break
                     case "ArrowRight":
-                        if (event.shiftKey) {
+                        if (eventObject.shiftKey) {
                             console.log(`going forward`)
                             eventObject.preventDefault()
                             this.player.forward(1/32)
-                        } else if (event.altKey) {
+                        } else if (eventObject.altKey) {
                             eventObject.preventDefault()
                             this.player.forward(10)
                         }
                         break
                     case "ArrowLeft":
-                        if (event.shiftKey) {
+                        if (eventObject.shiftKey) {
                             eventObject.preventDefault()
                             this.player.rewind(1/32)
-                        } else if (event.altKey) {
+                        } else if (eventObject.altKey) {
                             eventObject.preventDefault()
                             this.player.rewind(10)
                         }
                         break
                     case "ArrowUp":
-                        if (event.shiftKey) {
+                        if (eventObject.shiftKey) {
                             eventObject.preventDefault()
                             this.player.speed += 0.5
                         }
                         break
                     case "ArrowDown":
-                        if (event.shiftKey) {
+                        if (eventObject.shiftKey) {
                             eventObject.preventDefault()
                             this.player.speed -= 0.5
                         }
