@@ -60259,6 +60259,28 @@ function download(filename, text) {
   document.body.removeChild(element);
 }
 
+function isValidName(value) {
+  const namePattern = /^[a-zA-Z0-9_\-.]+$/;
+
+  if (typeof value == 'string') {
+    return !!value.match(namePattern);
+  }
+
+  return false;
+}
+
+function labelConfidenceCheck(labelConfidence) {
+  if (!(labelConfidence === null || labelConfidence === undefined)) {
+    if (isFinite(labelConfidence)) {
+      if (labelConfidence > 1 || labelConfidence < -1) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 const currentFixedSizeOfYouTubeVideoId = 11; // This is not guarenteed to stay this way forever
 
 module.exports = {
@@ -60270,6 +60292,8 @@ module.exports = {
   debounce,
   Delayable,
   download,
+  isValidName,
+  labelConfidenceCheck,
   currentFixedSizeOfYouTubeVideoId,
 
   wrapIndex(val, list) {
@@ -61044,10 +61068,11 @@ let {
 
 let {
   getColor,
-  currentFixedSizeOfYouTubeVideoId
+  currentFixedSizeOfYouTubeVideoId,
+  labelConfidenceCheck,
+  isValidName
 } = require("../utils");
 
-const namePattern = /^[a-zA-Z0-9_\-.]+$/;
 var _default = {
   props: ["currentTime", "duration", "jumpSegment"],
   components: {
@@ -61090,9 +61115,9 @@ var _default = {
       return {
         startTime: observationData.startTime >= 0 && observationData.startTime < observationData.endTime,
         endTime: observationData.endTime > 0 && observationData.startTime < observationData.endTime && observationData.endTime <= this.duration,
-        label: get(observationData, ["label"], "").match(namePattern),
-        observer: get(observationData, ["observer"], "").match(namePattern),
-        labelConfidence: observationData.labelConfidence < 1 && observationData.labelConfidence > -1,
+        label: isValidName(get(observationData, ["label"])),
+        observer: isValidName(get(observationData, ["observer"])),
+        labelConfidence: labelConfidenceCheck(observationData.labelConfidence),
         videoId: isString(observationData.videoId) && observationData.videoId.length == currentFixedSizeOfYouTubeVideoId
       };
     }
@@ -64591,6 +64616,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+
 //
 //
 //
@@ -64632,12 +64658,19 @@ exports.default = void 0;
 //
 //
 //
+const {
+  isValidName
+} = require("../utils");
+
 var _default = {
   props: ['observationData'],
   components: {
     UiSwitch: require("../atoms/UiSwitch").default
   },
-  data: () => ({})
+  data: () => ({}),
+  methods: {
+    isValidName
+  }
 };
 exports.default = _default;
         var $19840c = exports.default || module.exports;
@@ -64648,7 +64681,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($19840c, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"dummy-observation",attrs:{"align-h":"left"}},[_c('ui-textbox',{attrs:{"label":"Start Time (seconds)","type":"number"},model:{value:(_vm.observationData.startTime),callback:function ($$v) {_vm.$set(_vm.observationData, "startTime", _vm._n($$v))},expression:"observationData.startTime"}}),_c('ui-textbox',{attrs:{"label":"End Time (seconds)","type":"number"},model:{value:(_vm.observationData.endTime),callback:function ($$v) {_vm.$set(_vm.observationData, "endTime", _vm._n($$v))},expression:"observationData.endTime"}}),_c('ui-textbox',{attrs:{"floating-label":"floating-label","label":"Label","invalid":!_vm.observationData.observation.label.match(/^[a-zA-Z0-9]+$/)},model:{value:(_vm.observationData.observation.label),callback:function ($$v) {_vm.$set(_vm.observationData.observation, "label", $$v)},expression:"observationData.observation.label"}}),_c('ui-textbox',{attrs:{"floating-label":"floating-label","label":"Label Confidence"},model:{value:(_vm.observationData.observation.labelConfidence),callback:function ($$v) {_vm.$set(_vm.observationData.observation, "labelConfidence", $$v)},expression:"observationData.observation.labelConfidence"}}),_c('ui-textbox',{attrs:{"floating-label":"floating-label","label":"Observer (username)"},model:{value:(_vm.observationData.observer),callback:function ($$v) {_vm.$set(_vm.observationData, "observer", $$v)},expression:"observationData.observer"}}),_c('ui-textbox',{attrs:{"floating-label":"floating-label","label":"Video Id"},model:{value:(_vm.observationData.videoId),callback:function ($$v) {_vm.$set(_vm.observationData, "videoId", $$v)},expression:"observationData.videoId"}}),_c('UiSwitch',{model:{value:(_vm.observationData.isHuman),callback:function ($$v) {_vm.$set(_vm.observationData, "isHuman", $$v)},expression:"observationData.isHuman"}},[_vm._v("Observer Is Human")]),(!_vm.observationData.isHuman)?_c('UiSwitch',{model:{value:(_vm.observationData.confirmedBySomeone),callback:function ($$v) {_vm.$set(_vm.observationData, "confirmedBySomeone", $$v)},expression:"observationData.confirmedBySomeone"}},[_vm._v("Confirmed By ≥1 Human")]):_vm._e(),(!_vm.observationData.isHuman)?_c('UiSwitch',{model:{value:(_vm.observationData.rejectedBySomeone),callback:function ($$v) {_vm.$set(_vm.observationData, "rejectedBySomeone", $$v)},expression:"observationData.rejectedBySomeone"}},[_vm._v("Rejected By ≥1 Human")]):_vm._e()],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"dummy-observation",attrs:{"align-h":"left"}},[_c('ui-textbox',{attrs:{"label":"Start Time (seconds)","type":"number"},model:{value:(_vm.observationData.startTime),callback:function ($$v) {_vm.$set(_vm.observationData, "startTime", _vm._n($$v))},expression:"observationData.startTime"}}),_c('ui-textbox',{attrs:{"label":"End Time (seconds)","type":"number"},model:{value:(_vm.observationData.endTime),callback:function ($$v) {_vm.$set(_vm.observationData, "endTime", _vm._n($$v))},expression:"observationData.endTime"}}),_c('ui-textbox',{attrs:{"floating-label":"floating-label","label":"Label","invalid":!_vm.isValidName(_vm.observationData.observation.label)},model:{value:(_vm.observationData.observation.label),callback:function ($$v) {_vm.$set(_vm.observationData.observation, "label", $$v)},expression:"observationData.observation.label"}}),_c('ui-textbox',{attrs:{"floating-label":"floating-label","label":"Label Confidence"},model:{value:(_vm.observationData.observation.labelConfidence),callback:function ($$v) {_vm.$set(_vm.observationData.observation, "labelConfidence", $$v)},expression:"observationData.observation.labelConfidence"}}),_c('ui-textbox',{attrs:{"floating-label":"floating-label","label":"Observer (username)","invalid":!_vm.isValidName(_vm.observationData.observer)},model:{value:(_vm.observationData.observer),callback:function ($$v) {_vm.$set(_vm.observationData, "observer", $$v)},expression:"observationData.observer"}}),_c('ui-textbox',{attrs:{"floating-label":"floating-label","label":"Video Id"},model:{value:(_vm.observationData.videoId),callback:function ($$v) {_vm.$set(_vm.observationData, "videoId", $$v)},expression:"observationData.videoId"}}),_c('UiSwitch',{model:{value:(_vm.observationData.isHuman),callback:function ($$v) {_vm.$set(_vm.observationData, "isHuman", $$v)},expression:"observationData.isHuman"}},[_vm._v("Observer Is Human")]),(!_vm.observationData.isHuman)?_c('UiSwitch',{model:{value:(_vm.observationData.confirmedBySomeone),callback:function ($$v) {_vm.$set(_vm.observationData, "confirmedBySomeone", $$v)},expression:"observationData.confirmedBySomeone"}},[_vm._v("Confirmed By ≥1 Human")]):_vm._e(),(!_vm.observationData.isHuman)?_c('UiSwitch',{model:{value:(_vm.observationData.rejectedBySomeone),callback:function ($$v) {_vm.$set(_vm.observationData, "rejectedBySomeone", $$v)},expression:"observationData.rejectedBySomeone"}},[_vm._v("Rejected By ≥1 Human")]):_vm._e()],1)}
 var staticRenderFns = []
 
           return {
@@ -64660,7 +64693,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"../atoms/UiSwitch":"iTmx"}],"d3Es":[function(require,module,exports) {
+},{"../utils":"K0yk","../atoms/UiSwitch":"iTmx"}],"d3Es":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
