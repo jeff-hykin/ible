@@ -142,7 +142,7 @@ function isValidName(value) {
 function labelConfidenceCheck(labelConfidence) {
     if (!(labelConfidence === null || labelConfidence === undefined)) {
         if (isFinite(labelConfidence)) {
-            if (labelConfidence > 1 || labelConfidence < -1) {
+            if (labelConfidence < 1 || labelConfidence > -1) {
                 return true
             }
         }
