@@ -1,20 +1,20 @@
 <template lang="pug">
     column.search(align-v="top" width="100%")
         row.video-wrapper(style="min-width: 100%; margin-top: 1rem;")
-            ui-button.delete-button(
-                icon="download"
-                color="red"
-            )
-                | Delete
+            //- ui-button.delete-button(
+            //-     icon="download"
+            //-     color="red"
+            //- )
+            //-     | Delete
             VideoIdSearch(@goToVideo='goToVideo')
-            ui-button.download-button(
-                @click="download"
-                icon="download"
-                color="primary"
-                tooltipPosition="top"
-                :tooltip="`Download all ${$root.searchResults.counts.total} results as JSON`"
-            )
-                | Download
+            //- ui-button.download-button(
+            //-     @click="download"
+            //-     icon="download"
+            //-     color="primary"
+            //-     tooltipPosition="top"
+            //-     :tooltip="`Download all ${$root.searchResults.counts.total} results as JSON`"
+            //- )
+            //-     | Download
         row.search-summary(
             align-v="top"
             align-h="space-around"
