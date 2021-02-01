@@ -5,6 +5,7 @@
         align-h="center"
         align-v="top"
         overflow="auto"
+        overflow-x="hidden"
     )
         WrappedTopSearch
         
@@ -160,7 +161,7 @@ export default {
         transition: opacity ease 0.5s
         width: fit-content
         min-width: fit-content
-        padding-left: 8rem
+        padding-left: 6rem
         
         .below-video-search
             width: 100%

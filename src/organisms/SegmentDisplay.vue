@@ -34,14 +34,15 @@
                 )
                     | {{computeSymbol(eachSegment.confirmedBySomeone, eachSegment.rejectedBySomeone)}}
                     ui-tooltip(position="left" animation="fade")
-                        span
-                            | label: {{ eachSegment.observation.label }}
-                        span
-                            | length: {{  (eachSegment.endTime - eachSegment.startTime).toFixed(2) }} sec
-                        span
-                            | start: {{ eachSegment.startTime.toFixed(3) }} sec
-                        span
-                            | human?: {{ eachSegment.isHuman }}
+                        column(align-h="left")
+                            span
+                                | label: {{ eachSegment.observation.label }}
+                            span
+                                | length: {{  (eachSegment.endTime - eachSegment.startTime).toFixed(2) }} sec
+                            span
+                                | start: {{ eachSegment.startTime.toFixed(3) }} sec
+                            span
+                                | human?: {{ eachSegment.isHuman }}
         row(position="relative" align-h="left" align-v="top" width="100%")
             h5
                 | Filter Observations by Label
