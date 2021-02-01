@@ -217,14 +217,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $e4598d = exports.default || module.exports;
+        var $c1a83a = exports.default || module.exports;
       
-      if (typeof $e4598d === 'function') {
-        $e4598d = $e4598d.options;
+      if (typeof $c1a83a === 'function') {
+        $c1a83a = $c1a83a.options;
       }
     
         /* template */
-        Object.assign($e4598d, (function () {
+        Object.assign($c1a83a, (function () {
           var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('jsonValue',{attrs:{"initValue":_vm.value,"isKeyed":"true"},on:{"changeValue":_vm.changeValue,"delete":_vm.deleteSelf}},[_c('input',{attrs:{"type":"text","tabindex":"1"},domProps:{"value":_vm.key},on:{"input":function($event){return _vm.onInput($event)},"focus":function($event){return $event.target.select()}}})])}
 var staticRenderFns = []
 
@@ -237,7 +237,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"_bundle_loader":"z1Am","./jsonValue.vue":[["Root.95f9d399.js","rUmP"],"Root.8866e90b.css","iVU1"]}],"Bh1I":[function(require,module,exports) {
+},{"_bundle_loader":"z1Am","./jsonValue.vue":[["Root.dea0b52d.js","rUmP"],"Root.ff3abe75.css","iVU1"]}],"Bh1I":[function(require,module,exports) {
 var bundleURL = null;
 
 function getBundleURLCached() {

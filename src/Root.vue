@@ -332,6 +332,9 @@ export default RootComponent = {
         --red: #e57373;
         --break-tag-height: 18px;
     }
+    #vue-root {
+        overflow: hidden;
+    }
     body {
         background: radial-gradient(circle, rgb(245, 245, 245) 0%, rgb(218, 218, 218) 100%);
     }

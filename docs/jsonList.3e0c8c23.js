@@ -117,7 +117,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"iy5t":[function(require,module,exports) {
+})({"yvJ6":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -139,48 +139,40 @@ exports.default = void 0;
 //
 //
 //
+//
 var _default = {
   name: "jsonObject",
   components: {
-    jsonKeyValue: () => require("_bundle_loader")(require.resolve('./jsonKeyValue.vue'))
+    jsonValue: () => require("_bundle_loader")(require.resolve('./jsonValue.vue'))
   },
-  props: {},
   data: () => ({
-    masterValue: [],
-    value: {},
-    previousValueAsString: "{}"
+    value: [],
+    uniqueKeysBecauseVueIsDumb: [],
+    previousValueAsString: "[]",
+    randomIndexes: []
   }),
 
   mounted() {
-    // init the masterValue
-    for (const key in this.$attrs.initValue) {
-      this.masterValue.push({
-        key,
-        value: this.$attrs.initValue[key]
-      });
-    }
-
+    this.value = this.$attrs.initValue || [];
     this.attemptToInformParent();
   },
 
   methods: {
-    updateValue() {
-      let object = {};
-
-      for (const each of this.masterValue) {
-        object[each.key] = each.value;
-      }
-
-      this.value = object;
-    },
-
     attemptToInformParent() {
-      this.updateValue();
       let newValue = this.value;
       let newValueAsString = JSON.stringify(newValue); // if there is a legitimate change
 
       if (this.previousValueAsString != newValueAsString) {
-        this.previousValueAsString = newValueAsString; // and there is a listener
+        this.previousValueAsString = newValueAsString; // update the indexes when something actually changes
+
+        this.value = [...this.value]; // ensure that every index has a unique key
+
+        for (let eachIndex in this.value) {
+          if (!this.uniqueKeysBecauseVueIsDumb[eachIndex]) {
+            this.uniqueKeysBecauseVueIsDumb[eachIndex] = Math.random();
+          }
+        } // and there is a listener
+
 
         if (this.$listeners.changeValue instanceof Function) {
           // then send them the newValue
@@ -189,74 +181,38 @@ var _default = {
       }
     },
 
-    addKeyValue() {
-      if (this.masterValue.length == 0) {
-        this.masterValue.push({
-          key: "untitled-1",
-          value: null
-        });
-      } else {
-        let lastElement = this.masterValue[this.masterValue.length - 1];
-        let number = lastElement.key.replace(/.+?(\d+)/, "$1");
-        let name = lastElement.key.replace(/(.+?)\d+/, "$1"); // FIXME: this needs to be done in a while loop to avoid duplicate auto-generated key names
-
-        if (number - 0 == number - 0) {
-          ++number;
-          name += number;
-        } else {
-          name += "-1";
-        }
-
-        this.masterValue.push({
-          key: name,
-          value: null
-        });
-      }
-
+    addElement() {
+      // append an item
+      this.value.push(null);
+      this.uniqueKeysBecauseVueIsDumb.push(Math.random());
       this.attemptToInformParent(); // TODO: focus on the name of the newly created element
     },
 
-    updateKeyValue(oldKey, key, value) {
-      for (const eachIndex in this.masterValue) {
-        let eachPair = this.masterValue[eachIndex]; // TODO: raise an error when two pairs have the same key
-
-        if (eachPair.key == oldKey) {
-          this.masterValue[eachIndex] = {
-            key: key,
-            value: value
-          };
-        }
-      }
-
+    elementValueChange(key, newElementValue) {
+      this.value[key] = newElementValue;
       this.attemptToInformParent();
     },
 
-    deleteKey(key) {
-      for (const eachIndex in this.masterValue) {
-        let eachPair = this.masterValue[eachIndex];
-
-        if (eachPair.key == key) {
-          delete this.masterValue[eachIndex];
-        }
-      }
-
-      this.masterValue = this.masterValue.filter(each => each !== undefined); // invalidate all the value so it'll actually refresh
-
+    deleteElement(key) {
+      delete this.value[key];
+      delete this.uniqueKeysBecauseVueIsDumb[key];
+      this.value = this.value.filter(each => each !== undefined);
+      this.uniqueKeysBecauseVueIsDumb = this.uniqueKeysBecauseVueIsDumb.filter(each => each !== undefined);
       this.attemptToInformParent();
     }
 
   }
 };
 exports.default = _default;
-        var $8f7288 = exports.default || module.exports;
+        var $896824 = exports.default || module.exports;
       
-      if (typeof $8f7288 === 'function') {
-        $8f7288 = $8f7288.options;
+      if (typeof $896824 === 'function') {
+        $896824 = $896824.options;
       }
     
         /* template */
-        Object.assign($8f7288, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{attrs:{"json-object-fh3935":"","object-fh3935":""}},[_vm._l((this.masterValue),function(each,index){return [_c('jsonKeyValue',{key:index,attrs:{"initKey":each.key,"initValue":each.value},on:{"changeValue":_vm.updateKeyValue,"delete":_vm.deleteKey}})]}),_vm._v(" "),_c('button',{attrs:{"add-button-fh3935":"","tabindex":"1"},on:{"click":_vm.addKeyValue}},[_vm._v("\n        +\n    ")])],2)}
+        Object.assign($896824, (function () {
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{attrs:{"json-list-fh3935":""}},[_vm._l((this.value),function(each,index){return [_c('jsonValue',{key:_vm.uniqueKeysBecauseVueIsDumb[index],attrs:{"initValue":each},on:{"changeValue":function($event){return _vm.elementValueChange(index, $event)},"delete":function($event){return _vm.deleteElement(index, $event)}}})]}),_vm._v(" "),_c('button',{attrs:{"add-button-fh3935":"","tabindex":"1"},on:{"click":_vm.addElement}},[_vm._v("\n        +\n    ")])],2)}
 var staticRenderFns = []
 
           return {
@@ -268,7 +224,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"_bundle_loader":"z1Am","./jsonKeyValue.vue":[["jsonKeyValue.5221f4f7.js","neZM"],"neZM"]}],"Bh1I":[function(require,module,exports) {
+},{"_bundle_loader":"z1Am","./jsonValue.vue":[["Root.dea0b52d.js","rUmP"],"Root.ff3abe75.css","iVU1"]}],"Bh1I":[function(require,module,exports) {
 var bundleURL = null;
 
 function getBundleURLCached() {
@@ -383,7 +339,27 @@ LazyPromise.prototype.catch = function (onError) {
   if (this.promise === null) this.promise = new Promise(this.executor);
   return this.promise.catch(onError);
 };
-},{"./bundle-url":"Bh1I"}],"Ijyk":[function(require,module,exports) {
+},{"./bundle-url":"Bh1I"}],"ln2R":[function(require,module,exports) {
+module.exports = function loadCSSBundle(bundle) {
+  return new Promise(function (resolve, reject) {
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = bundle;
+
+    link.onerror = function (e) {
+      link.onerror = link.onload = null;
+      reject(e);
+    };
+
+    link.onload = function () {
+      link.onerror = link.onload = null;
+      resolve();
+    };
+
+    document.getElementsByTagName('head')[0].appendChild(link);
+  });
+};
+},{}],"Ijyk":[function(require,module,exports) {
 module.exports = function loadJSBundle(bundle) {
   return new Promise(function (resolve, reject) {
     var script = document.createElement('script');
@@ -406,5 +382,5 @@ module.exports = function loadJSBundle(bundle) {
   });
 };
 },{}],0:[function(require,module,exports) {
-var b=require("z1Am");b.register("js",require("Ijyk"));b.load([]).then(function(){require("iy5t");});
+var b=require("z1Am");b.register("css",require("ln2R"));b.register("js",require("Ijyk"));b.load([]).then(function(){require("yvJ6");});
 },{}]},{},[0], null)
