@@ -1,2 +1,2 @@
 # make this the lowest priority (will be overridden by commands)
-PATH="$PATH:/usr/bin"
+PATH="$PATH:$PWD/settings/path_injection"
