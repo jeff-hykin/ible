@@ -49,13 +49,14 @@
             ui-button.outline-button(@click="toggleAllLabels" style="position: absolute; right: 1.5rem; top: -0.3rem; --button-color: darkgray")
                 | Toggle All
         container.labels
-            container(
+            container.label-toggle(
                 v-if="eachLabelName != '(no segments)'"
                 v-for="(eachLevel, eachLabelName) in $root.labels"
-                :style="`--label-color: ${$root.labels[eachLabelName].selected ? $root.labels[eachLabelName].color : 'gray'}; align-items: flex-start;`"
+                :style="`--label-color: ${$root.labels[eachLabelName].selected ? $root.labels[eachLabelName].color : 'gray'};`"
             )
                 ui-checkbox(v-model="$root.labels[eachLabelName].selected" @change="toggleLabel(eachLabelName)" style="align-items: flex-start;")
-                    | {{eachLabelName}}
+                    span(style)
+                        | {{eachLabelName}}
 
 </template>
 <script>
@@ -306,6 +307,10 @@ export default {
         // 6 columns
         grid-template-columns: repeat(auto-fit, var(--max-label-size))
         
+        .label-toggle
+            align-items: flex-start
+            overflow: auto
+            
         // 
         // each label
         // 
