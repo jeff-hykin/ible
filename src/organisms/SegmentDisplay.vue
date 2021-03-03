@@ -55,8 +55,7 @@
                 :style="`--label-color: ${$root.labels[eachLabelName].selected ? $root.labels[eachLabelName].color : 'gray'};`"
             )
                 ui-checkbox(v-model="$root.labels[eachLabelName].selected" @change="toggleLabel(eachLabelName)" style="align-items: flex-start;")
-                    span(style)
-                        | {{eachLabelName}}
+                    | {{eachLabelName}}
 
 </template>
 <script>

@@ -130,21 +130,16 @@ export default {
                 }
             },
             responsive: [
-                {
-                    options: {
-                        chart: {
-                        },
-                        legend: {
-                            show: true,
-                        },
-                    },
-                },
             ],
             legend: {
                 position: "right",
                 offsetY: 0,
-                height: 230,
+                height: 330,
+                width: 160,
                 fontSize: '17rem',
+                onItemHover: {
+                    highlightDataSeries: false
+                },
             },
         },
     }),
@@ -186,5 +181,10 @@ export default {
     max-width: var(--standard-size);
     transform: translate(var(--percent), var(--percent)) scale(var(--scaler));
     --percent: calc(calc(calc(1 - var(--scaler)) * 50%) * -1);
+}
+.apexcharts-legend-series {
+    width: max-content;
+    height: min-content;
+    min-height: 1em;
 }
 </style>
