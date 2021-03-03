@@ -24,8 +24,8 @@
         )
             column.card(width="26rem" padding="0.6rem 1rem")
                 LabelLister
-            column.card(width="32rem" flex-grow="0.3")
-                h3(style="ont-weight: 100; margin-top: -10px; border-bottom: black solid 2px;")
+            column.card(width="32rem" flex-grow="0.3" overflow-x="hidden")
+                h3(style="font-weight: 100; margin-top: -10px; border-bottom: black solid 2px;")
                     | Stats
                 br
                 br
