@@ -5549,9 +5549,13 @@ div[data-fjio3y598t3hi2] .add-observation-area .new-observation-button, div[data
 .segments .labels .label-toggle {
   align-items: flex-start;
   overflow: auto;
+  height: 1.5rem;
+  scrollbar-width: none;
+}
+.segments .labels .label-toggle::-webkit-scrollbar {
+  display: none;
 }
 .segments .labels > * {
-  border-radius: 1rem;
   margin-left: 12px;
   margin-bottom: 7px;
   border: transparent 1px solid;
