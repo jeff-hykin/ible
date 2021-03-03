@@ -62637,7 +62637,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($9e2fc6, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"segments",attrs:{"align-h":"left"}},[_c('transition',{attrs:{"name":"fade"}},[_c('h5',[_vm._v("Observations")])]),_c('transition',{attrs:{"name":"fade"}},[_c('row',{staticClass:"segment-container",attrs:{"align-h":"space-between","position":"relative","height":((_vm.segmentsInfo.maxLevel*2.2) + "rem")}},[(_vm.segmentsInfo.organizedSegments.length <= 0)?_c('row',{attrs:{"font-size":"14pt","font-weight":"lighter","color":"gray","position":"absolute","width":"100%","padding":"0.7rem"}},[_vm._v("No observations with given filters")]):_vm._e(),_vm._l((_vm.segmentsInfo.organizedSegments),function(eachSegment,index){return (_vm.segmentsInfo.organizedSegments.length > 0)?_c('row',{key:eachSegment.$uuid,staticClass:"segment",style:(("--color: " + (_vm.$root.labels[eachSegment.observation.label].color))),attrs:{"left":eachSegment.$renderData.leftPercent,"width":eachSegment.$renderData.widthPercent,"top":eachSegment.$renderData.topAmount,"isHuman":eachSegment.isHuman,"confirmedBySomeone":eachSegment.confirmedBySomeone,"rejectedBySomeone":eachSegment.rejectedBySomeone,"selected":eachSegment.$uuid == (_vm.$root.selectedSegment&&_vm.$root.selectedSegment.$uuid),"background-color":_vm.$root.labels[eachSegment.observation.label].color,"border-color":_vm.$root.labels[eachSegment.observation.label].color},on:{"click":function($event){return _vm.jumpSegment(eachSegment.$displayIndex)}}},[_vm._v(_vm._s(_vm.computeSymbol(eachSegment.confirmedBySomeone, eachSegment.rejectedBySomeone))),_c('ui-tooltip',{attrs:{"position":"left","animation":"fade"}},[_c('column',{attrs:{"align-h":"left"}},[_c('span',[_vm._v("label: "+_vm._s(eachSegment.observation.label))]),_c('span',[_vm._v("length: "+_vm._s((eachSegment.endTime - eachSegment.startTime).toFixed(2))+" sec")]),_c('span',[_vm._v("start: "+_vm._s(eachSegment.startTime.toFixed(3))+" sec")]),_c('span',[_vm._v("human?: "+_vm._s(eachSegment.isHuman))])])],1)],1):_vm._e()})],2)],1),_c('row',{attrs:{"position":"relative","align-h":"left","align-v":"top","width":"100%"}},[_c('h5',[_vm._v("Filter Observations by Label")]),_c('ui-button',{staticClass:"outline-button",staticStyle:{"position":"absolute","right":"1.5rem","top":"-0.3rem","--button-color":"darkgray"},on:{"click":_vm.toggleAllLabels}},[_vm._v("Toggle All")])],1),_c('container',{staticClass:"labels"},_vm._l((_vm.$root.labels),function(eachLevel,eachLabelName){return (eachLabelName != '(no segments)')?_c('container',{style:(("--label-color: " + (_vm.$root.labels[eachLabelName].selected ? _vm.$root.labels[eachLabelName].color : 'gray') + "; align-items: flex-start;"))},[_c('ui-checkbox',{staticStyle:{"align-items":"flex-start"},on:{"change":function($event){return _vm.toggleLabel(eachLabelName)}},model:{value:(_vm.$root.labels[eachLabelName].selected),callback:function ($$v) {_vm.$set(_vm.$root.labels[eachLabelName], "selected", $$v)},expression:"$root.labels[eachLabelName].selected"}},[_vm._v(_vm._s(eachLabelName))])],1):_vm._e()}),1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"segments",attrs:{"align-h":"left"}},[_c('transition',{attrs:{"name":"fade"}},[_c('h5',[_vm._v("Observations")])]),_c('transition',{attrs:{"name":"fade"}},[_c('row',{staticClass:"segment-container",attrs:{"align-h":"space-between","position":"relative","height":((_vm.segmentsInfo.maxLevel*2.2) + "rem")}},[(_vm.segmentsInfo.organizedSegments.length <= 0)?_c('row',{attrs:{"font-size":"14pt","font-weight":"lighter","color":"gray","position":"absolute","width":"100%","padding":"0.7rem"}},[_vm._v("No observations with given filters")]):_vm._e(),_vm._l((_vm.segmentsInfo.organizedSegments),function(eachSegment,index){return (_vm.segmentsInfo.organizedSegments.length > 0)?_c('row',{key:eachSegment.$uuid,staticClass:"segment",style:(("--color: " + (_vm.$root.labels[eachSegment.observation.label].color))),attrs:{"left":eachSegment.$renderData.leftPercent,"width":eachSegment.$renderData.widthPercent,"top":eachSegment.$renderData.topAmount,"isHuman":eachSegment.isHuman,"confirmedBySomeone":eachSegment.confirmedBySomeone,"rejectedBySomeone":eachSegment.rejectedBySomeone,"selected":eachSegment.$uuid == (_vm.$root.selectedSegment&&_vm.$root.selectedSegment.$uuid),"background-color":_vm.$root.labels[eachSegment.observation.label].color,"border-color":_vm.$root.labels[eachSegment.observation.label].color},on:{"click":function($event){return _vm.jumpSegment(eachSegment.$displayIndex)}}},[_vm._v(_vm._s(_vm.computeSymbol(eachSegment.confirmedBySomeone, eachSegment.rejectedBySomeone))),_c('ui-tooltip',{attrs:{"position":"left","animation":"fade"}},[_c('column',{attrs:{"align-h":"left"}},[_c('span',[_vm._v("label: "+_vm._s(eachSegment.observation.label))]),_c('span',[_vm._v("length: "+_vm._s((eachSegment.endTime - eachSegment.startTime).toFixed(2))+" sec")]),_c('span',[_vm._v("start: "+_vm._s(eachSegment.startTime.toFixed(3))+" sec")]),_c('span',[_vm._v("human?: "+_vm._s(eachSegment.isHuman))])])],1)],1):_vm._e()})],2)],1),_c('row',{attrs:{"position":"relative","align-h":"left","align-v":"top","width":"100%"}},[_c('h5',[_vm._v("Filter Observations by Label")]),_c('ui-button',{staticClass:"outline-button",staticStyle:{"position":"absolute","right":"1.5rem","top":"-0.3rem","--button-color":"darkgray"},on:{"click":_vm.toggleAllLabels}},[_vm._v("Toggle All")])],1),_c('container',{staticClass:"labels"},_vm._l((_vm.$root.labels),function(eachLevel,eachLabelName){return (eachLabelName != '(no segments)')?_c('container',{staticClass:"label-toggle",style:(("--label-color: " + (_vm.$root.labels[eachLabelName].selected ? _vm.$root.labels[eachLabelName].color : 'gray') + ";"))},[_c('ui-checkbox',{staticStyle:{"align-items":"flex-start"},on:{"change":function($event){return _vm.toggleLabel(eachLabelName)}},model:{value:(_vm.$root.labels[eachLabelName].selected),callback:function ($$v) {_vm.$set(_vm.$root.labels[eachLabelName], "selected", $$v)},expression:"$root.labels[eachLabelName].selected"}},[_vm._v(_vm._s(eachLabelName))])],1):_vm._e()}),1)],1)}
 var staticRenderFns = []
 
           return {
@@ -63113,19 +63113,16 @@ var _default = {
           }
         }
       },
-      responsive: [{
-        options: {
-          chart: {},
-          legend: {
-            show: true
-          }
-        }
-      }],
+      responsive: [],
       legend: {
         position: "right",
         offsetY: 0,
-        height: 230,
-        fontSize: '17rem'
+        height: 330,
+        width: 160,
+        fontSize: '17rem',
+        onItemHover: {
+          highlightDataSeries: false
+        }
       }
     }
   }),
@@ -63355,7 +63352,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($d45f95, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"search-card",attrs:{"shadow":"1","align-h":"left","background-color":_vm.label.color}},[_c('h5',{staticStyle:{"text-decoration":"underline"}},[_vm._v(_vm._s(_vm.labelName))]),_c('column',{attrs:{"width":"max-content","padding":"0.5rem"}},[_vm._v("total number of clips: "+_vm._s(_vm.label.segmentCount||0)),_c('br'),_vm._v("total number of videos: "+_vm._s(_vm.label.videoCount||0))]),_c('column',{staticClass:"show-samples",on:{"click":function($event){return _vm.selectLabel(_vm.labelName, _vm.label)}}},[_vm._v("See Clips ▲")])],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"search-card",attrs:{"shadow":"1","align-h":"left","background-color":_vm.label.color}},[_c('h5',[_vm._v(_vm._s(_vm.labelName))]),_c('column',{staticClass:"stats"},[_vm._v("total number of clips: "+_vm._s(_vm.label.segmentCount||0)),_c('br'),_vm._v("total number of videos: "+_vm._s(_vm.label.videoCount||0))]),_c('column',{staticClass:"show-samples",on:{"click":function($event){return _vm.selectLabel(_vm.labelName, _vm.label)}}},[_vm._v("See Clips ▲")])],1)}
 var staticRenderFns = []
 
           return {

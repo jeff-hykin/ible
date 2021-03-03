@@ -5546,6 +5546,10 @@ div[data-fjio3y598t3hi2] .add-observation-area .new-observation-button, div[data
   grid-template-columns: repeat(auto-fit, var(--max-label-size));
   --label-color: darkgray;
 }
+.segments .labels .label-toggle {
+  align-items: flex-start;
+  overflow: auto;
+}
 .segments .labels > * {
   border-radius: 1rem;
   margin-left: 12px;
@@ -5678,6 +5682,11 @@ div[data-fjio3y598t3hi2] .add-observation-area .new-observation-button, div[data
     max-width: var(--standard-size);
     transform: translate(var(--percent), var(--percent)) scale(var(--scaler));
     --percent: calc(calc(calc(1 - var(--scaler)) * 50%) * -1);
+}
+.apexcharts-legend-series {
+    width: max-content;
+    height: min-content;
+    min-height: 1em;
 }.ui-textbox.rounded-search[data-v-bd349a] {
   width: 25rem;
   max-width: 25rem;
@@ -5700,6 +5709,10 @@ div[data-fjio3y598t3hi2] .add-observation-area .new-observation-button, div[data
   flex-grow: 1;
   transition: all 0.25s ease-out;
 }
+.search-card.good-column .stats[data-v-d45f95] {
+  width: max-content;
+  padding: 0.5rem;
+}
 .search-card.good-column .show-samples[data-v-d45f95] {
   opacity: 0;
   transition: opacity 0.25s ease-out;
@@ -5716,6 +5729,15 @@ div[data-fjio3y598t3hi2] .add-observation-area .new-observation-button, div[data
   position: absolute;
   color: gray;
   font-size: 10pt;
+}
+.search-card.good-column h5[data-v-d45f95] {
+  text-decoration: underline;
+  max-width: 80%;
+  overflow: auto;
+  scrollbar-width: none;
+}
+.search-card.good-column h5[data-v-d45f95]::-webkit-scrollbar {
+  display: none;
 }
 .search-card.good-column[data-v-d45f95]:hover {
   box-shadow: var(--shadow-3) !important;
