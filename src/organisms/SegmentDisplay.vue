@@ -309,12 +309,15 @@ export default {
         .label-toggle
             align-items: flex-start
             overflow: auto
+            height: 1.5rem
+            scrollbar-width: none  // Firefox specific
+            &::-webkit-scrollbar
+                display: none //  Chrome, Safari and Opera specific
             
         // 
         // each label
         // 
         & > *
-            border-radius: 1rem
             margin-left: 12px
             margin-bottom: 7px
             border: transparent 1px solid
