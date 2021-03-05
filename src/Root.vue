@@ -169,6 +169,7 @@ export default RootComponent = {
         }
     },
     mounted() {
+        this.backend.then(()=>this.$toasted.show(`Connected to backend, retreiving data`).goAway(6500))
     },
     watch: {
         "searchResults.videos": {

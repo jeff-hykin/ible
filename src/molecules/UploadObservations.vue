@@ -132,7 +132,7 @@ export default {
                 }
             } catch (error) {
                 this.$toasted.show(`Processing Error`).goAway(2500)
-                this.$toasted.show(`Are you sure the file is valid JSON?`).goAway(6500)
+                this.$toasted.show(`Are you sure the file is valid JSON?`).goAway(16500)
                 return
             }
             let size = JSON.stringify(newObservations).length
@@ -140,9 +140,15 @@ export default {
                 this.$root.bigMessage(`The file being uploaded is ${size} characters compressed\nThe limit is approximately ${approximateMaxFileSize}\n(that limit is about ~345 observations)\n(this will hopefully be increased in the future)\nPlease reduce the number of observations then try re-uploading`)
                 return
             }
+            this.$toasted.show(`👍 file seems to be valid JSON`).goAway(16500)
+            this.$toasted.show(`Sending data to database`).goAway(6500)
+            let interval = setInterval(() => {
+                this.$toasted.show(`Waiting on database...`).goAway(2500)
+            }, 5500)
             try {
                 newUuids = await (await this.backend).addMultipleObservations(newObservations)
             } catch (error) {
+                clearInterval(interval)
                 console.debug(`error is:`,error)
                 this.$toasted.show(`The Server said there was an error:`).goAway(2500)
                 this.$toasted.show(`Message: ${error.message}<br>`, {
@@ -157,6 +163,7 @@ export default {
                 this.$root.bigMessage(`Full Details:\n\n${JSON.stringify(error,0,3)}`)
                 return
             }
+            clearInterval(interval)
             this.$toasted.show(`Success! Refresh to see changes`).goAway(2500)
         },
     }
