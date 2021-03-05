@@ -64857,7 +64857,7 @@ var _default = {
         return;
       }
 
-      this.$toasted.show(`👍 file seems to be valid JSON`).goAway(16500);
+      this.$toasted.show(`👍 file seems to be valid JSON`).goAway(6500);
       this.$toasted.show(`Sending data to database`).goAway(6500);
       let interval = setInterval(() => {
         this.$toasted.show(`Waiting on database...`).goAway(2500);
@@ -65290,7 +65290,7 @@ var _default = RootComponent = {
   },
   methods: {
     bigMessage(message) {
-      this.$toasted.show(`<pre style="max-width: 70vw;overflow: auto;white-space: pre-wrap;">${escape(message)}<pre>`, {
+      this.$toasted.show(`<pre style="max-width: 70vw; max-height: 50vh; overflow: auto; white-space: pre-wrap;">${escape(message)}<pre>`, {
         closeOnSwipe: false,
         action: {
           text: 'Close',
