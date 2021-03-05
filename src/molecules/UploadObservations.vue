@@ -140,7 +140,7 @@ export default {
                 this.$root.bigMessage(`The file being uploaded is ${size} characters compressed\nThe limit is approximately ${approximateMaxFileSize}\n(that limit is about ~345 observations)\n(this will hopefully be increased in the future)\nPlease reduce the number of observations then try re-uploading`)
                 return
             }
-            this.$toasted.show(`👍 file seems to be valid JSON`).goAway(16500)
+            this.$toasted.show(`👍 file seems to be valid JSON`).goAway(6500)
             this.$toasted.show(`Sending data to database`).goAway(6500)
             let interval = setInterval(() => {
                 this.$toasted.show(`Waiting on database...`).goAway(2500)
