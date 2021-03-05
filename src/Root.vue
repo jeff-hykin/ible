@@ -251,7 +251,7 @@ export default RootComponent = {
     },
     methods: {
         bigMessage(message) {
-            this.$toasted.show(`<pre style="max-width: 70vw;overflow: auto;white-space: pre-wrap;">${escape(message)}<pre>`,{
+            this.$toasted.show(`<pre style="max-width: 70vw; max-height: 50vh; overflow: auto; white-space: pre-wrap;">${escape(message)}<pre>`,{
                 closeOnSwipe: false,
                 action: {
                     text:'Close',
