@@ -64846,7 +64846,7 @@ var _default = {
         }
       } catch (error) {
         this.$toasted.show(`Processing Error`).goAway(2500);
-        this.$toasted.show(`Are you sure the file is valid JSON?`).goAway(6500);
+        this.$toasted.show(`Are you sure the file is valid JSON?`).goAway(16500);
         return;
       }
 
@@ -64857,9 +64857,16 @@ var _default = {
         return;
       }
 
+      this.$toasted.show(`👍 file seems to be valid JSON`).goAway(16500);
+      this.$toasted.show(`Sending data to database`).goAway(6500);
+      let interval = setInterval(() => {
+        this.$toasted.show(`Waiting on database...`).goAway(2500);
+      }, 5500);
+
       try {
         newUuids = await (await this.backend).addMultipleObservations(newObservations);
       } catch (error) {
+        clearInterval(interval);
         console.debug(`error is:`, error);
         this.$toasted.show(`The Server said there was an error:`).goAway(2500);
         this.$toasted.show(`Message: ${error.message}<br>`, {
@@ -64882,6 +64889,7 @@ var _default = {
         return;
       }
 
+      clearInterval(interval);
       this.$toasted.show(`Success! Refresh to see changes`).goAway(2500);
     }
 
@@ -65173,7 +65181,9 @@ var _default = RootComponent = {
     };
   },
 
-  mounted() {},
+  mounted() {
+    this.backend.then(() => this.$toasted.show(`Connected to backend, retreiving data`).goAway(6500));
+  },
 
   watch: {
     "searchResults.videos": {
