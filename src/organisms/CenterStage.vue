@@ -88,6 +88,43 @@ export default {
             },
         }
     },
+    windowListeners: {
+        keydown(eventObject) {
+            if (eventObject.target == document.body || get(eventObject, ["path"], []).includes(this.$el)) {
+                // 
+                // key controls
+                // 
+                switch (eventObject.key) {
+                    case "ArrowRight":
+                        if (eventObject.ctrlKey) {
+                            console.log(`going to next clip`)
+                            eventObject.preventDefault()
+                            this.incrementIndex()
+                        }
+                        break
+                    case "ArrowLeft":
+                        if (eventObject.ctrlKey) {
+                            console.log(`going to previous clip`)
+                            eventObject.preventDefault()
+                            this.decrementIndex()
+                        }
+                        break
+                    // case "ArrowUp":
+                    //     if (eventObject.ctrlKey) {
+                    //         eventObject.preventDefault()
+                    //         // TODO: go to previous video in video list
+                    //     }
+                    //     break
+                    // case "ArrowDown":
+                    //     if (eventObject.ctrlKey) {
+                    //         eventObject.preventDefault()
+                    //         // TODO: go to next video in video list
+                    //     }
+                    //     break
+                }
+            }
+        }
+    },
     methods: {
         attemptSeekToSegmentStart() {
             // go to the start of the selected segment
@@ -182,17 +219,18 @@ export default {
             border-radius: 1rem
             box-shadow: var(--shadow-1)
             width: 100%
+            --from-top: 5.3rem
             
             .left-side-button
                 position: absolute
                 left: 0rem
-                top: 50%
+                top: var(--from-top)
                 transform: translate(-100%, -50%)
             
             .right-side-button
                 position: absolute
                 right: 0rem
-                top: 50%
+                top: var(--from-top)
                 transform: translate(100%, -50%)
     
     .fade-enter-active, .fade-leave-active
