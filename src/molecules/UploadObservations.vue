@@ -141,7 +141,10 @@ export default {
                 return
             }
             this.$toasted.show(`👍 file seems to be valid JSON`).goAway(6500)
-            this.$toasted.show(`Sending data to database`).goAway(6500)
+            this.$toasted.show(`Sending data to database<br>Estimated upload time: ${newObservations.length/25} min<br>started at ${(new Date())}`, {
+                closeOnSwipe: false,
+                action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
+            })
             let interval = setInterval(() => {
                 this.$toasted.show(`Waiting on database...`).goAway(2500)
             }, 5500)
@@ -150,8 +153,7 @@ export default {
             } catch (error) {
                 clearInterval(interval)
                 console.debug(`error is:`,error)
-                this.$toasted.show(`The Server said there was an error:`).goAway(2500)
-                this.$toasted.show(`Message: ${error.message}<br>`, {
+                this.$toasted.show(`The Server said there was an error:<br>Message: ${error.message}<br>`, {
                     closeOnSwipe: false,
                     action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
                 })
@@ -164,7 +166,10 @@ export default {
                 return
             }
             clearInterval(interval)
-            this.$toasted.show(`Success! Refresh to see changes`).goAway(2500)
+            this.$toasted.show(`Success! Refresh to see changes`, {
+                closeOnSwipe: false,
+                action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
+            })
         },
     }
 }
