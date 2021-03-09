@@ -20,6 +20,9 @@ Vue.use(VuePlyr, {
             iosNative: false,
             container: null,
         },
+        youtube: {
+            noCookie: false,
+        },
         invertTime: false,
     }
 })
