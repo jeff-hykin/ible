@@ -37360,6 +37360,9 @@ _vue.default.use(_vuePlyr.default, {
       iosNative: false,
       container: null
     },
+    youtube: {
+      noCookie: false
+    },
     invertTime: false
   }
 });
@@ -64139,6 +64142,47 @@ var _default = {
 
     }
   },
+  windowListeners: {
+    keydown(eventObject) {
+      if (eventObject.target == document.body || get(eventObject, ["path"], []).includes(this.$el)) {
+        // 
+        // key controls
+        // 
+        switch (eventObject.key) {
+          case "ArrowRight":
+            if (eventObject.ctrlKey) {
+              console.log(`going to next clip`);
+              eventObject.preventDefault();
+              this.incrementIndex();
+            }
+
+            break;
+
+          case "ArrowLeft":
+            if (eventObject.ctrlKey) {
+              console.log(`going to previous clip`);
+              eventObject.preventDefault();
+              this.decrementIndex();
+            }
+
+            break;
+          // case "ArrowUp":
+          //     if (eventObject.ctrlKey) {
+          //         eventObject.preventDefault()
+          //         // TODO: go to previous video in video list
+          //     }
+          //     break
+          // case "ArrowDown":
+          //     if (eventObject.ctrlKey) {
+          //         eventObject.preventDefault()
+          //         // TODO: go to next video in video list
+          //     }
+          //     break
+        }
+      }
+    }
+
+  },
   methods: {
     attemptSeekToSegmentStart() {
       // go to the start of the selected segment
@@ -64858,7 +64902,15 @@ var _default = {
       }
 
       this.$toasted.show(`👍 file seems to be valid JSON`).goAway(6500);
-      this.$toasted.show(`Sending data to database`).goAway(6500);
+      this.$toasted.show(`Sending data to database<br>Estimated upload time: ${newObservations.length / 25} min<br>started at ${new Date()}`, {
+        closeOnSwipe: false,
+        action: {
+          text: 'Close',
+          onClick: (e, toastObject) => {
+            toastObject.goAway(0);
+          }
+        }
+      });
       let interval = setInterval(() => {
         this.$toasted.show(`Waiting on database...`).goAway(2500);
       }, 5500);
@@ -64868,8 +64920,7 @@ var _default = {
       } catch (error) {
         clearInterval(interval);
         console.debug(`error is:`, error);
-        this.$toasted.show(`The Server said there was an error:`).goAway(2500);
-        this.$toasted.show(`Message: ${error.message}<br>`, {
+        this.$toasted.show(`The Server said there was an error:<br>Message: ${error.message}<br>`, {
           closeOnSwipe: false,
           action: {
             text: 'Close',
@@ -64890,7 +64941,15 @@ var _default = {
       }
 
       clearInterval(interval);
-      this.$toasted.show(`Success! Refresh to see changes`).goAway(2500);
+      this.$toasted.show(`Success! Refresh to see changes`, {
+        closeOnSwipe: false,
+        action: {
+          text: 'Close',
+          onClick: (e, toastObject) => {
+            toastObject.goAway(0);
+          }
+        }
+      });
     }
 
   }

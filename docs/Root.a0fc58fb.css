@@ -5971,17 +5971,18 @@ span[data-v-2ae310] {
   border-radius: 1rem;
   box-shadow: var(--shadow-1);
   width: 100%;
+  --from-top: 5.3rem;
 }
 .center-stage .main-container .below-video .left-side-button[data-v-aaa267] {
   position: absolute;
   left: 0rem;
-  top: 50%;
+  top: var(--from-top);
   transform: translate(-100%, -50%);
 }
 .center-stage .main-container .below-video .right-side-button[data-v-aaa267] {
   position: absolute;
   right: 0rem;
-  top: 50%;
+  top: var(--from-top);
   transform: translate(100%, -50%);
 }
 .center-stage .fade-enter-active[data-v-aaa267], .center-stage .fade-leave-active[data-v-aaa267] {
