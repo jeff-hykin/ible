@@ -113,9 +113,11 @@ export default RootComponent = {
         }
         
         return {
+            loadStart: (new Date()).getTime(),
             needToLoad$: {
                 backend,
             },
+            usernames: new Set(),
             routeData$: initialRouteData,
             filterAndSort: {
                 maxlabelConfidence: null,
@@ -169,7 +171,10 @@ export default RootComponent = {
         }
     },
     mounted() {
-        this.backend.then(()=>this.$toasted.show(`Connected to backend, retreiving data`).goAway(6500))
+        this.backend.then(async (backend)=>{
+            this.$toasted.show(`Connected to backend, retrieving data`).goAway(6500)
+            this.usernames = new Set(await backend.getUsernames())
+        })
     },
     watch: {
         "searchResults.videos": {
@@ -249,7 +254,12 @@ export default RootComponent = {
             this.routeData$ = {...this.routeData$}
         }
     },
+    computed: {
+    },
     methods: {
+        getUsernameList() {
+            return [...this.usernames]
+        },
         bigMessage(message) {
             this.$toasted.show(`<pre style="max-width: 70vw; max-height: 50vh; overflow: auto; white-space: pre-wrap;">${escape(message)}<pre>`,{
                 closeOnSwipe: false,

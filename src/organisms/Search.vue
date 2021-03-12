@@ -65,10 +65,11 @@
                 h5
                     | Search Filters
                 br
-                ui-textbox(
+                ui-autocomplete(
                     label="Observer (username)"
                     placeholder="(Any)"
-                    v-model="$root.filterAndSort.observer"
+                    v-model="observer"
+                    :suggestions="$root.getUsernameList()"
                 )
                 row(align-h="space-between")
                     ui-textbox(
@@ -107,7 +108,7 @@
             
 </template>
 <script>
-let { colors, debounce, download } = require("../utils")
+let { colors, debounce, download, } = require("../utils")
 let observationEntries
 export default {
     components: {
@@ -119,6 +120,7 @@ export default {
     data: ()=>({
         debouncedSubmitSearch:()=>{},
         colors,
+        observer: $root.filterAndSort.observer,
     }),
     mounted() {
         // wait half a sec before updating the content
@@ -216,6 +218,7 @@ export default {
             for (let each of observationEntries) {
                 if (!results.observers[each.observer]) { results.observers[each.observer] = 0 }
                 results.observers[each.observer] += 1
+                this.$root.usernames.add(each.observer)
                 
                 if (!results.labels[each.observation.label]) { results.labels[each.observation.label] = 0 }
                 results.labels[each.observation.label] += 1
@@ -241,7 +244,25 @@ export default {
                 }
             }
             this.$root.searchResults = results
+            
+            // show the time of the first load
+            if (this.$root.loadStart) {
+                let loadDuration = (new Date()).getTime() - this.$root.loadStart
+                this.$root.loadStart = null
+                this.$toasted.show(`Data retrieved in ${loadDuration/1000} sec`, {
+                    closeOnSwipe: false,
+                    action: {
+                        text:'Close',
+                        onClick: (e, toastObject)=>{toastObject.goAway(0)}
+                    },
+                })
+            }
         },
+    },
+    watch: {
+        observer() {
+            this.$root.filterAndSort.observer = this.observer
+        }
     },
     rootHooks: {
         watch: {
