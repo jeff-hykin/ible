@@ -18,7 +18,17 @@
         )
             ui-icon
                 | cloud_upload
-            ui-fileupload(name="file" type="secondary" @change="onUploadObservation")
+            ui-fileupload(name="file" type="secondary" @change="onUploadObservation" :multiple="true")
+        
+        transition(name="fade")
+            Card(v-if="uploadMessage && !uploadCanceled" position="fixed" bottom="2rem" right="2rem" z-index="999" width="30rem" max-width="30rem" overflow="scroll" white-space="pre" shadow="3" background="whitesmoke")
+                | {{uploadMessage}}
+                br
+                ui-button.cancel-button(
+                    @click="quitUpload"
+                    icon="cancel"
+                )
+                    | Cancel
         
         //- help message
         portal(to="modal-popups")
@@ -66,19 +76,23 @@
     
 </template>
 <script>
+const { humandReadableTime } = require("../utils")
 
 export default {
     components: {
         JsonTree: require('vue-json-tree').default,
         DummyObservation: require("../molecules/DummyObservation").default,
+        Card: require("../molecules/Card").default,
     },
     data: ()=>({
+        uploadMessage: null,
+        uploadCanceled: false,
         dummyData1: {
             "videoId": "FLK5-00l0r4",
             "type": "segment",
             "startTime": 125.659,
             "endTime": 127.661,
-            "observer": "CSCE636-Spring2021-WuAiSeDUdl-v1",
+            "observer": "CSCE636-Spring2021-WuAiSeDUdl-1",
             "isHuman": true,
             "observation": {
                 "label": "happy",
@@ -111,6 +125,11 @@ export default {
         },
     },
     methods: {
+        quitUpload() {
+            console.log(`canceling upload`)
+            this.uploadMessage = null
+            this.uploadCanceled = true
+        },
         dummyDataChange(dummyData) {
             if (dummyData.isHuman) {
                 delete dummyData.confirmedBySomeone
@@ -121,62 +140,104 @@ export default {
             this.$refs.helpModal.open()
         },
         async onUploadObservation(eventObject) {
-            let fileText = await eventObject[0].text()
-            const approximateMaxFileSize = 102391
-            let newObservations, newUuids
-            try {
-                newObservations = JSON.parse(fileText)
-                // save the uploadTime to help with removing bad data
-                for (let each of newObservations) {
-                    each.uploadTime = `${(new Date())}`
+            this.uploadCanceled = false
+            for (const [key, eachFile] of Object.entries(eventObject)) {
+                const fileNumber = key-0+1
+                let fileText = await eachFile.text()
+                let newObservations
+                try {
+                    newObservations = JSON.parse(fileText)
+                    // save the uploadTime to help with removing bad data
+                    for (let each of newObservations) {
+                        each.uploadTime = `${(new Date())}`
+                    }
+                } catch (error) {
+                    this.$toasted.show(`Processing Error`).goAway(2500)
+                    this.$toasted.show(`Are you sure the file is valid JSON?`).goAway(16500)
+                    return
                 }
-            } catch (error) {
-                this.$toasted.show(`Processing Error`).goAway(2500)
-                this.$toasted.show(`Are you sure the file is valid JSON?`).goAway(16500)
-                return
+                
+                this.$toasted.show(`👍 file seems to be valid JSON`).goAway(6500)
+                try {
+                    this.uploadCanceled = false
+                    this.uploadMessage = "starting upload"
+                    let errors = ""
+                    const size = newObservations.length
+                    const startTime = (new Date()).getTime()
+                    let timeRemaining = null
+                    
+                    for (const [key, value] of Object.entries(newObservations)) {
+                        const observationNumber = key-0+1
+                        const fileNumberString = eventObject.length > 1? `File ${fileNumber} of ${eventObject.length}\n\n`:""
+                        const timeRemainingString = timeRemaining?" (~ "+humandReadableTime(timeRemaining)+" remaining)":""
+                        this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n` + errors
+                        try {
+                            await (await this.backend).addObservation(value)
+                        } catch (error) {
+                            if (error.message.match(/Message: Failed to fetch/)) {
+                                this.$toasted.show(`Server too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(2500)
+                                continue
+                            }
+                            errors += `problem with #${observationNumber}:\n`+error.message+"\n"
+                        }
+                        const changeInTime = (new Date()).getTime() - startTime
+                        const changeInCount = observationNumber
+                        const rate = changeInTime/changeInCount
+                        const remainingObservationCount = size - observationNumber
+                        timeRemaining = remainingObservationCount * rate
+                        
+                        if (this.uploadCanceled === true) {
+                            this.$toasted.show(`Canceling remaining upload`).goAway(2500)
+                            this.quitUpload()
+                            return
+                        }
+                    }
+                    if (eventObject.length > 1) {
+                        this.$toasted.show(`File Upload #${fileNumber} Success!`, {
+                            closeOnSwipe: false,
+                            action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
+                        })
+                    } else {
+                        this.$toasted.show(`Upload Success! Refresh to see changes`, {
+                            closeOnSwipe: false,
+                            action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
+                        })
+                    }
+                } catch (error) {
+                    if (error.message.match(/Message: Failed to fetch/)) {
+                        this.$toasted.show(`Server too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(2500)
+                        continue
+                    }
+                    console.debug(`uploading error is:`,error)
+                    this.$toasted.show(`The Server said there was an error:`).goAway(2500)
+                    this.$toasted.show(`Message: ${error.message}<br>`, {
+                        closeOnSwipe: false,
+                        action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
+                    })
+                    // if arguments are long
+                    const maxLength = 2000
+                    if (JSON.stringify(error.arguments).length > maxLength) {
+                        error.arguments = JSON.stringify(error.arguments).slice(0,maxLength)
+                    }
+                    this.$root.bigMessage(`Full Details:\n\n${JSON.stringify(error,0,3)}`)
+                    this.quitUpload()
+                    return
+                }
             }
-            let size = JSON.stringify(newObservations).length
-            if (size > approximateMaxFileSize) {
-                this.$root.bigMessage(`The file being uploaded is ${size} characters compressed\nThe limit is approximately ${approximateMaxFileSize}\n(that limit is about ~345 observations)\n(this will hopefully be increased in the future)\nPlease reduce the number of observations then try re-uploading`)
-                return
-            }
-            this.$toasted.show(`👍 file seems to be valid JSON`).goAway(6500)
-            this.$toasted.show(`Sending data to database<br>Estimated upload time: ${newObservations.length/25} min<br>started at ${(new Date())}`, {
-                closeOnSwipe: false,
-                action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
-            })
-            let interval = setInterval(() => {
-                this.$toasted.show(`Waiting on database...`).goAway(2500)
-            }, 5500)
-            try {
-                newUuids = await (await this.backend).addMultipleObservations(newObservations)
-            } catch (error) {
-                clearInterval(interval)
-                console.debug(`error is:`,error)
-                this.$toasted.show(`The Server said there was an error:<br>Message: ${error.message}<br>`, {
+            if (eventObject.length > 1) {
+                this.$toasted.show(`All files uploaded! Refresh to see changes`, {
                     closeOnSwipe: false,
                     action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
                 })
-                // if arguments are long
-                const maxLength = 2000
-                if (JSON.stringify(error.arguments).length > maxLength) {
-                    error.arguments = JSON.stringify(error.arguments).slice(0,maxLength)
-                }
-                this.$root.bigMessage(`Full Details:\n\n${JSON.stringify(error,0,3)}`)
-                return
             }
-            clearInterval(interval)
-            this.$toasted.show(`Success! Refresh to see changes`, {
-                closeOnSwipe: false,
-                action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
-            })
+            this.quitUpload()
         },
     }
 }
 
 </script>
 <style lang="sass" scoped>
-
+    
 .modal[fj20485gh93oi53g=fj20485gh93oi53g]
     font-size: 14pt
     z-index: 99999
@@ -234,7 +295,21 @@ export default {
         min-width: var(--size)
         max-height: var(--size)
         min-height: var(--size)
+    
+    .cancel-button.ui-button
+        --button-color: darkgray
+        --text-color: white
+        background-color: var(--button-color) 
+        color: var(--text-color) !important
+        transition: all ease 0.3s
         
+        ::v-deep .ui-button__icon
+            color: var(--text-color)
+                
+        &:hover
+            background-color: var(--button-color) !important
+            color: white
+            box-shadow: var(--shadow-3) 
         
     &:hover
         .help-button
