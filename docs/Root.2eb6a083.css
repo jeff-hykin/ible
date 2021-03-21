@@ -6161,6 +6161,21 @@ span[data-v-6b65b0] {
   max-height: var(--size);
   min-height: var(--size);
 }
+.upload-wrapper .cancel-button.ui-button[data-v-2cbb07] {
+  --button-color: darkgray;
+  --text-color: white;
+  background-color: var(--button-color);
+  color: var(--text-color) !important;
+  transition: all ease 0.3s;
+}
+.upload-wrapper .cancel-button.ui-button[data-v-2cbb07]  .ui-button__icon {
+  color: var(--text-color);
+}
+.upload-wrapper .cancel-button.ui-button[data-v-2cbb07]:hover {
+  background-color: var(--button-color) !important;
+  color: white;
+  box-shadow: var(--shadow-3);
+}
 .upload-wrapper:hover .help-button[data-v-2cbb07] {
   opacity: 1;
 }.home-container[data-v-cbd61a]  .nub {

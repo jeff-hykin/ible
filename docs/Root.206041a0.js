@@ -60289,6 +60289,46 @@ function labelConfidenceCheck(labelConfidence) {
 
 const currentFixedSizeOfYouTubeVideoId = 11; // This is not guarenteed to stay this way forever
 
+function humandReadableTime(milliseconds) {
+  function numberEnding(number) {
+    return number > 1 ? 's' : '';
+  }
+
+  var temp = Math.floor(milliseconds / 1000);
+  var years = Math.floor(temp / 31536000);
+
+  if (years) {
+    return years + ' year' + numberEnding(years);
+  } //TODO: Months! Maybe weeks? 
+
+
+  var days = Math.floor((temp %= 31536000) / 86400);
+
+  if (days) {
+    return days + ' day' + numberEnding(days);
+  }
+
+  var hours = Math.floor((temp %= 86400) / 3600);
+
+  if (hours) {
+    return hours + ' hour' + numberEnding(hours);
+  }
+
+  var minutes = Math.floor((temp %= 3600) / 60);
+
+  if (minutes) {
+    return minutes + ' minute' + numberEnding(minutes);
+  }
+
+  var seconds = temp % 60;
+
+  if (seconds) {
+    return seconds + ' second' + numberEnding(seconds);
+  }
+
+  return 'less than a second'; //'just now' //or other string you like;
+}
+
 module.exports = {
   EventEmitter,
   storageObject,
@@ -60301,6 +60341,7 @@ module.exports = {
   isValidName,
   labelConfidenceCheck,
   currentFixedSizeOfYouTubeVideoId,
+  humandReadableTime,
 
   wrapIndex(val, list) {
     if (val < 0) {
@@ -63609,6 +63650,7 @@ exports.default = void 0;
 //
 //
 //
+//
 let {
   colors,
   debounce,
@@ -63625,7 +63667,8 @@ var _default = {
   },
   data: () => ({
     debouncedSubmitSearch: () => {},
-    colors
+    colors,
+    observer: $root.filterAndSort.observer
   }),
 
   mounted() {
@@ -63777,6 +63820,7 @@ var _default = {
         }
 
         results.observers[each.observer] += 1;
+        this.$root.usernames.add(each.observer);
 
         if (!results.labels[each.observation.label]) {
           results.labels[each.observation.label] = 0;
@@ -63807,7 +63851,27 @@ var _default = {
         }
       }
 
-      this.$root.searchResults = results;
+      this.$root.searchResults = results; // show the time of the first load
+
+      if (this.$root.loadStart) {
+        let loadDuration = new Date().getTime() - this.$root.loadStart;
+        this.$root.loadStart = null;
+        this.$toasted.show(`Data retrieved in ${loadDuration / 1000} sec`, {
+          closeOnSwipe: false,
+          action: {
+            text: 'Close',
+            onClick: (e, toastObject) => {
+              toastObject.goAway(0);
+            }
+          }
+        });
+      }
+    }
+
+  },
+  watch: {
+    observer() {
+      this.$root.filterAndSort.observer = this.observer;
     }
 
   },
@@ -63836,7 +63900,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($cdd074, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"search",attrs:{"align-v":"top","width":"100%"}},[_c('row',{staticClass:"video-wrapper",staticStyle:{"min-width":"100%","margin-top":"1rem"}},[_c('VideoIdSearch',{on:{"goToVideo":_vm.goToVideo}})],1),_c('row',{staticClass:"search-summary",attrs:{"align-v":"top","align-h":"space-around","padding":"1rem 4rem","height":"min-content","width":"100%"}},[_c('column',{staticClass:"card",attrs:{"width":"26rem","padding":"0.6rem 1rem"}},[_c('LabelLister')],1),_c('column',{staticClass:"card",attrs:{"width":"32rem","flex-grow":"0.3","overflow-x":"hidden"}},[_c('h3',{staticStyle:{"font-weight":"100","margin-top":"-10px","border-bottom":"black solid 2px"}},[_vm._v("Stats")]),_c('br'),_c('br'),_c('column',{staticClass:"text-grid",attrs:{"align-h":"left","width":"90%"}},[_c('h5',[_vm._v("Total Videos: "+_vm._s(_vm.$root.searchResults.videos.size))]),_c('h5',[_vm._v("False Positive Ratio: "+_vm._s(_vm.falsePositiveRatio()))])]),_c('br'),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"showTotal":"showTotal","series":[_vm.$root.searchResults.counts.fromHuman, _vm.$root.searchResults.counts.rejected, _vm.$root.searchResults.uncheckedObservations.length, _vm.$root.searchResults.counts.confirmed, _vm.$root.searchResults.counts.disagreement],"labels":['Human','Rejected','Unchecked','Confirmed', 'Disagreement'],"colors":[ _vm.colors.blue, _vm.colors.red, _vm.colors.purple, _vm.colors.green, _vm.colors.yellow ]}})],1):_vm._e(),_c('h5',[_vm._v("Observers")]),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"series":Object.values(_vm.$root.searchResults.observers),"labels":Object.keys(_vm.$root.searchResults.observers)}})],1):_vm._e(),_c('h5',[_vm._v("Labels")]),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"series":Object.values(_vm.$root.searchResults.labels),"labels":Object.keys(_vm.$root.searchResults.labels)}})],1):_vm._e()],1),_c('column',{staticClass:"card search-observation",attrs:{"align-h":"left","min-height":"fit-content"}},[_c('h5',[_vm._v("Search Filters")]),_c('br'),_c('ui-textbox',{attrs:{"label":"Observer (username)","placeholder":"(Any)"},model:{value:(_vm.$root.filterAndSort.observer),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "observer", $$v)},expression:"$root.filterAndSort.observer"}}),_c('row',{attrs:{"align-h":"space-between"}},[_c('ui-textbox',{attrs:{"label":"Minium Confidence","placeholder":"(Any)"},model:{value:(_vm.$root.filterAndSort.minlabelConfidence),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "minlabelConfidence", $$v)},expression:"$root.filterAndSort.minlabelConfidence"}}),_c('ui-textbox',{attrs:{"label":"Max Confidence","placeholder":"(Any)"},model:{value:(_vm.$root.filterAndSort.maxlabelConfidence),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "maxlabelConfidence", $$v)},expression:"$root.filterAndSort.maxlabelConfidence"}})],1),_c('ui-textbox',{attrs:{"label":"Label","placeholder":"(Any)"},model:{value:(_vm.$root.routeData$.labelName),callback:function ($$v) {_vm.$set(_vm.$root.routeData$, "labelName", $$v)},expression:"$root.routeData$.labelName"}}),_c('br'),_c('row',{attrs:{"align-h":"space-between","align-v":"top"}},[_c('ui-radio-group',{attrs:{"name":"Kind of Observer","options":['Only Humans', 'Either', 'Only Robots'],"vertical":"vertical"},model:{value:(_vm.$root.filterAndSort.kindOfObserver),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "kindOfObserver", $$v)},expression:"$root.filterAndSort.kindOfObserver"}},[_vm._v("Kind of Observer")]),_c('row',{attrs:{"width":"2rem"}}),_c('ui-checkbox-group',{attrs:{"name":"validation","options":[ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement' ],"vertical":"vertical"},model:{value:(_vm.$root.filterAndSort.validation),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "validation", $$v)},expression:"$root.filterAndSort.validation"}},[_vm._v("Validation")])],1)],1)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"search",attrs:{"align-v":"top","width":"100%"}},[_c('row',{staticClass:"video-wrapper",staticStyle:{"min-width":"100%","margin-top":"1rem"}},[_c('VideoIdSearch',{on:{"goToVideo":_vm.goToVideo}})],1),_c('row',{staticClass:"search-summary",attrs:{"align-v":"top","align-h":"space-around","padding":"1rem 4rem","height":"min-content","width":"100%"}},[_c('column',{staticClass:"card",attrs:{"width":"26rem","padding":"0.6rem 1rem"}},[_c('LabelLister')],1),_c('column',{staticClass:"card",attrs:{"width":"32rem","flex-grow":"0.3","overflow-x":"hidden"}},[_c('h3',{staticStyle:{"font-weight":"100","margin-top":"-10px","border-bottom":"black solid 2px"}},[_vm._v("Stats")]),_c('br'),_c('br'),_c('column',{staticClass:"text-grid",attrs:{"align-h":"left","width":"90%"}},[_c('h5',[_vm._v("Total Videos: "+_vm._s(_vm.$root.searchResults.videos.size))]),_c('h5',[_vm._v("False Positive Ratio: "+_vm._s(_vm.falsePositiveRatio()))])]),_c('br'),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"showTotal":"showTotal","series":[_vm.$root.searchResults.counts.fromHuman, _vm.$root.searchResults.counts.rejected, _vm.$root.searchResults.uncheckedObservations.length, _vm.$root.searchResults.counts.confirmed, _vm.$root.searchResults.counts.disagreement],"labels":['Human','Rejected','Unchecked','Confirmed', 'Disagreement'],"colors":[ _vm.colors.blue, _vm.colors.red, _vm.colors.purple, _vm.colors.green, _vm.colors.yellow ]}})],1):_vm._e(),_c('h5',[_vm._v("Observers")]),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"series":Object.values(_vm.$root.searchResults.observers),"labels":Object.keys(_vm.$root.searchResults.observers)}})],1):_vm._e(),_c('h5',[_vm._v("Labels")]),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"series":Object.values(_vm.$root.searchResults.labels),"labels":Object.keys(_vm.$root.searchResults.labels)}})],1):_vm._e()],1),_c('column',{staticClass:"card search-observation",attrs:{"align-h":"left","min-height":"fit-content"}},[_c('h5',[_vm._v("Search Filters")]),_c('br'),_c('ui-autocomplete',{attrs:{"label":"Observer (username)","placeholder":"(Any)","suggestions":_vm.$root.getUsernameList()},model:{value:(_vm.observer),callback:function ($$v) {_vm.observer=$$v},expression:"observer"}}),_c('row',{attrs:{"align-h":"space-between"}},[_c('ui-textbox',{attrs:{"label":"Minium Confidence","placeholder":"(Any)"},model:{value:(_vm.$root.filterAndSort.minlabelConfidence),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "minlabelConfidence", $$v)},expression:"$root.filterAndSort.minlabelConfidence"}}),_c('ui-textbox',{attrs:{"label":"Max Confidence","placeholder":"(Any)"},model:{value:(_vm.$root.filterAndSort.maxlabelConfidence),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "maxlabelConfidence", $$v)},expression:"$root.filterAndSort.maxlabelConfidence"}})],1),_c('ui-textbox',{attrs:{"label":"Label","placeholder":"(Any)"},model:{value:(_vm.$root.routeData$.labelName),callback:function ($$v) {_vm.$set(_vm.$root.routeData$, "labelName", $$v)},expression:"$root.routeData$.labelName"}}),_c('br'),_c('row',{attrs:{"align-h":"space-between","align-v":"top"}},[_c('ui-radio-group',{attrs:{"name":"Kind of Observer","options":['Only Humans', 'Either', 'Only Robots'],"vertical":"vertical"},model:{value:(_vm.$root.filterAndSort.kindOfObserver),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "kindOfObserver", $$v)},expression:"$root.filterAndSort.kindOfObserver"}},[_vm._v("Kind of Observer")]),_c('row',{attrs:{"width":"2rem"}}),_c('ui-checkbox-group',{attrs:{"name":"validation","options":[ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement' ],"vertical":"vertical"},model:{value:(_vm.$root.filterAndSort.validation),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "validation", $$v)},expression:"$root.filterAndSort.validation"}},[_vm._v("Validation")])],1)],1)],1)],1)}
 var staticRenderFns = []
 
           return {
@@ -64747,6 +64811,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+
 //
 //
 //
@@ -64814,18 +64879,35 @@ exports.default = void 0;
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+const {
+  humandReadableTime
+} = require("../utils");
+
 var _default = {
   components: {
     JsonTree: require('vue-json-tree').default,
-    DummyObservation: require("../molecules/DummyObservation").default
+    DummyObservation: require("../molecules/DummyObservation").default,
+    Card: require("../molecules/Card").default
   },
   data: () => ({
+    uploadMessage: null,
+    uploadCanceled: false,
     dummyData1: {
       "videoId": "FLK5-00l0r4",
       "type": "segment",
       "startTime": 125.659,
       "endTime": 127.661,
-      "observer": "CSCE636-Spring2021-WuAiSeDUdl-v1",
+      "observer": "CSCE636-Spring2021-WuAiSeDUdl-1",
       "isHuman": true,
       "observation": {
         "label": "happy",
@@ -64866,6 +64948,12 @@ var _default = {
     }
   },
   methods: {
+    quitUpload() {
+      console.log(`canceling upload`);
+      this.uploadMessage = null;
+      this.uploadCanceled = true;
+    },
+
     dummyDataChange(dummyData) {
       if (dummyData.isHuman) {
         delete dummyData.confirmedBySomeone;
@@ -64878,49 +64966,118 @@ var _default = {
     },
 
     async onUploadObservation(eventObject) {
-      let fileText = await eventObject[0].text();
-      const approximateMaxFileSize = 102391;
-      let newObservations, newUuids;
+      this.uploadCanceled = false;
 
-      try {
-        newObservations = JSON.parse(fileText); // save the uploadTime to help with removing bad data
+      for (const [key, eachFile] of Object.entries(eventObject)) {
+        const fileNumber = key - 0 + 1;
+        let fileText = await eachFile.text();
+        let newObservations;
 
-        for (let each of newObservations) {
-          each.uploadTime = `${new Date()}`;
-        }
-      } catch (error) {
-        this.$toasted.show(`Processing Error`).goAway(2500);
-        this.$toasted.show(`Are you sure the file is valid JSON?`).goAway(16500);
-        return;
-      }
+        try {
+          newObservations = JSON.parse(fileText); // save the uploadTime to help with removing bad data
 
-      let size = JSON.stringify(newObservations).length;
-
-      if (size > approximateMaxFileSize) {
-        this.$root.bigMessage(`The file being uploaded is ${size} characters compressed\nThe limit is approximately ${approximateMaxFileSize}\n(that limit is about ~345 observations)\n(this will hopefully be increased in the future)\nPlease reduce the number of observations then try re-uploading`);
-        return;
-      }
-
-      this.$toasted.show(`👍 file seems to be valid JSON`).goAway(6500);
-      this.$toasted.show(`Sending data to database<br>Estimated upload time: ${newObservations.length / 25} min<br>started at ${new Date()}`, {
-        closeOnSwipe: false,
-        action: {
-          text: 'Close',
-          onClick: (e, toastObject) => {
-            toastObject.goAway(0);
+          for (let each of newObservations) {
+            each.uploadTime = `${new Date()}`;
           }
+        } catch (error) {
+          this.$toasted.show(`Processing Error`).goAway(2500);
+          this.$toasted.show(`Are you sure the file is valid JSON?`).goAway(16500);
+          return;
         }
-      });
-      let interval = setInterval(() => {
-        this.$toasted.show(`Waiting on database...`).goAway(2500);
-      }, 5500);
 
-      try {
-        newUuids = await (await this.backend).addMultipleObservations(newObservations);
-      } catch (error) {
-        clearInterval(interval);
-        console.debug(`error is:`, error);
-        this.$toasted.show(`The Server said there was an error:<br>Message: ${error.message}<br>`, {
+        this.$toasted.show(`👍 file seems to be valid JSON`).goAway(6500);
+
+        try {
+          this.uploadCanceled = false;
+          this.uploadMessage = "starting upload";
+          let errors = "";
+          const size = newObservations.length;
+          const startTime = new Date().getTime();
+          let timeRemaining = null;
+
+          for (const [key, value] of Object.entries(newObservations)) {
+            const observationNumber = key - 0 + 1;
+            const fileNumberString = eventObject.length > 1 ? `File ${fileNumber} of ${eventObject.length}\n\n` : "";
+            const timeRemainingString = timeRemaining ? " (~ " + humandReadableTime(timeRemaining) + " remaining)" : "";
+            this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n` + errors;
+
+            try {
+              await (await this.backend).addObservation(value);
+            } catch (error) {
+              if (error.message.match(/Message: Failed to fetch/)) {
+                this.$toasted.show(`Server too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(2500);
+                continue;
+              }
+
+              errors += `problem with #${observationNumber}:\n` + error.message + "\n";
+            }
+
+            const changeInTime = new Date().getTime() - startTime;
+            const changeInCount = observationNumber;
+            const rate = changeInTime / changeInCount;
+            const remainingObservationCount = size - observationNumber;
+            timeRemaining = remainingObservationCount * rate;
+
+            if (this.uploadCanceled === true) {
+              this.$toasted.show(`Canceling remaining upload`).goAway(2500);
+              this.quitUpload();
+              return;
+            }
+          }
+
+          if (eventObject.length > 1) {
+            this.$toasted.show(`File Upload #${fileNumber} Success!`, {
+              closeOnSwipe: false,
+              action: {
+                text: 'Close',
+                onClick: (e, toastObject) => {
+                  toastObject.goAway(0);
+                }
+              }
+            });
+          } else {
+            this.$toasted.show(`Upload Success! Refresh to see changes`, {
+              closeOnSwipe: false,
+              action: {
+                text: 'Close',
+                onClick: (e, toastObject) => {
+                  toastObject.goAway(0);
+                }
+              }
+            });
+          }
+        } catch (error) {
+          if (error.message.match(/Message: Failed to fetch/)) {
+            this.$toasted.show(`Server too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(2500);
+            continue;
+          }
+
+          console.debug(`uploading error is:`, error);
+          this.$toasted.show(`The Server said there was an error:`).goAway(2500);
+          this.$toasted.show(`Message: ${error.message}<br>`, {
+            closeOnSwipe: false,
+            action: {
+              text: 'Close',
+              onClick: (e, toastObject) => {
+                toastObject.goAway(0);
+              }
+            }
+          }); // if arguments are long
+
+          const maxLength = 2000;
+
+          if (JSON.stringify(error.arguments).length > maxLength) {
+            error.arguments = JSON.stringify(error.arguments).slice(0, maxLength);
+          }
+
+          this.$root.bigMessage(`Full Details:\n\n${JSON.stringify(error, 0, 3)}`);
+          this.quitUpload();
+          return;
+        }
+      }
+
+      if (eventObject.length > 1) {
+        this.$toasted.show(`All files uploaded! Refresh to see changes`, {
           closeOnSwipe: false,
           action: {
             text: 'Close',
@@ -64928,28 +65085,10 @@ var _default = {
               toastObject.goAway(0);
             }
           }
-        }); // if arguments are long
-
-        const maxLength = 2000;
-
-        if (JSON.stringify(error.arguments).length > maxLength) {
-          error.arguments = JSON.stringify(error.arguments).slice(0, maxLength);
-        }
-
-        this.$root.bigMessage(`Full Details:\n\n${JSON.stringify(error, 0, 3)}`);
-        return;
+        });
       }
 
-      clearInterval(interval);
-      this.$toasted.show(`Success! Refresh to see changes`, {
-        closeOnSwipe: false,
-        action: {
-          text: 'Close',
-          onClick: (e, toastObject) => {
-            toastObject.goAway(0);
-          }
-        }
-      });
+      this.quitUpload();
     }
 
   }
@@ -64963,7 +65102,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($2cbb07, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"upload-wrapper",attrs:{"akfdjguo3359gip":"akfdjguo3359gip"}},[_c('ui-fab',{staticClass:"help-button",attrs:{"color":"gray","icon":"live_help","raised":"raised","tooltip":"Help with file upload","tooltipPosition":"left"},on:{"click":_vm.showHelp}}),_c('ui-fab',{staticClass:"upload-button",attrs:{"color":"blue","raised":"raised","tooltip":"upload multiple observations","tooltipPosition":"left"}},[_c('ui-icon',[_vm._v("cloud_upload")]),_c('ui-fileupload',{attrs:{"name":"file","type":"secondary"},on:{"change":_vm.onUploadObservation}})],1),_c('portal',{attrs:{"to":"modal-popups"}},[_c('ui-modal',{ref:"helpModal",staticClass:"modal",attrs:{"fj20485gh93oi53g":"fj20485gh93oi53g","title":"Example Upload","transition":"scale-up"}},[_c('row',{attrs:{"align-h":"space-evenly","align-v":"top"}},[_c('column',{attrs:{"align-v":"top"}},[_c('br'),_vm._v("Try editing them! Then look at the code →"),_c('row',{attrs:{"align-h":"space-between","padding":"2rem 1rem","align-v":"top"}},[_c('column',[_c('h5',[_vm._v("Observation 1")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData1}})],1),_c('container',{attrs:{"min-width":"3rem"}}),_c('column',[_c('h5',[_vm._v("Observation 2")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData2}})],1)],1)],1),_c('container',{attrs:{"width":"2rem"}}),_c('column',{attrs:{"flex-basis":"50%","max-width":"31rem","align-v":"top"}},[_c('span',[_c('br'),_vm._v("To upload these observations"),_c('br'),_c('br'),_vm._v("1. Create a file ending with"),_c('code',[_vm._v(" .json ")]),_c('br'),_c('br'),_vm._v("2. Then add the following text to that file."),_c('br'),_c('br')]),_c('JsonTree',{staticClass:"json-tree",attrs:{"data":[_vm.dummyData1, _vm.dummyData2]}}),_c('span',[_c('br'),_vm._v("3. Then simply use the upload button to upload the file."),_c('br'),_c('br'),_vm._v("The JSON file is just a list of each observation represented as a kind of dictionary.")])],1)],1)],1)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"upload-wrapper",attrs:{"akfdjguo3359gip":"akfdjguo3359gip"}},[_c('ui-fab',{staticClass:"help-button",attrs:{"color":"gray","icon":"live_help","raised":"raised","tooltip":"Help with file upload","tooltipPosition":"left"},on:{"click":_vm.showHelp}}),_c('ui-fab',{staticClass:"upload-button",attrs:{"color":"blue","raised":"raised","tooltip":"upload multiple observations","tooltipPosition":"left"}},[_c('ui-icon',[_vm._v("cloud_upload")]),_c('ui-fileupload',{attrs:{"name":"file","type":"secondary","multiple":true},on:{"change":_vm.onUploadObservation}})],1),_c('transition',{attrs:{"name":"fade"}},[(_vm.uploadMessage && !_vm.uploadCanceled)?_c('Card',{attrs:{"position":"fixed","bottom":"2rem","right":"2rem","z-index":"999","width":"30rem","max-width":"30rem","overflow":"scroll","white-space":"pre","shadow":"3","background":"whitesmoke"}},[_vm._v(_vm._s(_vm.uploadMessage)),_c('br'),_c('ui-button',{staticClass:"cancel-button",attrs:{"icon":"cancel"},on:{"click":_vm.quitUpload}},[_vm._v("Cancel")])],1):_vm._e()],1),_c('portal',{attrs:{"to":"modal-popups"}},[_c('ui-modal',{ref:"helpModal",staticClass:"modal",attrs:{"fj20485gh93oi53g":"fj20485gh93oi53g","title":"Example Upload","transition":"scale-up"}},[_c('row',{attrs:{"align-h":"space-evenly","align-v":"top"}},[_c('column',{attrs:{"align-v":"top"}},[_c('br'),_vm._v("Try editing them! Then look at the code →"),_c('row',{attrs:{"align-h":"space-between","padding":"2rem 1rem","align-v":"top"}},[_c('column',[_c('h5',[_vm._v("Observation 1")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData1}})],1),_c('container',{attrs:{"min-width":"3rem"}}),_c('column',[_c('h5',[_vm._v("Observation 2")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData2}})],1)],1)],1),_c('container',{attrs:{"width":"2rem"}}),_c('column',{attrs:{"flex-basis":"50%","max-width":"31rem","align-v":"top"}},[_c('span',[_c('br'),_vm._v("To upload these observations"),_c('br'),_c('br'),_vm._v("1. Create a file ending with"),_c('code',[_vm._v(" .json ")]),_c('br'),_c('br'),_vm._v("2. Then add the following text to that file."),_c('br'),_c('br')]),_c('JsonTree',{staticClass:"json-tree",attrs:{"data":[_vm.dummyData1, _vm.dummyData2]}}),_c('span',[_c('br'),_vm._v("3. Then simply use the upload button to upload the file."),_c('br'),_c('br'),_vm._v("The JSON file is just a list of each observation represented as a kind of dictionary.")])],1)],1)],1)],1)],1)}
 var staticRenderFns = []
 
           return {
@@ -64975,7 +65114,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"vue-json-tree":"vQbQ","../molecules/DummyObservation":"ygBg"}],"gi53":[function(require,module,exports) {
+},{"../utils":"K0yk","vue-json-tree":"vQbQ","../molecules/DummyObservation":"ygBg","../molecules/Card":"OSGx"}],"gi53":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -65184,9 +65323,11 @@ var _default = RootComponent = {
     }
 
     return {
+      loadStart: new Date().getTime(),
       needToLoad$: {
         backend
       },
+      usernames: new Set(),
       routeData$: initialRouteData,
       filterAndSort: {
         maxlabelConfidence: null,
@@ -65241,7 +65382,10 @@ var _default = RootComponent = {
   },
 
   mounted() {
-    this.backend.then(() => this.$toasted.show(`Connected to backend, retreiving data`).goAway(6500));
+    this.backend.then(async backend => {
+      this.$toasted.show(`Connected to backend, retrieving data`).goAway(6500);
+      this.usernames = new Set(await backend.getUsernames());
+    });
   },
 
   watch: {
@@ -65347,7 +65491,12 @@ var _default = RootComponent = {
     }
 
   },
+  computed: {},
   methods: {
+    getUsernameList() {
+      return [...this.usernames];
+    },
+
     bigMessage(message) {
       this.$toasted.show(`<pre style="max-width: 70vw; max-height: 50vh; overflow: auto; white-space: pre-wrap;">${escape(message)}<pre>`, {
         closeOnSwipe: false,
