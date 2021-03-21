@@ -63739,9 +63739,6 @@ var _default = {
 
     async submitSearch() {
       let backend = await this.backend;
-      backend.summary.main({ ...filterAndSort,
-        labelName: this.$root.routeData$.labelName
-      });
       let where = []; // 
       // build the backend query
       // 
@@ -63901,7 +63898,7 @@ var _default = {
 
         if (loadDuration > 5) {
           this.$root.loadStart = null;
-          this.$toasted.show(`Initial page loading took ${loadDuration} sec`, {
+          this.$toasted.show(`Initial page loading took: ${loadDuration} sec`, {
             closeOnSwipe: false,
             action: {
               text: 'Close',
@@ -64979,94 +64976,30 @@ var _default = {
 
     async onUploadObservation(eventObject) {
       this.uploadCanceled = false;
+      let newObservations = [];
+      let observationMapping = {}; // 
+      // check the json of each file
+      // 
 
       for (const [key, eachFile] of Object.entries(eventObject)) {
         const fileNumber = key - 0 + 1;
-        let fileText = await eachFile.text();
-        let newObservations;
+        const fileText = await eachFile.text();
 
         try {
-          newObservations = JSON.parse(fileText); // save the uploadTime to help with removing bad data
+          // save the uploadTime to help with removing bad data
+          let index = -1;
 
-          for (let each of newObservations) {
+          for (let each of JSON.parse(fileText)) {
             each.uploadTime = `${new Date()}`;
+            newObservations.push(each);
+            observationMapping[newObservations.length - 1] = {
+              fileNumber,
+              fileName: eachFile.name,
+              observationIndex: ++index
+            };
           }
         } catch (error) {
-          this.$toasted.show(`Processing Error`).goAway(2500);
-          this.$toasted.show(`Are you sure the file is valid JSON?`).goAway(16500);
-          return;
-        }
-
-        this.$toasted.show(`👍 file seems to be valid JSON`).goAway(6500);
-
-        try {
-          this.uploadCanceled = false;
-          this.uploadMessage = "starting upload";
-          let errors = "";
-          const size = newObservations.length;
-          const startTime = new Date().getTime();
-          let timeRemaining = null;
-
-          for (const [key, value] of Object.entries(newObservations)) {
-            const observationNumber = key - 0 + 1;
-            const fileNumberString = eventObject.length > 1 ? `File ${fileNumber} of ${eventObject.length}\n\n` : "";
-            const timeRemainingString = timeRemaining ? " (~ " + humandReadableTime(timeRemaining) + " remaining)" : "";
-            this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n` + errors;
-
-            try {
-              await (await this.backend).addObservation(value);
-            } catch (error) {
-              if (error.message.match(/Message: Failed to fetch/)) {
-                this.$toasted.show(`Server too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(2500);
-                continue;
-              }
-
-              errors += `problem with #${observationNumber}:\n` + error.message + "\n";
-            }
-
-            const changeInTime = new Date().getTime() - startTime;
-            const changeInCount = observationNumber;
-            const rate = changeInTime / changeInCount;
-            const remainingObservationCount = size - observationNumber;
-            timeRemaining = remainingObservationCount * rate;
-
-            if (this.uploadCanceled === true) {
-              this.$toasted.show(`Canceling remaining upload`).goAway(2500);
-              this.quitUpload();
-              return;
-            }
-          }
-
-          if (eventObject.length > 1) {
-            this.$toasted.show(`File Upload #${fileNumber} Success!`, {
-              closeOnSwipe: false,
-              action: {
-                text: 'Close',
-                onClick: (e, toastObject) => {
-                  toastObject.goAway(0);
-                }
-              }
-            });
-          } else {
-            this.$toasted.show(`Upload Success! Refresh to see changes`, {
-              closeOnSwipe: false,
-              action: {
-                text: 'Close',
-                onClick: (e, toastObject) => {
-                  toastObject.goAway(0);
-                }
-              }
-            });
-          }
-        } catch (error) {
-          if (error.message.match(/Message: Failed to fetch/)) {
-            this.$toasted.show(`Server too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(2500);
-            continue;
-          }
-
-          console.debug(`uploading error is:`, error);
-          this.$toasted.show(`The Server said there was an error:`).goAway(2500);
-          this.$toasted.show(`Message: ${error.message}<br>`, {
+          this.$toasted.show(`File Upload #${fileNumber} Error\nAre you sure the file is valid JSON?`, {
             closeOnSwipe: false,
             action: {
               text: 'Close',
@@ -65074,22 +65007,61 @@ var _default = {
                 toastObject.goAway(0);
               }
             }
-          }); // if arguments are long
-
-          const maxLength = 2000;
-
-          if (JSON.stringify(error.arguments).length > maxLength) {
-            error.arguments = JSON.stringify(error.arguments).slice(0, maxLength);
-          }
-
-          this.$root.bigMessage(`Full Details:\n\n${JSON.stringify(error, 0, 3)}`);
-          this.quitUpload();
+          });
+          this.$toasted.show(`Processing Error`).goAway(2500);
+          this.$toasted.show(`Are you sure the file is valid JSON?`).goAway(16500);
           return;
         }
-      }
+      } // 
+      // start uploading all the observations
+      // 
 
-      if (eventObject.length > 1) {
-        this.$toasted.show(`All files uploaded! Refresh to see changes`, {
+
+      try {
+        this.$toasted.show(`👍 everything seems to be valid JSON`).goAway(6500);
+        this.uploadCanceled = false;
+        this.uploadMessage = "starting upload";
+        let errors = "";
+        const size = newObservations.length;
+        const startTime = new Date().getTime();
+        let timeRemaining = null;
+
+        for (const [key, value] of Object.entries(newObservations)) {
+          const observationNumber = key - 0 + 1;
+          const {
+            fileNumber,
+            fileName,
+            observationIndex
+          } = observationMapping[key];
+          const fileNumberString = eventObject.length > 1 ? `File ${fileNumber} of ${eventObject.length}\n\n` : "";
+          const timeRemainingString = timeRemaining ? " (~ " + humandReadableTime(timeRemaining) + " remaining)" : "";
+          this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n` + errors;
+
+          try {
+            await (await this.backend).addObservation(value);
+          } catch (error) {
+            if (error.message.match(/Message: Failed to fetch/)) {
+              this.$toasted.show(`Server too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(2500);
+              continue;
+            }
+
+            errors += `problem with file #${fileNumber} "${fileName}", observation #${observationIndex}:\n` + error.message + "\n";
+          }
+
+          const changeInTime = new Date().getTime() - startTime;
+          const changeInCount = observationNumber;
+          const rate = changeInTime / changeInCount;
+          const remainingObservationCount = size - observationNumber;
+          timeRemaining = remainingObservationCount * rate;
+
+          if (this.uploadCanceled === true) {
+            this.$toasted.show(`Canceling remaining upload`).goAway(2500);
+            this.quitUpload();
+            return;
+          }
+        }
+
+        this.$toasted.show(`Upload Finished! Refresh to see changes`, {
           closeOnSwipe: false,
           action: {
             text: 'Close',
@@ -65098,6 +65070,9 @@ var _default = {
             }
           }
         });
+      } catch (error) {
+        this.quitUpload();
+        throw error;
       }
 
       this.quitUpload();
