@@ -38310,7 +38310,41 @@ var staticRenderFns = []
           };
         })());
       
-},{"./jsonValue":"iVU1"}],"UPxk":[function(require,module,exports) {
+},{"./jsonValue":"iVU1"}],"OSGx":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+//
+//
+//
+//
+//
+var _default = {};
+exports.default = _default;
+        var $6ad942 = exports.default || module.exports;
+      
+      if (typeof $6ad942 === 'function') {
+        $6ad942 = $6ad942.options;
+      }
+    
+        /* template */
+        Object.assign($6ad942, (function () {
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',_vm._b({staticClass:"card",attrs:{"shadow":"1","align-h":"left"}},'column',Object.assign({}, _vm.$props, _vm.$attrs),false),[_vm._t("default")],2)}
+var staticRenderFns = []
+
+          return {
+            render: render,
+            staticRenderFns: staticRenderFns,
+            _compiled: true,
+            _scopeId: "data-v-6ad942",
+            functional: undefined
+          };
+        })());
+      
+},{}],"UPxk":[function(require,module,exports) {
 // api
 //     loadedAll$
 //     needToLoad$
@@ -38944,7 +38978,7 @@ module.exports = {
 }; // add the backend to all of the components
 
 Vue.mixin(module.exports.mixin);
-},{"vue":"NtAQ","ez-rpc-frontend":"YL07"}],"CmfW":[function(require,module,exports) {
+},{"vue":"NtAQ","ez-rpc-frontend":"YL07"}],"Gra7":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -38981,6 +39015,9 @@ exports.default = void 0;
 //
 //
 //
+//
+//
+//
 const FileSaver = require('file-saver');
 
 var _default = {
@@ -38988,7 +39025,8 @@ var _default = {
   components: {
     Loader: require('../atoms/Loader').default,
     JsonTree: require('vue-json-tree').default,
-    jsonRoot: require("edit-json-vue/src/jsonRoot.vue").default
+    jsonRoot: require("edit-json-vue/src/jsonRoot.vue").default,
+    Card: require("../molecules/Card").default
   },
   mixins: [require("../mixins/loader"), require("../iilvd-api").mixin],
   data: () => ({
@@ -38998,17 +39036,14 @@ var _default = {
     searchOptions: {},
     collections: [],
     suggestions: [],
-    searchResult: null
+    searchResult: null,
+    databaseName: "submission-"
   }),
-  windowListeners: {
-    keydown({
-      key
-    }) {
-      if (key == "Enter") {
-        this.submitSearch();
-      }
-    }
-
+  windowListeners: {// keydown({key}) {
+    //     if (key == "Enter") {
+    //         this.submitSearch()
+    //     }
+    // }
   },
 
   created() {
@@ -39020,6 +39055,11 @@ var _default = {
   methods: {
     newJsonValue(value) {
       this.searchOptions = value;
+    },
+
+    async changeDatabases() {
+      this.$toasted.show(`Changing to: ${this.databaseName}`).goAway(2500);
+      await (await this.backend).changeDb(this.databaseName);
     },
 
     async submitSearch() {
@@ -39050,15 +39090,15 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $7c5ede = exports.default || module.exports;
+        var $fb45c2 = exports.default || module.exports;
       
-      if (typeof $7c5ede === 'function') {
-        $7c5ede = $7c5ede.options;
+      if (typeof $fb45c2 === 'function') {
+        $fb45c2 = $fb45c2.options;
       }
     
         /* template */
-        Object.assign($7c5ede, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"align-v":"top","width":"100%","flex-grow":"1"}},[(!_vm.loadedAll$)?_c('Loader'):_vm._e(),(_vm.loadedAll$)?_c('column',{attrs:{"padding":"1.2rem"}},[_c('row',[_c('column',[_c('h5',[_vm._v("Search Options")]),_c('jsonRoot',{staticClass:"json-root-class",attrs:{"initValue":{from: 'videos', maxNumberOfResults: 10}},on:{"changeValue":_vm.newJsonValue}})],1)],1),_c('column',[_c('h5',[_vm._v("Search Results")]),_c('JsonTree',{attrs:{"data":_vm.searchResult}})],1)],1):_vm._e()],1)}
+        Object.assign($fb45c2, (function () {
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"align-v":"top","width":"100%","flex-grow":"1"}},[(!_vm.loadedAll$)?_c('Loader'):_vm._e(),(_vm.loadedAll$)?_c('column',{attrs:{"padding":"1.2rem"}},[_c('h5',[_vm._v("Change Database")]),_c('Card',{attrs:{"margin":"3rem"}},[_c('ui-textbox',{attrs:{"label":"Which Database"},on:{"keydown":function($event){if(!$event.type.indexOf('key')&&_vm._k($event.keyCode,"enter",13,$event.key,"Enter")){ return null; }return _vm.changeDatabases($event)}},model:{value:(_vm.databaseName),callback:function ($$v) {_vm.databaseName=$$v},expression:"databaseName"}})],1),_c('row',[_c('column',{on:{"keyup":function($event){if(!$event.type.indexOf('key')&&_vm._k($event.keyCode,"enter",13,$event.key,"Enter")){ return null; }return _vm.submitSearch($event)}}},[_c('h5',[_vm._v("Search Options")]),_c('jsonRoot',{staticClass:"json-root-class",attrs:{"initValue":{from: 'observations', maxNumberOfResults: 10, where: [ { valueOf: ['observer'], is: 'bob' } ]}},on:{"changeValue":_vm.newJsonValue}})],1)],1),_c('column',[_c('h5',[_vm._v("Search Results")]),_c('JsonTree',{attrs:{"data":_vm.searchResult}})],1)],1):_vm._e()],1)}
 var staticRenderFns = []
 
           return {
@@ -39070,7 +39110,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"file-saver":"i0aF","../atoms/Loader":"N6QO","vue-json-tree":"vQbQ","edit-json-vue/src/jsonRoot.vue":"ENAU","../mixins/loader":"UPxk","../iilvd-api":"AC5t"}],"jqRt":[function(require,module,exports) {
+},{"file-saver":"i0aF","../atoms/Loader":"N6QO","vue-json-tree":"vQbQ","edit-json-vue/src/jsonRoot.vue":"ENAU","../molecules/Card":"OSGx","../mixins/loader":"UPxk","../iilvd-api":"AC5t"}],"jqRt":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -63977,41 +64017,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"../atoms/TopButton":"OFzg","../organisms/Search":"jv5N"}],"OSGx":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-//
-//
-//
-//
-//
-var _default = {};
-exports.default = _default;
-        var $6ad942 = exports.default || module.exports;
-      
-      if (typeof $6ad942 === 'function') {
-        $6ad942 = $6ad942.options;
-      }
-    
-        /* template */
-        Object.assign($6ad942, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',_vm._b({staticClass:"card",attrs:{"shadow":"1","align-h":"left"}},'column',Object.assign({}, _vm.$props, _vm.$attrs),false),[_vm._t("default")],2)}
-var staticRenderFns = []
-
-          return {
-            render: render,
-            staticRenderFns: staticRenderFns,
-            _compiled: true,
-            _scopeId: "data-v-6ad942",
-            functional: undefined
-          };
-        })());
-      
-},{}],"mlHE":[function(require,module,exports) {
+},{"../atoms/TopButton":"OFzg","../organisms/Search":"jv5N"}],"mlHE":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -65190,10 +65196,10 @@ var staticRenderFns = []
       
 },{"fuse.js":"jqRt","lodash":"HJaA","../organisms/CenterStage":"hqcF","../organisms/VideoPicker":"KjYO","../organisms/LabelPicker":"o22L","../molecules/UploadObservations":"d3Es","../molecules/Card":"OSGx"}],"Ka75":[function(require,module,exports) {
 module.exports = {
-  "ApiExplore": require("./ApiExplore.vue"),
+  "Api": require("./Api.vue"),
   "Home": require("./Home.vue")
 };
-},{"./ApiExplore.vue":"CmfW","./Home.vue":"gi53"}],"rUmP":[function(require,module,exports) {
+},{"./Api.vue":"Gra7","./Home.vue":"gi53"}],"rUmP":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
