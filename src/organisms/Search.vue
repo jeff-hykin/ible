@@ -148,8 +148,6 @@ export default {
         },
         async submitSearch() {
             let backend = await this.backend
-            
-            backend.summary.main({...filterAndSort, labelName: this.$root.routeData$.labelName })
             let where = []
             
             // 
@@ -252,7 +250,7 @@ export default {
                 let loadDuration = ((new Date()).getTime() - this.$root.loadStart)/1000
                 if (loadDuration > 5) {
                     this.$root.loadStart = null
-                    this.$toasted.show(`Initial page loading took ${loadDuration} sec`, {
+                    this.$toasted.show(`Initial page loading took: ${loadDuration} sec`, {
                         closeOnSwipe: false,
                         action: {
                             text:'Close',
