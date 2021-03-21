@@ -39058,7 +39058,7 @@ var _default = {
     },
 
     async changeDatabases() {
-      this.$toasted.show(`Changing to: ${this.databaseName}`).goAway(2500);
+      this.$toasted.show(`Okay, I told the database to switch to: ${this.databaseName}`).goAway(2500);
       await (await this.backend).changeDb(this.databaseName);
     },
 
@@ -63739,6 +63739,9 @@ var _default = {
 
     async submitSearch() {
       let backend = await this.backend;
+      backend.summary.main({ ...filterAndSort,
+        labelName: this.$root.routeData$.labelName
+      });
       let where = []; // 
       // build the backend query
       // 
@@ -63894,17 +63897,20 @@ var _default = {
       this.$root.searchResults = results; // show the time of the first load
 
       if (this.$root.loadStart) {
-        let loadDuration = new Date().getTime() - this.$root.loadStart;
-        this.$root.loadStart = null;
-        this.$toasted.show(`Data retrieved in ${loadDuration / 1000} sec`, {
-          closeOnSwipe: false,
-          action: {
-            text: 'Close',
-            onClick: (e, toastObject) => {
-              toastObject.goAway(0);
+        let loadDuration = (new Date().getTime() - this.$root.loadStart) / 1000;
+
+        if (loadDuration > 5) {
+          this.$root.loadStart = null;
+          this.$toasted.show(`Initial page loading took ${loadDuration} sec`, {
+            closeOnSwipe: false,
+            action: {
+              text: 'Close',
+              onClick: (e, toastObject) => {
+                toastObject.goAway(0);
+              }
             }
-          }
-        });
+          });
+        }
       }
     }
 

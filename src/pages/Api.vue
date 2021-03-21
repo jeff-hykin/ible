@@ -71,7 +71,7 @@ export default {
             this.searchOptions = value
         },
         async changeDatabases() {
-            this.$toasted.show(`Changing to: ${this.databaseName}`).goAway(2500)
+            this.$toasted.show(`Okay, I told the database to switch to: ${this.databaseName}`).goAway(2500)
             await (await this.backend).changeDb(this.databaseName)
         },
         async submitSearch() {
