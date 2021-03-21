@@ -10,15 +10,18 @@
         //-             :suggestions="suggestions"
         //-         )
         column(v-if="loadedAll$" padding="1.2rem")
+            h5 Change Database
+            Card(margin="3rem")
+                ui-textbox(label="Which Database" v-model="databaseName" @keydown.enter="changeDatabases")
             row
                 //- ui-autocomplete.rounded-search(
                 //-     placeholder="Which collection"
                 //-     v-model="whichCollection"
                 //-     :suggestions="collections"
                 //- )
-                column
+                column(@keyup.enter="submitSearch")
                     h5 Search Options
-                    jsonRoot.json-root-class(:initValue="{from: 'videos', maxNumberOfResults: 10}" @changeValue="newJsonValue")
+                    jsonRoot.json-root-class(:initValue="{from: 'observations', maxNumberOfResults: 10, where: [ { valueOf: ['observer'], is: 'bob' } ]}" @changeValue="newJsonValue")
             
             column
                 h5 Search Results
@@ -35,7 +38,7 @@ export default {
         Loader: require('../atoms/Loader').default,
         JsonTree: require('vue-json-tree').default,
         jsonRoot: require("edit-json-vue/src/jsonRoot.vue").default,
-        
+        Card: require("../molecules/Card").default,
     },
     mixins: [
         require("../mixins/loader"),
@@ -49,13 +52,14 @@ export default {
         collections: [],
         suggestions: [],
         searchResult: null,
+        databaseName: "submission-",
     }),
     windowListeners: {
-        keydown({key}) {
-            if (key == "Enter") {
-                this.submitSearch()
-            }
-        }
+        // keydown({key}) {
+        //     if (key == "Enter") {
+        //         this.submitSearch()
+        //     }
+        // }
     },
     created() {
         this.$once("loadedAll$",async ()=>{
@@ -65,6 +69,10 @@ export default {
     methods: {
         newJsonValue(value) {
             this.searchOptions = value
+        },
+        async changeDatabases() {
+            this.$toasted.show(`Changing to: ${this.databaseName}`).goAway(2500)
+            await (await this.backend).changeDb(this.databaseName)
         },
         async submitSearch() {
             this.$toasted.show(`Searching`).goAway(2500)
