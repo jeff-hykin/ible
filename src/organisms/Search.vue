@@ -148,6 +148,8 @@ export default {
         },
         async submitSearch() {
             let backend = await this.backend
+            
+            backend.summary.main({...filterAndSort, labelName: this.$root.routeData$.labelName })
             let where = []
             
             // 
@@ -247,15 +249,17 @@ export default {
             
             // show the time of the first load
             if (this.$root.loadStart) {
-                let loadDuration = (new Date()).getTime() - this.$root.loadStart
-                this.$root.loadStart = null
-                this.$toasted.show(`Data retrieved in ${loadDuration/1000} sec`, {
-                    closeOnSwipe: false,
-                    action: {
-                        text:'Close',
-                        onClick: (e, toastObject)=>{toastObject.goAway(0)}
-                    },
-                })
+                let loadDuration = ((new Date()).getTime() - this.$root.loadStart)/1000
+                if (loadDuration > 5) {
+                    this.$root.loadStart = null
+                    this.$toasted.show(`Initial page loading took ${loadDuration} sec`, {
+                        closeOnSwipe: false,
+                        action: {
+                            text:'Close',
+                            onClick: (e, toastObject)=>{toastObject.goAway(0)}
+                        },
+                    })
+                }
             }
         },
     },
