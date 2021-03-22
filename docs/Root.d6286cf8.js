@@ -63421,7 +63421,7 @@ var _default = {
       this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500);
       this.$root.push({
         labelName,
-        videoId: null
+        videoId: selectedVideoId
       });
     }
 
@@ -63739,165 +63739,20 @@ var _default = {
 
     async submitSearch() {
       let backend = await this.backend;
-      let where = []; // 
-      // build the backend query
-      // 
-
-      if (this.$root.routeData$.labelName) {
-        where.push({
-          valueOf: ['observation', 'label'],
-          is: this.$root.routeData$.labelName
-        });
-      }
-
-      if (isNumber(this.$root.filterAndSort.maxlabelConfidence)) {
-        where.push({
-          valueOf: ['observation', 'labelConfidence'],
-          isLessThanOrEqualTo: this.$root.filterAndSort.maxlabelConfidence
-        });
-      }
-
-      if (isNumber(this.$root.filterAndSort.minlabelConfidence)) {
-        where.push({
-          valueOf: ['observation', 'labelConfidence'],
-          isGreaterThanOrEqualTo: this.$root.filterAndSort.minlabelConfidence
-        });
-      }
-
-      if (this.$root.filterAndSort.observer) {
-        where.push({
-          valueOf: ['observer'],
-          is: this.$root.filterAndSort.observer
-        });
-      }
-
-      if (this.$root.filterAndSort.kindOfObserver == "Only Humans") {
-        where.push({
-          valueOf: ['isHuman'],
-          is: true
-        });
-      }
-
-      if (this.$root.filterAndSort.kindOfObserver == "Only Robots") {
-        where.push({
-          valueOf: ['isHuman'],
-          is: false
-        });
-      }
-
-      if (!this.$root.filterAndSort.validation.includes("Confirmed")) {
-        where.push({
-          valueOf: ['confirmedBySomeone'],
-          isNot: true
-        });
-      }
-
-      if (!this.$root.filterAndSort.validation.includes("Rejected")) {
-        where.push({
-          valueOf: ['rejectedBySomeone'],
-          isNot: true
-        });
-      } // if (!this.$root.filterAndSort.validation.includes("Unchecked")    ) { where.push({ valueOf: ['rejectedBySomeone'                ], is:                     false                         , }) 
-      //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], is:                     false                         , }) }
-      // if (!this.$root.filterAndSort.validation.includes("Disagreement") ) { where.push({ valueOf: ['rejectedBySomeone'                ], isNot:                  true                          , }) 
-      //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
-
-
-      console.log(`querying the backend`);
-      observationEntries = await backend.mongoInterface.getAll({
-        from: 'observations',
-        where: [{
-          valueOf: ['type'],
-          is: 'segment'
-        }, ...where]
-      }); // 
-      // this looks like is does nothing but sadly it does
-      // however it should be removed once the corrupt data from the database is fixed
-
-      observationEntries = observationEntries.map(each => ({ ...each,
-        isHuman: each.isHuman == true,
-        confirmedBySomeone: each.confirmedBySomeone == true,
-        rejectedBySomeone: each.rejectedBySomeone == true
-      })); // this is so weird because of the dumb ways Javascript handles string->number
-      // it behaves like if ($root.filterAndSort.minlabelConfidence) then min = $root.filterAndSort.minlabelConfidence
-
-      let min = `${this.$root.filterAndSort.minlabelConfidence}`;
-      min = min.length > 0 && isFinite(min - 0) ? min - 0 : -Infinity;
-      let max = `${this.$root.filterAndSort.maxlabelConfidence}`;
-      max = max.length > 0 && isFinite(max - 0) ? max - 0 : Infinity; // TODO: fix this, this is a patch/hack the backend should handle this
-
-      observationEntries = observationEntries.filter(each => each.observation.labelConfidence >= min && each.observation.labelConfidence <= max); // TODO: backend should be handling this too
-
-      if (!this.$root.filterAndSort.validation.includes("Unchecked")) {
-        observationEntries = observationEntries.filter(each => each.confirmedBySomeone || each.rejectedBySomeone);
-      } // TODO: backend should be handling this too
-
-
-      if (!this.$root.filterAndSort.validation.includes("Disagreement")) {
-        observationEntries = observationEntries.filter(each => !(each.confirmedBySomeone && each.rejectedBySomeone));
-      }
-
-      console.debug(`observationEntries is:`, observationEntries);
-      let results = {
-        finishedComputing: true,
-        uncheckedObservations: [],
-        rejected: [],
-        labels: {},
-        observers: {},
-        videos: new Set(),
-        counts: {
-          total: observationEntries.length,
-          fromHuman: 0,
-          rejected: 0,
-          confirmed: 0,
-          disagreement: 0
-        }
+      const filterAndSort = { ...this.$root.filterAndSort,
+        // also include label name if it exists
+        ...(this.$root.routeData$.labelName ? {
+          labelName: this.$root.routeData$.labelName
+        } : {})
       };
-
-      for (let each of observationEntries) {
-        if (!results.observers[each.observer]) {
-          results.observers[each.observer] = 0;
-        }
-
-        results.observers[each.observer] += 1;
-        this.$root.usernames.add(each.observer);
-
-        if (!results.labels[each.observation.label]) {
-          results.labels[each.observation.label] = 0;
-        }
-
-        results.labels[each.observation.label] += 1;
-        results.videos.add(each.videoId);
-
-        if (each.isHuman) {
-          results.counts.fromHuman += 1;
-        } else {
-          if (each.confirmedBySomeone == true) {
-            results.counts.confirmed += 1;
-          }
-
-          if (each.rejectedBySomeone == true) {
-            results.counts.rejected += 1;
-            results.rejected.push(each);
-          }
-
-          if (each.rejectedBySomeone && each.confirmedBySomeone) {
-            results.counts.disagreement += 1;
-          }
-
-          if (each.rejectedBySomeone !== true && each.confirmedBySomeone !== true) {
-            results.uncheckedObservations.push(each);
-          }
-        }
-      }
-
-      this.$root.searchResults = results; // show the time of the first load
+      this.$root.searchResults = await backend.summary.general(filterAndSort);
+      console.debug(`this.$root.searchResults is:`, JSON.stringify(this.$root.searchResults, 0, 4)); // show the time of the first load
 
       if (this.$root.loadStart) {
         let loadDuration = (new Date().getTime() - this.$root.loadStart) / 1000;
+        this.$root.loadStart = null;
 
         if (loadDuration > 5) {
-          this.$root.loadStart = null;
           this.$toasted.show(`Initial page loading took: ${loadDuration} sec`, {
             closeOnSwipe: false,
             action: {
@@ -63943,7 +63798,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($cdd074, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"search",attrs:{"align-v":"top","width":"100%"}},[_c('row',{staticClass:"video-wrapper",staticStyle:{"min-width":"100%","margin-top":"1rem"}},[_c('VideoIdSearch',{on:{"goToVideo":_vm.goToVideo}})],1),_c('row',{staticClass:"search-summary",attrs:{"align-v":"top","align-h":"space-around","padding":"1rem 4rem","height":"min-content","width":"100%"}},[_c('column',{staticClass:"card",attrs:{"width":"26rem","padding":"0.6rem 1rem"}},[_c('LabelLister')],1),_c('column',{staticClass:"card",attrs:{"width":"32rem","flex-grow":"0.3","overflow-x":"hidden"}},[_c('h3',{staticStyle:{"font-weight":"100","margin-top":"-10px","border-bottom":"black solid 2px"}},[_vm._v("Stats")]),_c('br'),_c('br'),_c('column',{staticClass:"text-grid",attrs:{"align-h":"left","width":"90%"}},[_c('h5',[_vm._v("Total Videos: "+_vm._s(_vm.$root.searchResults.videos.size))]),_c('h5',[_vm._v("False Positive Ratio: "+_vm._s(_vm.falsePositiveRatio()))])]),_c('br'),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"showTotal":"showTotal","series":[_vm.$root.searchResults.counts.fromHuman, _vm.$root.searchResults.counts.rejected, _vm.$root.searchResults.uncheckedObservations.length, _vm.$root.searchResults.counts.confirmed, _vm.$root.searchResults.counts.disagreement],"labels":['Human','Rejected','Unchecked','Confirmed', 'Disagreement'],"colors":[ _vm.colors.blue, _vm.colors.red, _vm.colors.purple, _vm.colors.green, _vm.colors.yellow ]}})],1):_vm._e(),_c('h5',[_vm._v("Observers")]),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"series":Object.values(_vm.$root.searchResults.observers),"labels":Object.keys(_vm.$root.searchResults.observers)}})],1):_vm._e(),_c('h5',[_vm._v("Labels")]),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"series":Object.values(_vm.$root.searchResults.labels),"labels":Object.keys(_vm.$root.searchResults.labels)}})],1):_vm._e()],1),_c('column',{staticClass:"card search-observation",attrs:{"align-h":"left","min-height":"fit-content"}},[_c('h5',[_vm._v("Search Filters")]),_c('br'),_c('ui-autocomplete',{attrs:{"label":"Observer (username)","placeholder":"(Any)","suggestions":_vm.$root.getUsernameList()},model:{value:(_vm.observer),callback:function ($$v) {_vm.observer=$$v},expression:"observer"}}),_c('row',{attrs:{"align-h":"space-between"}},[_c('ui-textbox',{attrs:{"label":"Minium Confidence","placeholder":"(Any)"},model:{value:(_vm.$root.filterAndSort.minlabelConfidence),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "minlabelConfidence", $$v)},expression:"$root.filterAndSort.minlabelConfidence"}}),_c('ui-textbox',{attrs:{"label":"Max Confidence","placeholder":"(Any)"},model:{value:(_vm.$root.filterAndSort.maxlabelConfidence),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "maxlabelConfidence", $$v)},expression:"$root.filterAndSort.maxlabelConfidence"}})],1),_c('ui-textbox',{attrs:{"label":"Label","placeholder":"(Any)"},model:{value:(_vm.$root.routeData$.labelName),callback:function ($$v) {_vm.$set(_vm.$root.routeData$, "labelName", $$v)},expression:"$root.routeData$.labelName"}}),_c('br'),_c('row',{attrs:{"align-h":"space-between","align-v":"top"}},[_c('ui-radio-group',{attrs:{"name":"Kind of Observer","options":['Only Humans', 'Either', 'Only Robots'],"vertical":"vertical"},model:{value:(_vm.$root.filterAndSort.kindOfObserver),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "kindOfObserver", $$v)},expression:"$root.filterAndSort.kindOfObserver"}},[_vm._v("Kind of Observer")]),_c('row',{attrs:{"width":"2rem"}}),_c('ui-checkbox-group',{attrs:{"name":"validation","options":[ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement' ],"vertical":"vertical"},model:{value:(_vm.$root.filterAndSort.validation),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "validation", $$v)},expression:"$root.filterAndSort.validation"}},[_vm._v("Validation")])],1)],1)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"search",attrs:{"align-v":"top","width":"100%"}},[_c('row',{staticClass:"video-wrapper",staticStyle:{"min-width":"100%","margin-top":"1rem"}},[_c('VideoIdSearch',{on:{"goToVideo":_vm.goToVideo}})],1),_c('row',{staticClass:"search-summary",attrs:{"align-v":"top","align-h":"space-around","padding":"1rem 4rem","height":"min-content","width":"100%"}},[_c('column',{staticClass:"card",attrs:{"width":"26rem","padding":"0.6rem 1rem"}},[_c('LabelLister')],1),_c('column',{staticClass:"card",attrs:{"width":"32rem","flex-grow":"0.3","overflow-x":"hidden"}},[_c('h3',{staticStyle:{"font-weight":"100","margin-top":"-10px","border-bottom":"black solid 2px"}},[_vm._v("Stats")]),_c('br'),_c('br'),_c('column',{staticClass:"text-grid",attrs:{"align-h":"left","width":"90%"}},[_c('h5',[_vm._v("Total Videos: "+_vm._s(Object.keys(_vm.$root.searchResults.videos).length))]),_c('h5',[_vm._v("False Positive Ratio: "+_vm._s(_vm.falsePositiveRatio()))])]),_c('br'),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"showTotal":"showTotal","series":[_vm.$root.searchResults.counts.fromHuman, _vm.$root.searchResults.counts.rejected, _vm.$root.searchResults.uncheckedObservations.length, _vm.$root.searchResults.counts.confirmed, _vm.$root.searchResults.counts.disagreement],"labels":['Human','Rejected','Unchecked','Confirmed', 'Disagreement'],"colors":[ _vm.colors.blue, _vm.colors.red, _vm.colors.purple, _vm.colors.green, _vm.colors.yellow ]}})],1):_vm._e(),_c('h5',[_vm._v("Observers")]),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"series":Object.values(_vm.$root.searchResults.observers),"labels":Object.keys(_vm.$root.searchResults.observers)}})],1):_vm._e(),_c('h5',[_vm._v("Labels")]),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"series":Object.values(_vm.$root.searchResults.labels),"labels":Object.keys(_vm.$root.searchResults.labels)}})],1):_vm._e()],1),_c('column',{staticClass:"card search-observation",attrs:{"align-h":"left","min-height":"fit-content"}},[_c('h5',[_vm._v("Search Filters")]),_c('br'),_c('ui-autocomplete',{attrs:{"label":"Observer (username)","placeholder":"(Any)","suggestions":_vm.$root.getUsernameList()},model:{value:(_vm.observer),callback:function ($$v) {_vm.observer=$$v},expression:"observer"}}),_c('row',{attrs:{"align-h":"space-between"}},[_c('ui-textbox',{attrs:{"label":"Minium Confidence","placeholder":"(Any)"},model:{value:(_vm.$root.filterAndSort.minlabelConfidence),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "minlabelConfidence", $$v)},expression:"$root.filterAndSort.minlabelConfidence"}}),_c('ui-textbox',{attrs:{"label":"Max Confidence","placeholder":"(Any)"},model:{value:(_vm.$root.filterAndSort.maxlabelConfidence),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "maxlabelConfidence", $$v)},expression:"$root.filterAndSort.maxlabelConfidence"}})],1),_c('ui-textbox',{attrs:{"label":"Label","placeholder":"(Any)"},model:{value:(_vm.$root.routeData$.labelName),callback:function ($$v) {_vm.$set(_vm.$root.routeData$, "labelName", $$v)},expression:"$root.routeData$.labelName"}}),_c('br'),_c('row',{attrs:{"align-h":"space-between","align-v":"top"}},[_c('ui-radio-group',{attrs:{"name":"Kind of Observer","options":['Only Humans', 'Either', 'Only Robots'],"vertical":"vertical"},model:{value:(_vm.$root.filterAndSort.kindOfObserver),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "kindOfObserver", $$v)},expression:"$root.filterAndSort.kindOfObserver"}},[_vm._v("Kind of Observer")]),_c('row',{attrs:{"width":"2rem"}}),_c('ui-checkbox-group',{attrs:{"name":"validation","options":[ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement' ],"vertical":"vertical"},model:{value:(_vm.$root.filterAndSort.validation),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "validation", $$v)},expression:"$root.filterAndSort.validation"}},[_vm._v("Validation")])],1)],1)],1)],1)}
 var staticRenderFns = []
 
           return {
@@ -64043,8 +63898,7 @@ var _default = {
     videoResults() {
       let videos = this.$root.searchResults.videos;
       let selectedId = get(this.$root, ['routeData$', 'videoId'], null);
-      let filtered = [...videos].filter(each => each !== selectedId);
-      console.debug(`filtered is:`, filtered);
+      let filtered = Object.keys(videos).filter(each => each !== selectedId);
       return filtered;
     }
 
@@ -65236,7 +65090,10 @@ if (!("Home" in _2.default)) {
 
 let RootComponent;
 setTimeout(() => new (_vue.default.extend(RootComponent))().$mount('#vue-root'), 0);
-let firstSearchLoad = true;
+let untrackedData = {
+  firstSearchLoad: true,
+  usernameList: []
+};
 
 var _default = RootComponent = {
   name: 'RootComponent',
@@ -65314,7 +65171,6 @@ var _default = RootComponent = {
       needToLoad$: {
         backend
       },
-      usernames: new Set(),
       routeData$: initialRouteData,
       filterAndSort: {
         maxlabelConfidence: null,
@@ -65325,8 +65181,9 @@ var _default = RootComponent = {
       },
       searchResults: {
         finishedComputing: false,
-        videos: new Set(),
+        videos: {},
         uncheckedObservations: [0],
+        observers: {},
         // this hardcoded value is only for initilization and is
         // immediately replaced with the result of a backend call
         // TODO: should probably still remove this
@@ -65371,7 +65228,7 @@ var _default = RootComponent = {
   mounted() {
     this.backend.then(async backend => {
       this.$toasted.show(`Connected to backend, retrieving data`).goAway(6500);
-      this.usernames = new Set(await backend.getUsernames());
+      untrackedData.usernameList = untrackedData.usernameList.concat(await backend.getUsernames());
     });
   },
 
@@ -65381,15 +65238,15 @@ var _default = RootComponent = {
 
       handler() {
         // ignore it the first time
-        if (firstSearchLoad) {
-          firstSearchLoad = false;
+        if (untrackedData.firstSearchLoad) {
+          untrackedData.firstSearchLoad = false;
           return;
         } // then let the video be set each time new search results roll in
 
 
         if (this.$root.routeData$.videoId == null) {
           if (!isEmpty(this.searchResults.videos)) {
-            this.routeData$.videoId = [...this.searchResults.videos][0]; // Vue isn't detecting deep changes on routeData without this >:(
+            this.routeData$.videoId = Object.keys(this.searchResults.videos)[0]; // Vue isn't detecting deep changes on routeData without this >:(
 
             this.$root.routeData$ = { ...this.$root.routeData$
             };
@@ -65481,7 +65338,8 @@ var _default = RootComponent = {
   computed: {},
   methods: {
     getUsernameList() {
-      return [...this.usernames];
+      untrackedData.usernameList = [...new Set(untrackedData.usernameList.concat(Object.keys(this.searchResults.observers)))];
+      return untrackedData.usernameList;
     },
 
     bigMessage(message) {
