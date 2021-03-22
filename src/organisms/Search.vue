@@ -31,7 +31,7 @@
                 br
                 column.text-grid(align-h="left" width="90%")
                     h5
-                        | Total Videos: {{$root.searchResults.videos.size}}
+                        | Total Videos: {{Object.keys($root.searchResults.videos).length}}
                     h5
                         | False Positive Ratio: {{falsePositiveRatio()}}
                 br
@@ -148,108 +148,19 @@ export default {
         },
         async submitSearch() {
             let backend = await this.backend
-            let where = []
-            
-            // 
-            // build the backend query
-            // 
-            if (this.$root.routeData$.labelName                               ) { where.push({ valueOf: ['observation', 'label'             ], is:                     this.$root.routeData$.labelName            , }) }
-            if (isNumber(this.$root.filterAndSort.maxlabelConfidence)         ) { where.push({ valueOf: ['observation', 'labelConfidence'   ], isLessThanOrEqualTo:    this.$root.filterAndSort.maxlabelConfidence, }) }
-            if (isNumber(this.$root.filterAndSort.minlabelConfidence)         ) { where.push({ valueOf: ['observation', 'labelConfidence'   ], isGreaterThanOrEqualTo: this.$root.filterAndSort.minlabelConfidence, }) }
-            if (this.$root.filterAndSort.observer                             ) { where.push({ valueOf: ['observer'                         ], is:                     this.$root.filterAndSort.observer          , }) }
-            if (this.$root.filterAndSort.kindOfObserver == "Only Humans"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     true                          , }) }
-            if (this.$root.filterAndSort.kindOfObserver == "Only Robots"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     false                         , }) }
-            if (!this.$root.filterAndSort.validation.includes("Confirmed")    ) { where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
-            if (!this.$root.filterAndSort.validation.includes("Rejected")     ) { where.push({ valueOf: ['rejectedBySomeone'                ], isNot:                  true                          , }) }
-            // if (!this.$root.filterAndSort.validation.includes("Unchecked")    ) { where.push({ valueOf: ['rejectedBySomeone'                ], is:                     false                         , }) 
-            //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], is:                     false                         , }) }
-            // if (!this.$root.filterAndSort.validation.includes("Disagreement") ) { where.push({ valueOf: ['rejectedBySomeone'                ], isNot:                  true                          , }) 
-            //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
-            console.log(`querying the backend`)
-            observationEntries = await backend.mongoInterface.getAll({
-                from: 'observations',
-                where: [
-                    { valueOf: ['type'], is:'segment' },
-                    ...where,
-                ]
-            })
-            
-            // 
-            // this looks like is does nothing but sadly it does
-            // however it should be removed once the corrupt data from the database is fixed
-            observationEntries = observationEntries.map(each => ({
-                ...each,
-                isHuman: each.isHuman == true,
-                confirmedBySomeone: each.confirmedBySomeone == true,
-                rejectedBySomeone: each.rejectedBySomeone == true,
-            }))
-            
-            // this is so weird because of the dumb ways Javascript handles string->number
-            // it behaves like if ($root.filterAndSort.minlabelConfidence) then min = $root.filterAndSort.minlabelConfidence
-            let min = `${this.$root.filterAndSort.minlabelConfidence}`; min = min.length>0 && isFinite(min-0) ? min-0 : -Infinity
-            let max = `${this.$root.filterAndSort.maxlabelConfidence}`; max = max.length>0 && isFinite(max-0) ? max-0 : Infinity
-            // TODO: fix this, this is a patch/hack the backend should handle this
-            observationEntries = observationEntries.filter(each => (each.observation.labelConfidence >= min) && (each.observation.labelConfidence <= max))
-            // TODO: backend should be handling this too
-            if (!this.$root.filterAndSort.validation.includes("Unchecked")) {
-                observationEntries = observationEntries.filter(each => each.confirmedBySomeone || each.rejectedBySomeone)
+            const filterAndSort = {
+                ...this.$root.filterAndSort,
+                // also include label name if it exists
+                ...(this.$root.routeData$.labelName? {labelName: this.$root.routeData$.labelName} : {}),
             }
-            // TODO: backend should be handling this too
-            if (!this.$root.filterAndSort.validation.includes("Disagreement")) {
-                observationEntries = observationEntries.filter(each => !(each.confirmedBySomeone && each.rejectedBySomeone))
-            }
-            
-            console.debug(`observationEntries is:`,observationEntries)
-            let results = {
-                finishedComputing: true,
-                uncheckedObservations: [],
-                rejected: [],
-                labels: {},
-                observers: {},
-                videos: new Set(),
-                counts: {
-                    total: observationEntries.length,
-                    fromHuman: 0,
-                    rejected: 0,
-                    confirmed: 0,
-                    disagreement: 0,
-                },
-            }
-            for (let each of observationEntries) {
-                if (!results.observers[each.observer]) { results.observers[each.observer] = 0 }
-                results.observers[each.observer] += 1
-                this.$root.usernames.add(each.observer)
-                
-                if (!results.labels[each.observation.label]) { results.labels[each.observation.label] = 0 }
-                results.labels[each.observation.label] += 1
-                
-                results.videos.add(each.videoId)
-                
-                if (each.isHuman) {
-                    results.counts.fromHuman += 1 
-                } else {
-                    if (each.confirmedBySomeone == true) {
-                        results.counts.confirmed += 1
-                    }
-                    if (each.rejectedBySomeone == true) {
-                        results.counts.rejected  += 1 
-                        results.rejected.push(each)
-                    }
-                    if (each.rejectedBySomeone && each.confirmedBySomeone) {
-                        results.counts.disagreement += 1
-                    }
-                    if (each.rejectedBySomeone !== true && each.confirmedBySomeone !== true) {
-                        results.uncheckedObservations.push(each)
-                    }
-                }
-            }
-            this.$root.searchResults = results
+            this.$root.searchResults = await backend.summary.general(filterAndSort)
+            console.debug(`this.$root.searchResults is:`,JSON.stringify(this.$root.searchResults,0,4))
             
             // show the time of the first load
             if (this.$root.loadStart) {
                 let loadDuration = ((new Date()).getTime() - this.$root.loadStart)/1000
+                this.$root.loadStart = null
                 if (loadDuration > 5) {
-                    this.$root.loadStart = null
                     this.$toasted.show(`Initial page loading took: ${loadDuration} sec`, {
                         closeOnSwipe: false,
                         action: {

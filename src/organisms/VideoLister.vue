@@ -15,8 +15,7 @@ export default {
         videoResults() {
             let videos = this.$root.searchResults.videos
             let selectedId = get(this.$root, ['routeData$', 'videoId'], null)
-            let filtered = [...videos].filter(each=>each!==selectedId)
-            console.debug(`filtered is:`,filtered)
+            let filtered = Object.keys(videos).filter(each=>each!==selectedId)
             return filtered
         }
     },

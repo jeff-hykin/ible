@@ -37,7 +37,10 @@ if (!("Home" in pages)) {
 
 // create Root instance and attach it (executed after this file loads)
 let RootComponent; setTimeout(()=>(new (Vue.extend(RootComponent))).$mount('#vue-root'), 0)
-let firstSearchLoad = true
+let untrackedData = {
+    firstSearchLoad: true,
+    usernameList: [],
+}
 export default RootComponent = {
     name: 'RootComponent',
     components: {
@@ -117,7 +120,6 @@ export default RootComponent = {
             needToLoad$: {
                 backend,
             },
-            usernames: new Set(),
             routeData$: initialRouteData,
             filterAndSort: {
                 maxlabelConfidence: null,
@@ -128,8 +130,9 @@ export default RootComponent = {
             },
             searchResults: {
                 finishedComputing: false,
-                videos: new Set(),
+                videos: {},
                 uncheckedObservations: [0],
+                observers: {},
                 // this hardcoded value is only for initilization and is
                 // immediately replaced with the result of a backend call
                 // TODO: should probably still remove this
@@ -173,7 +176,7 @@ export default RootComponent = {
     mounted() {
         this.backend.then(async (backend)=>{
             this.$toasted.show(`Connected to backend, retrieving data`).goAway(6500)
-            this.usernames = new Set(await backend.getUsernames())
+            untrackedData.usernameList = untrackedData.usernameList.concat(await backend.getUsernames())
         })
     },
     watch: {
@@ -181,14 +184,14 @@ export default RootComponent = {
             deep: true,
             handler() {
                 // ignore it the first time
-                if (firstSearchLoad) {
-                    firstSearchLoad = false
+                if (untrackedData.firstSearchLoad) {
+                    untrackedData.firstSearchLoad = false
                     return
                 }
                 // then let the video be set each time new search results roll in
                 if (this.$root.routeData$.videoId == null) {
                     if (!isEmpty(this.searchResults.videos)) {
-                        this.routeData$.videoId = ([...this.searchResults.videos])[0]
+                        this.routeData$.videoId = Object.keys(this.searchResults.videos)[0]
                         // Vue isn't detecting deep changes on routeData without this >:(
                         this.$root.routeData$ = {...this.$root.routeData$}
                     }
@@ -258,7 +261,8 @@ export default RootComponent = {
     },
     methods: {
         getUsernameList() {
-            return [...this.usernames]
+            untrackedData.usernameList = [... new Set(untrackedData.usernameList.concat(Object.keys(this.searchResults.observers)))]
+            return untrackedData.usernameList
         },
         bigMessage(message) {
             this.$toasted.show(`<pre style="max-width: 70vw; max-height: 50vh; overflow: auto; white-space: pre-wrap;">${escape(message)}<pre>`,{

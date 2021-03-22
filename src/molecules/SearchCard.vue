@@ -19,7 +19,7 @@ export default {
             let selectedVideoId = Object.keys(label.videos)[0]
             // get it from the cache (auto-adds to cache if needed)
             this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500)
-            this.$root.push({labelName, videoId: null})
+            this.$root.push({labelName, videoId: selectedVideoId})
         }
     }
 }
