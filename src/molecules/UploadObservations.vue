@@ -199,21 +199,23 @@ export default {
                 const size = newObservations.length
                 const startTime = (new Date()).getTime()
                 let timeRemaining = null
+                let errorCount = 0
                 
                 for (const [key, value] of Object.entries(newObservations)) {
                     const observationNumber = key-0+1
                     const {fileNumber, fileName, observationIndex } = observationMapping[key]
                     const fileNumberString = eventObject.length > 1? `File ${fileNumber} of ${eventObject.length}\n\n`:""
                     const timeRemainingString = timeRemaining?" (~ "+humandReadableTime(timeRemaining)+" remaining)":""
-                    this.errorSnippet = this.latestUploadErrors.length == 0 ? "" : "there were some errors:\n"+this.latestUploadErrors.split("\n").slice(0,4).map(each=>"    "+each).join("\n")+"\n"
+                    this.errorSnippet = this.latestUploadErrors.length == 0 ? "" : `There were some (${errorCount}) errors:\n`+this.latestUploadErrors.split("\n").slice(0,4).map(each=>"    - "+each).join("\n\n")+"\n"
                     this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n`
                     try {
                         await (await this.backend).addObservation(value)
                     } catch (error) {
                         if (error.message.match(/Message: Failed to fetch/)) {
-                            this.$toasted.show(`Server too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(2500)
+                            this.$toasted.show(`Server took too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(2500)
                             continue
                         }
+                        errorCount++
                         this.latestUploadErrors += `problem with file #${fileNumber} "${fileName}", observation #${observationIndex}:\n`+error.message+"\n"
                     }
                     const changeInTime = (new Date()).getTime() - startTime
