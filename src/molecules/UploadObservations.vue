@@ -206,7 +206,7 @@ export default {
                     const {fileNumber, fileName, observationIndex } = observationMapping[key]
                     const fileNumberString = eventObject.length > 1? `File ${fileNumber} of ${eventObject.length}\n\n`:""
                     const timeRemainingString = timeRemaining?" (~ "+humandReadableTime(timeRemaining)+" remaining)":""
-                    this.errorSnippet = this.latestUploadErrors.length == 0 ? "" : `There were some (${errorCount}) errors:\n`+this.latestUploadErrors.split("\n").slice(0,4).map(each=>"    - "+each).join("\n\n")+"\n"
+                    this.errorSnippet = this.latestUploadErrors.length == 0 ? "" : `There were some (${errorCount}) errors:\n`+this.latestUploadErrors.split("\n").slice(0,5).join("\n")+"\n"
                     this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n`
                     try {
                         await (await this.backend).addObservation(value)
@@ -216,7 +216,7 @@ export default {
                             continue
                         }
                         errorCount++
-                        this.latestUploadErrors += `problem with file #${fileNumber} "${fileName}", observation #${observationIndex}:\n`+error.message+"\n"
+                        this.latestUploadErrors += `    - problem with file #${fileNumber} "${fileName}", observation #${observationIndex}:\n`+error.message+"\n"
                     }
                     const changeInTime = (new Date()).getTime() - startTime
                     const changeInCount = observationNumber
