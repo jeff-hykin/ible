@@ -27,7 +27,7 @@
                 | {{errorSnippet}}
                 row(width="100%" align-h="space-between")
                     ui-button.cancel-button(
-                        v-if="uploadMessage && !uploadCanceled"
+                        v-show="uploadMessage && !uploadCanceled"
                         @click="quitUpload"
                         icon="cancel"
                     )
@@ -205,7 +205,7 @@ export default {
                     const {fileNumber, fileName, observationIndex } = observationMapping[key]
                     const fileNumberString = eventObject.length > 1? `File ${fileNumber} of ${eventObject.length}\n\n`:""
                     const timeRemainingString = timeRemaining?" (~ "+humandReadableTime(timeRemaining)+" remaining)":""
-                    this.errorSnippet = this.latestUploadErrors.length == 0 ? "" : "there were some errors:\n"+this.latestUploadErrors.split("\n")[0]
+                    this.errorSnippet = this.latestUploadErrors.length == 0 ? "" : "there were some errors:\n"+this.latestUploadErrors.split("\n").slice(0,4).map(each=>"    "+each).join("\n")+"\n"
                     this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n`
                     try {
                         await (await this.backend).addObservation(value)
