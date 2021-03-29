@@ -21,14 +21,21 @@
             ui-fileupload(name="file" type="secondary" @change="onUploadObservation" :multiple="true")
         
         transition(name="fade")
-            Card(v-if="uploadMessage && !uploadCanceled" position="fixed" bottom="2rem" right="2rem" z-index="999" width="30rem" max-width="30rem" overflow="scroll" white-space="pre" shadow="3" background="whitesmoke")
+            Card(v-if="uploadMessage && !uploadCanceled || (latestUploadErrors.length > 0)" position="fixed" bottom="2rem" right="2rem" z-index="999" width="30rem" max-width="30rem" max-height="50vh" overflow="scroll" white-space="pre" shadow="3" background="whitesmoke")
                 | {{uploadMessage}}
                 br
-                ui-button.cancel-button(
-                    @click="quitUpload"
-                    icon="cancel"
-                )
-                    | Cancel
+                row(width="100%" align-h="space-between")
+                    ui-button.cancel-button(
+                        @click="quitUpload"
+                        icon="cancel"
+                    )
+                        | Cancel
+                    ui-button.error-button(
+                        v-if="latestUploadErrors.length > 0"
+                        @click="downloadErrorLog"
+                        icon="sms_failed"
+                    )
+                        | Download Error Log
         
         //- help message
         portal(to="modal-popups")
@@ -76,7 +83,7 @@
     
 </template>
 <script>
-const { humandReadableTime } = require("../utils")
+const { humandReadableTime, download } = require("../utils")
 
 export default {
     components: {
@@ -87,6 +94,7 @@ export default {
     data: ()=>({
         uploadMessage: null,
         uploadCanceled: false,
+        latestUploadErrors: "",
         dummyData1: {
             "videoId": "FLK5-00l0r4",
             "type": "segment",
@@ -129,6 +137,9 @@ export default {
             console.log(`canceling upload`)
             this.uploadMessage = null
             this.uploadCanceled = true
+        },
+        downloadErrorLog() {
+            download("upload_error_log.txt", this.latestUploadErrors)
         },
         dummyDataChange(dummyData) {
             if (dummyData.isHuman) {
@@ -175,11 +186,11 @@ export default {
             // start uploading all the observations
             // 
             try {
-                this.$toasted.show(`👍 everything seems to be valid JSON`).goAway(6500)
+                this.$toasted.show(`each file at least seems to be valid JSON 👍 `).goAway(6500)
                 
                 this.uploadCanceled = false
                 this.uploadMessage = "starting upload"
-                let errors = ""
+                this.latestUploadErrors = ""
                 const size = newObservations.length
                 const startTime = (new Date()).getTime()
                 let timeRemaining = null
@@ -189,7 +200,8 @@ export default {
                     const {fileNumber, fileName, observationIndex } = observationMapping[key]
                     const fileNumberString = eventObject.length > 1? `File ${fileNumber} of ${eventObject.length}\n\n`:""
                     const timeRemainingString = timeRemaining?" (~ "+humandReadableTime(timeRemaining)+" remaining)":""
-                    this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n` + errors
+                    const errorDisplay = this.latestUploadErrors.length == 0 ? "" : "there were some errors: "+this.latestUploadErrors.split("\n")[0]
+                    this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n` + errorDisplay
                     try {
                         await (await this.backend).addObservation(value)
                     } catch (error) {
@@ -197,7 +209,7 @@ export default {
                             this.$toasted.show(`Server too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(2500)
                             continue
                         }
-                        errors += `problem with file #${fileNumber} "${fileName}", observation #${observationIndex}:\n`+error.message+"\n"
+                        this.latestUploadErrors += `problem with file #${fileNumber} "${fileName}", observation #${observationIndex}:\n`+error.message+"\n"
                     }
                     const changeInTime = (new Date()).getTime() - startTime
                     const changeInCount = observationNumber
@@ -288,6 +300,21 @@ export default {
     
     .cancel-button.ui-button
         --button-color: darkgray
+        --text-color: white
+        background-color: var(--button-color) 
+        color: var(--text-color) !important
+        transition: all ease 0.3s
+        
+        ::v-deep .ui-button__icon
+            color: var(--text-color)
+                
+        &:hover
+            background-color: var(--button-color) !important
+            color: white
+            box-shadow: var(--shadow-3) 
+        
+    .error-button.ui-button
+        --button-color: var(--red)
         --text-color: white
         background-color: var(--button-color) 
         color: var(--text-color) !important
