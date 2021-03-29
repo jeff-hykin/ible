@@ -24,8 +24,10 @@
             Card(v-if="uploadMessage && !uploadCanceled || (latestUploadErrors.length > 0)" position="fixed" bottom="2rem" right="2rem" z-index="999" width="30rem" max-width="30rem" max-height="50vh" overflow="scroll" white-space="pre" shadow="3" background="whitesmoke")
                 | {{uploadMessage}}
                 br
+                | {{errorSnippet}}
                 row(width="100%" align-h="space-between")
                     ui-button.cancel-button(
+                        v-if="uploadMessage && !uploadCanceled"
                         @click="quitUpload"
                         icon="cancel"
                     )
@@ -95,6 +97,7 @@ export default {
         uploadMessage: null,
         uploadCanceled: false,
         latestUploadErrors: "",
+        errorSnippet: "",
         dummyData1: {
             "videoId": "FLK5-00l0r4",
             "type": "segment",
@@ -139,7 +142,9 @@ export default {
             this.uploadCanceled = true
         },
         downloadErrorLog() {
-            download("upload_error_log.txt", this.latestUploadErrors)
+            const errorLogText = this.latestUploadErrors
+            download("upload_error_log.txt", errorLogText)
+            this.latestUploadErrors = ""
         },
         dummyDataChange(dummyData) {
             if (dummyData.isHuman) {
@@ -200,8 +205,8 @@ export default {
                     const {fileNumber, fileName, observationIndex } = observationMapping[key]
                     const fileNumberString = eventObject.length > 1? `File ${fileNumber} of ${eventObject.length}\n\n`:""
                     const timeRemainingString = timeRemaining?" (~ "+humandReadableTime(timeRemaining)+" remaining)":""
-                    const errorDisplay = this.latestUploadErrors.length == 0 ? "" : "there were some errors: "+this.latestUploadErrors.split("\n")[0]
-                    this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n` + errorDisplay
+                    this.errorSnippet = this.latestUploadErrors.length == 0 ? "" : "there were some errors:\n"+this.latestUploadErrors.split("\n")[0]
+                    this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n`
                     try {
                         await (await this.backend).addObservation(value)
                     } catch (error) {

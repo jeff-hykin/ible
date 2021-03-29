@@ -64759,6 +64759,8 @@ exports.default = void 0;
 //
 //
 //
+//
+//
 const {
   humandReadableTime,
   download
@@ -64774,6 +64776,7 @@ var _default = {
     uploadMessage: null,
     uploadCanceled: false,
     latestUploadErrors: "",
+    errorSnippet: "",
     dummyData1: {
       "videoId": "FLK5-00l0r4",
       "type": "segment",
@@ -64827,7 +64830,9 @@ var _default = {
     },
 
     downloadErrorLog() {
-      download("upload_error_log.txt", this.latestUploadErrors);
+      const errorLogText = this.latestUploadErrors;
+      download("upload_error_log.txt", errorLogText);
+      this.latestUploadErrors = "";
     },
 
     dummyDataChange(dummyData) {
@@ -64902,8 +64907,8 @@ var _default = {
           } = observationMapping[key];
           const fileNumberString = eventObject.length > 1 ? `File ${fileNumber} of ${eventObject.length}\n\n` : "";
           const timeRemainingString = timeRemaining ? " (~ " + humandReadableTime(timeRemaining) + " remaining)" : "";
-          const errorDisplay = this.latestUploadErrors.length == 0 ? "" : "there were some errors: " + this.latestUploadErrors.split("\n")[0];
-          this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n` + errorDisplay;
+          this.errorSnippet = this.latestUploadErrors.length == 0 ? "" : "there were some errors:\n" + this.latestUploadErrors.split("\n")[0];
+          this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n`;
 
           try {
             await (await this.backend).addObservation(value);
@@ -64957,7 +64962,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($2cbb07, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"upload-wrapper",attrs:{"akfdjguo3359gip":"akfdjguo3359gip"}},[_c('ui-fab',{staticClass:"help-button",attrs:{"color":"gray","icon":"live_help","raised":"raised","tooltip":"Help with file upload","tooltipPosition":"left"},on:{"click":_vm.showHelp}}),_c('ui-fab',{staticClass:"upload-button",attrs:{"color":"blue","raised":"raised","tooltip":"upload multiple observations","tooltipPosition":"left"}},[_c('ui-icon',[_vm._v("cloud_upload")]),_c('ui-fileupload',{attrs:{"name":"file","type":"secondary","multiple":true},on:{"change":_vm.onUploadObservation}})],1),_c('transition',{attrs:{"name":"fade"}},[(_vm.uploadMessage && !_vm.uploadCanceled || (_vm.latestUploadErrors.length > 0))?_c('Card',{attrs:{"position":"fixed","bottom":"2rem","right":"2rem","z-index":"999","width":"30rem","max-width":"30rem","max-height":"50vh","overflow":"scroll","white-space":"pre","shadow":"3","background":"whitesmoke"}},[_vm._v(_vm._s(_vm.uploadMessage)),_c('br'),_c('row',{attrs:{"width":"100%","align-h":"space-between"}},[_c('ui-button',{staticClass:"cancel-button",attrs:{"icon":"cancel"},on:{"click":_vm.quitUpload}},[_vm._v("Cancel")]),(_vm.latestUploadErrors.length > 0)?_c('ui-button',{staticClass:"error-button",attrs:{"icon":"sms_failed"},on:{"click":_vm.downloadErrorLog}},[_vm._v("Download Error Log")]):_vm._e()],1)],1):_vm._e()],1),_c('portal',{attrs:{"to":"modal-popups"}},[_c('ui-modal',{ref:"helpModal",staticClass:"modal",attrs:{"fj20485gh93oi53g":"fj20485gh93oi53g","title":"Example Upload","transition":"scale-up"}},[_c('row',{attrs:{"align-h":"space-evenly","align-v":"top"}},[_c('column',{attrs:{"align-v":"top"}},[_c('br'),_vm._v("Try editing them! Then look at the code →"),_c('row',{attrs:{"align-h":"space-between","padding":"2rem 1rem","align-v":"top"}},[_c('column',[_c('h5',[_vm._v("Observation 1")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData1}})],1),_c('container',{attrs:{"min-width":"3rem"}}),_c('column',[_c('h5',[_vm._v("Observation 2")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData2}})],1)],1)],1),_c('container',{attrs:{"width":"2rem"}}),_c('column',{attrs:{"flex-basis":"50%","max-width":"31rem","align-v":"top"}},[_c('span',[_c('br'),_vm._v("To upload these observations"),_c('br'),_c('br'),_vm._v("1. Create a file ending with"),_c('code',[_vm._v(" .json ")]),_c('br'),_c('br'),_vm._v("2. Then add the following text to that file."),_c('br'),_c('br')]),_c('JsonTree',{staticClass:"json-tree",attrs:{"data":[_vm.dummyData1, _vm.dummyData2]}}),_c('span',[_c('br'),_vm._v("3. Then simply use the upload button to upload the file."),_c('br'),_c('br'),_vm._v("The JSON file is just a list of each observation represented as a kind of dictionary.")])],1)],1)],1)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"upload-wrapper",attrs:{"akfdjguo3359gip":"akfdjguo3359gip"}},[_c('ui-fab',{staticClass:"help-button",attrs:{"color":"gray","icon":"live_help","raised":"raised","tooltip":"Help with file upload","tooltipPosition":"left"},on:{"click":_vm.showHelp}}),_c('ui-fab',{staticClass:"upload-button",attrs:{"color":"blue","raised":"raised","tooltip":"upload multiple observations","tooltipPosition":"left"}},[_c('ui-icon',[_vm._v("cloud_upload")]),_c('ui-fileupload',{attrs:{"name":"file","type":"secondary","multiple":true},on:{"change":_vm.onUploadObservation}})],1),_c('transition',{attrs:{"name":"fade"}},[(_vm.uploadMessage && !_vm.uploadCanceled || (_vm.latestUploadErrors.length > 0))?_c('Card',{attrs:{"position":"fixed","bottom":"2rem","right":"2rem","z-index":"999","width":"30rem","max-width":"30rem","max-height":"50vh","overflow":"scroll","white-space":"pre","shadow":"3","background":"whitesmoke"}},[_vm._v(_vm._s(_vm.uploadMessage)),_c('br'),_vm._v(_vm._s(_vm.errorSnippet)),_c('row',{attrs:{"width":"100%","align-h":"space-between"}},[(_vm.uploadMessage && !_vm.uploadCanceled)?_c('ui-button',{staticClass:"cancel-button",attrs:{"icon":"cancel"},on:{"click":_vm.quitUpload}},[_vm._v("Cancel")]):_vm._e(),(_vm.latestUploadErrors.length > 0)?_c('ui-button',{staticClass:"error-button",attrs:{"icon":"sms_failed"},on:{"click":_vm.downloadErrorLog}},[_vm._v("Download Error Log")]):_vm._e()],1)],1):_vm._e()],1),_c('portal',{attrs:{"to":"modal-popups"}},[_c('ui-modal',{ref:"helpModal",staticClass:"modal",attrs:{"fj20485gh93oi53g":"fj20485gh93oi53g","title":"Example Upload","transition":"scale-up"}},[_c('row',{attrs:{"align-h":"space-evenly","align-v":"top"}},[_c('column',{attrs:{"align-v":"top"}},[_c('br'),_vm._v("Try editing them! Then look at the code →"),_c('row',{attrs:{"align-h":"space-between","padding":"2rem 1rem","align-v":"top"}},[_c('column',[_c('h5',[_vm._v("Observation 1")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData1}})],1),_c('container',{attrs:{"min-width":"3rem"}}),_c('column',[_c('h5',[_vm._v("Observation 2")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData2}})],1)],1)],1),_c('container',{attrs:{"width":"2rem"}}),_c('column',{attrs:{"flex-basis":"50%","max-width":"31rem","align-v":"top"}},[_c('span',[_c('br'),_vm._v("To upload these observations"),_c('br'),_c('br'),_vm._v("1. Create a file ending with"),_c('code',[_vm._v(" .json ")]),_c('br'),_c('br'),_vm._v("2. Then add the following text to that file."),_c('br'),_c('br')]),_c('JsonTree',{staticClass:"json-tree",attrs:{"data":[_vm.dummyData1, _vm.dummyData2]}}),_c('span',[_c('br'),_vm._v("3. Then simply use the upload button to upload the file."),_c('br'),_c('br'),_vm._v("The JSON file is just a list of each observation represented as a kind of dictionary.")])],1)],1)],1)],1)],1)}
 var staticRenderFns = []
 
           return {
