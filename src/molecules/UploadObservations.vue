@@ -21,13 +21,16 @@
             ui-fileupload(name="file" type="secondary" @change="onUploadObservation" :multiple="true")
         
         transition(name="fade")
-            Card(v-if="uploadMessage && !uploadCanceled || (latestUploadErrors.length > 0)" position="fixed" bottom="2rem" right="2rem" z-index="999" width="30rem" max-width="30rem" max-height="50vh" overflow="scroll" white-space="pre" shadow="3" background="whitesmoke")
+            Card(v-if="(uploadMessage && !uploadCanceled) || (latestUploadErrors.length > 0)" position="fixed" bottom="2rem" right="2rem" z-index="999" width="30rem" shadow="3" background="whitesmoke" align-h="left")
                 | {{uploadMessage}}
+                br(v-if="errorPreview")
+                | {{errorPreview}}
+                row(width="100%" max-width="100%" max-height="6rem" overflow="auto" white-space="pre" align-h="left" align-v="top")
+                    | {{latestUploadErrors}}
                 br
-                | {{errorSnippet}}
                 row(width="100%" align-h="space-between")
                     ui-button.cancel-button(
-                        v-show="uploadMessage && !uploadCanceled"
+                        :style="`opacity: ${(uploadMessage && !uploadCanceled)?1:0}`"
                         @click="quitUpload"
                         icon="cancel"
                     )
@@ -96,8 +99,8 @@ export default {
     data: ()=>({
         uploadMessage: null,
         uploadCanceled: false,
+        errorPreview: "",
         latestUploadErrors: "",
-        errorSnippet: "",
         dummyData1: {
             "videoId": "FLK5-00l0r4",
             "type": "segment",
@@ -196,6 +199,7 @@ export default {
                 this.uploadCanceled = false
                 this.uploadMessage = "starting upload"
                 this.latestUploadErrors = ""
+                this.errorPreview = ""
                 const size = newObservations.length
                 const startTime = (new Date()).getTime()
                 let timeRemaining = null
@@ -206,7 +210,6 @@ export default {
                     const {fileNumber, fileName, observationIndex } = observationMapping[key]
                     const fileNumberString = eventObject.length > 1? `File ${fileNumber} of ${eventObject.length}\n\n`:""
                     const timeRemainingString = timeRemaining?" (~ "+humandReadableTime(timeRemaining)+" remaining)":""
-                    this.errorSnippet = this.latestUploadErrors.length == 0 ? "" : `There were some (${errorCount}) errors:\n`+this.latestUploadErrors.split("\n").slice(0,5).join("\n")+"\n"
                     this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n`
                     try {
                         await (await this.backend).addObservation(value)
@@ -216,7 +219,8 @@ export default {
                             continue
                         }
                         errorCount++
-                        this.latestUploadErrors += `    - problem with file #${fileNumber} "${fileName}", observation #${observationIndex}:\n`+error.message+"\n"
+                        this.errorPreview = `There were some (${errorCount}) errors:`
+                        this.latestUploadErrors += `\n- problem with file #${fileNumber} "${fileName}", observation #${observationIndex}:\n      `+error.message.split("\n").join("\n      ")+"\n"
                     }
                     const changeInTime = (new Date()).getTime() - startTime
                     const changeInCount = observationNumber
