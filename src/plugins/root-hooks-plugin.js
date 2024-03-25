@@ -1,3 +1,5 @@
+// TODO: fix potential issue of the "this" somehow not refering to the active component (maybe hotreload/debugging issue)
+
 // api
 //     rootHooks
 let Vue = require("vue").default

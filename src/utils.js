@@ -29,12 +29,10 @@ class EventEmitter {
 
 window.storageObject = new Proxy(window.localStorage, {
     get: function(target, key) {
-        let item = target.getItem(key)
-        if (!item) {
-            return undefined
-        // if it exists, parse it first
-        } else {
+        try {
             return JSON.parse(target.getItem(key))
+        } catch (error) {
+            return undefined
         }
     },
     set: function (target, key, value) {
@@ -51,11 +49,152 @@ window.storageObject = new Proxy(window.localStorage, {
         return key in target
     },
 })
-a = (a,b)=>(a<0)*((b.length-a)%b.length) + (!(a<0))*(a%b.length)
+
+function debounce(func, wait, immediate) {
+    var timeout
+    return function(...args) {
+        let context = this
+        let later = function() {
+            timeout = null
+            if (!immediate) {
+                func.apply(context, args)
+            }
+        }
+        let callNow = immediate && !timeout
+        clearTimeout(timeout)
+        timeout = setTimeout(later, wait)
+        if (callNow) {
+            func.apply(context, args)
+        }
+    }
+}
+
+function readFileAsString(files) {
+    if (files.length === 0) {
+        console.log('No file is selected')
+        return
+    }
+    return (new FileReader()).readAsText(files[0])
+}
+
+let colors = [ "#26c6da", "#e57373", "#ba68c8", "#04d895",  "#9575cd",  "#fec355", "#29b6f6", "#ff8a65", "#9ccc65", ]
+colors.green  = "#04d895"
+colors.blue   = "#29b6f6"
+colors.purple = "#9575cd"
+colors.red    = "#e57373"
+colors.yellow = "#fec355"
+let colorCopy = [...colors]
+function getColor(name) {
+    if (typeof name == "string") {
+        let total = name.length
+        for(let each in name) {
+            total += name.charCodeAt(each) * name.length
+        }
+        return colors[total % colors.length]
+    }
+    return colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())
+}
+
+const valueKey = Symbol("value")
+function Delayable() {
+    // the infinite loop ("you're resolved after you've waited on yourself to be resolved" lol)
+    this.promise = new Promise((resolve, reject)=>setTimeout(()=>this.promise.then(resolve).catch(reject), 0))
+    // the "ready" switch, breaks the infinite loop
+    Object.defineProperty(this, "value", {
+        set(value) {
+            this[valueKey] = value
+            this.promise = new Promise((resolve, reject)=>resolve(value))
+        },
+        get() {
+            return this[valueKey]
+        }
+    })
+    this.update = (value) => {
+        // only update if they're not equal according to lodash's rules (the correct)
+        if (!isEqual(value, this[valueKey])) {
+            this.value = value
+        }
+    }
+    // turn the infinite waiting loop back on
+    this.reset = () => {
+        this.promise = new Promise((resolve, reject)=>setTimeout(()=>this.promise.then(resolve).catch(reject), 0))
+    }
+}
+
+function download(filename, text) {
+    let element = document.createElement("a")
+    element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(text))
+    element.setAttribute("download", filename)
+    element.style.display = "none"
+    document.body.appendChild(element)
+    element.click()
+    document.body.removeChild(element)
+}
+
+function isValidName(value) {
+    const namePattern = /^[a-zA-Z0-9_\-.]+$/
+    if (typeof value == 'string') {
+        return !!value.match(namePattern)
+    }
+    return false
+}
+
+function labelConfidenceCheck(labelConfidence) {
+    if (!(labelConfidence === null || labelConfidence === undefined)) {
+        if (isFinite(labelConfidence)) {
+            if (labelConfidence < 1 || labelConfidence > -1) {
+                return true
+            }
+        }
+    }
+    return false
+}
+const currentFixedSizeOfYouTubeVideoId = 11 // This is not guarenteed to stay this way forever
+
+function humandReadableTime(milliseconds) {
+
+    function numberEnding (number) {
+        return (number > 1) ? 's' : ''
+    }
+
+    var temp = Math.floor(milliseconds / 1000)
+    var years = Math.floor(temp / 31536000)
+    if (years) {
+        return years + ' year' + numberEnding(years)
+    }
+    //TODO: Months! Maybe weeks? 
+    var days = Math.floor((temp %= 31536000) / 86400)
+    if (days) {
+        return days + ' day' + numberEnding(days)
+    }
+    var hours = Math.floor((temp %= 86400) / 3600)
+    if (hours) {
+        return hours + ' hour' + numberEnding(hours)
+    }
+    var minutes = Math.floor((temp %= 3600) / 60)
+    if (minutes) {
+        return minutes + ' minute' + numberEnding(minutes)
+    }
+    var seconds = temp % 60
+    if (seconds) {
+        return seconds + ' second' + numberEnding(seconds)
+    }
+    return 'less than a second' //'just now' //or other string you like;
+}
 
 module.exports = {
     EventEmitter,
     storageObject,
+    readFileAsString,
+    colors,
+    getColor,
+    debounce,
+    Delayable,
+    download,
+    isValidName,
+    labelConfidenceCheck,
+    currentFixedSizeOfYouTubeVideoId,
+    humandReadableTime,
     wrapIndex(val, list) {
         if (val < 0) {
             val = list.length + val

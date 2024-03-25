@@ -1,10 +1,10 @@
 <template lang="pug">
     column.search-card(shadow=1 align-h="left" :background-color="label.color")
-        h5(style="text-decoration: underline") {{labelName}}
-        column(width='max-content' padding='0.5rem')
-            | total number of clips: {{label.segmentCount}}
+        h5 {{labelName}}
+        column.stats
+            | total number of clips: {{label.segmentCount||0}}
             br
-            | total number of videos: {{label.videoCount}}
+            | total number of videos: {{label.videoCount||0}}
         column.show-samples(@click="selectLabel(labelName, label)")
             | See Clips ▲
 </template>
@@ -14,14 +14,12 @@ export default {
     props: ["labelName", "label"],
     methods: {
         selectLabel(labelName, label) {
-            console.debug(`EVENT: selectLabel callback (Home.vue)`)
             label.name = labelName
-            this.$root.selectedLabel = label
             // (there must be at least one video with the label, unless the database is corrupt)
-            let selectedVideoId = Object.keys(this.$root.selectedLabel.videos)[0]
+            let selectedVideoId = Object.keys(label.videos)[0]
             // get it from the cache (auto-adds to cache if needed)
-            this.$root.selectedVideo = this.$root.getCachedVideoObject(selectedVideoId)
             this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500)
+            this.$root.push({labelName, videoId: selectedVideoId})
         }
     }
 }
@@ -40,7 +38,11 @@ export default {
     border: 3px solid white
     flex-grow: 1
     transition: all 0.25s ease-out
-
+    
+    .stats
+        width: max-content
+        padding: 0.5rem
+            
     .show-samples
         opacity: 0
         transition: opacity 0.25s ease-out
@@ -57,10 +59,17 @@ export default {
         position: absolute
         color: gray
         font-size: 10pt
-
+    
+    h5
+        text-decoration: underline
+        max-width: 80%
+        overflow: auto
+        scrollbar-width: none  // Firefox specific
+        &::-webkit-scrollbar
+            display: none //  Chrome, Safari and Opera specific
+            
     &:hover
         box-shadow: var(--shadow-3) !important
-        
         .show-samples
             transition: opacity 0.25s ease-out
             opacity: 1

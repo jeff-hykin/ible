@@ -12,13 +12,14 @@
                     )
                 
                 Loader(v-if="!loadedAll$")
-                //- all the panel things
-                row.below-search-container(v-if="loadedAll$" align-v='top' align-h="space-between" padding='1rem' overflow="auto")
-                    //- waterfall style area
-                    row(:wrap="true" flex-grow=1)
-                        SearchCard(v-for="(label, labelName) in items" :label="label" :labelName="labelName")
-                        //- dud card to remove some strange behavior
-                        column.search-card(opacity=0)
+                transition(name="fade")
+                    //- all the panel things
+                    row.below-search-container(v-if="loadedAll$" align-v='top' align-h="space-between" padding='1rem' overflow="auto")
+                        //- waterfall style area
+                        row(:wrap="true" flex-grow=1)
+                            SearchCard(v-for="(label, labelName) in items" :label="label" :labelName="labelName" :key="labelName")
+                            //- dud card to remove some strange behavior
+                            column.search-card(opacity=0)
 </template>
 
 <script>
@@ -37,28 +38,15 @@ export default {
     data: ()=>({
         useLeftPanel: true,
         needToLoad$: {
-            endpoints,
+            backend,
         },
         items: {},
         searchTerm: "",
         fuseSuggestor: null,
     }),
     mounted() {
-        openPanel()
         // generate the UI for the labels right after mounting
         this.$rootHooks.watch.labels()
-        setTimeout(() => {
-            if (!this.loadedAll$) {
-                this.$toasted.show(`Are you on the A&M VPN?`).goAway(6500)
-                setTimeout(() => {
-                    this.$toasted.show(`If you are, then I think the Server might be down`).goAway(6500)
-                    this.$toasted.show(`(Complain to jeff.hykin@gmail.com)`).goAway(6500)
-                    setTimeout(()=>{
-                        this.$toasted.show(`I'll keep trying to connect in the meantime`).goAway(6500)
-                    }, 1600)
-                }, 1700)
-            }
-        }, 3500)
     },
     watch: {
         // when the search term changes
