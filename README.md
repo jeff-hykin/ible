@@ -1,4 +1,8 @@
-iLab Database Interface
+# What is this?
+
+The frontend of the iLab Database: a tool for annotating videos from multiple sources (humans and machine learning models).
+
+Note: uploading data in the 10-thousands will cause the site to get slow. The site has not yet been optimized to handle that level of data.
 
 # Setup
 
