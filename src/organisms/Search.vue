@@ -7,14 +7,14 @@
             //- )
             //-     | Delete
             VideoIdSearch(@goToVideo='goToVideo')
-            //- ui-button.download-button(
-            //-     @click="download"
-            //-     icon="download"
-            //-     color="primary"
-            //-     tooltipPosition="top"
-            //-     :tooltip="`Download all ${$root.searchResults.counts.total} results as JSON`"
-            //- )
-            //-     | Download
+            ui-button.download-button(
+                @click="download"
+                icon="download"
+                color="primary"
+                tooltipPosition="top"
+                :tooltip="`Download all ${$root.searchResults.counts.total} results as JSON`"
+            )
+                | Download
         row.search-summary(
             align-v="top"
             align-h="space-around"
