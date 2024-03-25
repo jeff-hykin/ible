@@ -1,18 +1,13 @@
-# 
-# if you want to customize things,
-# change settings/during_start/00100#setup_zsh.sh instead of editing this file
-# 
-
-# don't let zsh update itself without telling all the other packages 
-# instead use nix to update zsh
-DISABLE_AUTO_UPDATE="true"
-DISABLE_UPDATE_PROMPT="true"
+#!/usr/bin/env bash
 
 # 
-# this shouldnt ever happen (FORNIX undefined), but just encase
+# ensure FORNIX_FOLDER exists
 # 
-if [[ -z "$FORNIX_FOLDER" ]]
+if [ -z "$FORNIX_FOLDER" ]
 then
+    # 
+    # find fornix_core
+    # 
     path_to_file=""
     file_name="settings/fornix_core"
     folder_to_look_in="$PWD"
@@ -43,9 +38,13 @@ then
         echo "thats all the information I have"
         exit
     fi
-    export FORNIX_NEXT_RUN_DONT_DO_MANUAL_START="true"
+    export FORNIX_NEXT_RUN_ONLY_DO_BASIC_INIT="true"
+    # run the basic init of fornix to get the FORNIX_FOLDER/FORNIX_COMMANDS_FOLDER/FORNIX_HOME etc
     . "$path_to_file"
 fi
 
-# run the automatic non-zsh-specific setup
-. "$FORNIX_FOLDER/settings/extensions/#standard/commands/tools/fornix/trigger" "$FORNIX_FOLDER/settings/during_start"
+# 
+# 
+# [ actual program code here ]
+# 
+# 
