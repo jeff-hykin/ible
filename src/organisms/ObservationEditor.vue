@@ -147,7 +147,7 @@
 
 <script>
 let { backend } = require('../iilvd-api')
-let { getColor, currentFixedSizeOfYouTubeVideoId, labelConfidenceCheck, isValidName } = require("../utils")
+let { getColor, currentFixedSizeOfYouTubeVideoId, labelConfidenceCheck, isValidName, storageObject } = require("../utils")
 export default {
     props: [
         "currentTime",
@@ -263,7 +263,6 @@ export default {
         },
         async onSaveEdit() {
             console.log(`onSaveEdit`)
-            this.editing = false
             if (this.observationData.observer) {
                 storageObject.observer = this.observationData.observer
             }
@@ -286,9 +285,22 @@ export default {
                     labelConfidence: this.observationData.labelConfidence,
                 },
             }
+            const isNewObervation = !this.uuidOfSelectedSegment
+            if (isNewObervation) {
+                // if it is a new observation
+                this.uuidOfSelectedSegment = `${Math.random()}`
+            }
+            // 
+            // save on storageObject
+            // 
+            this.$root.addLabel(observation.observation.label)
+            const observationsForVideo = storageObject[this.observationData.videoId]||{}
+            observationsForVideo[this.uuidOfSelectedSegment] = observation
+            storageObject[this.observationData.videoId] = observationsForVideo
+            
             try {
                 // if saving an edit
-                if (this.uuidOfSelectedSegment) {
+                if (isNewObervation) {
                     // TODO: check the valid-ness of the segment first
                     // TODO: add hints for data validity
                     await (await this.backend).mongoInterface.set({
@@ -304,24 +316,13 @@ export default {
                 this.$toasted.show(`There was an error on the database`).goAway(5500)
                 this.$toasted.show(error.message.slice(0,65)).goAway(5500)
                 this.$toasted.show(`(Full error log in the console)`).goAway(6500)
-                throw error
+                // throw error
             }
+            this.editing = false
             this.$toasted.show(`Changes saved`).goAway(2500)
             // create label if it doesn't exist
-            if (!this.$root.labels[this.observationData.label]) {
-                this.$toasted.show(`New label added`).goAway(3500)
-                this.$root.labels[this.observationData.label] = {
-                    color: getColor(this.observationData.label),
-                    segmentCount: 1,
-                    videoCount: 1,
-                    videos: [ this.observationData.videoId ],
-                    selected: true,
-                }
-            }
+            this.$root.addLabel(this.observationData.label, observation.videoId)
             this.$root.selectedSegment = observation
-            
-            // enable the label if it wasn't already
-            this.$root.labels[this.observationData.label] = { ...this.$root.labels[this.observationData.label], selected: true }
             
             // tell segments they need to get the data from the backend again
             window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))

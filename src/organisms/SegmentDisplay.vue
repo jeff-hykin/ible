@@ -125,16 +125,24 @@ export default {
             } catch (err) {}
         },
         async updateSegments() {
+            console.log(`updateSegments`)
             const originalVideoId = get(this.$root, ['routeData$', 'videoId'], null)
             if (originalVideoId) {
-                let keySegments = await (await this.backend).mongoInterface.getAll({
-                    from: 'observations',
-                    where: [
-                        { valueOf: ['type']   , is: "segment" },
-                        { valueOf: ['videoId'], is: originalVideoId },
-                    ],
-                    returnObject: true,
-                })
+                let keySegments
+                try {
+                    keySegments = await (await this.backend).mongoInterface.getAll({
+                        from: 'observations',
+                        where: [
+                            { valueOf: ['type']   , is: "segment" },
+                            { valueOf: ['videoId'], is: originalVideoId },
+                        ],
+                        returnObject: true,
+                    })
+                } catch (error) {
+                    console.error("updateSegments error", error)
+                    return
+                }
+                
                 // add uuid to all of them
                 keySegments = Object.entries(keySegments).map(
                     ([eachKey, eachValue])=>(eachValue.$uuid=eachKey,eachValue)

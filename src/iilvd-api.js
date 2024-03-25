@@ -7,7 +7,8 @@ let ezRpc = require("ez-rpc-frontend")
 // const databaseUrl = "http://192.168.192.57:3000"
 // const ezRpcUrl = "http://192.168.86.222:6283" // my desktop db 
 // const ezRpcUrl = "http://128.194.4.15:3000" // csce-jiang1.engr.tamu.edu:3000
-const ezRpcUrl = "http://128.194.4.15:6283" // csce-jiang1.engr.tamu.edu:6283
+// const ezRpcUrl = "http://128.194.4.15:6283" // csce-jiang1.engr.tamu.edu:6283
+const ezRpcUrl = "http://127.0.0.1:6283"
 const key = "4a75cfe3cdc1164b67aae6b413c9714280d2f102"
 
 window.backend = ezRpc.buildInterfaceFor(ezRpcUrl)

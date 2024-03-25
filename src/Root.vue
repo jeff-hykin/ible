@@ -18,7 +18,7 @@
 import Vue from "vue"
 import plugins from "./plugins/*.js"
 import pages from "./pages/*.vue"
-import {getColor} from "./utils"
+import {getColor, storageObject} from "./utils"
 
 // make lodash global because I like to live dangerously
 for (const [eachKey, eachValue] of Object.entries(require("lodash"))) { window[eachKey] = eachValue }
@@ -136,26 +136,7 @@ export default RootComponent = {
                 // this hardcoded value is only for initilization and is
                 // immediately replaced with the result of a backend call
                 // TODO: should probably still remove this
-                labels: {
-                    "Uncertain": 2,
-                    "Happy": 36,
-                    "Neutral": 13,
-                    "Surprise": 2,
-                    "Disgust": 2,
-                    "Contempt": 2,
-                    "Anger": 3,
-                    "non-face": 1,
-                    "Sad": 2,
-                    "headache": 182,
-                    "Smoking": 49,
-                    "Shaking Head": 21,
-                    "Fall": 119,
-                    "Angry": 14,
-                    "Hand Rotation": 3,
-                    "Hand Swipe": 11,
-                    "Heart-Attack": 27,
-                    "chest pain": 29
-                },
+                labels: {},
                 counts: {
                     total: 1,
                     fromHuman: 0,
@@ -320,7 +301,15 @@ export default RootComponent = {
             // get labels
             // 
             let prevLabels = get(this, "labels", {})
-            let newLabels = await (await this.backend).summary.labels()
+            let newLabels
+            try {
+                newLabels = await (await this.backend).summary.labels()
+            } catch (error) {
+                this.$toasted.show(`Unable to get summary.labels() from backend`).goAway(3500)
+                console.error(error.message)
+                console.error(error.stack)
+                return
+            }
             // assign colors to all labels in a pretty (irrelevently) inefficient way
             Object.keys(newLabels).forEach(
                 eachLabelName => newLabels[eachLabelName] = {
@@ -333,6 +322,20 @@ export default RootComponent = {
             )
             this.labels = newLabels
         },
+        addLabel(labelName, videoId) {
+            // if the label doesnt exist
+            if (!this.$root.labels[labelName]) {
+                this.$toasted.show(`New label added`).goAway(3500)
+                // then add it
+                this.$root.labels[labelName] = {
+                    color: getColor(labelName),
+                    segmentCount: 1,
+                    videoCount: 1,
+                    videos: [ videoId ],
+                    selected: true,
+                }
+            }
+        }
     }
 }
 </script>
