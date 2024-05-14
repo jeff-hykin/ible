@@ -18,6 +18,7 @@ npm run start
 
 And then open then url in the browser ([http://localhost:1234](http://localhost:1234))
 
+To annotate local videos (beta), put them under the `dist/videos/` folder and then, in the search textbox, type `/videos/name_of_your_video.mp4` and press enter. It should pull up your video and allow for annotations. When annotations are downloaded the video id will be `/videos/name_of_your_video.mp4` (in comparison to the Youtube video id).
 
 To deploy (slightly better performance) do:
 
