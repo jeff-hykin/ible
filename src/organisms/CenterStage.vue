@@ -70,12 +70,12 @@ export default {
             this.attemptSeekToSegmentStart()
         },
         "videoData.currentTime": function(value, prevValue) {
-            let playing = get(this.$refs, ["videoPlayer","player","playing"], false)
+            let playing = get(this.$refs, ["vuePlyr","player","playing"], false)
             if (playing) {
                 let endTime = get(this.$root, ["selectedSegment", "endTime",], Infinity)
                 if (value >= endTime && prevValue < endTime) {
                     // pause video
-                    this.$refs.videoPlayer.player.pause()
+                    this.$refs.vuePlyr.player.pause()
                     this.$toasted.show(`(End of Clip)`).goAway(2000)
                 }
             }
@@ -130,7 +130,7 @@ export default {
             // go to the start of the selected segment
             let startTime = get(this.$root, ["selectedSegment", "startTime"], null)
             if (isFinite(startTime) && this.videoData.duration) {
-                let seekTo = get(this, ["$refs", "videoPlayer", "seekTo"], ()=>0)
+                let seekTo = get(this, ["$refs", "vuePlyr", "player", "seekTo"], ()=>0)
                 seekTo(startTime)
             }
         },

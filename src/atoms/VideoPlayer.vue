@@ -132,13 +132,16 @@ export default {
             // 
             // starting with the next update, keep checking until the video has loaded
             this.videoLoading = new Promise(async (resolve, reject) => {
+                console.log(`waiting for video to load`)
                 // a seperate function is needed so that recursion is possible
                 let checkForPlayer = (resolve, reject) => () => {
+                    console.log(`checking For Player`)
                     safteyCheck(reject)
-                    if (get(this, ["$refs", "videoPlayer", "plyr", "duration"], 0) !== 0) {
-                        this.player = this.$refs.videoPlayer.plyr
+                    if (get(this, ["$refs", "vuePlyr", "player", "duration"], 0) !== 0) {
+                        this.player = this.$refs.vuePlyr.player
+                        console.debug(`this.player is:`,this.player)
                         this.setupPlayer(this.player)
-                        this.$emit("VideoPlayer-loaded", this.$refs.videoPlayer.plyr)
+                        this.$emit("VideoPlayer-loaded", this.$refs.vuePlyr.player)
                         resolve(this.player)
                     } else {
                         // recursively wait because theres no callback API
