@@ -7,8 +7,7 @@
             row.message(v-if='videoId && !player')
                 | Video Loading...
         vue-plyr(v-if='isLocalVideo' ref="vuePlyr" :style="`transition: all ease 0.6s; opacity: ${videoId && player ? 1 : 0}`" :key="videoId")
-            video(controls crossorigin playsinline data-poster="poster.jpg")
-                source(:src="videoId" type="video/mp4")
+            video(:src="videoId")
         vue-plyr(v-if='!isLocalVideo' ref="vuePlyr" :style="`transition: all ease 0.6s; opacity: ${videoId && player ? 1 : 0}`" :key="videoId")
             div.plyr__video-embed(v-if='!isLocalVideo')
                 iframe(
