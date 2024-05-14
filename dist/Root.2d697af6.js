@@ -8542,7 +8542,113 @@ if (inBrowser) {
 
 var _default = Vue;
 exports.default = _default;
-},{}],"node_modules/good-vue/dist/index.js":[function(require,module,exports) {
+},{}],"src/plugins/child.js":[function(require,module,exports) {
+// api
+//     $child(...args)
+let Vue = require("vue").default;
+
+Object.defineProperty(Vue.prototype, "$child", {
+  get() {
+    return (firstRef, ...args) => new Promise((resolve, reject) => {
+      let checker;
+
+      checker = () => {
+        let ref = this.$refs[firstRef]; // base case
+
+        if (ref && args.length === 0) {
+          resolve(ref); // recursive child case
+        } else if (ref) {
+          ref.$child(...args).then(resolve); // recursive wait case
+        } else {
+          this.$nextTick(() => {
+            setTimeout(checker, 500);
+          });
+        }
+      };
+
+      checker();
+    });
+  }
+
+});
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
+var bundleURL = null;
+
+function getBundleURLCached() {
+  if (!bundleURL) {
+    bundleURL = getBundleURL();
+  }
+
+  return bundleURL;
+}
+
+function getBundleURL() {
+  // Attempt to find the URL of the current script and use that as the base URL
+  try {
+    throw new Error();
+  } catch (err) {
+    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
+
+    if (matches) {
+      return getBaseURL(matches[0]);
+    }
+  }
+
+  return '/';
+}
+
+function getBaseURL(url) {
+  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)\/[^/]+$/, '$1') + '/';
+}
+
+exports.getBundleURL = getBundleURLCached;
+exports.getBaseURL = getBaseURL;
+},{}],"node_modules/parcel-bundler/src/builtins/css-loader.js":[function(require,module,exports) {
+var bundle = require('./bundle-url');
+
+function updateLink(link) {
+  var newLink = link.cloneNode();
+
+  newLink.onload = function () {
+    link.remove();
+  };
+
+  newLink.href = link.href.split('?')[0] + '?' + Date.now();
+  link.parentNode.insertBefore(newLink, link.nextSibling);
+}
+
+var cssTimeout = null;
+
+function reloadCSS() {
+  if (cssTimeout) {
+    return;
+  }
+
+  cssTimeout = setTimeout(function () {
+    var links = document.querySelectorAll('link[rel="stylesheet"]');
+
+    for (var i = 0; i < links.length; i++) {
+      if (bundle.getBaseURL(links[i].href) === bundle.getBundleURL()) {
+        updateLink(links[i]);
+      }
+    }
+
+    cssTimeout = null;
+  }, 50);
+}
+
+module.exports = reloadCSS;
+},{"./bundle-url":"node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"node_modules/css-baseline/css/3.css":[function(require,module,exports) {
+
+        var reloadCSS = require('_css_loader');
+        module.hot.dispose(reloadCSS);
+        module.hot.accept(reloadCSS);
+      
+},{"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js"}],"src/plugins/css-baseline-plugin.js":[function(require,module,exports) {
+"use strict";
+
+require("css-baseline/css/3.css");
+},{"css-baseline/css/3.css":"node_modules/css-baseline/css/3.css"}],"node_modules/good-vue/dist/index.js":[function(require,module,exports) {
 /*!
  * good-vue v1.3.1
  * (c) 
@@ -9043,84 +9149,7 @@ var _goodVue = _interopRequireDefault(require("good-vue"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_goodVue.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","good-vue":"node_modules/good-vue/dist/index.js"}],"node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
-var bundleURL = null;
-
-function getBundleURLCached() {
-  if (!bundleURL) {
-    bundleURL = getBundleURL();
-  }
-
-  return bundleURL;
-}
-
-function getBundleURL() {
-  // Attempt to find the URL of the current script and use that as the base URL
-  try {
-    throw new Error();
-  } catch (err) {
-    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
-
-    if (matches) {
-      return getBaseURL(matches[0]);
-    }
-  }
-
-  return '/';
-}
-
-function getBaseURL(url) {
-  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)\/[^/]+$/, '$1') + '/';
-}
-
-exports.getBundleURL = getBundleURLCached;
-exports.getBaseURL = getBaseURL;
-},{}],"node_modules/parcel-bundler/src/builtins/css-loader.js":[function(require,module,exports) {
-var bundle = require('./bundle-url');
-
-function updateLink(link) {
-  var newLink = link.cloneNode();
-
-  newLink.onload = function () {
-    link.remove();
-  };
-
-  newLink.href = link.href.split('?')[0] + '?' + Date.now();
-  link.parentNode.insertBefore(newLink, link.nextSibling);
-}
-
-var cssTimeout = null;
-
-function reloadCSS() {
-  if (cssTimeout) {
-    return;
-  }
-
-  cssTimeout = setTimeout(function () {
-    var links = document.querySelectorAll('link[rel="stylesheet"]');
-
-    for (var i = 0; i < links.length; i++) {
-      if (bundle.getBaseURL(links[i].href) === bundle.getBundleURL()) {
-        updateLink(links[i]);
-      }
-    }
-
-    cssTimeout = null;
-  }, 50);
-}
-
-module.exports = reloadCSS;
-},{"./bundle-url":"node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"node_modules/css-baseline/css/3.css":[function(require,module,exports) {
-
-        var reloadCSS = require('_css_loader');
-        module.hot.dispose(reloadCSS);
-        module.hot.accept(reloadCSS);
-      
-},{"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js"}],"src/plugins/css-baseline-plugin.js":[function(require,module,exports) {
-"use strict";
-
-require("css-baseline/css/3.css");
-},{"css-baseline/css/3.css":"node_modules/css-baseline/css/3.css"}],"node_modules/keen-ui/dist/keen-ui.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","good-vue":"node_modules/good-vue/dist/index.js"}],"node_modules/keen-ui/dist/keen-ui.js":[function(require,module,exports) {
 var define;
 var global = arguments[3];
 /*!
@@ -25429,7 +25458,635 @@ require("keen-ui/dist/keen-ui.css");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_keenUi.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","keen-ui":"node_modules/keen-ui/dist/keen-ui.js","keen-ui/dist/keen-ui.css":"node_modules/keen-ui/dist/keen-ui.css"}],"src/plugins/resolvables-plugin.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","keen-ui":"node_modules/keen-ui/dist/keen-ui.js","keen-ui/dist/keen-ui.css":"node_modules/keen-ui/dist/keen-ui.css"}],"node_modules/portal-vue/dist/portal-vue.common.js":[function(require,module,exports) {
+
+ /*! 
+  * portal-vue © Thorsten Lünborg, 2019 
+  * 
+  * Version: 2.1.7
+  * 
+  * LICENCE: MIT 
+  * 
+  * https://github.com/linusborg/portal-vue
+  * 
+ */
+
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var Vue = _interopDefault(require('vue'));
+
+function _typeof(obj) {
+  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+    _typeof = function (obj) {
+      return typeof obj;
+    };
+  } else {
+    _typeof = function (obj) {
+      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+    };
+  }
+
+  return _typeof(obj);
+}
+
+function _toConsumableArray(arr) {
+  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
+}
+
+function _arrayWithoutHoles(arr) {
+  if (Array.isArray(arr)) {
+    for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+    return arr2;
+  }
+}
+
+function _iterableToArray(iter) {
+  if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
+}
+
+function _nonIterableSpread() {
+  throw new TypeError("Invalid attempt to spread non-iterable instance");
+}
+
+var inBrowser = typeof window !== 'undefined';
+function freeze(item) {
+  if (Array.isArray(item) || _typeof(item) === 'object') {
+    return Object.freeze(item);
+  }
+
+  return item;
+}
+function combinePassengers(transports) {
+  var slotProps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  return transports.reduce(function (passengers, transport) {
+    var temp = transport.passengers[0];
+    var newPassengers = typeof temp === 'function' ? temp(slotProps) : transport.passengers;
+    return passengers.concat(newPassengers);
+  }, []);
+}
+function stableSort(array, compareFn) {
+  return array.map(function (v, idx) {
+    return [idx, v];
+  }).sort(function (a, b) {
+    return compareFn(a[1], b[1]) || a[0] - b[0];
+  }).map(function (c) {
+    return c[1];
+  });
+}
+function pick(obj, keys) {
+  return keys.reduce(function (acc, key) {
+    if (obj.hasOwnProperty(key)) {
+      acc[key] = obj[key];
+    }
+
+    return acc;
+  }, {});
+}
+
+var transports = {};
+var targets = {};
+var sources = {};
+var Wormhole = Vue.extend({
+  data: function data() {
+    return {
+      transports: transports,
+      targets: targets,
+      sources: sources,
+      trackInstances: inBrowser
+    };
+  },
+  methods: {
+    open: function open(transport) {
+      if (!inBrowser) return;
+      var to = transport.to,
+          from = transport.from,
+          passengers = transport.passengers,
+          _transport$order = transport.order,
+          order = _transport$order === void 0 ? Infinity : _transport$order;
+      if (!to || !from || !passengers) return;
+      var newTransport = {
+        to: to,
+        from: from,
+        passengers: freeze(passengers),
+        order: order
+      };
+      var keys = Object.keys(this.transports);
+
+      if (keys.indexOf(to) === -1) {
+        Vue.set(this.transports, to, []);
+      }
+
+      var currentIndex = this.$_getTransportIndex(newTransport); // Copying the array here so that the PortalTarget change event will actually contain two distinct arrays
+
+      var newTransports = this.transports[to].slice(0);
+
+      if (currentIndex === -1) {
+        newTransports.push(newTransport);
+      } else {
+        newTransports[currentIndex] = newTransport;
+      }
+
+      this.transports[to] = stableSort(newTransports, function (a, b) {
+        return a.order - b.order;
+      });
+    },
+    close: function close(transport) {
+      var force = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      var to = transport.to,
+          from = transport.from;
+      if (!to || !from && force === false) return;
+
+      if (!this.transports[to]) {
+        return;
+      }
+
+      if (force) {
+        this.transports[to] = [];
+      } else {
+        var index = this.$_getTransportIndex(transport);
+
+        if (index >= 0) {
+          // Copying the array here so that the PortalTarget change event will actually contain two distinct arrays
+          var newTransports = this.transports[to].slice(0);
+          newTransports.splice(index, 1);
+          this.transports[to] = newTransports;
+        }
+      }
+    },
+    registerTarget: function registerTarget(target, vm, force) {
+      if (!inBrowser) return;
+
+      if (this.trackInstances && !force && this.targets[target]) {
+        console.warn("[portal-vue]: Target ".concat(target, " already exists"));
+      }
+
+      this.$set(this.targets, target, Object.freeze([vm]));
+    },
+    unregisterTarget: function unregisterTarget(target) {
+      this.$delete(this.targets, target);
+    },
+    registerSource: function registerSource(source, vm, force) {
+      if (!inBrowser) return;
+
+      if (this.trackInstances && !force && this.sources[source]) {
+        console.warn("[portal-vue]: source ".concat(source, " already exists"));
+      }
+
+      this.$set(this.sources, source, Object.freeze([vm]));
+    },
+    unregisterSource: function unregisterSource(source) {
+      this.$delete(this.sources, source);
+    },
+    hasTarget: function hasTarget(to) {
+      return !!(this.targets[to] && this.targets[to][0]);
+    },
+    hasSource: function hasSource(to) {
+      return !!(this.sources[to] && this.sources[to][0]);
+    },
+    hasContentFor: function hasContentFor(to) {
+      return !!this.transports[to] && !!this.transports[to].length;
+    },
+    // Internal
+    $_getTransportIndex: function $_getTransportIndex(_ref) {
+      var to = _ref.to,
+          from = _ref.from;
+
+      for (var i in this.transports[to]) {
+        if (this.transports[to][i].from === from) {
+          return +i;
+        }
+      }
+
+      return -1;
+    }
+  }
+});
+var wormhole = new Wormhole(transports);
+
+var _id = 1;
+var Portal = Vue.extend({
+  name: 'portal',
+  props: {
+    disabled: {
+      type: Boolean
+    },
+    name: {
+      type: String,
+      default: function _default() {
+        return String(_id++);
+      }
+    },
+    order: {
+      type: Number,
+      default: 0
+    },
+    slim: {
+      type: Boolean
+    },
+    slotProps: {
+      type: Object,
+      default: function _default() {
+        return {};
+      }
+    },
+    tag: {
+      type: String,
+      default: 'DIV'
+    },
+    to: {
+      type: String,
+      default: function _default() {
+        return String(Math.round(Math.random() * 10000000));
+      }
+    }
+  },
+  created: function created() {
+    var _this = this;
+
+    this.$nextTick(function () {
+      wormhole.registerSource(_this.name, _this);
+    });
+  },
+  mounted: function mounted() {
+    if (!this.disabled) {
+      this.sendUpdate();
+    }
+  },
+  updated: function updated() {
+    if (this.disabled) {
+      this.clear();
+    } else {
+      this.sendUpdate();
+    }
+  },
+  beforeDestroy: function beforeDestroy() {
+    wormhole.unregisterSource(this.name);
+    this.clear();
+  },
+  watch: {
+    to: function to(newValue, oldValue) {
+      oldValue && oldValue !== newValue && this.clear(oldValue);
+      this.sendUpdate();
+    }
+  },
+  methods: {
+    clear: function clear(target) {
+      var closer = {
+        from: this.name,
+        to: target || this.to
+      };
+      wormhole.close(closer);
+    },
+    normalizeSlots: function normalizeSlots() {
+      return this.$scopedSlots.default ? [this.$scopedSlots.default] : this.$slots.default;
+    },
+    normalizeOwnChildren: function normalizeOwnChildren(children) {
+      return typeof children === 'function' ? children(this.slotProps) : children;
+    },
+    sendUpdate: function sendUpdate() {
+      var slotContent = this.normalizeSlots();
+
+      if (slotContent) {
+        var transport = {
+          from: this.name,
+          to: this.to,
+          passengers: _toConsumableArray(slotContent),
+          order: this.order
+        };
+        wormhole.open(transport);
+      } else {
+        this.clear();
+      }
+    }
+  },
+  render: function render(h) {
+    var children = this.$slots.default || this.$scopedSlots.default || [];
+    var Tag = this.tag;
+
+    if (children && this.disabled) {
+      return children.length <= 1 && this.slim ? this.normalizeOwnChildren(children)[0] : h(Tag, [this.normalizeOwnChildren(children)]);
+    } else {
+      return this.slim ? h() : h(Tag, {
+        class: {
+          'v-portal': true
+        },
+        style: {
+          display: 'none'
+        },
+        key: 'v-portal-placeholder'
+      });
+    }
+  }
+});
+
+var PortalTarget = Vue.extend({
+  name: 'portalTarget',
+  props: {
+    multiple: {
+      type: Boolean,
+      default: false
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    slim: {
+      type: Boolean,
+      default: false
+    },
+    slotProps: {
+      type: Object,
+      default: function _default() {
+        return {};
+      }
+    },
+    tag: {
+      type: String,
+      default: 'div'
+    },
+    transition: {
+      type: [String, Object, Function]
+    }
+  },
+  data: function data() {
+    return {
+      transports: wormhole.transports,
+      firstRender: true
+    };
+  },
+  created: function created() {
+    var _this = this;
+
+    this.$nextTick(function () {
+      wormhole.registerTarget(_this.name, _this);
+    });
+  },
+  watch: {
+    ownTransports: function ownTransports() {
+      this.$emit('change', this.children().length > 0);
+    },
+    name: function name(newVal, oldVal) {
+      /**
+       * TODO
+       * This should warn as well ...
+       */
+      wormhole.unregisterTarget(oldVal);
+      wormhole.registerTarget(newVal, this);
+    }
+  },
+  mounted: function mounted() {
+    var _this2 = this;
+
+    if (this.transition) {
+      this.$nextTick(function () {
+        // only when we have a transition, because it causes a re-render
+        _this2.firstRender = false;
+      });
+    }
+  },
+  beforeDestroy: function beforeDestroy() {
+    wormhole.unregisterTarget(this.name);
+  },
+  computed: {
+    ownTransports: function ownTransports() {
+      var transports = this.transports[this.name] || [];
+
+      if (this.multiple) {
+        return transports;
+      }
+
+      return transports.length === 0 ? [] : [transports[transports.length - 1]];
+    },
+    passengers: function passengers() {
+      return combinePassengers(this.ownTransports, this.slotProps);
+    }
+  },
+  methods: {
+    // can't be a computed prop because it has to "react" to $slot changes.
+    children: function children() {
+      return this.passengers.length !== 0 ? this.passengers : this.$scopedSlots.default ? this.$scopedSlots.default(this.slotProps) : this.$slots.default || [];
+    },
+    // can't be a computed prop because it has to "react" to this.children().
+    noWrapper: function noWrapper() {
+      var noWrapper = this.slim && !this.transition;
+
+      if (noWrapper && this.children().length > 1) {
+        console.warn('[portal-vue]: PortalTarget with `slim` option received more than one child element.');
+      }
+
+      return noWrapper;
+    }
+  },
+  render: function render(h) {
+    var noWrapper = this.noWrapper();
+    var children = this.children();
+    var Tag = this.transition || this.tag;
+    return noWrapper ? children[0] : this.slim && !Tag ? h() : h(Tag, {
+      props: {
+        // if we have a transition component, pass the tag if it exists
+        tag: this.transition && this.tag ? this.tag : undefined
+      },
+      class: {
+        'vue-portal-target': true
+      }
+    }, children);
+  }
+});
+
+var _id$1 = 0;
+var portalProps = ['disabled', 'name', 'order', 'slim', 'slotProps', 'tag', 'to'];
+var targetProps = ['multiple', 'transition'];
+var MountingPortal = Vue.extend({
+  name: 'MountingPortal',
+  inheritAttrs: false,
+  props: {
+    append: {
+      type: [Boolean, String]
+    },
+    bail: {
+      type: Boolean
+    },
+    mountTo: {
+      type: String,
+      required: true
+    },
+    // Portal
+    disabled: {
+      type: Boolean
+    },
+    // name for the portal
+    name: {
+      type: String,
+      default: function _default() {
+        return 'mounted_' + String(_id$1++);
+      }
+    },
+    order: {
+      type: Number,
+      default: 0
+    },
+    slim: {
+      type: Boolean
+    },
+    slotProps: {
+      type: Object,
+      default: function _default() {
+        return {};
+      }
+    },
+    tag: {
+      type: String,
+      default: 'DIV'
+    },
+    // name for the target
+    to: {
+      type: String,
+      default: function _default() {
+        return String(Math.round(Math.random() * 10000000));
+      }
+    },
+    // Target
+    multiple: {
+      type: Boolean,
+      default: false
+    },
+    targetSlim: {
+      type: Boolean
+    },
+    targetSlotProps: {
+      type: Object,
+      default: function _default() {
+        return {};
+      }
+    },
+    targetTag: {
+      type: String,
+      default: 'div'
+    },
+    transition: {
+      type: [String, Object, Function]
+    }
+  },
+  created: function created() {
+    if (typeof document === 'undefined') return;
+    var el = document.querySelector(this.mountTo);
+
+    if (!el) {
+      console.error("[portal-vue]: Mount Point '".concat(this.mountTo, "' not found in document"));
+      return;
+    }
+
+    var props = this.$props; // Target already exists
+
+    if (wormhole.targets[props.name]) {
+      if (props.bail) {
+        console.warn("[portal-vue]: Target ".concat(props.name, " is already mounted.\n        Aborting because 'bail: true' is set"));
+      } else {
+        this.portalTarget = wormhole.targets[props.name];
+      }
+
+      return;
+    }
+
+    var append = props.append;
+
+    if (append) {
+      var type = typeof append === 'string' ? append : 'DIV';
+      var mountEl = document.createElement(type);
+      el.appendChild(mountEl);
+      el = mountEl;
+    } // get props for target from $props
+    // we have to rename a few of them
+
+
+    var _props = pick(this.$props, targetProps);
+
+    _props.slim = this.targetSlim;
+    _props.tag = this.targetTag;
+    _props.slotProps = this.targetSlotProps;
+    _props.name = this.to;
+    this.portalTarget = new PortalTarget({
+      el: el,
+      parent: this.$parent || this,
+      propsData: _props
+    });
+  },
+  beforeDestroy: function beforeDestroy() {
+    var target = this.portalTarget;
+
+    if (this.append) {
+      var el = target.$el;
+      el.parentNode.removeChild(el);
+    }
+
+    target.$destroy();
+  },
+  render: function render(h) {
+    if (!this.portalTarget) {
+      console.warn("[portal-vue] Target wasn't mounted");
+      return h();
+    } // if there's no "manual" scoped slot, so we create a <Portal> ourselves
+
+
+    if (!this.$scopedSlots.manual) {
+      var props = pick(this.$props, portalProps);
+      return h(Portal, {
+        props: props,
+        attrs: this.$attrs,
+        on: this.$listeners,
+        scopedSlots: this.$scopedSlots
+      }, this.$slots.default);
+    } // else, we render the scoped slot
+
+
+    var content = this.$scopedSlots.manual({
+      to: this.to
+    }); // if user used <template> for the scoped slot
+    // content will be an array
+
+    if (Array.isArray(content)) {
+      content = content[0];
+    }
+
+    if (!content) return h();
+    return content;
+  }
+});
+
+function install(Vue$$1) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  Vue$$1.component(options.portalName || 'Portal', Portal);
+  Vue$$1.component(options.portalTargetName || 'PortalTarget', PortalTarget);
+  Vue$$1.component(options.MountingPortalName || 'MountingPortal', MountingPortal);
+}
+
+var index = {
+  install: install
+};
+
+exports.default = index;
+exports.Portal = Portal;
+exports.PortalTarget = PortalTarget;
+exports.MountingPortal = MountingPortal;
+exports.Wormhole = wormhole;
+//# sourceMappingURL=portal-vue.common.js.map
+
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/portal-plugin.js":[function(require,module,exports) {
+"use strict";
+
+var _portalVue = _interopRequireDefault(require("portal-vue"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+let Vue = require("vue").default;
+
+Vue.use(_portalVue.default);
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","portal-vue":"node_modules/portal-vue/dist/portal-vue.common.js"}],"src/plugins/resolvables-plugin.js":[function(require,module,exports) {
 // api
 // resolvables:
 //     [resolvable].promise
@@ -36870,668 +37527,13 @@ _vue.default.use(_vuePlyr.default, {
     invertTime: false
   }
 });
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-plyr":"node_modules/vue-plyr/dist/vue-plyr.esm.js","vue-plyr/dist/vue-plyr.css":"node_modules/vue-plyr/dist/vue-plyr.css"}],"node_modules/portal-vue/dist/portal-vue.common.js":[function(require,module,exports) {
-
- /*! 
-  * portal-vue © Thorsten Lünborg, 2019 
-  * 
-  * Version: 2.1.7
-  * 
-  * LICENCE: MIT 
-  * 
-  * https://github.com/linusborg/portal-vue
-  * 
- */
-
-'use strict';
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
-
-var Vue = _interopDefault(require('vue'));
-
-function _typeof(obj) {
-  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
-    _typeof = function (obj) {
-      return typeof obj;
-    };
-  } else {
-    _typeof = function (obj) {
-      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-    };
-  }
-
-  return _typeof(obj);
-}
-
-function _toConsumableArray(arr) {
-  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
-}
-
-function _arrayWithoutHoles(arr) {
-  if (Array.isArray(arr)) {
-    for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
-
-    return arr2;
-  }
-}
-
-function _iterableToArray(iter) {
-  if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
-}
-
-function _nonIterableSpread() {
-  throw new TypeError("Invalid attempt to spread non-iterable instance");
-}
-
-var inBrowser = typeof window !== 'undefined';
-function freeze(item) {
-  if (Array.isArray(item) || _typeof(item) === 'object') {
-    return Object.freeze(item);
-  }
-
-  return item;
-}
-function combinePassengers(transports) {
-  var slotProps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  return transports.reduce(function (passengers, transport) {
-    var temp = transport.passengers[0];
-    var newPassengers = typeof temp === 'function' ? temp(slotProps) : transport.passengers;
-    return passengers.concat(newPassengers);
-  }, []);
-}
-function stableSort(array, compareFn) {
-  return array.map(function (v, idx) {
-    return [idx, v];
-  }).sort(function (a, b) {
-    return compareFn(a[1], b[1]) || a[0] - b[0];
-  }).map(function (c) {
-    return c[1];
-  });
-}
-function pick(obj, keys) {
-  return keys.reduce(function (acc, key) {
-    if (obj.hasOwnProperty(key)) {
-      acc[key] = obj[key];
-    }
-
-    return acc;
-  }, {});
-}
-
-var transports = {};
-var targets = {};
-var sources = {};
-var Wormhole = Vue.extend({
-  data: function data() {
-    return {
-      transports: transports,
-      targets: targets,
-      sources: sources,
-      trackInstances: inBrowser
-    };
-  },
-  methods: {
-    open: function open(transport) {
-      if (!inBrowser) return;
-      var to = transport.to,
-          from = transport.from,
-          passengers = transport.passengers,
-          _transport$order = transport.order,
-          order = _transport$order === void 0 ? Infinity : _transport$order;
-      if (!to || !from || !passengers) return;
-      var newTransport = {
-        to: to,
-        from: from,
-        passengers: freeze(passengers),
-        order: order
-      };
-      var keys = Object.keys(this.transports);
-
-      if (keys.indexOf(to) === -1) {
-        Vue.set(this.transports, to, []);
-      }
-
-      var currentIndex = this.$_getTransportIndex(newTransport); // Copying the array here so that the PortalTarget change event will actually contain two distinct arrays
-
-      var newTransports = this.transports[to].slice(0);
-
-      if (currentIndex === -1) {
-        newTransports.push(newTransport);
-      } else {
-        newTransports[currentIndex] = newTransport;
-      }
-
-      this.transports[to] = stableSort(newTransports, function (a, b) {
-        return a.order - b.order;
-      });
-    },
-    close: function close(transport) {
-      var force = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-      var to = transport.to,
-          from = transport.from;
-      if (!to || !from && force === false) return;
-
-      if (!this.transports[to]) {
-        return;
-      }
-
-      if (force) {
-        this.transports[to] = [];
-      } else {
-        var index = this.$_getTransportIndex(transport);
-
-        if (index >= 0) {
-          // Copying the array here so that the PortalTarget change event will actually contain two distinct arrays
-          var newTransports = this.transports[to].slice(0);
-          newTransports.splice(index, 1);
-          this.transports[to] = newTransports;
-        }
-      }
-    },
-    registerTarget: function registerTarget(target, vm, force) {
-      if (!inBrowser) return;
-
-      if (this.trackInstances && !force && this.targets[target]) {
-        console.warn("[portal-vue]: Target ".concat(target, " already exists"));
-      }
-
-      this.$set(this.targets, target, Object.freeze([vm]));
-    },
-    unregisterTarget: function unregisterTarget(target) {
-      this.$delete(this.targets, target);
-    },
-    registerSource: function registerSource(source, vm, force) {
-      if (!inBrowser) return;
-
-      if (this.trackInstances && !force && this.sources[source]) {
-        console.warn("[portal-vue]: source ".concat(source, " already exists"));
-      }
-
-      this.$set(this.sources, source, Object.freeze([vm]));
-    },
-    unregisterSource: function unregisterSource(source) {
-      this.$delete(this.sources, source);
-    },
-    hasTarget: function hasTarget(to) {
-      return !!(this.targets[to] && this.targets[to][0]);
-    },
-    hasSource: function hasSource(to) {
-      return !!(this.sources[to] && this.sources[to][0]);
-    },
-    hasContentFor: function hasContentFor(to) {
-      return !!this.transports[to] && !!this.transports[to].length;
-    },
-    // Internal
-    $_getTransportIndex: function $_getTransportIndex(_ref) {
-      var to = _ref.to,
-          from = _ref.from;
-
-      for (var i in this.transports[to]) {
-        if (this.transports[to][i].from === from) {
-          return +i;
-        }
-      }
-
-      return -1;
-    }
-  }
-});
-var wormhole = new Wormhole(transports);
-
-var _id = 1;
-var Portal = Vue.extend({
-  name: 'portal',
-  props: {
-    disabled: {
-      type: Boolean
-    },
-    name: {
-      type: String,
-      default: function _default() {
-        return String(_id++);
-      }
-    },
-    order: {
-      type: Number,
-      default: 0
-    },
-    slim: {
-      type: Boolean
-    },
-    slotProps: {
-      type: Object,
-      default: function _default() {
-        return {};
-      }
-    },
-    tag: {
-      type: String,
-      default: 'DIV'
-    },
-    to: {
-      type: String,
-      default: function _default() {
-        return String(Math.round(Math.random() * 10000000));
-      }
-    }
-  },
-  created: function created() {
-    var _this = this;
-
-    this.$nextTick(function () {
-      wormhole.registerSource(_this.name, _this);
-    });
-  },
-  mounted: function mounted() {
-    if (!this.disabled) {
-      this.sendUpdate();
-    }
-  },
-  updated: function updated() {
-    if (this.disabled) {
-      this.clear();
-    } else {
-      this.sendUpdate();
-    }
-  },
-  beforeDestroy: function beforeDestroy() {
-    wormhole.unregisterSource(this.name);
-    this.clear();
-  },
-  watch: {
-    to: function to(newValue, oldValue) {
-      oldValue && oldValue !== newValue && this.clear(oldValue);
-      this.sendUpdate();
-    }
-  },
-  methods: {
-    clear: function clear(target) {
-      var closer = {
-        from: this.name,
-        to: target || this.to
-      };
-      wormhole.close(closer);
-    },
-    normalizeSlots: function normalizeSlots() {
-      return this.$scopedSlots.default ? [this.$scopedSlots.default] : this.$slots.default;
-    },
-    normalizeOwnChildren: function normalizeOwnChildren(children) {
-      return typeof children === 'function' ? children(this.slotProps) : children;
-    },
-    sendUpdate: function sendUpdate() {
-      var slotContent = this.normalizeSlots();
-
-      if (slotContent) {
-        var transport = {
-          from: this.name,
-          to: this.to,
-          passengers: _toConsumableArray(slotContent),
-          order: this.order
-        };
-        wormhole.open(transport);
-      } else {
-        this.clear();
-      }
-    }
-  },
-  render: function render(h) {
-    var children = this.$slots.default || this.$scopedSlots.default || [];
-    var Tag = this.tag;
-
-    if (children && this.disabled) {
-      return children.length <= 1 && this.slim ? this.normalizeOwnChildren(children)[0] : h(Tag, [this.normalizeOwnChildren(children)]);
-    } else {
-      return this.slim ? h() : h(Tag, {
-        class: {
-          'v-portal': true
-        },
-        style: {
-          display: 'none'
-        },
-        key: 'v-portal-placeholder'
-      });
-    }
-  }
-});
-
-var PortalTarget = Vue.extend({
-  name: 'portalTarget',
-  props: {
-    multiple: {
-      type: Boolean,
-      default: false
-    },
-    name: {
-      type: String,
-      required: true
-    },
-    slim: {
-      type: Boolean,
-      default: false
-    },
-    slotProps: {
-      type: Object,
-      default: function _default() {
-        return {};
-      }
-    },
-    tag: {
-      type: String,
-      default: 'div'
-    },
-    transition: {
-      type: [String, Object, Function]
-    }
-  },
-  data: function data() {
-    return {
-      transports: wormhole.transports,
-      firstRender: true
-    };
-  },
-  created: function created() {
-    var _this = this;
-
-    this.$nextTick(function () {
-      wormhole.registerTarget(_this.name, _this);
-    });
-  },
-  watch: {
-    ownTransports: function ownTransports() {
-      this.$emit('change', this.children().length > 0);
-    },
-    name: function name(newVal, oldVal) {
-      /**
-       * TODO
-       * This should warn as well ...
-       */
-      wormhole.unregisterTarget(oldVal);
-      wormhole.registerTarget(newVal, this);
-    }
-  },
-  mounted: function mounted() {
-    var _this2 = this;
-
-    if (this.transition) {
-      this.$nextTick(function () {
-        // only when we have a transition, because it causes a re-render
-        _this2.firstRender = false;
-      });
-    }
-  },
-  beforeDestroy: function beforeDestroy() {
-    wormhole.unregisterTarget(this.name);
-  },
-  computed: {
-    ownTransports: function ownTransports() {
-      var transports = this.transports[this.name] || [];
-
-      if (this.multiple) {
-        return transports;
-      }
-
-      return transports.length === 0 ? [] : [transports[transports.length - 1]];
-    },
-    passengers: function passengers() {
-      return combinePassengers(this.ownTransports, this.slotProps);
-    }
-  },
-  methods: {
-    // can't be a computed prop because it has to "react" to $slot changes.
-    children: function children() {
-      return this.passengers.length !== 0 ? this.passengers : this.$scopedSlots.default ? this.$scopedSlots.default(this.slotProps) : this.$slots.default || [];
-    },
-    // can't be a computed prop because it has to "react" to this.children().
-    noWrapper: function noWrapper() {
-      var noWrapper = this.slim && !this.transition;
-
-      if (noWrapper && this.children().length > 1) {
-        console.warn('[portal-vue]: PortalTarget with `slim` option received more than one child element.');
-      }
-
-      return noWrapper;
-    }
-  },
-  render: function render(h) {
-    var noWrapper = this.noWrapper();
-    var children = this.children();
-    var Tag = this.transition || this.tag;
-    return noWrapper ? children[0] : this.slim && !Tag ? h() : h(Tag, {
-      props: {
-        // if we have a transition component, pass the tag if it exists
-        tag: this.transition && this.tag ? this.tag : undefined
-      },
-      class: {
-        'vue-portal-target': true
-      }
-    }, children);
-  }
-});
-
-var _id$1 = 0;
-var portalProps = ['disabled', 'name', 'order', 'slim', 'slotProps', 'tag', 'to'];
-var targetProps = ['multiple', 'transition'];
-var MountingPortal = Vue.extend({
-  name: 'MountingPortal',
-  inheritAttrs: false,
-  props: {
-    append: {
-      type: [Boolean, String]
-    },
-    bail: {
-      type: Boolean
-    },
-    mountTo: {
-      type: String,
-      required: true
-    },
-    // Portal
-    disabled: {
-      type: Boolean
-    },
-    // name for the portal
-    name: {
-      type: String,
-      default: function _default() {
-        return 'mounted_' + String(_id$1++);
-      }
-    },
-    order: {
-      type: Number,
-      default: 0
-    },
-    slim: {
-      type: Boolean
-    },
-    slotProps: {
-      type: Object,
-      default: function _default() {
-        return {};
-      }
-    },
-    tag: {
-      type: String,
-      default: 'DIV'
-    },
-    // name for the target
-    to: {
-      type: String,
-      default: function _default() {
-        return String(Math.round(Math.random() * 10000000));
-      }
-    },
-    // Target
-    multiple: {
-      type: Boolean,
-      default: false
-    },
-    targetSlim: {
-      type: Boolean
-    },
-    targetSlotProps: {
-      type: Object,
-      default: function _default() {
-        return {};
-      }
-    },
-    targetTag: {
-      type: String,
-      default: 'div'
-    },
-    transition: {
-      type: [String, Object, Function]
-    }
-  },
-  created: function created() {
-    if (typeof document === 'undefined') return;
-    var el = document.querySelector(this.mountTo);
-
-    if (!el) {
-      console.error("[portal-vue]: Mount Point '".concat(this.mountTo, "' not found in document"));
-      return;
-    }
-
-    var props = this.$props; // Target already exists
-
-    if (wormhole.targets[props.name]) {
-      if (props.bail) {
-        console.warn("[portal-vue]: Target ".concat(props.name, " is already mounted.\n        Aborting because 'bail: true' is set"));
-      } else {
-        this.portalTarget = wormhole.targets[props.name];
-      }
-
-      return;
-    }
-
-    var append = props.append;
-
-    if (append) {
-      var type = typeof append === 'string' ? append : 'DIV';
-      var mountEl = document.createElement(type);
-      el.appendChild(mountEl);
-      el = mountEl;
-    } // get props for target from $props
-    // we have to rename a few of them
-
-
-    var _props = pick(this.$props, targetProps);
-
-    _props.slim = this.targetSlim;
-    _props.tag = this.targetTag;
-    _props.slotProps = this.targetSlotProps;
-    _props.name = this.to;
-    this.portalTarget = new PortalTarget({
-      el: el,
-      parent: this.$parent || this,
-      propsData: _props
-    });
-  },
-  beforeDestroy: function beforeDestroy() {
-    var target = this.portalTarget;
-
-    if (this.append) {
-      var el = target.$el;
-      el.parentNode.removeChild(el);
-    }
-
-    target.$destroy();
-  },
-  render: function render(h) {
-    if (!this.portalTarget) {
-      console.warn("[portal-vue] Target wasn't mounted");
-      return h();
-    } // if there's no "manual" scoped slot, so we create a <Portal> ourselves
-
-
-    if (!this.$scopedSlots.manual) {
-      var props = pick(this.$props, portalProps);
-      return h(Portal, {
-        props: props,
-        attrs: this.$attrs,
-        on: this.$listeners,
-        scopedSlots: this.$scopedSlots
-      }, this.$slots.default);
-    } // else, we render the scoped slot
-
-
-    var content = this.$scopedSlots.manual({
-      to: this.to
-    }); // if user used <template> for the scoped slot
-    // content will be an array
-
-    if (Array.isArray(content)) {
-      content = content[0];
-    }
-
-    if (!content) return h();
-    return content;
-  }
-});
-
-function install(Vue$$1) {
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  Vue$$1.component(options.portalName || 'Portal', Portal);
-  Vue$$1.component(options.portalTargetName || 'PortalTarget', PortalTarget);
-  Vue$$1.component(options.MountingPortalName || 'MountingPortal', MountingPortal);
-}
-
-var index = {
-  install: install
-};
-
-exports.default = index;
-exports.Portal = Portal;
-exports.PortalTarget = PortalTarget;
-exports.MountingPortal = MountingPortal;
-exports.Wormhole = wormhole;
-//# sourceMappingURL=portal-vue.common.js.map
-
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/portal-plugin.js":[function(require,module,exports) {
-"use strict";
-
-var _portalVue = _interopRequireDefault(require("portal-vue"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-let Vue = require("vue").default;
-
-Vue.use(_portalVue.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","portal-vue":"node_modules/portal-vue/dist/portal-vue.common.js"}],"src/plugins/child.js":[function(require,module,exports) {
-// api
-//     $child(...args)
-let Vue = require("vue").default;
-
-Object.defineProperty(Vue.prototype, "$child", {
-  get() {
-    return (firstRef, ...args) => new Promise((resolve, reject) => {
-      let checker;
-
-      checker = () => {
-        let ref = this.$refs[firstRef]; // base case
-
-        if (ref && args.length === 0) {
-          resolve(ref); // recursive child case
-        } else if (ref) {
-          ref.$child(...args).then(resolve); // recursive wait case
-        } else {
-          this.$nextTick(() => {
-            setTimeout(checker, 500);
-          });
-        }
-      };
-
-      checker();
-    });
-  }
-
-});
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/*.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-plyr":"node_modules/vue-plyr/dist/vue-plyr.esm.js","vue-plyr/dist/vue-plyr.css":"node_modules/vue-plyr/dist/vue-plyr.css"}],"src/plugins/*.js":[function(require,module,exports) {
 module.exports = {
-  "good-vue-plugin": require("./good-vue-plugin.js"),
+  "child": require("./child.js"),
   "css-baseline-plugin": require("./css-baseline-plugin.js"),
+  "good-vue-plugin": require("./good-vue-plugin.js"),
   "keen-ui-plugin": require("./keen-ui-plugin.js"),
+  "portal-plugin": require("./portal-plugin.js"),
   "resolvables-plugin": require("./resolvables-plugin.js"),
   "root-hooks-plugin": require("./root-hooks-plugin.js"),
   "router-plugin": require("./router-plugin.js"),
@@ -37539,11 +37541,9 @@ module.exports = {
   "window-listeners-plugin": require("./window-listeners-plugin.js"),
   "without-watchers": require("./without-watchers.js"),
   "workers-plugin": require("./workers-plugin.js"),
-  "youtube-player-plugin": require("./youtube-player-plugin.js"),
-  "portal-plugin": require("./portal-plugin.js"),
-  "child": require("./child.js")
+  "youtube-player-plugin": require("./youtube-player-plugin.js")
 };
-},{"./good-vue-plugin.js":"src/plugins/good-vue-plugin.js","./css-baseline-plugin.js":"src/plugins/css-baseline-plugin.js","./keen-ui-plugin.js":"src/plugins/keen-ui-plugin.js","./resolvables-plugin.js":"src/plugins/resolvables-plugin.js","./root-hooks-plugin.js":"src/plugins/root-hooks-plugin.js","./router-plugin.js":"src/plugins/router-plugin.js","./vue-toasted-plugin.js":"src/plugins/vue-toasted-plugin.js","./window-listeners-plugin.js":"src/plugins/window-listeners-plugin.js","./without-watchers.js":"src/plugins/without-watchers.js","./workers-plugin.js":"src/plugins/workers-plugin.js","./youtube-player-plugin.js":"src/plugins/youtube-player-plugin.js","./portal-plugin.js":"src/plugins/portal-plugin.js","./child.js":"src/plugins/child.js"}],"node_modules/file-saver/dist/FileSaver.min.js":[function(require,module,exports) {
+},{"./child.js":"src/plugins/child.js","./css-baseline-plugin.js":"src/plugins/css-baseline-plugin.js","./good-vue-plugin.js":"src/plugins/good-vue-plugin.js","./keen-ui-plugin.js":"src/plugins/keen-ui-plugin.js","./portal-plugin.js":"src/plugins/portal-plugin.js","./resolvables-plugin.js":"src/plugins/resolvables-plugin.js","./root-hooks-plugin.js":"src/plugins/root-hooks-plugin.js","./router-plugin.js":"src/plugins/router-plugin.js","./vue-toasted-plugin.js":"src/plugins/vue-toasted-plugin.js","./window-listeners-plugin.js":"src/plugins/window-listeners-plugin.js","./without-watchers.js":"src/plugins/without-watchers.js","./workers-plugin.js":"src/plugins/workers-plugin.js","./youtube-player-plugin.js":"src/plugins/youtube-player-plugin.js"}],"node_modules/file-saver/dist/FileSaver.min.js":[function(require,module,exports) {
 var define;
 var global = arguments[3];
 (function(a,b){if("function"==typeof define&&define.amd)define([],b);else if("undefined"!=typeof exports)b();else{b(),a.FileSaver={exports:{}}.exports}})(this,function(){"use strict";function b(a,b){return"undefined"==typeof b?b={autoBom:!1}:"object"!=typeof b&&(console.warn("Deprecated: Expected third argument to be a object"),b={autoBom:!b}),b.autoBom&&/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(a.type)?new Blob(["\uFEFF",a],{type:a.type}):a}function c(a,b,c){var d=new XMLHttpRequest;d.open("GET",a),d.responseType="blob",d.onload=function(){g(d.response,b,c)},d.onerror=function(){console.error("could not download file")},d.send()}function d(a){var b=new XMLHttpRequest;b.open("HEAD",a,!1);try{b.send()}catch(a){}return 200<=b.status&&299>=b.status}function e(a){try{a.dispatchEvent(new MouseEvent("click"))}catch(c){var b=document.createEvent("MouseEvents");b.initMouseEvent("click",!0,!0,window,0,0,0,80,20,!1,!1,!1,!1,0,null),a.dispatchEvent(b)}}var f="object"==typeof window&&window.window===window?window:"object"==typeof self&&self.self===self?self:"object"==typeof global&&global.global===global?global:void 0,a=f.navigator&&/Macintosh/.test(navigator.userAgent)&&/AppleWebKit/.test(navigator.userAgent)&&!/Safari/.test(navigator.userAgent),g=f.saveAs||("object"!=typeof window||window!==f?function(){}:"download"in HTMLAnchorElement.prototype&&!a?function(b,g,h){var i=f.URL||f.webkitURL,j=document.createElement("a");g=g||b.name||"download",j.download=g,j.rel="noopener","string"==typeof b?(j.href=b,j.origin===location.origin?e(j):d(j.href)?c(b,g,h):e(j,j.target="_blank")):(j.href=i.createObjectURL(b),setTimeout(function(){i.revokeObjectURL(j.href)},4E4),setTimeout(function(){e(j)},0))}:"msSaveOrOpenBlob"in navigator?function(f,g,h){if(g=g||f.name||"download","string"!=typeof f)navigator.msSaveOrOpenBlob(b(f,h),g);else if(d(f))c(f,g,h);else{var i=document.createElement("a");i.href=f,i.target="_blank",setTimeout(function(){e(i)})}}:function(b,d,e,g){if(g=g||open("","_blank"),g&&(g.document.title=g.document.body.innerText="downloading..."),"string"==typeof b)return c(b,d,e);var h="application/octet-stream"===b.type,i=/constructor/i.test(f.HTMLElement)||f.safari,j=/CriOS\/[\d]+/.test(navigator.userAgent);if((j||h&&i||a)&&"undefined"!=typeof FileReader){var k=new FileReader;k.onloadend=function(){var a=k.result;a=j?a:a.replace(/^data:[^;]*;/,"data:attachment/file;"),g?g.location.href=a:location=a,g=null},k.readAsDataURL(b)}else{var l=f.URL||f.webkitURL,m=l.createObjectURL(b);g?g.location=m:location.href=m,g=null,setTimeout(function(){l.revokeObjectURL(m)},4E4)}});f.saveAs=g.saveAs=g,"undefined"!=typeof module&&(module.exports=g)});
@@ -37981,14 +37981,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $0250c4 = exports.default || module.exports;
+        var $6b692d = exports.default || module.exports;
       
-      if (typeof $0250c4 === 'function') {
-        $0250c4 = $0250c4.options;
+      if (typeof $6b692d === 'function') {
+        $6b692d = $6b692d.options;
       }
     
         /* template */
-        Object.assign($0250c4, (function () {
+        Object.assign($6b692d, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -38067,9 +38067,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$0250c4', $0250c4);
+            api.createRecord('$6b692d', $6b692d);
           } else {
-            api.reload('$0250c4', $0250c4);
+            api.reload('$6b692d', $6b692d);
           }
         }
 
@@ -38100,14 +38100,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $e4b511 = exports.default || module.exports;
+        var $c77b87 = exports.default || module.exports;
       
-      if (typeof $e4b511 === 'function') {
-        $e4b511 = $e4b511.options;
+      if (typeof $c77b87 === 'function') {
+        $c77b87 = $c77b87.options;
       }
     
         /* template */
-        Object.assign($e4b511, (function () {
+        Object.assign($c77b87, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -38135,7 +38135,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-e4b511",
+            _scopeId: "data-v-c77b87",
             functional: undefined
           };
         })());
@@ -38148,9 +38148,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$e4b511', $e4b511);
+            api.createRecord('$c77b87', $c77b87);
           } else {
-            api.reload('$e4b511', $e4b511);
+            api.reload('$c77b87', $c77b87);
           }
         }
 
@@ -38310,14 +38310,14 @@ var _default = {
 
 };
 exports.default = _default;
-        var $8f21d9 = exports.default || module.exports;
+        var $038799 = exports.default || module.exports;
       
-      if (typeof $8f21d9 === 'function') {
-        $8f21d9 = $8f21d9.options;
+      if (typeof $038799 === 'function') {
+        $038799 = $038799.options;
       }
     
         /* template */
-        Object.assign($8f21d9, (function () {
+        Object.assign($038799, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -38572,9 +38572,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$8f21d9', $8f21d9);
+            api.createRecord('$038799', $038799);
           } else {
-            api.reload('$8f21d9', $8f21d9);
+            api.reload('$038799', $038799);
           }
         }
 
@@ -39007,14 +39007,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $f35a9c = exports.default || module.exports;
+        var $67bee6 = exports.default || module.exports;
       
-      if (typeof $f35a9c === 'function') {
-        $f35a9c = $f35a9c.options;
+      if (typeof $67bee6 === 'function') {
+        $67bee6 = $67bee6.options;
       }
     
         /* template */
-        Object.assign($f35a9c, (function () {
+        Object.assign($67bee6, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -39174,9 +39174,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$f35a9c', $f35a9c);
+            api.createRecord('$67bee6', $67bee6);
           } else {
-            api.reload('$f35a9c', $f35a9c);
+            api.reload('$67bee6', $67bee6);
           }
         }
 
@@ -39230,14 +39230,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $1c3e00 = exports.default || module.exports;
+        var $50c5aa = exports.default || module.exports;
       
-      if (typeof $1c3e00 === 'function') {
-        $1c3e00 = $1c3e00.options;
+      if (typeof $50c5aa === 'function') {
+        $50c5aa = $50c5aa.options;
       }
     
         /* template */
-        Object.assign($1c3e00, (function () {
+        Object.assign($50c5aa, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -39277,9 +39277,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$1c3e00', $1c3e00);
+            api.createRecord('$50c5aa', $50c5aa);
           } else {
-            api.reload('$1c3e00', $1c3e00);
+            api.reload('$50c5aa', $50c5aa);
           }
         }
 
@@ -39304,14 +39304,14 @@ exports.default = void 0;
 //
 var _default = {};
 exports.default = _default;
-        var $6ad942 = exports.default || module.exports;
+        var $6d3946 = exports.default || module.exports;
       
-      if (typeof $6ad942 === 'function') {
-        $6ad942 = $6ad942.options;
+      if (typeof $6d3946 === 'function') {
+        $6d3946 = $6d3946.options;
       }
     
         /* template */
-        Object.assign($6ad942, (function () {
+        Object.assign($6d3946, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -39335,7 +39335,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-6ad942",
+            _scopeId: "data-v-6d3946",
             functional: undefined
           };
         })());
@@ -39348,9 +39348,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$6ad942', $6ad942);
+            api.createRecord('$6d3946', $6d3946);
           } else {
-            api.reload('$6ad942', $6ad942);
+            api.reload('$6d3946', $6d3946);
           }
         }
 
@@ -40112,14 +40112,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $fb45c2 = exports.default || module.exports;
+        var $79f499 = exports.default || module.exports;
       
-      if (typeof $fb45c2 === 'function') {
-        $fb45c2 = $fb45c2.options;
+      if (typeof $79f499 === 'function') {
+        $79f499 = $79f499.options;
       }
     
         /* template */
-        Object.assign($fb45c2, (function () {
+        Object.assign($79f499, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -40248,9 +40248,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$fb45c2', $fb45c2);
+            api.createRecord('$79f499', $79f499);
           } else {
-            api.reload('$fb45c2', $fb45c2);
+            api.reload('$79f499', $79f499);
           }
         }
 
@@ -61561,14 +61561,14 @@ exports.default = void 0;
 //
 var _default = {};
 exports.default = _default;
-        var $0aeb93 = exports.default || module.exports;
+        var $204b1e = exports.default || module.exports;
       
-      if (typeof $0aeb93 === 'function') {
-        $0aeb93 = $0aeb93.options;
+      if (typeof $204b1e === 'function') {
+        $204b1e = $204b1e.options;
       }
     
         /* template */
-        Object.assign($0aeb93, (function () {
+        Object.assign($204b1e, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -61608,7 +61608,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-0aeb93",
+            _scopeId: "data-v-204b1e",
             functional: undefined
           };
         })());
@@ -61621,9 +61621,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$0aeb93', $0aeb93);
+            api.createRecord('$204b1e', $204b1e);
           } else {
-            api.reload('$0aeb93', $0aeb93);
+            api.reload('$204b1e', $204b1e);
           }
         }
 
@@ -61948,14 +61948,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $890b00 = exports.default || module.exports;
+        var $6ceed1 = exports.default || module.exports;
       
-      if (typeof $890b00 === 'function') {
-        $890b00 = $890b00.options;
+      if (typeof $6ceed1 === 'function') {
+        $6ceed1 = $6ceed1.options;
       }
     
         /* template */
-        Object.assign($890b00, (function () {
+        Object.assign($6ceed1, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -62024,7 +62024,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-890b00",
+            _scopeId: "data-v-6ceed1",
             functional: undefined
           };
         })());
@@ -62037,9 +62037,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$890b00', $890b00);
+            api.createRecord('$6ceed1', $6ceed1);
           } else {
-            api.reload('$890b00', $890b00);
+            api.reload('$6ceed1', $6ceed1);
           }
         }
 
@@ -62092,14 +62092,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $354401 = exports.default || module.exports;
+        var $283074 = exports.default || module.exports;
       
-      if (typeof $354401 === 'function') {
-        $354401 = $354401.options;
+      if (typeof $283074 === 'function') {
+        $283074 = $283074.options;
       }
     
         /* template */
-        Object.assign($354401, (function () {
+        Object.assign($283074, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -62126,7 +62126,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-354401",
+            _scopeId: "data-v-283074",
             functional: undefined
           };
         })());
@@ -62139,9 +62139,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$354401', $354401);
+            api.createRecord('$283074', $283074);
           } else {
-            api.reload('$354401', $354401);
+            api.reload('$283074', $283074);
           }
         }
 
@@ -62300,14 +62300,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $3fbd37 = exports.default || module.exports;
+        var $bf66b8 = exports.default || module.exports;
       
-      if (typeof $3fbd37 === 'function') {
-        $3fbd37 = $3fbd37.options;
+      if (typeof $bf66b8 === 'function') {
+        $bf66b8 = $bf66b8.options;
       }
     
         /* template */
-        Object.assign($3fbd37, (function () {
+        Object.assign($bf66b8, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -62358,7 +62358,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-3fbd37",
+            _scopeId: "data-v-bf66b8",
             functional: undefined
           };
         })());
@@ -62371,9 +62371,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$3fbd37', $3fbd37);
+            api.createRecord('$bf66b8', $bf66b8);
           } else {
-            api.reload('$3fbd37', $3fbd37);
+            api.reload('$bf66b8', $bf66b8);
           }
         }
 
@@ -62786,14 +62786,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $3acede = exports.default || module.exports;
+        var $141083 = exports.default || module.exports;
       
-      if (typeof $3acede === 'function') {
-        $3acede = $3acede.options;
+      if (typeof $141083 === 'function') {
+        $141083 = $141083.options;
       }
     
         /* template */
-        Object.assign($3acede, (function () {
+        Object.assign($141083, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -63253,9 +63253,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$3acede', $3acede);
+            api.createRecord('$141083', $141083);
           } else {
-            api.reload('$3acede', $3acede);
+            api.reload('$141083', $141083);
           }
         }
 
@@ -64668,14 +64668,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $9e2fc6 = exports.default || module.exports;
+        var $941d68 = exports.default || module.exports;
       
-      if (typeof $9e2fc6 === 'function') {
-        $9e2fc6 = $9e2fc6.options;
+      if (typeof $941d68 === 'function') {
+        $941d68 = $941d68.options;
       }
     
         /* template */
-        Object.assign($9e2fc6, (function () {
+        Object.assign($941d68, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -64912,9 +64912,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$9e2fc6', $9e2fc6);
+            api.createRecord('$941d68', $941d68);
           } else {
-            api.reload('$9e2fc6', $9e2fc6);
+            api.reload('$941d68', $941d68);
           }
         }
 
@@ -64939,14 +64939,14 @@ exports.default = void 0;
 //
 var _default = {};
 exports.default = _default;
-        var $ad949a = exports.default || module.exports;
+        var $c86157 = exports.default || module.exports;
       
-      if (typeof $ad949a === 'function') {
-        $ad949a = $ad949a.options;
+      if (typeof $c86157 === 'function') {
+        $c86157 = $c86157.options;
       }
     
         /* template */
-        Object.assign($ad949a, (function () {
+        Object.assign($c86157, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -64970,7 +64970,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-ad949a",
+            _scopeId: "data-v-c86157",
             functional: undefined
           };
         })());
@@ -64983,9 +64983,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$ad949a', $ad949a);
+            api.createRecord('$c86157', $c86157);
           } else {
-            api.reload('$ad949a', $ad949a);
+            api.reload('$c86157', $c86157);
           }
         }
 
@@ -65460,14 +65460,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $79148b = exports.default || module.exports;
+        var $ad56e1 = exports.default || module.exports;
       
-      if (typeof $79148b === 'function') {
-        $79148b = $79148b.options;
+      if (typeof $ad56e1 === 'function') {
+        $ad56e1 = $ad56e1.options;
       }
     
         /* template */
-        Object.assign($79148b, (function () {
+        Object.assign($ad56e1, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -65525,9 +65525,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$79148b', $79148b);
+            api.createRecord('$ad56e1', $ad56e1);
           } else {
-            api.reload('$79148b', $79148b);
+            api.reload('$ad56e1', $ad56e1);
           }
         }
 
@@ -65659,14 +65659,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $bd349a = exports.default || module.exports;
+        var $2ed258 = exports.default || module.exports;
       
-      if (typeof $bd349a === 'function') {
-        $bd349a = $bd349a.options;
+      if (typeof $2ed258 === 'function') {
+        $2ed258 = $2ed258.options;
       }
     
         /* template */
-        Object.assign($bd349a, (function () {
+        Object.assign($2ed258, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -65704,7 +65704,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-bd349a",
+            _scopeId: "data-v-2ed258",
             functional: undefined
           };
         })());
@@ -65717,9 +65717,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$bd349a', $bd349a);
+            api.createRecord('$2ed258', $2ed258);
           } else {
-            api.reload('$bd349a', $bd349a);
+            api.reload('$2ed258', $2ed258);
           }
         }
 
@@ -65766,14 +65766,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $d45f95 = exports.default || module.exports;
+        var $cee646 = exports.default || module.exports;
       
-      if (typeof $d45f95 === 'function') {
-        $d45f95 = $d45f95.options;
+      if (typeof $cee646 === 'function') {
+        $cee646 = $cee646.options;
       }
     
         /* template */
-        Object.assign($d45f95, (function () {
+        Object.assign($cee646, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -65818,7 +65818,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-d45f95",
+            _scopeId: "data-v-cee646",
             functional: undefined
           };
         })());
@@ -65831,9 +65831,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$d45f95', $d45f95);
+            api.createRecord('$cee646', $cee646);
           } else {
-            api.reload('$d45f95', $d45f95);
+            api.reload('$cee646', $cee646);
           }
         }
 
@@ -65950,14 +65950,14 @@ var _default = {
   methods: {}
 };
 exports.default = _default;
-        var $52e0e9 = exports.default || module.exports;
+        var $5fe760 = exports.default || module.exports;
       
-      if (typeof $52e0e9 === 'function') {
-        $52e0e9 = $52e0e9.options;
+      if (typeof $5fe760 === 'function') {
+        $5fe760 = $5fe760.options;
       }
     
         /* template */
-        Object.assign($52e0e9, (function () {
+        Object.assign($5fe760, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -66047,7 +66047,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-52e0e9",
+            _scopeId: "data-v-5fe760",
             functional: undefined
           };
         })());
@@ -66060,9 +66060,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$52e0e9', $52e0e9);
+            api.createRecord('$5fe760', $5fe760);
           } else {
-            api.reload('$52e0e9', $52e0e9);
+            api.reload('$5fe760', $5fe760);
           }
         }
 
@@ -66289,14 +66289,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $cdd074 = exports.default || module.exports;
+        var $778ccd = exports.default || module.exports;
       
-      if (typeof $cdd074 === 'function') {
-        $cdd074 = $cdd074.options;
+      if (typeof $778ccd === 'function') {
+        $778ccd = $778ccd.options;
       }
     
         /* template */
-        Object.assign($cdd074, (function () {
+        Object.assign($778ccd, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -66311,7 +66311,26 @@ exports.default = _default;
           staticClass: "video-wrapper",
           staticStyle: { "min-width": "100%", "margin-top": "1rem" }
         },
-        [_c("VideoIdSearch", { on: { goToVideo: _vm.goToVideo } })],
+        [
+          _c("VideoIdSearch", { on: { goToVideo: _vm.goToVideo } }),
+          _c(
+            "ui-button",
+            {
+              staticClass: "download-button",
+              attrs: {
+                icon: "download",
+                color: "primary",
+                tooltipPosition: "top",
+                tooltip:
+                  "Download all " +
+                  _vm.$root.searchResults.counts.total +
+                  " results as JSON"
+              },
+              on: { click: _vm.download }
+            },
+            [_vm._v("Download")]
+          )
+        ],
         1
       ),
       _c(
@@ -66599,7 +66618,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-cdd074",
+            _scopeId: "data-v-778ccd",
             functional: undefined
           };
         })());
@@ -66612,9 +66631,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$cdd074', $cdd074);
+            api.createRecord('$778ccd', $778ccd);
           } else {
-            api.reload('$cdd074', $cdd074);
+            api.reload('$778ccd', $778ccd);
           }
         }
 
@@ -66670,14 +66689,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $b68b87 = exports.default || module.exports;
+        var $0bbde7 = exports.default || module.exports;
       
-      if (typeof $b68b87 === 'function') {
-        $b68b87 = $b68b87.options;
+      if (typeof $0bbde7 === 'function') {
+        $0bbde7 = $0bbde7.options;
       }
     
         /* template */
-        Object.assign($b68b87, (function () {
+        Object.assign($0bbde7, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -66717,7 +66736,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-b68b87",
+            _scopeId: "data-v-0bbde7",
             functional: undefined
           };
         })());
@@ -66730,9 +66749,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$b68b87', $b68b87);
+            api.createRecord('$0bbde7', $0bbde7);
           } else {
-            api.reload('$b68b87', $b68b87);
+            api.reload('$0bbde7', $0bbde7);
           }
         }
 
@@ -66812,14 +66831,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $2ae310 = exports.default || module.exports;
+        var $436954 = exports.default || module.exports;
       
-      if (typeof $2ae310 === 'function') {
-        $2ae310 = $2ae310.options;
+      if (typeof $436954 === 'function') {
+        $436954 = $436954.options;
       }
     
         /* template */
-        Object.assign($2ae310, (function () {
+        Object.assign($436954, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -66873,7 +66892,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-2ae310",
+            _scopeId: "data-v-436954",
             functional: undefined
           };
         })());
@@ -66886,9 +66905,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$2ae310', $2ae310);
+            api.createRecord('$436954', $436954);
           } else {
-            api.reload('$2ae310', $2ae310);
+            api.reload('$436954', $436954);
           }
         }
 
@@ -67111,14 +67130,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $aaa267 = exports.default || module.exports;
+        var $689f79 = exports.default || module.exports;
       
-      if (typeof $aaa267 === 'function') {
-        $aaa267 = $aaa267.options;
+      if (typeof $689f79 === 'function') {
+        $689f79 = $689f79.options;
       }
     
         /* template */
-        Object.assign($aaa267, (function () {
+        Object.assign($689f79, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -67326,7 +67345,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-aaa267",
+            _scopeId: "data-v-689f79",
             functional: undefined
           };
         })());
@@ -67339,9 +67358,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$aaa267', $aaa267);
+            api.createRecord('$689f79', $689f79);
           } else {
-            api.reload('$aaa267', $aaa267);
+            api.reload('$689f79', $689f79);
           }
         }
 
@@ -67402,14 +67421,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $a84b2f = exports.default || module.exports;
+        var $c4c95d = exports.default || module.exports;
       
-      if (typeof $a84b2f === 'function') {
-        $a84b2f = $a84b2f.options;
+      if (typeof $c4c95d === 'function') {
+        $c4c95d = $c4c95d.options;
       }
     
         /* template */
-        Object.assign($a84b2f, (function () {
+        Object.assign($c4c95d, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -67432,7 +67451,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-a84b2f",
+            _scopeId: "data-v-c4c95d",
             functional: undefined
           };
         })());
@@ -67445,9 +67464,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$a84b2f', $a84b2f);
+            api.createRecord('$c4c95d', $c4c95d);
           } else {
-            api.reload('$a84b2f', $a84b2f);
+            api.reload('$c4c95d', $c4c95d);
           }
         }
 
@@ -67512,14 +67531,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $6b65b0 = exports.default || module.exports;
+        var $5035e6 = exports.default || module.exports;
       
-      if (typeof $6b65b0 === 'function') {
-        $6b65b0 = $6b65b0.options;
+      if (typeof $5035e6 === 'function') {
+        $5035e6 = $5035e6.options;
       }
     
         /* template */
-        Object.assign($6b65b0, (function () {
+        Object.assign($5035e6, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -67545,7 +67564,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-6b65b0",
+            _scopeId: "data-v-5035e6",
             functional: undefined
           };
         })());
@@ -67558,9 +67577,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$6b65b0', $6b65b0);
+            api.createRecord('$5035e6', $5035e6);
           } else {
-            api.reload('$6b65b0', $6b65b0);
+            api.reload('$5035e6', $5035e6);
           }
         }
 
@@ -67644,14 +67663,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $57d059 = exports.default || module.exports;
+        var $94c4ff = exports.default || module.exports;
       
-      if (typeof $57d059 === 'function') {
-        $57d059 = $57d059.options;
+      if (typeof $94c4ff === 'function') {
+        $94c4ff = $94c4ff.options;
       }
     
         /* template */
-        Object.assign($57d059, (function () {
+        Object.assign($94c4ff, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -67674,7 +67693,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-57d059",
+            _scopeId: "data-v-94c4ff",
             functional: undefined
           };
         })());
@@ -67687,9 +67706,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$57d059', $57d059);
+            api.createRecord('$94c4ff', $94c4ff);
           } else {
-            api.reload('$57d059', $57d059);
+            api.reload('$94c4ff', $94c4ff);
           }
         }
 
@@ -67830,14 +67849,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $f70751 = exports.default || module.exports;
+        var $0f6af9 = exports.default || module.exports;
       
-      if (typeof $f70751 === 'function') {
-        $f70751 = $f70751.options;
+      if (typeof $0f6af9 === 'function') {
+        $0f6af9 = $0f6af9.options;
       }
     
         /* template */
-        Object.assign($f70751, (function () {
+        Object.assign($0f6af9, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -67955,7 +67974,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-f70751",
+            _scopeId: "data-v-0f6af9",
             functional: undefined
           };
         })());
@@ -67968,9 +67987,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$f70751', $f70751);
+            api.createRecord('$0f6af9', $0f6af9);
           } else {
-            api.reload('$f70751', $f70751);
+            api.reload('$0f6af9', $0f6af9);
           }
         }
 
@@ -68045,14 +68064,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $19840c = exports.default || module.exports;
+        var $23e9ba = exports.default || module.exports;
       
-      if (typeof $19840c === 'function') {
-        $19840c = $19840c.options;
+      if (typeof $23e9ba === 'function') {
+        $23e9ba = $23e9ba.options;
       }
     
         /* template */
-        Object.assign($19840c, (function () {
+        Object.assign($23e9ba, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -68186,7 +68205,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-19840c",
+            _scopeId: "data-v-23e9ba",
             functional: undefined
           };
         })());
@@ -68199,9 +68218,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$19840c', $19840c);
+            api.createRecord('$23e9ba', $23e9ba);
           } else {
-            api.reload('$19840c', $19840c);
+            api.reload('$23e9ba', $23e9ba);
           }
         }
 
@@ -68505,14 +68524,14 @@ var _default = {
   }
 };
 exports.default = _default;
-        var $2cbb07 = exports.default || module.exports;
+        var $a19e3f = exports.default || module.exports;
       
-      if (typeof $2cbb07 === 'function') {
-        $2cbb07 = $2cbb07.options;
+      if (typeof $a19e3f === 'function') {
+        $a19e3f = $a19e3f.options;
       }
     
         /* template */
-        Object.assign($2cbb07, (function () {
+        Object.assign($a19e3f, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -68759,7 +68778,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-2cbb07",
+            _scopeId: "data-v-a19e3f",
             functional: undefined
           };
         })());
@@ -68772,9 +68791,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$2cbb07', $2cbb07);
+            api.createRecord('$a19e3f', $a19e3f);
           } else {
-            api.reload('$2cbb07', $2cbb07);
+            api.reload('$a19e3f', $a19e3f);
           }
         }
 
@@ -68839,14 +68858,14 @@ var _default = {
 
 };
 exports.default = _default;
-        var $cbd61a = exports.default || module.exports;
+        var $bf95e1 = exports.default || module.exports;
       
-      if (typeof $cbd61a === 'function') {
-        $cbd61a = $cbd61a.options;
+      if (typeof $bf95e1 === 'function') {
+        $bf95e1 = $bf95e1.options;
       }
     
         /* template */
-        Object.assign($cbd61a, (function () {
+        Object.assign($bf95e1, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -68884,7 +68903,7 @@ render._withStripped = true
             render: render,
             staticRenderFns: staticRenderFns,
             _compiled: true,
-            _scopeId: "data-v-cbd61a",
+            _scopeId: "data-v-bf95e1",
             functional: undefined
           };
         })());
@@ -68897,9 +68916,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$cbd61a', $cbd61a);
+            api.createRecord('$bf95e1', $bf95e1);
           } else {
-            api.reload('$cbd61a', $cbd61a);
+            api.reload('$bf95e1', $bf95e1);
           }
         }
 
@@ -69316,14 +69335,14 @@ var _default = RootComponent = {
 };
 
 exports.default = _default;
-        var $0892d1 = exports.default || module.exports;
+        var $883330 = exports.default || module.exports;
       
-      if (typeof $0892d1 === 'function') {
-        $0892d1 = $0892d1.options;
+      if (typeof $883330 === 'function') {
+        $883330 = $883330.options;
       }
     
         /* template */
-        Object.assign($0892d1, (function () {
+        Object.assign($883330, (function () {
           var render = function() {
   var _vm = this
   var _h = _vm.$createElement
@@ -69360,9 +69379,9 @@ render._withStripped = true
         if (api.compatible) {
           module.hot.accept();
           if (!module.hot.data) {
-            api.createRecord('$0892d1', $0892d1);
+            api.createRecord('$883330', $883330);
           } else {
-            api.reload('$0892d1', $0892d1);
+            api.reload('$883330', $883330);
           }
         }
 
@@ -69401,7 +69420,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "65044" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "40213" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
