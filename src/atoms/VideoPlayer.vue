@@ -6,8 +6,11 @@
         transition(name="fade")
             row.message(v-if='videoId && !player')
                 | Video Loading...
-        vue-plyr(ref="vuePlyr" :style="`transition: all ease 0.6s; opacity: ${videoId && player ? 1 : 0}`" :key="videoId")
-            div.plyr__video-embed
+        vue-plyr(v-if='isLocalVideo' ref="vuePlyr" :style="`transition: all ease 0.6s; opacity: ${videoId && player ? 1 : 0}`" :key="videoId")
+            video(controls crossorigin playsinline data-poster="poster.jpg")
+                source(:src="videoId" type="video/mp4")
+        vue-plyr(v-if='!isLocalVideo' ref="vuePlyr" :style="`transition: all ease 0.6s; opacity: ${videoId && player ? 1 : 0}`" :key="videoId")
+            div.plyr__video-embed(v-if='!isLocalVideo')
                 iframe(
                     ref="videoPlayer"
                     :src="`https://www.youtube.com/embed/${videoId}?amp;iv_load_policy=3&amp;modestbranding=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1`"
@@ -33,6 +36,11 @@ export default {
         }
     },
     computed: {
+        isLocalVideo: {
+            get() {
+                return `${this.videoId}`.startsWith("/videos/")
+            }
+        },
         externalData: {
             get() {
                 return this.value

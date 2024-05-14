@@ -23,6 +23,7 @@ export default {
         searchTerm: null,
         // TODO: remove or add back suggestions feature
         suggestions: [],
+        notificationAlreadyShown: false,
     }),
     mounted() {
         // add some default suggestions
@@ -80,7 +81,7 @@ export default {
             }
             newVideoId = this.extractVideoIdIfPossible(newVideoId)
             
-            if (newVideoId.length == currentFixedSizeOfYouTubeVideoId) {
+            if (newVideoId.length == currentFixedSizeOfYouTubeVideoId || newVideoId.startsWith("/videos/")) {
                 // pushing searched video route
                 this.$root.routeData$.videoId = newVideoId
                 // emit video event
@@ -88,14 +89,17 @@ export default {
                 // sometimes the changes are not detected
                 this.$root.routeData$ = {...this.$root.routeData$}
                 console.debug(`this.$root.routeData$ is:`,JSON.stringify(this.$root.routeData$,0,4))
-            } else {
+            } else if (!this.notificationAlreadyShown) {
+                this.notificationAlreadyShown = true
                 this.$toasted.show(`It looks like that video id isn't valid\n(its not 11 characters)\nWould you like to try and load it anyways?`, {
                     keepOnHover:true,
                     action: [
                         {
                             text : 'Load Anyways',
                             onClick : (eventData, toastObject) => {
+                                this.notificationAlreadyShown = false
                                 this.$root.routeData$.videoId = newVideoId
+                                toastObject.goAway(100)
                             },
                         },
                     ]
