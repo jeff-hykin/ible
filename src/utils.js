@@ -182,6 +182,32 @@ function humandReadableTime(milliseconds) {
     return 'less than a second' //'just now' //or other string you like;
 }
 
+function deferredPromise() {
+    let methods
+    let state = "pending"
+    const promise = new Promise((resolve, reject) => {
+        methods = {
+            resolve(value) {
+                if (value?.catch instanceof Function) {
+                    value.catch(reject)
+                }
+                if (value?.then instanceof Function) {
+                    value.then(methods.resolve)
+                } else {
+                    state = "fulfilled"
+                    resolve(value)
+                }
+            },
+            reject(reason) {
+                state = "rejected"
+                reject(reason)
+            },
+        }
+    })
+    Object.defineProperty(promise, "state", { get: () => state })
+    return Object.assign(promise, methods)
+}
+
 module.exports = {
     EventEmitter,
     storageObject,
@@ -195,6 +221,7 @@ module.exports = {
     labelConfidenceCheck,
     currentFixedSizeOfYouTubeVideoId,
     humandReadableTime,
+    deferredPromise,
     wrapIndex(val, list) {
         if (val < 0) {
             val = list.length + val
