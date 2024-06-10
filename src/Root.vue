@@ -18,7 +18,7 @@
 import Vue from "vue"
 import plugins from "./plugins/*.js"
 import pages from "./pages/*.vue"
-import {getColor, storageObject} from "./utils"
+import {getColor, storageObject, deferredPromise} from "./utils"
 
 // make lodash global because I like to live dangerously
 for (const [eachKey, eachValue] of Object.entries(require("lodash"))) { window[eachKey] = eachValue }
@@ -40,6 +40,8 @@ let RootComponent; setTimeout(()=>(new (Vue.extend(RootComponent))).$mount('#vue
 let untrackedData = {
     firstSearchLoad: true,
     usernameList: [],
+    prevVideoId: null,
+    videoLoadedCallbacks: new Set(),
 }
 export default RootComponent = {
     name: 'RootComponent',
@@ -152,6 +154,7 @@ export default RootComponent = {
             needToLoad$: {
                 backend,
             },
+            videoLoadedPromise: deferredPromise(),
         }
     },
     mounted() {
@@ -241,6 +244,13 @@ export default RootComponent = {
     computed: {
     },
     methods: {
+        getVideoId() {
+            const videoId = get(this, ["routeData$", "videoId"], null)
+            if (typeof videoId != 'string' || videoId.length == 0) {
+                return null
+            }
+            return videoId
+        },
         getUsernameList() {
             untrackedData.usernameList = [... new Set(untrackedData.usernameList.concat(Object.keys(this.searchResults.observers)))]
             return untrackedData.usernameList
@@ -264,8 +274,40 @@ export default RootComponent = {
             }
             this.routeData$ = newObject
         },
+        // this gets triggered first/immediately
+        whenVideoIdChanges() {
+            // refresh the callback system
+            untrackedData.videoLoadedCallbacks = new Set()
+            this.$root.videoLoadedPromise = deferredPromise()
+        },
+        whenVideoIsLoaded(callback) {
+            // dont double-up callbacks
+            if (!untrackedData.videoLoadedCallbacks.has(callback)) {
+                untrackedData.videoLoadedCallbacks.add(callback)
+                this.$root.videoLoadedPromise.then(async ()=>{
+                    try {
+                        await callback()
+                    } catch (error) {
+                        console.error(error.stack)
+                        console.error(`\n\nerror with callback from .whenVideoIsLoaded(func)`)
+                        console.error(error)
+                        console.error(`func is:\n${func.toString()}`)
+                    }
+                })
+            }
+            return this.$root.videoLoadedPromise
+        },
         setVideoObject() {
             let videoId = get(this, ["routeData$", "videoId"], null)
+            const videoHasChanged = untrackedData.prevVideoId != videoId
+            if (videoHasChanged) {
+                try {
+                    this.whenVideoIdChanges()
+                } catch (error) {
+                    console.debug(`error with this.whenVideoIdChanges is:`,error)
+                }
+                untrackedData.prevVideoId = videoId
+            }
             if (isString(videoId) && videoId.length > 0) {
                 this.$root.selectedVideo = this.$root.getCachedVideoObject(videoId)
             } else {

@@ -19,6 +19,8 @@
         
 </template>
 <script>
+
+const { deferredPromise } = require("../utils.js")
 // TODO: fix the fullscreen mode
 export default {
     props: [
@@ -31,7 +33,7 @@ export default {
     data() {
         return {
             player: null,
-            videoLoading: new Promise((resolve, reject)=>setTimeout(()=>this.videoLoading.then(resolve).catch(reject), 0)),
+            videoLoading: this.$root.videoLoadedPromise,
         }
     },
     computed: {
@@ -142,6 +144,7 @@ export default {
                         console.debug(`this.player is:`,this.player)
                         this.setupPlayer(this.player)
                         this.$emit("VideoPlayer-loaded", this.$refs.vuePlyr.player)
+                        this.$root.videoLoadedPromise.resolve(this.player)
                         resolve(this.player)
                     } else {
                         // recursively wait because theres no callback API

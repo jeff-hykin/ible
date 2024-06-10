@@ -61,9 +61,13 @@
 <script>
 const { wrapIndex, storageObject } = require('../utils')
 const { dynamicSort } = require("good-js")
-
+const { checkIf, deferredPromise } = require("../utils.js")
 const generalTimeoutFrequency = 50 // ms 
 
+let untracked = {
+    lastSeekFinished: deferredPromise(),
+    singleActionAfterVideoLoaded: {},
+}
 export default {
     props: [
         "videoDuration",
@@ -274,24 +278,58 @@ export default {
                 return this.jumpSegment(0)
             }
             // make sure the selected segment has a start time
-            if (!checkIf({value: this.$root.selectedSegment.start, is: Number })) {
-                console.error(`[seekToSegmentStart] this.$root.selectedSegment.start isn't a number`)
+            if (!checkIf({value: this.$root.selectedSegment.startTime, is: Number })) {
+                console.error(`[seekToSegmentStart] this.$root.selectedSegment.startTime isn't a number: ${JSON.stringify(this.$root.selectedSegment.startTime)}`)
                 return
             }
-            // if video not initilized, then wait for it to be initilized
-            if (this.idOfLastInitilizedVideo != this.$root.getVideoId()) {
-                console.debug(`[seekToSegmentStart] video isn't initilized, retrying later`)
-                return this.videoStateInitilized.promise.then(this.seekToSegmentStart)
+            
+            const videoId = this.$root.getVideoId()
+            if (videoId == null) {
+                return
             }
-            // if all checks pass
-            try  {
-                console.debug(`[seekToSegmentStart] seeking to ${this.$root.selectedSegment.start}`)
-                this.player.seekTo(this.$root.selectedSegment.start)
-            // sometimes an error is caused by switching videos, and all thats needed is a restart
-            } catch (err) {
-                console.debug(`[seekToSegmentStart] seeking to segment start (will retry):`,err)
-                return this.seekToSegmentStart()
+            
+            // 
+            // set what should happen (latest action overwrites previous)
+            // 
+            
+            // check if anything scheduled
+            let actionAlreadyScheduled = untracked.singleActionAfterVideoLoaded[videoId]
+            untracked.singleActionAfterVideoLoaded[videoId] = (player)=>{
+                try  {
+                    console.debug(`[seekToSegmentStart] seeking to ${this.$root.selectedSegment.startTime}`)
+                    player.currentTime = this.$root.selectedSegment.startTime
+                // sometimes an error is caused by switching videos, and all thats needed is a restart
+                } catch (err) {
+                    console.debug(`[seekToSegmentStart] seeking to segment start (will retry):`,err)
+                    return this.seekToSegmentStart()
+                }
             }
+            // if nothing is scheduled, then schedule something
+            if (!actionAlreadyScheduled) {
+                this.$root.videoLoadedPromise.then(async (player)=>{
+                    try {
+                        const videoIdChanged = videoId != this.$root.getVideoId()
+                        if (!videoIdChanged) {
+                            try {
+                                await untracked.singleActionAfterVideoLoaded[videoId](player)
+                            } catch (error) {
+                                console.error(error.stack)
+                                console.error(`[seekToSegmentStart] error with untracked.singleActionAfterVideoLoaded[videoId]():`)
+                                console.error(error)
+                            }
+                        }
+                    } catch (error) {
+                        console.error(error.stack)
+                        console.error(`[seekToSegmentStart] error with untracked.singleActionAfterVideoLoaded[videoId]():`)
+                        console.error(error)
+                    }
+                    // then resolve after the singular action is done
+                    untracked.lastSeekFinished.resolve()
+                })
+            }
+            
+            // this promise is already scheduled to be fullfilled
+            return untracked.lastSeekFinished
         },
         async jumpSegment(newIndex) {
             const functionCallId = Math.random().toFixed(6)

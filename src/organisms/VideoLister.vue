@@ -47,6 +47,7 @@ export default {
             }
         },
         selectVideo(eventObj, videoId) {
+            console.log(`clicked video ${videoId}`)
             this.$root.push({videoId})
         },
     }

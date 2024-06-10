@@ -1,7 +1,8 @@
 let Vue = require("vue").default
 let ezRpc = require("ez-rpc-frontend")
-let { deferredPromise } = require("./utils.js")
+let { deferredPromise, asyncIteratorToList } = require("./utils.js")
 let { get, set, remove } = require("./object.js")
+let { toKebabCase, toSnakeCase, toScreamingtoKebabCase, toScreamingtoSnakeCase } = require("./string.js")
 
 // const databaseUrl = "http://192.168.86.198:3000"
 // const databaseUrl = "http://localhost:3000"
@@ -79,7 +80,15 @@ const makeIterator = (tableName)=>{
         }
     }
 }
+const quickHash = (str)=>{
+    let hash = 0, i = 0, len = str.length;
+    while ( i < len ) {
+        hash  = ((hash << 5) - hash + str.charCodeAt(i++)) << 0
+    }
+    return hash
+}
 const indexDb = {
+    loaded: dbPromise,
     _tableNames: new Set(JSON.parse(localStorage.getItem("_tableNames")||"[]")),
     /**
      * @example
@@ -230,7 +239,7 @@ const indexDb = {
         }
     },
     // deletes
-    deletes(addresses) {
+    async deletes(addresses) {
         addresses = [...addresses]
         const next = await dbPromise.then(()=>new Promise((resolve, reject)=>{
             const transaction = db.transaction([storeName], 'readwrite')
@@ -292,6 +301,14 @@ const indexDb = {
     get keys() {
         return [...indexDb._tableNames]
     },
+    /**
+     * iterate keys and values
+     *
+     * @example
+     *     for await (const [ key, value ] of indexDb.iter.videos) {
+     *         console.log(key, value)
+     *     }
+     */
     get iter() {
         return Object.defineProperties({}, Object.fromEntries(
             [...indexDb._tableNames].map(
@@ -346,11 +363,24 @@ const indexDb = {
             yield output.value
         }
     },
+    async get(address) {
+        for await (const [ address, each ] of indexDb.get(address)) {
+            return each
+        }
+    },
 }
-
+// tables
+    // labels
+    // observations
+    // videos
+    // observers
+// FIXME: find everywhere I use the `mongoInterface`
 const fakeBackend = {
-    addObservation(observation) {
-        // observation = {
+    async addObservation(observationEntry) {
+        if (!db) {
+            await await indexDb.loaded
+        }
+        // observationEntry = {
         //     "videoId": "FLK5-00l0r4",
         //     "type": "segment",
         //     "startTime": 125.659,
@@ -362,26 +392,92 @@ const fakeBackend = {
         //         "labelConfidence": -0.99
         //     }
         // }
+        const labelAddress = ["labels", observationEntry.label]
+        const labelInfo = (await indexDb.get(labelAddress)||{})
         
+        const observerAddress = ["observers", observationEntry.observer]
+        const observerInfo = (await indexDb.get(observerAddress)||{})
+        
+        const videoAddress = ["videos", observationEntry.videoId]
+        const videoInfo = (await indexDb.get(videoAddress)||{})
+        
+        // enforce simplfied names
+        observationEntry.observation.label = toKebabCase(observationEntry.observation.label)
+        observationEntry.observer = toKebabCase(observationEntry.observer)
+        const { videoId, type, startTime, endTime, observer } = observationEntry
+        const { label, spacialInfo } = observationEntry.observation
+        const observationKey = `${quickHash(JSON.stringify({ videoId, type, startTime, endTime, observer, label, spacialInfo }))}`
+        const observationAddress = ["observations", observationKey]
+        
+        indexDb.puts([
+            // add video
+            [
+                videoAddress,
+                {
+                    ...videoInfo,
+                    observationCount: videoInfo?.count+1,
+                    labelCount: {...videoInfo?.labelCount, [label]: ((videoInfo?.labelCount||{})[label]||0)+1},
+                }
+            ],
+            // add observer
+            [
+                observerAddress,
+                {
+                    ...observerInfo,
+                    observationCount: observerInfo?.count+1,
+                    labelCount: {...observerInfo?.labelCount, [label]: ((observerInfo?.labelCount||{})[label]||0)+1},
+                    videos: [...new Set(...((observerInfo?.videos||[]).concat([observation.videoId])))],
+                }
+            ],
+            // update labels
+            [
+                labelAddress,
+                {
+                    ...labelInfo,
+                    count: (labelInfo?.count||0)+1,
+                    videos: [...new Set(...((labelInfo?.videos||[]).concat([observation.videoId])))],
+                },
+            ],
+            // add observation
+            [
+                observationAddress,
+                observationEntry,
+            ],
+        ])
     },
-    addSegmentObservation() {
-
+    addSegmentObservation(...args) {
+        return fakeBackend.addObservation(...args)
     },
     changeDb() {
-
+        // done (do nothing)
     },
-    collectionNames() {
-
+    async collectionNames() {
+        await indexDb.loaded
+        // done (just used to load the db)
+        return indexDb.keys()
     },
-    getUsernames() {
-
+    async getUsernames() {
+        await indexDb.loaded
+        let usernames = []
+        for await (const [ key, each ] of await indexDb.iter.observers) {
+            usernames.push(key)
+        }
+        return usernames
     },
     summary: {
-        general() {
-
+        general(filterAndSort) {
+            // filterAndSort = {
+            //     "minlabelConfidence":
+            //     "maxlabelConfidence":
+            //     "kindOfObserver":
+            //     "validation":
+            //     "observer":
+            //     labelName:
+            // }
+            // FIXME:
         },
         labels() {
-
+            // FIXME:
         }
     },
 }

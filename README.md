@@ -13,6 +13,7 @@ Everything is detailed in the `documentation/setup.md`!
 To debug run:
 
 ```sh
+npm run build
 npm run start
 ```
 
