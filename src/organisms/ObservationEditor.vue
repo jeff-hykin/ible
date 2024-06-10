@@ -110,6 +110,7 @@
                                     | skip_next
                         
                         ui-textbox(
+                            ref="labelElement"
                             :disabled="!editing"
                             floating-label
                             label="Label"
@@ -239,6 +240,14 @@ export default {
                 eventObj.preventDefault()
                 eventObj.stopPropagation()
                 return
+            }
+            if (eventObj.key == "l") {
+                if (this.observationData instanceof Object) {   
+                    this.$refs.labelElement.focus()
+                    eventObj.preventDefault()
+                    eventObj.stopPropagation()
+                    return
+                }
             }
             if (eventObj.key == "m") {
                 this.observationData.endTime = this.currentTime.toFixed(3)
