@@ -147,7 +147,7 @@
 </template>
 
 <script>
-let { backend } = require('../iilvd-api')
+let { backend, backendHelpers } = require('../iilvd-api.js')
 let { getColor, currentFixedSizeOfYouTubeVideoId, labelConfidenceCheck, isValidName, storageObject } = require("../utils")
 export default {
     props: [
@@ -337,11 +337,7 @@ export default {
                 if (isNewObervation) {
                     // TODO: check the valid-ness of the segment first
                     // TODO: add hints for data validity
-                    await (await this.backend).mongoInterface.set({
-                        keyList:[this.uuidOfSelectedSegment],
-                        from: "observations",
-                        to: observation,
-                    })
+                    await backendHelpers.setObservation({uuidOfSelectedSegment, observation})
                 // if saving something new
                 } else {
                     this.uuidOfSelectedSegment = await (await this.backend).addSegmentObservation(observation)
@@ -367,10 +363,7 @@ export default {
             this.editing = false
             let index = this.$root.selectedSegment.$displayIndex
             if (this.uuidOfSelectedSegment) {
-                (await this.backend).mongoInterface.delete({
-                    keyList:[this.uuidOfSelectedSegment],
-                    from: "observations",
-                })
+                backendHelpers.deleteObservation({uuidOfSelectedSegment})
                 this.$root.selectedVideo.keySegments = [...this.$root.selectedVideo.keySegments].filter(each=>each.$uuid != this.uuidOfSelectedSegment)
                 this.resetData()
                 window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))

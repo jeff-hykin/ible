@@ -368,13 +368,94 @@ const indexDb = {
             return each
         }
     },
+    async select({from, where=[], returnObject=false}) {
+        let output
+        if (returnObject) {
+            output = {}
+        } else {
+            output = []
+        }
+
+        if (where.length == 0) {
+            if (returnObject) {
+                for await (const [ key, each ] of indexDb.iter[from]) {
+                    output[key] = each
+                }
+            } else {
+                for await (const [ key, each ] of indexDb.iter[from]) {
+                    output.push(each)
+                }
+            }
+        } else {
+            const equalityCheckers             = where.filter(each=>Object.keys(each).includes("is"))
+            const notEqualCheckers             = where.filter(each=>Object.keys(each).includes("isNot"))
+            const lessThanOrEqualToCheckers    = where.filter(each=>Object.keys(each).includes("isLessThanOrEqualTo"))
+            const greaterThanOrEqualToCheckers = where.filter(each=>Object.keys(each).includes("isGreaterThanOrEqualTo"))
+            const lessThanCheckers             = where.filter(each=>Object.keys(each).includes("isLessThan"))
+            const greaterThanCheckers          = where.filter(each=>Object.keys(each).includes("isGreaterThan"))
+
+            const passesChecks = (eachObject)=>{
+                for (const rule of equalityCheckers) {
+                    const value = get({ keyList: rule.valueOf, from: eachObject, failValue: undefined })
+                    if (value !== rule.is) {
+                        return false
+                    }
+                }
+                for (const rule of notEqualCheckers) {
+                    const value = get({ keyList: rule.valueOf, from: eachObject, failValue: undefined })
+                    if (value === rule.isNot) {
+                        return false
+                    }
+                }
+                for (const rule of lessThanOrEqualToCheckers) {
+                    const value = get({ keyList: rule.valueOf, from: eachObject, failValue: NaN })
+                    if (value !== value || value > rule.isLessThanOrEqualTo) {
+                        return false
+                    }
+                }
+                for (const rule of greaterThanOrEqualToCheckers) {
+                    const value = get({ keyList: rule.valueOf, from: eachObject, failValue: NaN })
+                    if (value !== value || value < rule.isLessThanOrEqualTo) {
+                        return false
+                    }
+                }
+                for (const rule of lessThanCheckers) {
+                    const value = get({ keyList: rule.valueOf, from: eachObject, failValue: NaN })
+                    if (value !== value || value >= rule.isLessThan) {
+                        return false
+                    }
+                }
+                for (const rule of greaterThanCheckers) {
+                    const value = get({ keyList: rule.valueOf, from: eachObject, failValue: NaN })
+                    if (value !== value || value <= rule.isGreaterThan) {
+                        return false
+                    }
+                }
+                return true
+            }
+
+            if (returnObject) {
+                for await (const [ key, each ] of indexDb.iter[from]) {
+                    if (passesChecks(each)) {
+                        output[key] = each
+                    }
+                }
+            } else {
+                for await (const [ key, each ] of indexDb.iter[from]) {
+                    if (passesChecks(each)) {
+                        output.push(each)
+                    }
+                }
+            }
+        }
+        return output
+    },
 }
 // tables
     // labels
     // observations
     // videos
     // observers
-// FIXME: find everywhere I use the `mongoInterface`
 const fakeBackend = {
     async addObservation(observationEntry) {
         if (!db) {
@@ -464,6 +545,24 @@ const fakeBackend = {
         }
         return usernames
     },
+    async getVideoTitle(videoId) {
+        await indexDb.loaded
+        return indexDb.get([videoId, "summary", "title"])
+    },
+    async getObservations({where=[], returnObject=false}) {
+        await indexDb.loaded
+        return indexDb.select({from:"observations", where, returnObject})
+    },
+    async deleteObservation({uuidOfSelectedSegment}) {
+        await indexDb.loaded
+        return indexDb.deletes([["observations", uuidOfSelectedSegment]])
+    },
+    async setObservation({uuidOfSelectedSegment, observation}) {
+        await indexDb.loaded
+        return indexDb.puts([
+            [["observations", uuidOfSelectedSegment], observation],
+        ])
+    },
     async getVideoIds() {
         await indexDb.loaded
         let videoIds = []
@@ -474,18 +573,139 @@ const fakeBackend = {
     },
     summary: {
         general(filterAndSort) {
-            // filterAndSort = {
-            //     "minlabelConfidence":
-            //     "maxlabelConfidence":
-            //     "kindOfObserver":
-            //     "validation":
-            //     "observer":
-            //     labelName:
-            // }
-            // FIXME:
+            await indexDb.loaded
+            let where = []
+                    
+            // 
+            // build the query
+            // 
+            if (filterAndSort.labelName                            ) { where.push({ valueOf: ['observation', 'label'             ], is:                     filterAndSort.labelName         , }) }
+            if (isNumber(filterAndSort.maxlabelConfidence)         ) { where.push({ valueOf: ['observation', 'labelConfidence'   ], isLessThanOrEqualTo:    filterAndSort.maxlabelConfidence, }) }
+            if (isNumber(filterAndSort.minlabelConfidence)         ) { where.push({ valueOf: ['observation', 'labelConfidence'   ], isGreaterThanOrEqualTo: filterAndSort.minlabelConfidence, }) }
+            if (filterAndSort.observer                             ) { where.push({ valueOf: ['observer'                         ], is:                     filterAndSort.observer          , }) }
+            if (filterAndSort.kindOfObserver == "Only Humans"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     true                          , }) }
+            if (filterAndSort.kindOfObserver == "Only Robots"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     false                         , }) }
+            if (!filterAndSort.validation.includes("Confirmed")    ) { where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
+            if (!filterAndSort.validation.includes("Rejected")     ) { where.push({ valueOf: ['rejectedBySomeone'                ], isNot:                  true                          , }) }
+
+            let results = {
+                finishedComputing: true,
+                uncheckedObservations: [],
+                rejected: [],
+                labels: {},
+                observers: {},
+                usernames: new Set(),
+                videos: {},
+                counts: {
+                    total: 0,
+                    fromHuman: 0,
+                    rejected: 0,
+                    confirmed: 0,
+                    disagreement: 0,
+                },
+            }
+
+            // 
+            // this section should be rewritten to use the search^ instead of Javascript filters
+            // 
+            const hideUnchecked = !filterAndSort.validation.includes("Unchecked")
+            const hideDisagreement = !filterAndSort.validation.includes("Disagreement")
+            // this is so weird because of the dumb ways Javascript handles string->number
+            // it behaves like if ($root.filterAndSort.minlabelConfidence) then min = $root.filterAndSort.minlabelConfidence
+            let min = `${filterAndSort.minlabelConfidence}`; min = min.length>0 && isFinite(min-0) ? min-0 : -Infinity
+            let max = `${filterAndSort.maxlabelConfidence}`; max = max.length>0 && isFinite(max-0) ? max-0 : Infinity
+
+            for await (const [ key, each ] of indexDb.select({
+                from:'observations',
+                where:[
+                    { valueOf: ['type'], is:'segment' },
+                    ...where,
+                ],
+            })) {
+                console.debug(`[observationIterator] each is:`,each)
+                // filters 
+                if ((each.observation.labelConfidence < min) || (each.observation.labelConfidence > max)) { return }
+                if (hideUnchecked && (!each.confirmedBySomeone && !each.rejectedBySomeone)) { return }
+                if (hideDisagreement && (each.confirmedBySomeone && each.rejectedBySomeone)) { return }
+                
+                // 
+                // this section is actual logic
+                // 
+                
+                // count observations for observers
+                if (!results.observers[each.observer]) { results.observers[each.observer] = 0 }
+                results.observers[each.observer] += 1
+                
+                // count observations for labels
+                if (!results.labels[each.observation.label]) { results.labels[each.observation.label] = 0 }
+                results.labels[each.observation.label] += 1
+                
+                // count observations for videos
+                if (!results.videos[each.videoId]) { results.videos[each.videoId] = 0 }
+                results.videos[each.videoId] += 1
+                
+                results.counts.total += 1
+                if (each.isHuman) {
+                    results.counts.fromHuman += 1 
+                } else {
+                    if (each.confirmedBySomeone == true) {
+                        results.counts.confirmed += 1
+                    }
+                    if (each.rejectedBySomeone == true) {
+                        results.counts.rejected  += 1 
+                        results.rejected.push(each)
+                    }
+                    if (each.rejectedBySomeone && each.confirmedBySomeone) {
+                        results.counts.disagreement += 1
+                    }
+                    if (each.rejectedBySomeone !== true && each.confirmedBySomeone !== true) {
+                        results.uncheckedObservations.push(each)
+                    }
+                }
+            }
+            
+            // save result for later
+            console.debug(`fresh summary is:`,results)
+            return results
         },
         labels() {
-            // FIXME:
+            await indexDb.loaded
+            // start summarizing the data
+            let results = {}
+            let videosWithLabels = new Set()
+            for await (const [ key, veachObservationEntry ] of indexDb.iter.observations) {
+                videosWithLabels.add(eachObservationEntry.videoId)
+                if (eachObservationEntry.observation instanceof Object) {
+                    // init
+                    if (!Object.hasOwn(results, eachObservationEntry.observation.label)) {
+                        results[eachObservationEntry.observation.label] = {}
+                        results[eachObservationEntry.observation.label].videos = {[eachObservationEntry.videoId]: 1}
+                        results[eachObservationEntry.observation.label].segmentCount = 1
+                    // update
+                    } else {
+                        results[eachObservationEntry.observation.label].videos[eachObservationEntry.videoId] += 1
+                        results[eachObservationEntry.observation.label].segmentCount += 1
+                    }
+                }
+            }
+            
+            // generate videoCount
+            for (const [key, value] of Object.entries(results)) {
+                // record length
+                value.videoCount = Object.keys(value.videos).length
+                // sort by segment count (split into [keys, values], then sort by value (e.g. 1))
+                value.videos = Object.fromEntries(Object.entries(value.videos).sort(dynamicSort([1], true)))
+            }
+
+            // 
+            // hard coded colors (probably should remove these)
+            // 
+            results["uncertain"] || (results["uncertain"]={})
+            results["uncertain"].color = "gray"
+
+            // sort results by largest segmentCount
+            results = Object.fromEntries(Object.entries(results).sort(dynamicSort([1, "segmentCount"], true)))
+            return results
         }
     },
 }
@@ -494,6 +714,35 @@ window.backend = ezRpc.buildInterfaceFor(ezRpcUrl)
 module.exports = {
     backend,
     backendHelpers: {
+        async getVideoTitle(videoId) {
+            return (await backend).mongoInterface.get({
+                from: 'videos',
+                keyList: [videoId, "summary", "title"],
+            })
+        },
+        async getObservations({where=[], returnObject=false}) {
+            return (await backend).mongoInterface.getAll({
+                from: 'observations',
+                where: [
+                    { valueOf: ['type'], is:'segment' },
+                    ...where,
+                ],
+                returnObject,
+            })
+        },
+        async deleteObservation({uuidOfSelectedSegment}) {
+            return (await backend).mongoInterface.delete({
+                keyList:[uuidOfSelectedSegment],
+                from: "observations",
+            })
+        },
+        async setObservation({uuidOfSelectedSegment, observation}) {
+            return await (await backend).mongoInterface.set({
+                keyList:[uuidOfSelectedSegment],
+                from: "observations",
+                to: observation,
+            })
+        },
         async getVideoIds() {
             return await (await backend).mongoInterface.getAll({
                 from: "videos",

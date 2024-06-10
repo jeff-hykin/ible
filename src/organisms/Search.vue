@@ -108,7 +108,8 @@
             
 </template>
 <script>
-let { colors, debounce, download, } = require("../utils")
+let { backendHelpers } = require('../iilvd-api.js')
+let { colors, debounce, download, } = require("../utils.js")
 let observationEntries
 export default {
     components: {
@@ -176,13 +177,7 @@ export default {
             // if (!this.$root.filterAndSort.validation.includes("Disagreement") ) { where.push({ valueOf: ['rejectedBySomeone'                ], isNot:                  true                          , }) 
             //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
             console.log(`querying the backend for observationEntries`)
-            observationEntries = await backend.mongoInterface.getAll({
-                from: 'observations',
-                where: [
-                    { valueOf: ['type'], is:'segment' },
-                    ...where,
-                ]
-            })
+            observationEntries = await backendHelpers.getObservations({where})
             
             // show the time of the first load
             if (this.$root.loadStart) {

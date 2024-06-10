@@ -7,6 +7,7 @@
 </template>
 
 <script>
+import { backendHelpers } from '../iilvd-api.js'
 export default {
     data: ()=>({
         get
@@ -29,19 +30,13 @@ export default {
             if (title != undefined) {
                 return title
             } else {
-                this.backend.then(backend=>{
-                    console.log(`requesting video title`)
-                    backend.mongoInterface.get({
-                        from: 'videos',
-                        keyList: [videoId, "summary", "title"],
-                    }).then(title=>{
-                        console.log(`received title ${title}`)
-                        if (!(videoObject.summary instanceof Object)) {
-                            videoObject.summary = {}
-                        }
-                        videoObject.summary.title = title || null
-                        this.$forceUpdate()
-                    })
+                backendHelpers.getVideoTitle(videoId).then(title=>{
+                    console.log(`received title ${title}`)
+                    if (!(videoObject.summary instanceof Object)) {
+                        videoObject.summary = {}
+                    }
+                    videoObject.summary.title = title || null
+                    this.$forceUpdate()
                 })
                 return "Loading..."
             }

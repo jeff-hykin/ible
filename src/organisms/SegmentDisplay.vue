@@ -62,6 +62,7 @@
 const { wrapIndex, storageObject } = require('../utils')
 const { dynamicSort } = require("good-js")
 const { checkIf, deferredPromise } = require("../utils.js")
+const { backendHelpers } = require('../iilvd-api.js')
 const generalTimeoutFrequency = 50 // ms 
 
 let untracked = {
@@ -134,10 +135,8 @@ export default {
             if (originalVideoId) {
                 let keySegments
                 try {
-                    keySegments = await (await this.backend).mongoInterface.getAll({
-                        from: 'observations',
-                        where: [
-                            { valueOf: ['type']   , is: "segment" },
+                    keySegments = await backendHelpers.getObservations({
+                        where:[
                             { valueOf: ['videoId'], is: originalVideoId },
                         ],
                         returnObject: true,
