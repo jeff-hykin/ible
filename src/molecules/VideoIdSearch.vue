@@ -11,6 +11,7 @@
 </template>
 
 <script>
+import { backendHelpers } from '../iilvd-api.js'
 const { storageObject, currentFixedSizeOfYouTubeVideoId } = require('../utils')
 
 // make sure cachedVideoIds exists as an Array
@@ -43,18 +44,7 @@ export default {
                 this.suggestions = storageObject.cachedVideoIds
             } else {
                 // add results from the database
-                let possibleVideoIds = await (await this.backend).mongoInterface.getAll({
-                    from: "videos",
-                    where: [
-                        {
-                            hiddenValueOf: ["_id"],
-                            matches: `^${value.trim()}`,
-                        }
-                    ],
-                    forEach:{
-                        extractHidden: [ '_id']
-                    },
-                })
+                let possibleVideoIds = await backendHelpers.getVideoIds()
                 this.suggestions = [...new Set(possibleVideoIds.concat(this.suggestions))]
             }
         }

@@ -464,6 +464,14 @@ const fakeBackend = {
         }
         return usernames
     },
+    async getVideoIds() {
+        await indexDb.loaded
+        let videoIds = []
+        for await (const [ key, each ] of await indexDb.iter.videos) {
+            videoIds.push(key)
+        }
+        return videoIds
+    },
     summary: {
         general(filterAndSort) {
             // filterAndSort = {
@@ -485,6 +493,22 @@ window.backend = ezRpc.buildInterfaceFor(ezRpcUrl)
 
 module.exports = {
     backend,
+    backendHelpers: {
+        async getVideoIds() {
+            return await (await backend).mongoInterface.getAll({
+                from: "videos",
+                where: [
+                    {
+                        hiddenValueOf: ["_id"],
+                        matches: `^${value.trim()}`,
+                    }
+                ],
+                forEach:{
+                    extractHidden: [ '_id']
+                },
+            })
+        }
+    },
     mixin: {
         data: ()=>({
             backend,
