@@ -296,6 +296,16 @@ export default {
                 try  {
                     console.debug(`[seekToSegmentStart] seeking to ${this.$root.selectedSegment.startTime}`)
                     player.currentTime = this.$root.selectedSegment.startTime
+                    // there is a render issue and this is a hack to fix it
+                    try {
+                        const targetProportion = (this.$root.selectedSegment.startTime/player.duration)*100
+                        // yes the line below with innerHTML is necessary
+                        //      For some reason setting the value directly (document.querySelector(".plyr__progress").children[0].value = 45.5)
+                        //      this might be a firefox bug but that ^ assignment does nothing (print out value on next line and its not changed)
+                        document.querySelector(".plyr__progress").innerHTML = document.querySelector(".plyr__progress").innerHTML.replace(/value=".*?"/,`value="${targetProportion}"`)
+                    } catch (error) {
+                        
+                    }
                 // sometimes an error is caused by switching videos, and all thats needed is a restart
                 } catch (err) {
                     console.debug(`[seekToSegmentStart] seeking to segment start (will retry):`,err)
@@ -384,12 +394,6 @@ export default {
                 debug("seeking to segment start since a new index was found")
                 await this.seekToSegmentStart()
             }
-        },
-        incrementIndex() {
-            this.jumpSegment(this.$root.selectedSegment.$displayIndex+1)
-        },
-        decrementIndex() {
-            this.jumpSegment(this.$root.selectedSegment.$displayIndex-1)
         },
         toggleLabel(labelName) {
             // this is a dumb hack that only exists because sometimes the ui-checkboxes don't display the change

@@ -127,12 +127,7 @@ export default {
     },
     methods: {
         attemptSeekToSegmentStart() {
-            // go to the start of the selected segment
-            let startTime = get(this.$root, ["selectedSegment", "startTime"], null)
-            if (isFinite(startTime) && this.videoData.duration) {
-                let seekTo = get(this, ["$refs", "vuePlyr", "player", "seekTo"], ()=>0)
-                seekTo(startTime)
-            }
+            window.SegmentDisplay.seekToSegmentStart()
         },
         incrementIndex() {
             this.jumpSegment(this.$root.selectedSegment.$displayIndex+1)
@@ -141,43 +136,7 @@ export default {
             this.jumpSegment(this.$root.selectedSegment.$displayIndex-1)
         },
         async jumpSegment(newIndex) {
-            // basic saftey check
-            if (!(this.$root.selectedVideo.keySegments instanceof Array) || this.$root.selectedVideo.keySegments.length == 0) {
-                console.debug(`[jumpSegment] segments don't exist, returning`)
-                return 
-            }
-            // get the previous segment or the first one in the list
-            let segment = this.$root.selectedSegment || this.$root.selectedVideo.keySegments[0]
-            const startingPoint = wrapIndex(newIndex, this.$root.selectedVideo.keySegments)
-            let indexOfPreviousSegment = (!segment) ? 0 : segment.$displayIndex
-            if (newIndex != indexOfPreviousSegment || !segment.$shouldDisplay) {
-                let direction = indexOfPreviousSegment > newIndex ? -1 : 1
-                console.debug(`jump direction is:`,direction)
-                while (1) {
-                    let newSegment = this.$root.selectedVideo.keySegments[ wrapIndex(newIndex, this.$root.selectedVideo.keySegments) ]
-                    // if its a displayable segment then good, were done
-                    if (newSegment.$shouldDisplay) {
-                        segment = newSegment
-                        console.debug(`[jumpSegment] found a displayable segment`)
-                        break
-                    }
-                    // cycle the index
-                    newIndex += direction
-                    // if somehow ended back at the start then fail
-                    if (wrapIndex(newIndex, this.$root.selectedVideo.keySegments) == startingPoint) {
-                        console.debug(`[jumpSegment] couldn't find a displayable segment`)
-                        break
-                    }
-                }
-            }
-            
-            this.$root.selectedSegment = (segment && segment.$shouldDisplay) ? segment : null
-            
-            console.debug(`[jumpSegment] this.$root.selectedSegment is:`,this.$root.selectedSegment)
-            if (this.$root.selectedSegment instanceof Object) {
-                console.debug(`[jumpSegment] seeking to segment start since a new index was found`)
-                this.attemptSeekToSegmentStart()
-            }
+            window.SegmentDisplay.jumpSegment(newIndex)
         },
     }
 }
