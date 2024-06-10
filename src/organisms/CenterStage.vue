@@ -24,7 +24,7 @@
                                 //- BACK
                                 SideButton.left-side-button(left @click='decrementIndex')
                                 //- segments
-                                SegmentDisplay(:jumpSegment="jumpSegment" :videoDuration="videoData.duration" @SegmentDisplay-segementsRetrived="attemptSeekToSegmentStart")
+                                SegmentDisplay(:jumpSegment="jumpSegment" :videoDuration="videoData.duration")
                                 //- NEXT
                                 SideButton.right-side-button(right @click='incrementIndex')
                 column.side-container(align-v="top" overflow="visible" min-height="50rem" width="fit-content")
@@ -67,7 +67,7 @@ export default {
     watch: {
         "videoData.duration": function() {
             console.debug(`[watch] this.videoData.duration is:`,this.videoData.duration)
-            this.attemptSeekToSegmentStart()
+            window.SegmentDisplay.seekToSegmentStart()
         },
         "videoData.currentTime": function(value, prevValue) {
             let playing = get(this.$refs, ["vuePlyr","player","playing"], false)
@@ -84,7 +84,6 @@ export default {
     rootHooks: {
         watch: {
             selectedSegment() {
-                this.attemptSeekToSegmentStart()
             },
         }
     },
@@ -126,9 +125,6 @@ export default {
         }
     },
     methods: {
-        attemptSeekToSegmentStart() {
-            window.SegmentDisplay.seekToSegmentStart()
-        },
         incrementIndex() {
             this.jumpSegment(this.$root.selectedSegment.$displayIndex+1)
         },

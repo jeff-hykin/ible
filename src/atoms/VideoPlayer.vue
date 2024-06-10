@@ -140,6 +140,7 @@ export default {
                     safteyCheck(reject)
                     if (get(this, ["$refs", "vuePlyr", "player", "duration"], 0) !== 0) {
                         this.player = this.$refs.vuePlyr.player
+                        window.player = this.player
                         console.debug(`this.player is:`,this.player)
                         this.setupPlayer(this.player)
                         this.$emit("VideoPlayer-loaded", this.$refs.vuePlyr.player)
@@ -191,19 +192,6 @@ export default {
                         // Set
                         this.media.currentTime = Math.min(input, this.duration)
                         that.externalData.currentTime = this.media.currentTime
-                        setTimeout(() => that.externalData.currentTime = this.media.currentTime, 0)
-                        setTimeout(() => that.externalData.currentTime = this.media.currentTime, 50)
-                        setTimeout(() => that.externalData.currentTime = this.media.currentTime, 150)
-                        let location = (input / this.duration) * 100
-                        setTimeout(() => {
-                            try {
-                                this.elements.inputs.seek.setAttribute("value", location)
-                                this.elements.inputs.seek.setAttribute("aria-valuenow", location)
-                                this.elements.inputs.seek.style.setProperty("--value", `${location}%`)
-                            } catch (error) {
-                                console.error(error)
-                            }
-                        }, 0)
                     }
                     // Logging
                     this.debug.log(`Seeking to ${this.currentTime} seconds`)

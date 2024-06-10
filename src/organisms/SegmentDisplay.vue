@@ -301,6 +301,7 @@ export default {
                     try {
                         const targetProportion = (startTime/player.duration)*100
                         document.querySelector(".plyr__progress").children[0].setAttribute("value",targetProportion)
+                        document.querySelector(".plyr__progress").children[0].value = targetProportion
                         const minutes = Math.trunc(startTime/60)
                         const seconds = `${Math.trunc(startTime-minutes*60)}`.padStart(2,'0')
                         document.querySelector(".plyr__controls__item.plyr__time--current.plyr__time").innerText = `${minutes}:${seconds}`

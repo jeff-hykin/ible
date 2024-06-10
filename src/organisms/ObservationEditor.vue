@@ -234,9 +234,11 @@ export default {
     },
     windowListeners: {
         keydown(eventObj) {
-            console.debug(`eventObj is:`,eventObj)
             if (eventObj.key == "n") {
                 this.onNewObservation()
+                eventObj.preventDefault()
+                eventObj.stopPropagation()
+                return
             }
             if (eventObj.key == "m") {
                 this.observationData.endTime = this.currentTime.toFixed(3)
@@ -244,11 +246,15 @@ export default {
             if (eventObj.key == "s" && this.editing) {
                 this.onSaveEdit()
             }
+            // NOTE: ctrl+s save is handled in "preventBubbling"
         }
     },
     methods: {
-        preventBubbling(event) {
-            event.stopPropagation()
+        preventBubbling(eventObject) {
+            if (eventObject.ctrlKey && eventObject.key == "s") {
+                this.onSaveEdit()
+            }
+            eventObject.stopPropagation()
         },
         noSegment() {
             return !this.$root.selectedSegment && !this.editing
@@ -257,6 +263,7 @@ export default {
             this.$root.selectedSegment = null
         },
         async onNewObservation() {
+            console.log(`here`)
             if (!this.editing) {
                 this.dataCopy = {}
                 this.resetData()
@@ -267,6 +274,7 @@ export default {
                 // start editing the newly created observation
                 this.onEditObservation()
             }
+            console.log(`here  2`)
         },
         onEditObservation() {
             // save a copy encase they cancel
