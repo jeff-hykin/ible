@@ -19,7 +19,6 @@
         
 </template>
 <script>
-
 const { deferredPromise } = require("../utils.js")
 // TODO: fix the fullscreen mode
 export default {
@@ -226,7 +225,7 @@ export default {
                 switch (eventObject.key) {
                     case ".":
                         eventObject.preventDefault()
-                        this.player.foward(1/32)
+                        this.player.forward(1/32)
                         break
                     case ",":
                         eventObject.preventDefault()
