@@ -69281,7 +69281,7 @@ var _default = {
 
     download() {
       console.log(`download clicked`);
-      download("data.json", JSON.stringify(observationEntries));
+      download("data.json", JSON.stringify(observationEntries, 0, 4));
     },
 
     falsePositiveRatio() {
@@ -69302,7 +69302,80 @@ var _default = {
         } : {})
       };
       this.$root.searchResults = await backend.summary.general(filterAndSort);
-      console.debug(`this.$root.searchResults is:`, JSON.stringify(this.$root.searchResults, 0, 4)); // show the time of the first load
+      console.debug(`this.$root.searchResults is:`, JSON.stringify(this.$root.searchResults, 0, 4));
+      let where = []; // 
+      // build the backend query
+      // 
+
+      if (this.$root.routeData$.labelName) {
+        where.push({
+          valueOf: ['observation', 'label'],
+          is: this.$root.routeData$.labelName
+        });
+      }
+
+      if (isNumber(this.$root.filterAndSort.maxlabelConfidence)) {
+        where.push({
+          valueOf: ['observation', 'labelConfidence'],
+          isLessThanOrEqualTo: this.$root.filterAndSort.maxlabelConfidence
+        });
+      }
+
+      if (isNumber(this.$root.filterAndSort.minlabelConfidence)) {
+        where.push({
+          valueOf: ['observation', 'labelConfidence'],
+          isGreaterThanOrEqualTo: this.$root.filterAndSort.minlabelConfidence
+        });
+      }
+
+      if (this.$root.filterAndSort.observer) {
+        where.push({
+          valueOf: ['observer'],
+          is: this.$root.filterAndSort.observer
+        });
+      }
+
+      if (this.$root.filterAndSort.kindOfObserver == "Only Humans") {
+        where.push({
+          valueOf: ['isHuman'],
+          is: true
+        });
+      }
+
+      if (this.$root.filterAndSort.kindOfObserver == "Only Robots") {
+        where.push({
+          valueOf: ['isHuman'],
+          is: false
+        });
+      }
+
+      if (!this.$root.filterAndSort.validation.includes("Confirmed")) {
+        where.push({
+          valueOf: ['confirmedBySomeone'],
+          isNot: true
+        });
+      }
+
+      if (!this.$root.filterAndSort.validation.includes("Rejected")) {
+        where.push({
+          valueOf: ['rejectedBySomeone'],
+          isNot: true
+        });
+      } // TODO: I don't remember why I commented these out
+      // if (!this.$root.filterAndSort.validation.includes("Unchecked")    ) { where.push({ valueOf: ['rejectedBySomeone'                ], is:                     false                         , }) 
+      //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], is:                     false                         , }) }
+      // if (!this.$root.filterAndSort.validation.includes("Disagreement") ) { where.push({ valueOf: ['rejectedBySomeone'                ], isNot:                  true                          , }) 
+      //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
+
+
+      console.log(`querying the backend for observationEntries`);
+      observationEntries = await backend.mongoInterface.getAll({
+        from: 'observations',
+        where: [{
+          valueOf: ['type'],
+          is: 'segment'
+        }, ...where]
+      }); // show the time of the first load
 
       if (this.$root.loadStart) {
         let loadDuration = (new Date().getTime() - this.$root.loadStart) / 1000;
@@ -72475,7 +72548,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60441" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60611" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
