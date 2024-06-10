@@ -218,11 +218,25 @@ export default {
         keydownControls(eventObject) {
             // only when focused on the nothing or this element
             // (this is to exclude textboxes)
-            if (eventObject.target == document.body || get(eventObject, ["path"], []).includes(this.$el)) {
+            if (eventObject.target == document.body || get(eventObject, ["path"], []).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
                 // 
                 // key controls
                 // 
                 switch (eventObject.key) {
+                    case " ":
+                        // yes, this 50ms delay is necessary otherwise it sometimes fights with the bulitin window listeners from plyr (and sometimes doesn't depending on what element is selected)
+                        if (this.player.playing) {
+                            setTimeout(() => {
+                                this.player.pause()
+                            },50)
+                        } else {
+                            setTimeout(() => {
+                                this.player.play()
+                            },50)
+                        }
+                        eventObject.preventDefault()
+                        eventObject.stopPropagation()
+                        break
                     case ".":
                         eventObject.preventDefault()
                         this.player.forward(1/32)
