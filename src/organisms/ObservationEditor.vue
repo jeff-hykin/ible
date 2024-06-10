@@ -232,6 +232,20 @@ export default {
             }
         },
     },
+    windowListeners: {
+        keydown(eventObj) {
+            console.debug(`eventObj is:`,eventObj)
+            if (eventObj.key == "n") {
+                this.onNewObservation()
+            }
+            if (eventObj.key == "m") {
+                this.observationData.endTime = this.currentTime.toFixed(3)
+            }
+            if (eventObj.key == "s" && this.editing) {
+                this.onSaveEdit()
+            }
+        }
+    },
     methods: {
         noSegment() {
             return !this.$root.selectedSegment && !this.editing
