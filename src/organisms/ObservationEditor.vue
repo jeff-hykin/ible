@@ -67,7 +67,7 @@
                         | Cancel
                 
                 transition(name="fade")    
-                    container.input-area(v-if="!noSegment()" margin-top="2rem")
+                    container.input-area(v-if="!noSegment()" margin-top="2rem" @keydown="preventBubbling")
                         row.start-time-wrapper
                             ui-textbox(
                                 :disabled="!editing"
@@ -247,6 +247,9 @@ export default {
         }
     },
     methods: {
+        preventBubbling(event) {
+            event.stopPropagation()
+        },
         noSegment() {
             return !this.$root.selectedSegment && !this.editing
         },
