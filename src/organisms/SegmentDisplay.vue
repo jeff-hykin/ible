@@ -294,15 +294,16 @@ export default {
             
             const seekAction = (player)=>{
                 try  {
-                    console.debug(`[seekToSegmentStart] seeking to ${this.$root.selectedSegment.startTime}`)
-                    player.currentTime = this.$root.selectedSegment.startTime
+                    const startTime = this.$root.selectedSegment.startTime
+                    console.debug(`[seekToSegmentStart] seeking to ${startTime}`)
+                    player.currentTime = startTime
                     // there is a render issue and this is a hack to fix it
                     try {
-                        const targetProportion = (this.$root.selectedSegment.startTime/player.duration)*100
-                        // yes the line below with innerHTML is necessary
-                        //      For some reason setting the value directly (document.querySelector(".plyr__progress").children[0].value = 45.5)
-                        //      this might be a firefox bug but that ^ assignment does nothing (print out value on next line and its not changed)
-                        document.querySelector(".plyr__progress").innerHTML = document.querySelector(".plyr__progress").innerHTML.replace(/value=".*?"/,`value="${targetProportion}"`)
+                        const targetProportion = (startTime/player.duration)*100
+                        document.querySelector(".plyr__progress").children[0].setAttribute("value",targetProportion)
+                        const minutes = Math.trunc(startTime/60)
+                        const seconds = `${Math.trunc(startTime-minutes*60)}`.padStart(2,'0')
+                        document.querySelector(".plyr__controls__item.plyr__time--current.plyr__time").innerText = `${minutes}:${seconds}`
                     } catch (error) {
                         
                     }
