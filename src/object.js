@@ -176,6 +176,9 @@ export const hasDirectKeyList = (object, keyList) => {
  *     ```
  */
 export const get = ({ keyList, from, failValue }) => {
+    if (!(keyList instanceof Array)) {
+        keyList = [keyList]
+    }
     const lastKey = keyList.slice(-1)[0]
     for (const each of keyList.slice(0,-1)) {
         // couldn't make it to the last key

@@ -12,6 +12,7 @@
 
 <script>
 import { backendHelpers } from '../iilvd-api.js'
+import { isLocalVideo } from '../observation_tooling.js'
 const { storageObject, currentFixedSizeOfYouTubeVideoId } = require('../utils')
 
 // make sure cachedVideoIds exists as an Array
@@ -71,7 +72,7 @@ export default {
             }
             newVideoId = this.extractVideoIdIfPossible(newVideoId)
             
-            if (newVideoId.length == currentFixedSizeOfYouTubeVideoId || newVideoId.startsWith("/videos/")) {
+            if (newVideoId.length == currentFixedSizeOfYouTubeVideoId || isLocalVideo(newVideoId)) {
                 // pushing searched video route
                 this.$root.routeData$.videoId = newVideoId
                 // emit video event

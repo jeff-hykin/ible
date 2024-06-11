@@ -146,12 +146,27 @@
                             | Confirmed By ≥1 Human
                         UiSwitch(:disabled="!editing" v-model="observationData.rejectedBySomeone" v-if="!observationData.isHuman")
                             | Rejected By ≥1 Human
+                        ui-textbox(
+                            :disabled="true"
+                            floating-label
+                            label="Created At"
+                            v-model="humanTime"
+                        )
+                        ui-textbox(
+                            :disabled="true"
+                            floating-label
+                            label="Id"
+                            tooltip="This is based on 'Created At'"
+                            v-model="observationData.createdAt"
+                        )
 </template>
 
 <script>
 import { toKebabCase } from '../string.js'
+import { isLocalVideo } from '../observation_tooling.js'
 let { backend, backendHelpers, fakeBackend } = require('../iilvd-api.js')
 let { getColor, currentFixedSizeOfYouTubeVideoId, labelConfidenceCheck, isValidName, storageObject } = require("../utils")
+const createUuid = ()=>new Date().getTime() + `${Math.random()}`.slice(1)
 export default {
     props: [
         "currentTime",
@@ -163,6 +178,7 @@ export default {
     },
     data: ()=>({
         observationData: {
+            createdAt: createUuid(),
             videoId: null,
             startTime: 0,
             endTime: 0,
@@ -172,6 +188,7 @@ export default {
             isHuman: true,
             confirmedBySomeone: false,
             rejectedBySomeone: false,
+            customInfo: {},
         },
         uuidOfSelectedSegment: null,
         dataCopy: null,
@@ -187,6 +204,9 @@ export default {
         this.resetData()
     },
     computed: {
+        humanTime() {
+            return (new Date(this.observationData.createdAt)).toString()
+        },
         // TODO: check this before submitting to backend
         allValid() {
             // not("some of them are invalid")
@@ -197,10 +217,10 @@ export default {
             return {
                 startTime: observationData.startTime >= 0 && observationData.startTime < observationData.endTime,
                 endTime: observationData.endTime > 0 && observationData.startTime < observationData.endTime && observationData.endTime <= window.player.duration,
-                label: isValidName(get(observationData, ["label"])),
-                observer: isValidName(get(observationData, ["observer"])),
+                label: isValidName(observationData?.label),
+                observer: isValidName(observationData?.observer),
                 labelConfidence: labelConfidenceCheck(observationData.labelConfidence),
-                videoId: isString(observationData.videoId) && (observationData.videoId.length == currentFixedSizeOfYouTubeVideoId || observationData.videoId.startsWith("/videos/")),
+                videoId: isString(observationData.videoId) && (observationData.videoId.length == currentFixedSizeOfYouTubeVideoId || isLocalVideo(observationData.videoId)),
             }
         }
     },
@@ -220,6 +240,7 @@ export default {
                 if (selectedSegment instanceof Object) {
                     this.uuidOfSelectedSegment = selectedSegment.$uuid
                     this.observationData = {
+                        createdAt: selectedSegment.createdAt,
                         videoId:   selectedSegment.videoId,
                         startTime: selectedSegment.startTime,
                         endTime:   selectedSegment.endTime,
@@ -229,6 +250,7 @@ export default {
                         rejectedBySomeone: selectedSegment.rejectedBySomeone,
                         label:           (selectedSegment.observation||{}).label,
                         labelConfidence: (selectedSegment.observation||{}).labelConfidence,
+                        customInfo:      selectedSegment.customInfo,
                     }
                 }
             },
@@ -267,6 +289,10 @@ export default {
             // enforce naming convention
             this.observationData.label = toKebabCase(this.observationData.label.toLowerCase())
         },
+        onObserverChange() {
+            // enforce naming convention
+            this.observationData.observer = toKebabCase(this.observationData.observer.toLowerCase())
+        },
         preventBubbling(eventObject) {
             if (eventObject.ctrlKey && eventObject.key == "s") {
                 this.onSaveEdit()
@@ -274,7 +300,7 @@ export default {
             eventObject.stopPropagation()
         },
         noSegment() {
-            return !this.$root.selectedSegment && !this.editing
+            return !(this.$root.selectedSegment instanceof Object) && !this.editing
         },
         deSelectSegment() {
             this.$root.selectedSegment = null
@@ -285,8 +311,8 @@ export default {
                 this.resetData()
                 this.observationData.startTime = window.player.currentTime.toFixed(3)
                 this.observationData.endTime = (window.player.currentTime+0.01).toFixed(3)
-                this.observationData.label = storageObject.recentLabel || get(this.$root, ["routeData$", "labelName"],"") || "example-label"
-                this.uuidOfSelectedSegment = null // start editing the newly created observation
+                this.observationData.label = storageObject.recentLabel || this.$root?.routeData$?.labelName || "example-label"
+                this.uuidOfSelectedSegment = new Date().getTime() + `${Math.random()}`.slice(1)
                 this.onEditObservation()
             }
         },
@@ -312,14 +338,14 @@ export default {
             }
             if (!this.allValid) {
                 this.$toasted.show(`Some fields are invalid (should be marked red)`).goAway(2500)
-                return
             }
             
             // convert to numbers 
             this.observationData.startTime -= 0
             this.observationData.endTime -= 0
             
-            let observation = {
+            let observationEntry = {
+                createdAt: this.observationData.createdAt,
                 type: "segment",
                 videoId:            this.observationData.videoId,
                 startTime:          this.observationData.startTime,
@@ -331,7 +357,9 @@ export default {
                 observation: {
                     label:           this.observationData.label,
                     labelConfidence: this.observationData.labelConfidence,
+                    spacialInfo: {},
                 },
+                customInfo: this.observationData.customInfo,
             }
             const isNewObervation = !this.uuidOfSelectedSegment
             if (isNewObervation) {
@@ -341,26 +369,14 @@ export default {
             // 
             // save on storageObject
             // 
-            observation.observation.label = toKebabCase(`${observation.observation.label}`.toLowerCase())
-            this.$root.addLabel(observation.observation.label)
+            this.$root.addLabel(observationEntry.observation.label)
             const observationsForVideo = storageObject[this.observationData.videoId]||{}
-            observationsForVideo[this.uuidOfSelectedSegment] = observation
+            observationsForVideo[this.uuidOfSelectedSegment] = observationEntry
             storageObject[this.observationData.videoId] = observationsForVideo
             
             try {
-                // if saving an edit
-                if (isNewObervation) {
-                    const uuidOfSelectedSegment = this.uuidOfSelectedSegment
-                    // TODO: check the valid-ness of the segment first
-                    // TODO: add hints for data validity
-                    await backendHelpers.setObservation({uuidOfSelectedSegment, observation})
-                    await fakeBackend.setObservation({uuidOfSelectedSegment, observation})
-                // if saving something new
-                } else {
-                    this.uuidOfSelectedSegment = await (await this.backend).addSegmentObservation(observation)
-                    let uuid = await fakeBackend.addObservation(observation)
-                    console.debug(`fake backend uuid is:`,uuid)
-                }
+                await backendHelpers.setObservation({uuidOfSelectedSegment, observation: observationEntry})
+                await fakeBackend.setObservation(observationEntry)
             } catch (error) {
                 this.$toasted.show(`There was an error on the database`).goAway(5500)
                 console.error("# ")
@@ -379,8 +395,8 @@ export default {
             this.editing = false
             this.$toasted.show(`Changes saved`).goAway(2500)
             // create label if it doesn't exist
-            this.$root.addLabel(this.observationData.label, observation.videoId)
-            this.$root.selectedSegment = observation
+            this.$root.addLabel(this.observationData.label, observationEntry.videoId)
+            this.$root.selectedSegment = observationEntry
             
             // tell segments they need to get the data from the backend again
             window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
@@ -404,11 +420,12 @@ export default {
         resetData() {
             this.$root.selectedSegment = null
             this.observationData = {
+                createdAt: new Date().getTime() + `${Math.random()}`.slice(1),
                 videoId: (this.$root.selectedVideo)&&this.$root.selectedVideo.$id,
                 startTime: window.player.currentTime || 0,
                 endTime: window.player.currentTime || window.player.duration || 0,
                 observer: window.storageObject.observer || "",
-                label: get(this,["$root", "routeData$", "labelName"], ""),
+                label: this.$root?.routeData$?.labelName||"",
                 labelConfidence: 0.95,
                 confirmedBySomeone: false,
                 rejectedBySomeone:  false,

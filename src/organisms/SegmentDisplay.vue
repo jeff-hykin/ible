@@ -59,10 +59,8 @@
 
 </template>
 <script>
-import { set } from '../object'
-const { wrapIndex, storageObject } = require('../utils')
-const { dynamicSort } = require("good-js")
-const { checkIf, deferredPromise } = require("../utils.js")
+import { set } from '../object.js'
+const { wrapIndex, storageObject, checkIf, deferredPromise, dynamicSort } = require("../utils.js")
 const { backendHelpers, fakeBackend } = require('../iilvd-api.js')
 const generalTimeoutFrequency = 50 // ms 
 
@@ -94,10 +92,10 @@ export default {
         watch: {
             labels() {
                 // make sure the label is still valid
-                let label = get(this.$root, ["selectedSegment", "label"], null)
+                let label = this.$root?.selectedSegment?.label
                 if (label) {
                     // if no longer selected
-                    if (!get(this.$root, ["labels", label, "selected"], false)) {
+                    if (!((this.$root?.labels||{})[label]?.selected)) {
                         // reset the selected segment
                         this.$root.selectedSegment = null
                     }
@@ -133,7 +131,7 @@ export default {
             } catch (err) {}
         },
         async updateSegments(...args) {
-            const originalVideoId = get(this.$root, ['routeData$', 'videoId'], null)
+            const originalVideoId = this.$root?.routeData$?.videoId
             const duration = window.player.duration
             if (originalVideoId) {
                 let keySegments
@@ -169,7 +167,7 @@ export default {
                 }
                 
                 // check then assign
-                if (originalVideoId == get(this.$root, ['routeData$', 'videoId'], null)) {
+                if (originalVideoId == this.$root?.routeData$?.videoId) {
                     this.$withoutWatchers("SegmentDisplay-retrieveFromBackend", ()=>{
                         this.$root.selectedVideo.keySegments = this.processNewSegments({ duration, keySegments })
                     })
@@ -220,7 +218,7 @@ export default {
             
             // only return segments that match the selected labels
             let namesOfSelectedLabels = this.$root.getNamesOfSelectedLabels()
-            let displaySegments = get(this.$root, ["selectedVideo", "keySegments"], []).filter(
+            let displaySegments = (this.$root?.selectedVideo?.keySegments||[]).filter(
                 eachSegment=>(eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.observation.label) || namesOfSelectedLabels.length == 0)
             )
         
@@ -271,7 +269,7 @@ export default {
             this.allLabelsOn = !this.allLabelsOn
             // assign
             for (let [eachKey, eachValue] of Object.entries(this.$root.labels)) {
-                if (eachKey != get(this.$root, ["routeData$", "labelName"], null)) {
+                if (eachKey != this.$root?.routeData$?.labelName) {
                     eachValue.selected = this.allLabelsOn
                 } else {
                     eachValue.selected = true

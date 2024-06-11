@@ -9,17 +9,17 @@
     )
         WrappedTopSearch
         
-        column(v-if="!get($root, ['routeData$', 'videoId'], false)" width="100%" height="100vh" flex-shrink="1" color="gray")
+        column(v-if="!get({ keyList: ['routeData$', 'videoId'], from: $root, failValue: false })" width="100%" height="100vh" flex-shrink="1" color="gray")
             h5 No Video Selected
             
         transition(name="fade")
-            row.center-stage(v-show="get($root, ['routeData$', 'videoId'], false)" align-v="top" align-h="center" padding-top="8rem")
+            row.center-stage(v-show="get({ keyList: ['routeData$', 'videoId'], from: $root, failValue: false })" align-v="top" align-h="center" padding-top="8rem")
                 column.main-container(flex-grow=1 align-v="top")
-                    row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top" :opacity="get($root, ['routeData$', 'videoId'], false)? 1 : 0")
+                    row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top" :opacity="get({ keyList: ['routeData$', 'videoId'], from: $root, failValue: false })? 1 : 0")
                         //- Video area
                         column(align-v="top").video-width-sizer
                             row(width="96%" position="relative")
-                                VideoPlayer(ref="videoPlayer" v-model="videoData" :videoId="get($root, ['routeData$', 'videoId'], false)")
+                                VideoPlayer(ref="videoPlayer" v-model="videoData" :videoId="get({ keyList: ['routeData$', 'videoId'], from: $root, failValue: false })")
                             container.below-video
                                 //- BACK
                                 SideButton.left-side-button(left @click='decrementIndex')
@@ -34,14 +34,16 @@
                         :duration="videoData.duration"
                     )
                     InfoSection.info-section(
-                        :labelName="get($root, ['routeData$', 'labelName'], '')"
-                        :videoId="get($root, ['routeData$', 'videoId'], null)"
-                        :segmentUuid="get($root, ['selectedSegment', '$uuid'], null)"
+                        :labelName="get({ keyList: ['routeData$', 'labelName'], from: $root, failValue: '' })"
+                        :videoId="get({ keyList: ['routeData$', 'videoId'], from: $root, failValue: false })"
+                        :segmentUuid="get({ keyList: ['routeData$', 'segmentUuid'], from: $root, failValue: null })"
                         :currentTime="videoData.currentTime"
                     )
 </template>
 <script>
 const { wrapIndex } = require('../utils')
+import { get } from "../object.js"
+
 export default {
     props: [],
     components: {
@@ -70,10 +72,9 @@ export default {
             window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
         },
         "videoData.currentTime": function(value, prevValue) {
-            const vuePlyr = this.$refs.vuePlyr1||((this.$refs.vuePlyr2)&&this.$refs.vuePlyr2.player)
-            let playing = get(vuePlyr, ["playing"], false)
+            let playing = !window.player?.paused
             if (playing) {
-                let endTime = get(this.$root, ["selectedSegment", "endTime",], Infinity)
+                let endTime = this.$root?.selectedSegment?.endTime||Infinity
                 if (value >= endTime && prevValue < endTime) {
                     // pause video
                     vuePlyr.player.pause()
@@ -90,7 +91,7 @@ export default {
     },
     windowListeners: {
         keydown(eventObject) {
-            if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get(eventObject, ["path"], []).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
+            if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get({ keyList: ["path"], from: eventObject, failValue: [] }).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
                 // 
                 // key controls
                 // 

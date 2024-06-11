@@ -3,14 +3,16 @@
         span(v-if="videoResults.length == 0")
             | (No other videos matching this search)
         column.video-list-element(v-for="eachVideoId in videoResults" @click="selectVideo($event, eachVideoId)")
-            row.thumbnail(width="100%" height="100%" :background-image="eachVideoId.startsWith('/videos/') ? `url(/icon.png)` : `url(http://img.youtube.com/vi/${eachVideoId}/mqdefault.jpg)`" position="relative" border-radius="0.5rem")
+            row.thumbnail(width="100%" height="100%" :background-image="isLocalVideo(eachVideoId) ? `url(/icon.png)` : `url(http://img.youtube.com/vi/${eachVideoId}/mqdefault.jpg)`" position="relative" border-radius="0.5rem")
                 span(style="background-color: rgba(0,0,0,0.10); position: absolute; bottom: 0.1rem; left: 0.1rem; padding: 0.5rem; border-radius: 0.5rem;")
-                    | {{!eachVideoId.startsWith('/videos/')?"":`${eachVideoId.slice("/videos/".length)}`}}
+                    | {{!isLocalVideo(eachVideoId)?"":`${getLocalVideoName(eachVideoId)}`}}
 </template>
 
 <script>
 import { backendHelpers, fakeBackend } from '../iilvd-api.js'
 import { set } from '../object.js'
+import { isLocalVideo, getLocalVideoName } from '../observation_tooling.js'
+
 export default {
     data: ()=>({
         get
@@ -18,12 +20,14 @@ export default {
     computed: {
         videoResults() {
             let videos = this.$root.searchResults.videos
-            let selectedId = get(this.$root, ['routeData$', 'videoId'], null)
+            let selectedId = this.$root?.routeData$?.videoId
             let filtered = Object.keys(videos).filter(each=>each!==selectedId)
             return filtered
         }
     },
     methods: {
+        isLocalVideo,
+        getLocalVideoName,
         getTitleFor(videoId) {
             let videoObject = this.$root.getCachedVideoObject(videoId)
             let title = videoObject&&videoObject.summary&&videoObject.summary.title

@@ -103,18 +103,22 @@ export default {
         errorPreview: "",
         latestUploadErrors: "",
         dummyData1: {
-            "videoId": "FLK5-00l0r4",
+            "createdAt": new Date().getTime() + `${Math.random()}`.slice(1),
             "type": "segment",
+            "videoId": "FLK5-00l0r4",
             "startTime": 125.659,
             "endTime": 127.661,
             "observer": "CSCE636-Spring2021-WuAiSeDUdl-1",
             "isHuman": true,
             "observation": {
                 "label": "happy",
-                "labelConfidence": -0.99
-            }
+                "labelConfidence": -0.99,
+                "spacialInfo": {},
+            },
+            "customInfo": {},
         },
         dummyData2: {
+            "createdAt": 1718116559422.8207249607261322,
             "videoId": "FLK5-00l0r4",
             "type": "segment",
             "startTime": 92.433,
@@ -125,8 +129,10 @@ export default {
             "rejectedBySomeone": false,
             "observation": {
                 "label": "sad",
-                "labelConfidence": 0.85
-            }
+                "labelConfidence": 0.85,
+                "spacialInfo": {},
+            },
+            "customInfo": {},
         },
     }),
     watch: {

@@ -4,8 +4,6 @@
 </template>
 
 <script>
-const { dynamicSort, logBlock, checkIf, get, set } = require("good-js")
-
 let oldOwner = { giveUpControl: ()=>0 }
 export let openPanel = ()=>{
     console.log(`opening panel`)

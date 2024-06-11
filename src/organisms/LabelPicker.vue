@@ -23,7 +23,6 @@
 </template>
 
 <script>
-const { dynamicSort, logBlock, get, set } = require("good-js")
 const { checkIf } = require("../utils.js")
 const { openPanel, takeover } = require("../templates/LeftSidePanel")
 let Fuse = require("fuse.js").default

@@ -8,7 +8,6 @@
 
 <script>
 const { wrapIndex } = require('../utils')
-const { dynamicSort, logBlock } = require("good-js")
 const { openPanel } = require("../templates/RightSidePanel")
 
 export default {

@@ -1,9 +1,9 @@
 let Vue = require("vue").default
 let ezRpc = require("ez-rpc-frontend")
-let { deferredPromise, asyncIteratorToList } = require("./utils.js")
+let { deferredPromise, asyncIteratorToList, getColor, dynamicSort } = require("./utils.js")
 let { get, set, remove } = require("./object.js")
 let { toKebabCase, toSnakeCase, toScreamingtoKebabCase, toScreamingtoSnakeCase } = require("./string.js")
-const { dynamicSort } = require("good-js")
+const { each, add } = require("lodash")
 
 // const databaseUrl = "http://192.168.86.198:3000"
 // const databaseUrl = "http://localhost:3000"
@@ -42,6 +42,9 @@ Object.assign(
 )
 const makeIterator = (tableName)=>{
     return async function* () {
+        if (!db) {
+            await dbPromise
+        }
         const transaction = db.transaction([storeName], 'readonly')
         const objectStore = transaction.objectStore(storeName)
         let nextIsReady = deferredPromise()
@@ -80,13 +83,6 @@ const makeIterator = (tableName)=>{
             yield [ output.value.k, output.value.v ]
         }
     }
-}
-const quickHash = (str)=>{
-    let hash = 0, i = 0, len = str.length;
-    while ( i < len ) {
-        hash  = ((hash << 5) - hash + str.charCodeAt(i++)) << 0
-    }
-    return hash
 }
 const indexDb = {
     loaded: dbPromise,
@@ -208,6 +204,9 @@ const indexDb = {
         return transactionPromise
     },
     async *gets(addresses) {
+        if (!db) {
+            await dbPromise
+        }
         addresses = [...addresses]
         const next = await dbPromise.then(()=>new Promise((resolve, reject)=>{
             const transaction = db.transaction([storeName], 'readwrite')
@@ -241,6 +240,9 @@ const indexDb = {
     },
     // deletes
     async deletes(addresses) {
+        if (!db) {
+            await dbPromise
+        }
         addresses = [...addresses]
         const next = await dbPromise.then(()=>new Promise((resolve, reject)=>{
             const transaction = db.transaction([storeName], 'readwrite')
@@ -299,7 +301,10 @@ const indexDb = {
             ).then(resolve).catch(reject)
         }))
     },
-    get keys() {
+    async keys() {
+        if (!db) {
+            await dbPromise
+        }
         return [...indexDb._tableNames]
     },
     /**
@@ -355,6 +360,9 @@ const indexDb = {
     },
     // all entries
     async *[Symbol.asyncIterator]() {
+        if (!db) {
+            await dbPromise
+        }
         const transaction = db.transaction([storeName], 'readonly')
         const objectStore = transaction.objectStore(storeName)
         let nextIsReady = deferredPromise()
@@ -486,87 +494,253 @@ const indexDb = {
     // observations
     // videos
     // observers
-const fakeBackend = {
-    async addObservation(observationEntry) {
-        if (!db) {
-            await indexDb.loaded
-        }
-        // observationEntry = {
-        //     "videoId": "FLK5-00l0r4",
-        //     "type": "segment",
-        //     "startTime": 125.659,
-        //     "endTime": 127.661,
-        //     "observer": "CSCE636-Spring2021-WuAiSeDUdl-1",
-        //     "isHuman": true,
-        //     "observation": {
-        //         "label": "happy",
-        //         "labelConfidence": -0.99
-        //     }
-        // }
-        const labelAddress = ["labels", observationEntry.label]
-        const labelInfo = (await indexDb.get(labelAddress)||{})
-        
-        const observerAddress = ["observers", observationEntry.observer]
-        const observerInfo = (await indexDb.get(observerAddress)||{})
-        
-        const videoAddress = ["videos", observationEntry.videoId]
-        const videoInfo = (await indexDb.get(videoAddress)||{})
-        
-        // enforce simplfied names
-        observationEntry.observation.label = toKebabCase(observationEntry.observation.label)
-        observationEntry.observer = toKebabCase(observationEntry.observer)
-        const { videoId, type, startTime, endTime, observer } = observationEntry
-        const { label, spacialInfo } = observationEntry.observation
-        const observationKey = `${quickHash(JSON.stringify({ videoId, type, startTime, endTime, observer, label, spacialInfo }))}`
-        const observationAddress = ["observations", observationKey]
-        
-        indexDb.puts([
-            // add video
-            [
-                videoAddress,
-                {
-                    ...videoInfo,
-                    observationCount: videoInfo?.count+1,
-                    labelCount: {...videoInfo?.labelCount, [label]: ((videoInfo?.labelCount||{})[label]||0)+1},
+const minSizeOfUnixTimestamp = 10
+
+const managers = {
+    labels: {
+        async regenerate(existingValues, {addressesToIgnore=[], entriesToAssume=[]}={}) {
+            const labels = {...existingValues}
+            // reset computed values
+            for (const [key, value] of Object.entries(labels)) {
+                value.count = 0
+                value.videos = new Set()
+            }
+            const observationKeysToSkip = addressesToIgnore.filter(
+                    each=>each instanceof Array && each[0] == "observations"
+                ).map(
+                    each=>each[1]
+                )
+            const addEntry = (observationEntry)=>{
+                if (observationEntry.observation.label) {
+                    const labelName = observationEntry.observation.label
+                    labels[labelName] = labels[labelName]||{}
+                    labels[labelName].color = labels[labelName].color || getColor(labelName)
+                    labels[labelName].count = (labels[labelName].count||0)+1
+                    labels[labelName].videos = labels[labelName].videos||new Set()
+                    labels[labelName].videos.add(observationEntry.videoId)
                 }
-            ],
-            // add observer
-            [
-                observerAddress,
-                {
-                    ...observerInfo,
-                    observationCount: observerInfo?.count+1,
-                    labelCount: {...observerInfo?.labelCount, [label]: ((observerInfo?.labelCount||{})[label]||0)+1},
-                    videos: [...new Set(...((observerInfo?.videos||[]).concat([observationEntry.videoId])))],
+            }
+            for (const each of entriesToAssume) {
+                addEntry(each)
+            }
+            for await (const [ key,observationEntry ] of indexDb.iter.observations) {
+                if (observationKeysToSkip.includes(key)) {
+                    continue
                 }
-            ],
-            // update labels
-            [
-                labelAddress,
+                addEntry(observationEntry)
+            }
+            // convert sets to arrays
+            for (const [key, value] of Object.entries(labels)) {
+                value.videos = [...value.videos]
+            }
+            return labels
+        },
+        async whenEditObservations({oldObservationEntries, newObservationEntries, existingValues}) {
+            // NOTE: this isn't very efficient.
+                // We would need to change the data structure of the video to include the ID's of the observations
+                // in order to maintain correctness and have ~O(1) operations for editing a observation.
+                // Large bulk edits should still use this method, but for small edits we it would be better to use a
+                // the incremental approach
+            return managers.labels.regenerate(
+                existingValues,
                 {
-                    ...labelInfo,
-                    count: (labelInfo?.count||0)+1,
-                    videos: [...new Set(...((labelInfo?.videos||[]).concat([observationEntry.videoId])))],
+                    addressesToIgnore:oldObservationEntries.map(each=>["observations", each.createdAt]),
+                    entriesToAssume: newObservationEntries,
                 },
-            ],
-            // add observation
-            [
-                observationAddress,
-                observationEntry,
-            ],
+            )
+        },
+        renameLabels({oldLabelName, newLabelName, existingTables}) {
+            existingTables.labels[newLabelName] = existingTables.labels[oldLabelName]
+            delete existingTables.labels[oldLabelName]
+            for (const [key, value] of Object.entries(existingTables.observations)) {
+                if (value.observation.label == oldLabelName) {
+                    value.observer = newLabelName
+                }
+            }
+            return existingTables
+        },
+    },
+    observers: {
+        async regenerate(existingObservers, {addressesToIgnore=[], entriesToAssume=[]}={}) {
+            const observers = {...existingObservers}
+            // reset computed values
+            for (const [key, value] of Object.entries(observers)) {
+                value.observationCount = 0
+                value.labelCounts = {}
+                value.videos = new Set()
+            }
+            const observationKeysToSkip = addressesToIgnore.filter(
+                    each=>each instanceof Array && each[0] == "observations"
+                ).map(
+                    each=>each[1]
+                )
+            const addEntry = (observationEntry)=>{
+                if (observationEntry.observer) {
+                    const videoId = observationEntry.videoId
+                    const label = observationEntry.observation.label
+                    const observer = observationEntry.observer
+                    observers[observer] = observers[observer]||{}
+                    observers[observer].observationCount   = (observers[observer].observationCount||0)+1
+                    observers[observer].labelCounts        = observers[observer].labelCounts||{}
+                    observers[observer].labelCounts[label] = (observers[observer].labelCounts[label]||0)+1
+                    observers[observer].videos             = observers[observer].videos||new Set()
+                    observers[observer].videos.add(videoId)
+                }
+            }
+            for (const each of entriesToAssume) {
+                addEntry(each)
+            }
+            for await (const [ key,observationEntry ] of indexDb.iter.observations) {
+                if (observationKeysToSkip.includes(key)) {
+                    continue
+                }
+                addEntry(observationEntry)
+            }
+            // convert sets to arrays
+            for (const [key, value] of Object.entries(observers)) {
+                value.videos = [...value.videos]
+            }
+            return labels
+        },
+        async whenEditObservations({oldObservationEntries, newObservationEntries, existingValues}) {
+            // NOTE: this isn't very efficient.
+                // We would need to change the data structure of the video to include the ID's of the observations
+                // in order to maintain correctness and have ~O(1) operations for editing a observation.
+                // Large bulk edits should still use this method, but for small edits we it would be better to use a
+                // the incremental approach
+            return managers.labels.regenerate(
+                existingValues,
+                {
+                    addressesToIgnore:oldObservationEntries.map(each=>["observations", each.createdAt]),
+                    entriesToAssume: newObservationEntries,
+                },
+            )
+        },
+        renameObserver({oldObserverName, newObserverName, existingTables}) {
+            existingTables.observers[newObserverName] = existingTables.observers[oldObserverName]
+            delete existingTables.observers[oldObserverName]
+            for (const [key, value] of Object.entries(existingTables.observations)) {
+                if (value.observer == oldObserverName) {
+                    value.observer = newObserverName
+                }
+            }
+            return existingTables
+        },
+    },
+    videos: {
+        async regenerate(existingVideos, {addressesToIgnore=[], entriesToAssume=[]}={}) {
+            const videos = {...existingVideos}
+            // reset computed values
+            for (const [key, value] of Object.entries(videos)) {
+                value.observationCount = 0
+                value.observationsPerLabel = {}
+            }
+            const observationKeysToSkip = addressesToIgnore.filter(
+                    each=>each instanceof Array && each[0] == "observations"
+                ).map(
+                    each=>each[1]
+                )
+            const addEntry = (observationEntry)=>{
+                if (observationEntry.videoId) {
+                    const videoId = observationEntry.videoId
+                    const label = observationEntry.observation.label
+                    videos[videoId] = videos[videoId]||{}
+                    videos[videoId].count = (videos[videoId].count||0)+1
+                    videos[videoId].observationsPerLabel = videos[videoId].observationsPerLabel||{}
+                    videos[videoId].observationsPerLabel[label] = (videos[videoId].observationsPerLabel[label]||0)+1
+                }
+            }
+            for (const each of entriesToAssume) {
+                addEntry(each)
+            }
+            for await (const [ key,observationEntry ] of indexDb.iter.observations) {
+                if (observationKeysToSkip.includes(key)) {
+                    continue
+                }
+                addEntry(observationEntry)
+            }
+            return labels
+        },
+        async whenEditObservations({oldObservationEntries, newObservationEntries, existingValues}) {
+            // NOTE: this isn't very efficient.
+                // We would need to change the data structure of the video to include the ID's of the observations
+                // in order to maintain correctness and have ~O(1) operations for editing a observation.
+                // Large bulk edits should still use this method, but for small edits we it would be better to use a
+                // the incremental approach
+            return managers.labels.regenerate(
+                existingValues,
+                {
+                    addressesToIgnore:oldObservationEntries.map(each=>["observations", each.createdAt]),
+                    entriesToAssume: newObservationEntries,
+                },
+            )
+        },
+    },
+}
+
+
+const fakeBackend = {
+    async setObservations(observationEntries) {
+        // 
+        // synchonous changes before bulk set
+        // 
+        for (const observationEntry of observationEntries) {
+            // observationEntry = {
+            //     "createdAt": "1623456789.308420294042",
+            //     "type": "segment",
+            //     "videoId": "FLK5-00l0r4",
+            //     "startTime": 125.659,
+            //     "endTime": 127.661,
+            //     "observer": "CSCE636-Spring2021-WuAiSeDUdl-1",
+            //     "isHuman": true,
+            //     "observation": {
+            //         "label": "happy",
+            //         "labelConfidence": -0.99
+            //     },
+            //     "customInfo": {},
+            // }
+
+            // enforce unix timestamp (e.g. id)
+            if (!observationEntry.createdAt || `${observationEntry.createdAt}`.length < minSizeOfUnixTimestamp) {
+                observationEntry.createdAt = new Date().getTime() + `${Math.random()}`.slice(1)
+            }
+    
+            // enforce simplfied names
+            observationEntry.observation.label = toKebabCase(observationEntry.observation.label.toLowerCase())
+            observationEntry.observer = toKebabCase(observationEntry.observer.toLowerCase())
+            const { videoId, type, startTime, endTime, observer } = observationEntry
+            const { label, spacialInfo } = observationEntry.observation
+        }
+    
+        const entryIds = observationEntries.map(({createdAt})=>["observations", createdAt])
+        
+        const newLabels    = managers.labels.regenerate(    {},{addressesToIgnore: entryIds, entriesToAssume: observationEntries,},)
+        const newObservers = managers.observers.regenerate( {},{addressesToIgnore: entryIds, entriesToAssume: observationEntries,},)
+        const newVideos    = managers.videos.regenerate(    {},{addressesToIgnore: entryIds, entriesToAssume: observationEntries,},)
+    
+        // 
+        // bulk set
+        // 
+        return indexDb.puts([
+            ...observationEntries.map(each=>[
+                ["observations", each.createdAt], each,
+            ]),
+            ...Object.entries(newLabels   ).map(([key, value])=>[   ["labels",    key],   value,   ]),
+            ...Object.entries(newObservers).map(([key, value])=>[   ["observers", key],   value,   ]),
+            ...Object.entries(newVideos   ).map(([key, value])=>[   ["videos",    key],   value,   ]),
         ])
-        return observationKey
+    },
+    setObservation(observationEntry) {
+        return fakeBackend.setObservations([observationEntries])
     },
     changeDb() {
         // done (do nothing)
     },
     async collectionNames() {
-        await indexDb.loaded
         // done (just used to load the db)
         return indexDb.keys()
     },
     async getUsernames() {
-        await indexDb.loaded
         let usernames = []
         for await (const [ key, each ] of indexDb.iter.observations) {
             usernames.push(each.observer)
@@ -574,25 +748,62 @@ const fakeBackend = {
         return [...new Set(usernames)]
     },
     async getVideoTitle(videoId) {
-        await indexDb.loaded
         return indexDb.get([videoId, "summary", "title"])
     },
     async getObservations({where=[], returnObject=false}) {
-        await indexDb.loaded
         return indexDb.select({from:"observations", where, returnObject})
     },
     async deleteObservation({uuidOfSelectedSegment}) {
-        await indexDb.loaded
-        return indexDb.deletes([["observations", uuidOfSelectedSegment]])
-    },
-    async setObservation({uuidOfSelectedSegment, observation}) {
-        await indexDb.loaded
-        return indexDb.puts([
-            [["observations", uuidOfSelectedSegment], observation],
+        const observationEntry = await indexDb.get(["observations", uuidOfSelectedSegment])
+        if (observationEntry == undefined) {
+            return
+        }
+        
+        const labelAddress    = ["labels",    observationEntry.label   ]
+        const observerAddress = ["observers", observationEntry.observer]
+        const videoAddress    = ["videos",    observationEntry.videoId ]
+
+        const [ labelInfo, observerInfo, videoInfo ] = await Promise.all([
+            indexDb.get(labelAddress   ).then(value=>value||{}),
+            indexDb.get(observerAddress).then(value=>value||{}),
+            indexDb.get(videoAddress   ).then(value=>value||{}),
+        ])
+        
+        return Promise.all([
+            indexDb.deletes([["observations", uuidOfSelectedSegment]]),
+            indexDb.puts([
+                // add video
+                [
+                    videoAddress,
+                    {
+                        ...videoInfo,
+                        observationCount: (videoInfo?.count||1)-1,
+                        labelCount: {...videoInfo?.labelCount, [label]: ((videoInfo?.labelCount||{})[label]||1)-1},
+                    }
+                ],
+                // add observer
+                [
+                    observerAddress,
+                    {
+                        ...observerInfo,
+                        observationCount: (observerInfo?.count||1)-1,
+                        labelCount: {...observerInfo?.labelCount, [label]: ((observerInfo?.labelCount||{})[label]||1)-1},
+                        videos: [...new Set(...((observerInfo?.videos||[]).concat([observationEntry.videoId])))],
+                    }
+                ],
+                // update labels
+                [
+                    labelAddress,
+                    {
+                        ...labelInfo,
+                        count: (labelInfo?.count||1)-1,
+                        videos: [...new Set(...((labelInfo?.videos||[]).concat([observationEntry.videoId])))],
+                    },
+                ],
+            ]),
         ])
     },
     async getVideoIds() {
-        await indexDb.loaded
         let videoIds = []
         for await (const [ key, each ] of await indexDb.iter.videos) {
             videoIds.push(key)

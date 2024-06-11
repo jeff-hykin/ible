@@ -20,9 +20,12 @@
         
 </template>
 <script>
-const { deferredPromise } = require("../utils.js")
+import { isLocalVideo } from "../observation_tooling.js"
+import { deferredPromise } from "../utils.js"
+import { get } from "../object.js"
+
 window.resetPlayer = false
-// TODO: fix the fullscreen mode
+
 export default {
     props: [
         "value",
@@ -40,7 +43,7 @@ export default {
     computed: {
         isLocalVideo: {
             get() {
-                return `${this.videoId}`.startsWith("/videos/")
+                return isLocalVideo(this.videoId)
             }
         },
         externalData: {
@@ -136,7 +139,7 @@ export default {
                     console.log(`checking For Player`)
                     safteyCheck(reject)
                     const vuePlyr = this.$refs.nativePlayer || (this.$refs.vuePlyr2)&&this.$refs.vuePlyr2.player
-                    if (get(vuePlyr, ["duration"], 0) !== 0) {
+                    if (vuePlyr?.duration) {
                         window.resetPlayer = false
                         this.player = vuePlyr
                         let checkDuration = () => {
@@ -224,7 +227,7 @@ export default {
             console.debug(`eventObject is:`,eventObject)
             // only when focused on the nothing or this element
             // (this is to exclude textboxes)
-            if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get(eventObject, ["path"], []).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
+            if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get({ keyList: ["path"], from: eventObject, failValue: [] }).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
                 // 
                 // key controls
                 // 

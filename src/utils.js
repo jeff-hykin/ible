@@ -134,7 +134,7 @@ function download(filename, text) {
 }
 
 function isValidName(value) {
-    const namePattern = /^[a-zA-Z0-9_\-.]+$/
+    const namePattern = /^[a-z0-9-.]+$/
     if (typeof value == 'string') {
         return !!value.match(namePattern)
     }
@@ -232,8 +232,8 @@ const dynamicSort        = function (property, reverse=false) {
     if (property instanceof Array) {
         if (reverse) {
             return (a,b) => {
-                let aValue = get(a,property,-Infinity)
-                let bValue = get(b,property,-Infinity)
+                let aValue = get({ keyList: property, from: a, failValue: -Infinity })
+                let bValue = get({ keyList: property, from: b, failValue: -Infinity })
                 let type = typeof bValue
                 if (type == 'number') {
                     return bValue - aValue
@@ -243,8 +243,8 @@ const dynamicSort        = function (property, reverse=false) {
             }
         } else {
             return (b,a) => {
-                let aValue = get(a,property,-Infinity)
-                let bValue = get(b,property,-Infinity)
+                let aValue = get({ keyList: property, from: a, failValue: -Infinity })
+                let bValue = get({ keyList: property, from: b, failValue: -Infinity })
                 let type = typeof bValue
                 if (type == 'number') {
                     return bValue - aValue

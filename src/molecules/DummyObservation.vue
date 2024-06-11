@@ -38,9 +38,15 @@
             | Confirmed By ≥1 Human
         UiSwitch(v-model="observationData.rejectedBySomeone" v-if="!observationData.isHuman")
             | Rejected By ≥1 Human
+        ui-textbox(
+            floating-label
+            label="Id"
+            tooltip="this needs to be unique! Use the unix epoch timestamp (milliseconds) + decimals of a random number"
+            v-model="observationData.createdAt"
+        )
 </template>
 <script>
-const { isValidName } = require("../utils")
+const { isValidName } = require("../utils")
 
 export default {
     props: [

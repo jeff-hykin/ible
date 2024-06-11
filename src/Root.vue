@@ -18,7 +18,8 @@
 import Vue from "vue"
 import plugins from "./plugins/*.js"
 import pages from "./pages/*.vue"
-import {getColor, storageObject, deferredPromise} from "./utils"
+import {getColor, storageObject, deferredPromise} from "./utils.js"
+import { get, set } from "./object.js"
 
 // make lodash global because I like to live dangerously
 for (const [eachKey, eachValue] of Object.entries(require("lodash"))) { window[eachKey] = eachValue }
@@ -110,7 +111,7 @@ export default RootComponent = {
             labelName: null,
             initWithHelp: false,
         }
-        prevRouteDataJson = get(this.$route, ["query", "_"], "{}")
+        prevRouteDataJson = get({ keyList: ["query", "_"], from: this.$route, failValue: "{}" })
         for (const [eachKey, eachValue] of Object.entries(JSON.parse(prevRouteDataJson))) {
             if (eachValue != null) {
                 initialRouteData[eachKey] = eachValue
@@ -249,7 +250,7 @@ export default RootComponent = {
     },
     methods: {
         getVideoId() {
-            const videoId = get(this, ["routeData$", "videoId"], null)
+            const videoId = get({ keyList: ["routeData$", "videoId"], from: this, failValue: null })
             if (typeof videoId != 'string' || videoId.length == 0) {
                 return null
             }
@@ -269,7 +270,7 @@ export default RootComponent = {
             })
         },
         importDataFromUrl() {
-            prevRouteDataJson = get(this.$route, ["query", "_"], "{}")
+            prevRouteDataJson = get({ keyList: ["query", "_"], from: this.$route, failValue: "{}" })
             let newObject = {}
             for (const [eachKey, eachValue] of Object.entries(JSON.parse(prevRouteDataJson))) {
                 if (eachValue != null) {
@@ -302,7 +303,7 @@ export default RootComponent = {
             return this.$root.videoLoadedPromise
         },
         setVideoObject() {
-            let videoId = get(this, ["routeData$", "videoId"], null)
+            let videoId = get({ keyList: ["routeData$", "videoId"], from: this, failValue: null })
             const videoHasChanged = untrackedData.prevVideoId != videoId
             if (videoHasChanged) {
                 try {
@@ -346,7 +347,7 @@ export default RootComponent = {
             // 
             // get labels
             // 
-            let prevLabels = get(this, "labels", {})
+            let prevLabels = get({ keyList: ["labels"], from: this, failValue: {} })
             let newLabels
             try {
                 newLabels = await (await this.backend).summary.labels()
@@ -366,7 +367,7 @@ export default RootComponent = {
                     ...newLabels[eachLabelName],
                     // preserve selection information
                     // TODO: should probably rewrite where/how this data is saved
-                    selected: get(prevLabels, [eachLabelName, "selected"], false),
+                    selected: get({ keyList: [eachLabelName, "selected"], from: prevLabels, failValue: false }),
                 }
             )
             this.labels = newLabels
