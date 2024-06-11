@@ -1,3 +1,5 @@
+const { get, set } = require("./object.js")
+
 class EventEmitter {
     constructor() {
         this._events = {}
@@ -226,6 +228,52 @@ const quickHash = (str)=>{
     }
     return hash
 }
+const dynamicSort        = function (property, reverse=false) {
+    if (property instanceof Array) {
+        if (reverse) {
+            return (a,b) => {
+                let aValue = get(a,property,-Infinity)
+                let bValue = get(b,property,-Infinity)
+                let type = typeof bValue
+                if (type == 'number') {
+                    return bValue - aValue
+                } else if (type == 'string') {
+                    return bValue.localeCompare(aValue)
+                }
+            }
+        } else {
+            return (b,a) => {
+                let aValue = get(a,property,-Infinity)
+                let bValue = get(b,property,-Infinity)
+                let type = typeof bValue
+                if (type == 'number') {
+                    return bValue - aValue
+                } else if (type == 'string') {
+                    return bValue.localeCompare(aValue)
+                }
+            }
+        }
+    }
+    if (reverse) {
+        return (a,b) => {
+            let type = typeof a[property]
+            if (type == 'number') {
+                return b[property] - a[property]
+            } else if (type == 'string') {
+                return b[property].localeCompare(a[property])
+            }
+        }
+    } else {
+        return (b,a) => {
+            let type = typeof a[property]
+            if (type == 'number') {
+                return b[property] - a[property]
+            } else if (type == 'string') {
+                return b[property].localeCompare(a[property])
+            }
+        }
+    }
+}
 
 const checkIf = ({ value, is }) => {
     let typeOrClass = is 
@@ -407,6 +455,7 @@ module.exports = {
     asyncIteratorToList,
     checkIf,
     quickHash,
+    dynamicSort,
     wrapIndex(val, list) {
         if (val < 0) {
             val = list.length + val
