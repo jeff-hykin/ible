@@ -67,15 +67,16 @@ export default {
     watch: {
         "videoData.duration": function() {
             console.debug(`[watch] this.videoData.duration is:`,this.videoData.duration)
-            window.SegmentDisplay.seekToSegmentStart()
+            window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments", { detail: { duration: window.player.duration } }))
         },
         "videoData.currentTime": function(value, prevValue) {
-            let playing = get(this.$refs, ["vuePlyr","player","playing"], false)
+            const vuePlyr = this.$refs.vuePlyr1||((this.$refs.vuePlyr2)&&this.$refs.vuePlyr2.player)
+            let playing = get(vuePlyr, ["playing"], false)
             if (playing) {
                 let endTime = get(this.$root, ["selectedSegment", "endTime",], Infinity)
                 if (value >= endTime && prevValue < endTime) {
                     // pause video
-                    this.$refs.vuePlyr.player.pause()
+                    vuePlyr.player.pause()
                     this.$toasted.show(`(End of Clip)`).goAway(2000)
                 }
             }
@@ -89,7 +90,7 @@ export default {
     },
     windowListeners: {
         keydown(eventObject) {
-            if (eventObject.target == document.body || get(eventObject, ["path"], []).includes(this.$el)) {
+            if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get(eventObject, ["path"], []).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
                 // 
                 // key controls
                 // 
@@ -125,11 +126,58 @@ export default {
         }
     },
     methods: {
+        closestSegment({time, forward=true}) {
+            if (window.SegmentDisplay.$data.segmentsInfo.organizedSegments.length == 0) {
+                return null
+            } else {
+                let finalIndex = 0
+                if (forward) {
+                    let runningIndex = 0
+                    for (const each of window.SegmentDisplay.$data.segmentsInfo.organizedSegments) {
+                        runningIndex += 1
+                        if (each.startTime > time) {
+                            finalIndex = runningIndex
+                            break
+                        }
+                    }
+                } else {
+                    let finalIndex = 0
+                    let runningIndex = 0
+                    const segmentsBackwards = [...window.SegmentDisplay.$data.segmentsInfo.organizedSegments]
+                    // first one is largest number of seconds
+                    segmentsBackwards.sort((a,b)=>b.endTime-a.endTime)
+                    for (const each of segmentsBackwards) {
+                        runningIndex += 1
+                        if (each.endTime < time) {
+                            finalIndex = runningIndex
+                            break
+                        }
+                    }
+                    // because reversed:
+                    // 0 => last (length-1)
+                    // 1 => second to last (length-2)
+                    finalIndex = segmentsBackwards.length-(finalIndex+1)
+                }
+                return window.SegmentDisplay.$data.segmentsInfo.organizedSegments[finalIndex]
+            }
+        },
         incrementIndex() {
-            this.jumpSegment(this.$root.selectedSegment.$displayIndex+1)
+            let segment = this.$root.selectedSegment
+            if (!segment) {
+                segment = this.closestSegment({time: window.player.currentTime, forward: true})
+            }
+            if (segment) {
+                this.jumpSegment(segment.$displayIndex+1)
+            }
         },
         decrementIndex() {
-            this.jumpSegment(this.$root.selectedSegment.$displayIndex-1)
+            let segment = this.$root.selectedSegment
+            if (!segment) {
+                segment = this.closestSegment({time: window.player.currentTime, forward: false})
+            }
+            if (segment) {
+                this.jumpSegment(segment.$displayIndex-1)
+            }
         },
         async jumpSegment(newIndex) {
             window.SegmentDisplay.jumpSegment(newIndex)

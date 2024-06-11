@@ -3,6 +3,7 @@ let ezRpc = require("ez-rpc-frontend")
 let { deferredPromise, asyncIteratorToList } = require("./utils.js")
 let { get, set, remove } = require("./object.js")
 let { toKebabCase, toSnakeCase, toScreamingtoKebabCase, toScreamingtoSnakeCase } = require("./string.js")
+const { dynamicSort } = require("good-js")
 
 // const databaseUrl = "http://192.168.86.198:3000"
 // const databaseUrl = "http://localhost:3000"
@@ -310,7 +311,7 @@ const indexDb = {
      *     }
      */
     get iter() {
-        return Object.defineProperties({}, Object.fromEntries(
+        const originalThing = Object.defineProperties({}, Object.fromEntries(
             [...indexDb._tableNames].map(
                 tableName=>[
                     tableName,
@@ -322,6 +323,35 @@ const indexDb = {
                 ]
             )
         ))
+        const proxySymbol = Symbol.for('Proxy')
+        const thisProxySymbol = Symbol('thisProxy')
+        // originalThing[Symbol.iterator]      // used by for..of loops and spread syntax.
+        // originalThing[Symbol.toPrimitive]
+        return new Proxy(originalThing, {
+            // Object.keys
+            ownKeys(target, ...args) { return Reflect.ownKeys(target, ...args) },
+            // new operator (original value needs to be a class)
+            construct(original, args, originalConstructor) {},
+            get(original, key, ...args) {
+                if (key == proxySymbol||key == thisProxySymbol) {return true}
+                if (!Object.hasOwn(original, key)) {
+                    return (async function*(){})()
+                }
+                return Reflect.get(original, key, ...args)
+            },
+            set(original, key, ...args) {
+                if (key == proxySymbol||key == thisProxySymbol) {return}
+                return Reflect.set(original, key, ...args)
+            },
+            has: Reflect.has,
+            deleteProperty: Reflect.deleteProperty,
+            isExtensible: Reflect.isExtensible,
+            preventExtensions: Reflect.preventExtensions,
+            setPrototypeOf: Reflect.setPrototypeOf,
+            defineProperty: Reflect.defineProperty,
+            getPrototypeOf: Reflect.getPrototypeOf,
+            getOwnPropertyDescriptor: Reflect.getOwnPropertyDescriptor,
+        })
     },
     // all entries
     async *[Symbol.asyncIterator]() {
@@ -364,7 +394,7 @@ const indexDb = {
         }
     },
     async get(address) {
-        for await (const [ address, each ] of indexDb.get(address)) {
+        for await (const [ _, each ] of indexDb.gets([address])) {
             return each
         }
     },
@@ -459,7 +489,7 @@ const indexDb = {
 const fakeBackend = {
     async addObservation(observationEntry) {
         if (!db) {
-            await await indexDb.loaded
+            await indexDb.loaded
         }
         // observationEntry = {
         //     "videoId": "FLK5-00l0r4",
@@ -507,7 +537,7 @@ const fakeBackend = {
                     ...observerInfo,
                     observationCount: observerInfo?.count+1,
                     labelCount: {...observerInfo?.labelCount, [label]: ((observerInfo?.labelCount||{})[label]||0)+1},
-                    videos: [...new Set(...((observerInfo?.videos||[]).concat([observation.videoId])))],
+                    videos: [...new Set(...((observerInfo?.videos||[]).concat([observationEntry.videoId])))],
                 }
             ],
             // update labels
@@ -516,7 +546,7 @@ const fakeBackend = {
                 {
                     ...labelInfo,
                     count: (labelInfo?.count||0)+1,
-                    videos: [...new Set(...((labelInfo?.videos||[]).concat([observation.videoId])))],
+                    videos: [...new Set(...((labelInfo?.videos||[]).concat([observationEntry.videoId])))],
                 },
             ],
             // add observation
@@ -525,9 +555,7 @@ const fakeBackend = {
                 observationEntry,
             ],
         ])
-    },
-    addSegmentObservation(...args) {
-        return fakeBackend.addObservation(...args)
+        return observationKey
     },
     changeDb() {
         // done (do nothing)
@@ -540,10 +568,10 @@ const fakeBackend = {
     async getUsernames() {
         await indexDb.loaded
         let usernames = []
-        for await (const [ key, each ] of await indexDb.iter.observers) {
-            usernames.push(key)
+        for await (const [ key, each ] of indexDb.iter.observations) {
+            usernames.push(each.observer)
         }
-        return usernames
+        return [...new Set(usernames)]
     },
     async getVideoTitle(videoId) {
         await indexDb.loaded
@@ -572,7 +600,7 @@ const fakeBackend = {
         return videoIds
     },
     summary: {
-        general(filterAndSort) {
+        async general(filterAndSort) {
             await indexDb.loaded
             let where = []
                     
@@ -594,7 +622,7 @@ const fakeBackend = {
                 rejected: [],
                 labels: {},
                 observers: {},
-                usernames: new Set(),
+                usernames: {},
                 videos: {},
                 counts: {
                     total: 0,
@@ -614,15 +642,14 @@ const fakeBackend = {
             // it behaves like if ($root.filterAndSort.minlabelConfidence) then min = $root.filterAndSort.minlabelConfidence
             let min = `${filterAndSort.minlabelConfidence}`; min = min.length>0 && isFinite(min-0) ? min-0 : -Infinity
             let max = `${filterAndSort.maxlabelConfidence}`; max = max.length>0 && isFinite(max-0) ? max-0 : Infinity
-
-            for await (const [ key, each ] of indexDb.select({
+            const items = await indexDb.select({
                 from:'observations',
                 where:[
                     { valueOf: ['type'], is:'segment' },
                     ...where,
                 ],
-            })) {
-                console.debug(`[observationIterator] each is:`,each)
+            })
+            for (const each of items) {
                 // filters 
                 if ((each.observation.labelConfidence < min) || (each.observation.labelConfidence > max)) { return }
                 if (hideUnchecked && (!each.confirmedBySomeone && !each.rejectedBySomeone)) { return }
@@ -668,12 +695,12 @@ const fakeBackend = {
             console.debug(`fresh summary is:`,results)
             return results
         },
-        labels() {
+        async labels() {
             await indexDb.loaded
             // start summarizing the data
             let results = {}
             let videosWithLabels = new Set()
-            for await (const [ key, veachObservationEntry ] of indexDb.iter.observations) {
+            for await (const [ key, eachObservationEntry ] of indexDb.iter.observations) {
                 videosWithLabels.add(eachObservationEntry.videoId)
                 if (eachObservationEntry.observation instanceof Object) {
                     // init
@@ -758,6 +785,7 @@ module.exports = {
             })
         }
     },
+    fakeBackend,
     mixin: {
         data: ()=>({
             backend,

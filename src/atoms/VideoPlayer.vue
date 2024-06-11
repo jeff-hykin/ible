@@ -6,9 +6,10 @@
         transition(name="fade")
             row.message(v-if='videoId && !player')
                 | Video Loading...
-        vue-plyr(v-if='isLocalVideo' ref="vuePlyr" :style="`transition: all ease 0.6s; opacity: ${videoId && player ? 1 : 0}`" :key="videoId")
-            video(:src="videoId")
-        vue-plyr(v-if='!isLocalVideo' ref="vuePlyr" :style="`transition: all ease 0.6s; opacity: ${videoId && player ? 1 : 0}`" :key="videoId")
+        video(v-if='isLocalVideo' ref="nativePlayer" controls style="width: 100%; z-index: 7;")
+           source(:src="videoId" type="video/mp4")
+        //- vue-plyr(v-if='isLocalVideo' ref="vuePlyr1" :style="`transition: all ease 0.6s; opacity: ${videoId && player ? 1 : 0}`" :key="`${Math.random()}`.replace('.','')")
+        vue-plyr(v-if='!isLocalVideo' ref="vuePlyr2" :style="`transition: all ease 0.6s; opacity: ${videoId && player ? 1 : 0}`" :key="`${Math.random()}`.replace('.','')")
             div.plyr__video-embed(v-if='!isLocalVideo')
                 iframe(
                     ref="videoPlayer"
@@ -20,6 +21,7 @@
 </template>
 <script>
 const { deferredPromise } = require("../utils.js")
+window.resetPlayer = false
 // TODO: fix the fullscreen mode
 export default {
     props: [
@@ -102,16 +104,11 @@ export default {
             // 
             // don't let focus stay on YouTube player
             // 
-            let iframe = get(this.player, ["elements", "wrapper", "children", 0], undefined)
+            
             // we don't want to focus on the iframe ever
-            if (document.activeElement === iframe) {
-                // delayed recurse just as a check
-                setTimeout(this.focusWatcher, 0)
+            if (document.activeElement.tagName === "IFRAME" || document.activeElement.tagName === "VIDEO") {
                 // focusing on nothing to move the focus to the body
                 document.activeElement.blur()
-                // alternatively focus directly on the player itself
-                // this.player.elements.buttons.play[0].focus()
-                // this.player.elements.buttons.play[1].focus()
             }
         },
         loadVideo() {
@@ -138,13 +135,37 @@ export default {
                 let checkForPlayer = (resolve, reject) => () => {
                     console.log(`checking For Player`)
                     safteyCheck(reject)
-                    if (get(this, ["$refs", "vuePlyr", "player", "duration"], 0) !== 0) {
-                        this.player = this.$refs.vuePlyr.player
-                        window.player = this.player
+                    const vuePlyr = this.$refs.nativePlayer || (this.$refs.vuePlyr2)&&this.$refs.vuePlyr2.player
+                    if (get(vuePlyr, ["duration"], 0) !== 0) {
+                        window.resetPlayer = false
+                        this.player = vuePlyr
+                        let checkDuration = () => {
+                            if (this.player.duration != undefined) {
+                                this.$root.videoLoadedPromise.resolve(this.player)
+                            } else {
+                                setTimeout(checkDuration, 50)
+                            }
+                        }
+                        setTimeout(checkDuration, 0)
+                        // hacky I know but the more obvious ways are not working (e.g. this.$refs.vuePlyr2.player)
+                        // I'm also fighting interal-vue errors because vue2 is end-of-life and buggy
+                        Object.defineProperty(window, "player", {
+                            get:() => {
+                                if (window.resetPlayer) {
+                                    return { currentTime: 0 }
+                                }
+                                let output
+                                if (this.$refs.nativePlayer) {
+                                    output = this.$refs.nativePlayer
+                                } else {
+                                    output = document.querySelector(".plyr").__vue__.player.media
+                                }
+                                return output
+                            }
+                        })
                         console.debug(`this.player is:`,this.player)
                         this.setupPlayer(this.player)
-                        this.$emit("VideoPlayer-loaded", this.$refs.vuePlyr.player)
-                        this.$root.videoLoadedPromise.resolve(this.player)
+                        this.$emit("VideoPlayer-loaded", this.player)
                         resolve(this.player)
                     } else {
                         // recursively wait because theres no callback API
@@ -160,108 +181,112 @@ export default {
             // 
             // add listeners to the player
             //
-            this.externalData.duration = this.player.duration
-            let updateCurrentTime = (...args) => {
-                this.externalData.currentTime = get(this, ['player', 'media', 'currentTime'], null)
-                setTimeout(() => {
-                    this.externalData.currentTime = get(this, ['player', 'media', 'currentTime'], null)
-                }, 50)
-            }
-            updateCurrentTime()
-            this.player.on("seeked", updateCurrentTime)
-            this.player.on("seeking", updateCurrentTime)
-            this.player.on("timeupdate", updateCurrentTime)
-            this.player.on("play", updateCurrentTime)
-            this.player.on("pause", updateCurrentTime)
+            this.externalData.duration = player.duration
             
             // 
             // fix the scubber update issue
             // 
-            let that = this
-            Object.defineProperty(Object.getPrototypeOf(this.player), "currentTime", {
-                set(input) {
-                    // Bail if media duration isn't available yet
-                    if (!this.duration) { return }
-                    // Validate input
-                    input = input-0
-                    if (input < 0) {
-                        input = 0
-                    }
-                    const inputIsValid = (input == input) && input >= 0
-                    if (inputIsValid) {
-                        // Set
-                        this.media.currentTime = Math.min(input, this.duration)
-                        that.externalData.currentTime = this.media.currentTime
-                    }
-                    // Logging
-                    this.debug.log(`Seeking to ${this.currentTime} seconds`)
+                if (!this.isLocalVideo) {
+                    let that = this
+                    Object.defineProperty(Object.getPrototypeOf(player), "currentTime", {
+                        set(input) {
+                            // Bail if media duration isn't available yet
+                            if (!this.duration) { return }
+                            // Validate input
+                            input = input-0
+                            if (input < 0) {
+                                input = 0
+                            }
+                            const inputIsValid = (input == input) && input >= 0
+                            if (inputIsValid) {
+                                // Set
+                                this.media.currentTime = Math.min(input, this.duration)
+                                that.externalData.currentTime = this.media.currentTime
+                            }
+                            // Logging
+                            this.debug.log(`Seeking to ${this.currentTime} seconds`)
+                        }
+                    })
                 }
-            })
             
             // 
             // add custom controls
             //
-            this.player.elements.container.addEventListener("keydown", this.keydownControls)
+            try {
+                // plyr
+                player.elements.container.addEventListener("keydown", this.keydownControls)
+            } catch (error) {
+                // native player
+                player.addEventListener("keydown", this.keydownControls)
+            }
         },
         keydownControls(eventObject) {
+            console.debug(`eventObject is:`,eventObject)
             // only when focused on the nothing or this element
             // (this is to exclude textboxes)
-            if (eventObject.target == document.body || get(eventObject, ["path"], []).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
+            if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get(eventObject, ["path"], []).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
                 // 
                 // key controls
                 // 
                 switch (eventObject.key) {
                     case " ":
+                    case "k":
+                        console.log(`toggling play/pause!`)
+                        eventObject.preventDefault()
+                        eventObject.stopPropagation()
                         // yes, this 50ms delay is necessary otherwise it sometimes fights with the bulitin window listeners from plyr (and sometimes doesn't depending on what element is selected)
-                        if (this.player.playing) {
+                        if (!window.player.paused) {
                             setTimeout(() => {
-                                this.player.pause()
+                                window.player.pause()
                             },50)
                         } else {
                             setTimeout(() => {
-                                this.player.play()
+                                window.player.play()
                             },50)
                         }
-                        eventObject.preventDefault()
-                        eventObject.stopPropagation()
                         break
                     case ".":
                         eventObject.preventDefault()
-                        this.player.forward(1/32)
+                        window.player.currentTime += (1/32)
                         break
                     case ",":
                         eventObject.preventDefault()
-                        this.player.rewind(1/32)
+                        window.player.currentTime -= (1/32)
                         break
                     case "ArrowRight":
                         if (eventObject.shiftKey) {
-                            console.log(`going forward`)
                             eventObject.preventDefault()
-                            this.player.forward(1/32)
+                            window.player.currentTime += (1/32)
                         } else if (eventObject.altKey) {
                             eventObject.preventDefault()
-                            this.player.forward(10)
+                            window.player.currentTime += (10)
+                        } else if (!eventObject.ctrlKey) {
+                            eventObject.preventDefault()
+                            window.player.currentTime += (5)
                         }
                         break
                     case "ArrowLeft":
                         if (eventObject.shiftKey) {
                             eventObject.preventDefault()
-                            this.player.rewind(1/32)
+                            window.player.currentTime -= (1/32)
                         } else if (eventObject.altKey) {
                             eventObject.preventDefault()
-                            this.player.rewind(10)
+                            window.player.currentTime -= (10)
+                        } else if (!eventObject.ctrlKey) {
+                            eventObject.preventDefault()
+                            window.player.currentTime -= (5)
                         }
                         break
                     case "ArrowUp":
                         if (eventObject.shiftKey) {
                             eventObject.preventDefault()
-                            this.player.speed += 0.5
+                            window.player.playbackRate *= 2
                         }
                         break
                     case "ArrowDown":
                         if (eventObject.shiftKey) {
                             eventObject.preventDefault()
-                            this.player.speed -= 0.5
+                            window.player.playbackRate *= 0.5
                         }
                         break
                 }
@@ -275,7 +300,7 @@ export default {
             await this.videoLoading
             // if the video hasn't changed
             if (videoId == this.videoId) {
-                this.player.currentTime = startTime
+                window.player.currentTime = startTime
                 // always focus on the video immediately after seeking
                 document.activeElement.blur()
             }

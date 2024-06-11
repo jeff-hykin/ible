@@ -3,11 +3,14 @@
         span(v-if="videoResults.length == 0")
             | (No other videos matching this search)
         column.video-list-element(v-for="eachVideoId in videoResults" @click="selectVideo($event, eachVideoId)")
-            row.thumbnail(width="100%" height="100%" :background-image="`url(http://img.youtube.com/vi/${eachVideoId}/mqdefault.jpg)`" position="relative")
+            row.thumbnail(width="100%" height="100%" :background-image="eachVideoId.startsWith('/videos/') ? `url(/icon.png)` : `url(http://img.youtube.com/vi/${eachVideoId}/mqdefault.jpg)`" position="relative" border-radius="0.5rem")
+                span(style="background-color: rgba(0,0,0,0.10); position: absolute; bottom: 0.1rem; left: 0.1rem; padding: 0.5rem; border-radius: 0.5rem;")
+                    | {{!eachVideoId.startsWith('/videos/')?"":`${eachVideoId.slice("/videos/".length)}`}}
 </template>
 
 <script>
-import { backendHelpers } from '../iilvd-api.js'
+import { backendHelpers, fakeBackend } from '../iilvd-api.js'
+import { set } from '../object.js'
 export default {
     data: ()=>({
         get
@@ -30,7 +33,9 @@ export default {
             if (title != undefined) {
                 return title
             } else {
-                backendHelpers.getVideoTitle(videoId).then(title=>{
+                backendHelpers.getVideoTitle(videoId).then(async (title)=>{
+                    console.debug(`BACKEND: title is:`,title)
+                    console.debug(`FAKE   : title is:`,await fakeBackend.getVideoTitle(videoId))
                     console.log(`received title ${title}`)
                     if (!(videoObject.summary instanceof Object)) {
                         videoObject.summary = {}
@@ -43,7 +48,12 @@ export default {
         },
         selectVideo(eventObj, videoId) {
             console.log(`clicked video ${videoId}`)
+            window.resetPlayer = true
             this.$root.push({videoId})
+            setTimeout(()=>{
+                window.location.reload()
+            }, 50)
+            
         },
     }
 }

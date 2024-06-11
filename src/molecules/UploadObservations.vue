@@ -88,7 +88,8 @@
     
 </template>
 <script>
-const { humandReadableTime, download } = require("../utils")
+const { humandReadableTime, download } = require("../utils.js")
+const { fakeBackend } = require("../iilvd-api.js")
 
 export default {
     components: {
@@ -211,11 +212,13 @@ export default {
                     const fileNumberString = eventObject.length > 1? `File ${fileNumber} of ${eventObject.length}\n\n`:""
                     const timeRemainingString = timeRemaining?" (~ "+humandReadableTime(timeRemaining)+" remaining)":""
                     this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n`
+                    value.observation.label = toKebabCase(`${value.observation.label}`.toLowerCase())
                     try {
                         await (await this.backend).addObservation(value)
+                        await fakeBackend.addObservation(value)
                     } catch (error) {
                         if (error.message.match(/Message: Failed to fetch/)) {
-                            this.$toasted.show(`Server took too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(2500)
+                            this.$toasted.show(`Server took too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(6500)
                             continue
                         }
                         errorCount++

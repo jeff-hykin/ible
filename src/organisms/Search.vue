@@ -108,7 +108,7 @@
             
 </template>
 <script>
-let { backendHelpers } = require('../iilvd-api.js')
+let { backendHelpers, fakeBackend } = require('../iilvd-api.js')
 let { colors, debounce, download, } = require("../utils.js")
 let observationEntries
 export default {
@@ -155,6 +155,10 @@ export default {
                 ...(this.$root.routeData$.labelName? {labelName: this.$root.routeData$.labelName} : {}),
             }
             this.$root.searchResults = await backend.summary.general(filterAndSort)
+            const fakeSearchResults  = await fakeBackend.summary.general(filterAndSort)
+            console.debug(`BACKEND searchResults`, this.$root.searchResults)
+            console.debug(`FAKE    searchResults`, fakeSearchResults)
+            
             console.debug(`this.$root.searchResults is:`,JSON.stringify(this.$root.searchResults,0,4))
             
             let where = []
@@ -178,6 +182,9 @@ export default {
             //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
             console.log(`querying the backend for observationEntries`)
             observationEntries = await backendHelpers.getObservations({where})
+            let fakeObservationEntries = await fakeBackend.getObservations({where})
+            console.debug(`BACKEND: observationEntries is:`,observationEntries)
+            console.debug(`FAKE   : observationEntries is:`,fakeObservationEntries)
             
             // show the time of the first load
             if (this.$root.loadStart) {

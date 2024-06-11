@@ -20,21 +20,13 @@ export default {
     ],
     data: ()=>({
         displayTime: null,
-        throttledDisplayUpdater: ()=>0,
     }),
     created() {
-        const updateEveryMiliseconds = 100
-        this.throttledDisplayUpdater = throttle(
-            ()=>this.displayTime = this.currentTime,
-            updateEveryMiliseconds,
-            // fire at the very end
-            { trailing: true },
-        )
+        setInterval(() => {
+            this.displayTime = window.player.currentTime
+        }, 100)
     },
     watch: {
-        currentTime() {
-            this.throttledDisplayUpdater()
-        }
     }
 }
 </script>

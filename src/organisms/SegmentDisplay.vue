@@ -59,10 +59,11 @@
 
 </template>
 <script>
+import { set } from '../object'
 const { wrapIndex, storageObject } = require('../utils')
 const { dynamicSort } = require("good-js")
 const { checkIf, deferredPromise } = require("../utils.js")
-const { backendHelpers } = require('../iilvd-api.js')
+const { backendHelpers, fakeBackend } = require('../iilvd-api.js')
 const generalTimeoutFrequency = 50 // ms 
 
 let untracked = {
@@ -85,12 +86,9 @@ export default {
     }),
     mounted() {
         window.SegmentDisplay = this
+        this.$root.whenVideoIsLoaded(this.updateSegments)
     },
     watch: {
-        videoDuration() {
-            console.log(`[SegmentDisplay] videoDuration changed`)
-            this.updateSegments()
-        }
     },
     rootHooks: {
         watch: {
@@ -104,20 +102,25 @@ export default {
                         this.$root.selectedSegment = null
                     }
                 }
-                this.updateSegments()
+                if (window.player.duration) {
+                    console.log(`[SegmentDisplay] labels changed, updating segments`)
+                    this.updateSegments()
+                }
             },
             selectedVideo() {
                 this.$root.selectedSegment = null
-                this.updateSegments()
             },
             "selectedVideo.keySegments": function() {
-                this.updateSegments()
+                if (window.player.duration) {
+                    console.log(`[SegmentDisplay] keySegments changed, updating segments`)
+                    this.updateSegments()
+                }
             },
         }
     },
     windowListeners: {
-        "SegmentDisplay-updateSegments": function() {
-            this.updateSegments()
+        "SegmentDisplay-updateSegments": function(...args) {
+            this.updateSegments(...args)
         }
     },
     methods: {
@@ -129,9 +132,9 @@ export default {
                 }
             } catch (err) {}
         },
-        async updateSegments() {
-            console.log(`updateSegments`)
+        async updateSegments(...args) {
             const originalVideoId = get(this.$root, ['routeData$', 'videoId'], null)
+            const duration = window.player.duration
             if (originalVideoId) {
                 let keySegments
                 try {
@@ -141,6 +144,14 @@ export default {
                         ],
                         returnObject: true,
                     })
+                    const fakeKeySegments = await fakeBackend.getObservations({
+                        where:[
+                            { valueOf: ['videoId'], is: originalVideoId },
+                        ],
+                        returnObject: true,
+                    })
+                    console.debug(`BACKEND: keySegments is:`,keySegments)
+                    console.debug(`FAKE   : keySegments is:`,fakeKeySegments)
                 } catch (error) {
                     console.error("updateSegments error", error)
                     return
@@ -150,13 +161,13 @@ export default {
                 keySegments = Object.entries(keySegments).map(
                     ([eachKey, eachValue])=>(eachValue.$uuid=eachKey,eachValue)
                 )
-                // if theres no duration then the visual segments can't be generated
-                // (wait for duration to change)
-                if (!this.videoDuration) {
-                    console.debug(`SegmentDisplay: this.videoDuration wasn't available`)
+                
+                // if theres no duration then the visual segments can't be generated 
+                if (!duration) {
+                    console.log(`[SegmentDisplay] window.player.duration unavailable, cant update segments`)
                     return
                 }
-                let duration = this.videoDuration
+                
                 // check then assign
                 if (originalVideoId == get(this.$root, ['routeData$', 'videoId'], null)) {
                     this.$withoutWatchers("SegmentDisplay-retrieveFromBackend", ()=>{
@@ -210,7 +221,7 @@ export default {
             // only return segments that match the selected labels
             let namesOfSelectedLabels = this.$root.getNamesOfSelectedLabels()
             let displaySegments = get(this.$root, ["selectedVideo", "keySegments"], []).filter(
-                eachSegment=>(eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.observation.label))
+                eachSegment=>(eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.observation.label) || namesOfSelectedLabels.length == 0)
             )
         
             // 2 percent of the width of the video
@@ -292,6 +303,7 @@ export default {
             // 
             
             const seekAction = (player)=>{
+                player = window.player || player
                 try  {
                     const startTime = this.$root.selectedSegment.startTime
                     console.debug(`[seekToSegmentStart] seeking to ${startTime}`)

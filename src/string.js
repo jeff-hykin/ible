@@ -223,6 +223,7 @@ export const toKebabCase = (str) => {
     const words = wordList(str)
     return words.map(each=>each.toLowerCase()).join('-')
 }
+window.toKebabCase = toKebabCase
 
 export const toSnakeCase = (str) => {
     const words = wordList(str)

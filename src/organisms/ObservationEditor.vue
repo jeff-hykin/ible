@@ -116,6 +116,8 @@
                             label="Label"
                             :invalid="!isValid.label"
                             v-model="observationData.label"
+                            @change="onLabelChange"
+                            @input="onLabelChange"
                         )
                         ui-textbox(
                             :disabled="!editing"
@@ -147,7 +149,8 @@
 </template>
 
 <script>
-let { backend, backendHelpers } = require('../iilvd-api.js')
+import { toKebabCase } from '../string.js'
+let { backend, backendHelpers, fakeBackend } = require('../iilvd-api.js')
 let { getColor, currentFixedSizeOfYouTubeVideoId, labelConfidenceCheck, isValidName, storageObject } = require("../utils")
 export default {
     props: [
@@ -180,6 +183,7 @@ export default {
     },
     mounted() {
         window.Editor = this // debugging
+        window.player = window.player || { currentTime: 0 }
         this.resetData()
     },
     computed: {
@@ -223,8 +227,8 @@ export default {
                         isHuman:   selectedSegment.isHuman,
                         confirmedBySomeone: selectedSegment.confirmedBySomeone,
                         rejectedBySomeone: selectedSegment.rejectedBySomeone,
-                        label:           selectedSegment.observation.label,
-                        labelConfidence: selectedSegment.observation.labelConfidence,
+                        label:           (selectedSegment.observation||{}).label,
+                        labelConfidence: (selectedSegment.observation||{}).labelConfidence,
                     }
                 }
             },
@@ -250,7 +254,7 @@ export default {
                 }
             }
             if (eventObj.key == "m") {
-                this.observationData.endTime = this.currentTime.toFixed(3)
+                this.observationData.endTime = window.player.currentTime.toFixed(3)
             }
             if (eventObj.key == "s" && this.editing) {
                 this.onSaveEdit()
@@ -259,6 +263,10 @@ export default {
         }
     },
     methods: {
+        onLabelChange() {
+            // enforce naming convention
+            this.observationData.label = toKebabCase(this.observationData.label.toLowerCase())
+        },
         preventBubbling(eventObject) {
             if (eventObject.ctrlKey && eventObject.key == "s") {
                 this.onSaveEdit()
@@ -272,22 +280,22 @@ export default {
             this.$root.selectedSegment = null
         },
         async onNewObservation() {
-            console.log(`here`)
             if (!this.editing) {
                 this.dataCopy = {}
                 this.resetData()
-                this.observationData.startTime = this.currentTime.toFixed(3)
-                this.observationData.endTime = (this.currentTime+1).toFixed(3)
+                this.observationData.startTime = window.player.currentTime.toFixed(3)
+                this.observationData.endTime = (window.player.currentTime+1).toFixed(3)
                 this.observationData.label = get(this.$root, ["routeData$", "labelName"],"") || "(change me)"
                 this.uuidOfSelectedSegment = null
                 // start editing the newly created observation
                 this.onEditObservation()
             }
-            console.log(`here  2`)
         },
         onEditObservation() {
             // save a copy encase they cancel
             this.dataCopy = JSON.parse(JSON.stringify(this.observationData))
+            // instantly convert to kebab case if somehow it isn't already
+            this.observationData.label = toKebabCase(`${this.observationData.label}`.toLowerCase())
             this.editing = true
         },
         onCancelEdit() {
@@ -327,6 +335,7 @@ export default {
             // 
             // save on storageObject
             // 
+            observation.observation.label = toKebabCase(`${observation.observation.label}`.toLowerCase())
             this.$root.addLabel(observation.observation.label)
             const observationsForVideo = storageObject[this.observationData.videoId]||{}
             observationsForVideo[this.uuidOfSelectedSegment] = observation
@@ -335,16 +344,29 @@ export default {
             try {
                 // if saving an edit
                 if (isNewObervation) {
+                    const uuidOfSelectedSegment = this.uuidOfSelectedSegment
                     // TODO: check the valid-ness of the segment first
                     // TODO: add hints for data validity
                     await backendHelpers.setObservation({uuidOfSelectedSegment, observation})
+                    await fakeBackend.setObservation({uuidOfSelectedSegment, observation})
                 // if saving something new
                 } else {
                     this.uuidOfSelectedSegment = await (await this.backend).addSegmentObservation(observation)
+                    let uuid = await fakeBackend.addObservation(observation)
+                    console.debug(`fake backend uuid is:`,uuid)
                 }
             } catch (error) {
                 this.$toasted.show(`There was an error on the database`).goAway(5500)
-                this.$toasted.show(error.message.slice(0,65)).goAway(5500)
+                console.error("# ")
+                console.error("# BACKEND ERROR")
+                console.error("# ")
+                console.error(error.stack)
+                console.error(error)
+                console.error("# ")
+                this.$toasted.show(error.message.slice(0,65), {
+                    closeOnSwipe: false,
+                    action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
+                })
                 this.$toasted.show(`(Full error log in the console)`).goAway(6500)
                 // throw error
             }
@@ -363,7 +385,7 @@ export default {
             this.editing = false
             let index = this.$root.selectedSegment.$displayIndex
             if (this.uuidOfSelectedSegment) {
-                backendHelpers.deleteObservation({uuidOfSelectedSegment})
+                backendHelpers.deleteObservation({uuidOfSelectedSegment: this.uuidOfSelectedSegment})
                 this.$root.selectedVideo.keySegments = [...this.$root.selectedVideo.keySegments].filter(each=>each.$uuid != this.uuidOfSelectedSegment)
                 this.resetData()
                 window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
@@ -377,8 +399,8 @@ export default {
             this.$root.selectedSegment = null
             this.observationData = {
                 videoId: (this.$root.selectedVideo)&&this.$root.selectedVideo.$id,
-                startTime: this.currentTime || 0,
-                endTime: this.currentTime || this.duration || 0,
+                startTime: window.player.currentTime || 0,
+                endTime: window.player.currentTime || this.duration || 0,
                 observer: window.storageObject.observer || "",
                 label: get(this,["$root", "routeData$", "labelName"], ""),
                 labelConfidence: 0.95,
@@ -388,10 +410,10 @@ export default {
             }
         },
         setStartToCurrentTime() {
-            this.observationData.startTime = this.currentTime.toFixed(3)
+            this.observationData.startTime = window.player.currentTime.toFixed(3)
         },
         setEndToCurrentTime() {
-            this.observationData.endTime = this.currentTime.toFixed(3)
+            this.observationData.endTime = window.player.currentTime.toFixed(3)
         },
     },
 }

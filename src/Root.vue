@@ -23,7 +23,7 @@ import {getColor, storageObject, deferredPromise} from "./utils"
 // make lodash global because I like to live dangerously
 for (const [eachKey, eachValue] of Object.entries(require("lodash"))) { window[eachKey] = eachValue }
 
-let { backend } = require("./iilvd-api")
+let { backend, fakeBackend } = require("./iilvd-api")
 
 //
 // Routing Init
@@ -161,6 +161,10 @@ export default RootComponent = {
         this.backend.then(async (backend)=>{
             this.$toasted.show(`Connected to backend, retrieving data`).goAway(6500)
             untrackedData.usernameList = untrackedData.usernameList.concat(await backend.getUsernames())
+            
+            let fakeUsernames = await fakeBackend.getUsernames()
+            console.debug(`BACKEND: untrackedData.usernameList is:` ,untrackedData.usernameList)
+            console.debug(`FAKE: untrackedData.usernameList is:` , fakeUsernames)
         })
     },
     watch: {
@@ -346,6 +350,9 @@ export default RootComponent = {
             let newLabels
             try {
                 newLabels = await (await this.backend).summary.labels()
+                const fakeNewLabels = await fakeBackend.summary.labels()
+                console.debug(`BACKEND: newLabels is:`, newLabels)
+                console.debug(`FAKE   : newLabels is` , fakeNewLabels)
             } catch (error) {
                 this.$toasted.show(`Unable to get summary.labels() from backend`).goAway(3500)
                 console.error(error.message)
