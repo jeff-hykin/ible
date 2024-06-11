@@ -91,6 +91,7 @@ export default {
     rootHooks: {
         watch: {
             labels() {
+                console.log(`labels changed`)
                 // make sure the label is still valid
                 let label = this.$root?.selectedSegment?.label
                 if (label) {
@@ -418,6 +419,8 @@ export default {
             setTimeout(() => {
                 this.$root.labels[labelName] = actualValue
             }, generalTimeoutFrequency)
+            
+            window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
         },
     }
 }

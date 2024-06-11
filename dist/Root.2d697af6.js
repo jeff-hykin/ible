@@ -41503,8 +41503,6 @@ function isValidName(value) {
   return false;
 }
 
-const currentFixedSizeOfYouTubeVideoId = 11; // This is not guarenteed to stay this way forever
-
 function humandReadableTime(milliseconds) {
   function numberEnding(number) {
     return number > 1 ? 's' : '';
@@ -41818,7 +41816,6 @@ module.exports = {
   Delayable,
   download,
   isValidName,
-  currentFixedSizeOfYouTubeVideoId,
   humandReadableTime,
   deferredPromise,
   asyncIteratorToList,
@@ -71439,7 +71436,7 @@ exports.labelIsValid = labelIsValid;
 exports.quickLocalValidationCheck = quickLocalValidationCheck;
 exports.coerceObservation = coerceObservation;
 exports.validateObservations = validateObservations;
-exports.createDefaultObservationEntry = exports.InvalidFormatError = exports.minSizeOfLocalVideoId = exports.minSizeOfYouTubeVideoId = exports.minSizeOfUnixTimestamp = exports.createUuid = exports.getLocalVideoName = exports.isLocalVideo = void 0;
+exports.createDefaultObservationEntry = exports.InvalidFormatError = exports.minSizeOfLocalVideoId = exports.currentFixedSizeOfYouTubeVideoId = exports.minSizeOfUnixTimestamp = exports.createUuid = exports.getLocalVideoName = exports.isLocalVideo = void 0;
 
 var _string = require("./string.js");
 
@@ -71464,8 +71461,8 @@ const createUuid = () => new Date().getTime() + `${Math.random()}`.slice(1);
 exports.createUuid = createUuid;
 const minSizeOfUnixTimestamp = 10;
 exports.minSizeOfUnixTimestamp = minSizeOfUnixTimestamp;
-const minSizeOfYouTubeVideoId = 11;
-exports.minSizeOfYouTubeVideoId = minSizeOfYouTubeVideoId;
+const currentFixedSizeOfYouTubeVideoId = 11;
+exports.currentFixedSizeOfYouTubeVideoId = currentFixedSizeOfYouTubeVideoId;
 const minSizeOfLocalVideoId = localVideoPrefix.length;
 exports.minSizeOfLocalVideoId = minSizeOfLocalVideoId;
 const namePattern = /^[a-z0-9-.]+$/;
@@ -76441,7 +76438,6 @@ let {
 
 let {
   getColor,
-  currentFixedSizeOfYouTubeVideoId,
   isValidName,
   storageObject
 } = require("../utils");
@@ -77384,7 +77380,8 @@ var _default = {
   rootHooks: {
     watch: {
       labels() {
-        // make sure the label is still valid
+        console.log(`labels changed`); // make sure the label is still valid
+
         let label = this.$root?.selectedSegment?.label;
 
         if (label) {
@@ -77748,6 +77745,7 @@ var _default = {
       setTimeout(() => {
         this.$root.labels[labelName] = actualValue;
       }, generalTimeoutFrequency);
+      window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"));
     }
 
   }
@@ -78648,8 +78646,7 @@ var _observation_tooling = require("../observation_tooling.js");
 //
 //
 const {
-  storageObject,
-  currentFixedSizeOfYouTubeVideoId
+  storageObject
 } = require('../utils'); // make sure cachedVideoIds exists as an Array
 
 
@@ -78715,7 +78712,7 @@ var _default = {
 
       newVideoId = this.extractVideoIdIfPossible(newVideoId);
 
-      if (newVideoId.length == currentFixedSizeOfYouTubeVideoId || (0, _observation_tooling.isLocalVideo)(newVideoId)) {
+      if (newVideoId.length == _observation_tooling.currentFixedSizeOfYouTubeVideoId || (0, _observation_tooling.isLocalVideo)(newVideoId)) {
         // pushing searched video route
         this.$root.routeData$.videoId = newVideoId; // emit video event
 
@@ -78839,20 +78836,36 @@ var _default = {
   props: ["labelName", "label"],
   methods: {
     selectLabel(labelName, label) {
+      const currentVideoId = this.$root.getVideoId();
       label.name = labelName; // (there must be at least one video with the label, unless the database is corrupt)
 
       let selectedVideoId = Object.keys(label.videos)[0]; // get it from the cache (auto-adds to cache if needed)
 
       this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500);
-      window.resetPlayer = true;
-      setTimeout(() => {
-        // TODO: i should do a proper fix for this
-        window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"));
-      }, 100);
+
+      if (selectedVideoId != currentVideoId) {
+        window.resetPlayer = true;
+      }
+
       this.$root.push({
         labelName,
         videoId: selectedVideoId
       });
+      const newLabelValues = {};
+
+      for (const [key, value] of Object.entries(this.$root.labels)) {
+        if (key != labelName) {
+          newLabelValues[key] = { ...value,
+            selected: false
+          };
+        } else {
+          newLabelValues[key] = { ...value,
+            selected: true
+          };
+        }
+      }
+
+      this.$root.labels = newLabelValues;
     }
 
   }
@@ -80009,10 +80022,9 @@ var _default = {
       window.resetPlayer = true;
       this.$root.push({
         videoId
-      });
-      setTimeout(() => {
-        window.location.reload();
-      }, 50);
+      }); // setTimeout(()=>{
+      //     window.location.reload()
+      // }, 50)
     }
 
   }

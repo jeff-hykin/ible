@@ -141,8 +141,6 @@ function isValidName(value) {
     return false
 }
 
-const currentFixedSizeOfYouTubeVideoId = 11 // This is not guarenteed to stay this way forever
-
 function humandReadableTime(milliseconds) {
 
     function numberEnding (number) {
@@ -438,7 +436,6 @@ module.exports = {
     Delayable,
     download,
     isValidName,
-    currentFixedSizeOfYouTubeVideoId,
     humandReadableTime,
     deferredPromise,
     asyncIteratorToList,

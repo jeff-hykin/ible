@@ -12,8 +12,8 @@
 
 <script>
 import { backendHelpers } from '../iilvd-api.js'
-import { isLocalVideo } from '../observation_tooling.js'
-const { storageObject, currentFixedSizeOfYouTubeVideoId } = require('../utils')
+import { isLocalVideo, currentFixedSizeOfYouTubeVideoId } from '../observation_tooling.js'
+const { storageObject } = require('../utils')
 
 // make sure cachedVideoIds exists as an Array
 storageObject.cachedVideoIds = storageObject.cachedVideoIds || []

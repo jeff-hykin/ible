@@ -54,9 +54,9 @@ export default {
             console.log(`clicked video ${videoId}`)
             window.resetPlayer = true
             this.$root.push({videoId})
-            setTimeout(()=>{
-                window.location.reload()
-            }, 50)
+            // setTimeout(()=>{
+            //     window.location.reload()
+            // }, 50)
             
         },
     }

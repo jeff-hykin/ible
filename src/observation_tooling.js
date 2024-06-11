@@ -7,7 +7,7 @@ export const isLocalVideo = (videoId) => toString(videoId).startsWith(localVideo
 export const getLocalVideoName = (videoId) => toString(videoId).slice(localVideoPrefix.length)
 export const createUuid = ()=>new Date().getTime() + `${Math.random()}`.slice(1)
 export const minSizeOfUnixTimestamp = 10
-export const minSizeOfYouTubeVideoId = 11
+export const currentFixedSizeOfYouTubeVideoId = 11
 export const minSizeOfLocalVideoId = localVideoPrefix.length
 
 const namePattern = /^[a-z0-9-.]+$/

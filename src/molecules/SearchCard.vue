@@ -15,17 +15,26 @@ export default {
     props: ["labelName", "label"],
     methods: {
         selectLabel(labelName, label) {
+            const currentVideoId = this.$root.getVideoId()
             label.name = labelName
             // (there must be at least one video with the label, unless the database is corrupt)
             let selectedVideoId = Object.keys(label.videos)[0]
             // get it from the cache (auto-adds to cache if needed)
             this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500)
-            window.resetPlayer = true
-            
-            setTimeout(() => { // TODO: i should do a proper fix for this
-                window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
-            }, 100)
+            if (selectedVideoId != currentVideoId) {
+                window.resetPlayer = true
+            }
             this.$root.push({labelName, videoId: selectedVideoId})
+            
+            const newLabelValues = {}
+            for (const [key, value] of Object.entries(this.$root.labels)) {
+                if (key != labelName) {
+                    newLabelValues[key] = {...value, selected: false}
+                } else {
+                    newLabelValues[key] = {...value, selected: true}
+                }
+            }
+            this.$root.labels = newLabelValues
         }
     }
 }

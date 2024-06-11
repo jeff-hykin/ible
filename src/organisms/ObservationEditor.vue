@@ -168,7 +168,7 @@
 import { toKebabCase, toRepresentation } from '../string.js'
 import * as observationTooling from '../observation_tooling.js'
 let { backend, backendHelpers, fakeBackend } = require('../iilvd-api.js')
-let { getColor, currentFixedSizeOfYouTubeVideoId, isValidName, storageObject } = require("../utils")
+let { getColor, isValidName, storageObject } = require("../utils")
 
 window.backendHelpers =backendHelpers
 
