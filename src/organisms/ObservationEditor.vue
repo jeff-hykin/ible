@@ -310,6 +310,10 @@ export default {
             if (typeof this.observationData.label == "string" && this.observationData.label.length > 0) {
                 storageObject.recentLabel = this.observationData.label
             }
+            if (!this.allValid) {
+                this.$toasted.show(`Some fields are invalid (should be marked red)`).goAway(2500)
+                return
+            }
             
             // convert to numbers 
             this.observationData.startTime -= 0
