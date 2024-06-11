@@ -141,16 +141,6 @@ function isValidName(value) {
     return false
 }
 
-function labelConfidenceCheck(labelConfidence) {
-    if (!(labelConfidence === null || labelConfidence === undefined)) {
-        if (isFinite(labelConfidence)) {
-            if (labelConfidence < 1 || labelConfidence > -1) {
-                return true
-            }
-        }
-    }
-    return false
-}
 const currentFixedSizeOfYouTubeVideoId = 11 // This is not guarenteed to stay this way forever
 
 function humandReadableTime(milliseconds) {
@@ -448,7 +438,6 @@ module.exports = {
     Delayable,
     download,
     isValidName,
-    labelConfidenceCheck,
     currentFixedSizeOfYouTubeVideoId,
     humandReadableTime,
     deferredPromise,

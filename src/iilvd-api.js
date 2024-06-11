@@ -4,6 +4,7 @@ let { deferredPromise, asyncIteratorToList, getColor, dynamicSort } = require(".
 let { get, set, remove } = require("./object.js")
 let { toKebabCase, toSnakeCase, toScreamingtoKebabCase, toScreamingtoSnakeCase } = require("./string.js")
 const { each, add } = require("lodash")
+const observationTooling = require("./observation_tooling.js")
 
 // const databaseUrl = "http://192.168.86.198:3000"
 // const databaseUrl = "http://localhost:3000"
@@ -678,38 +679,36 @@ const managers = {
     },
 }
 
-
 const fakeBackend = {
-    async setObservations(observationEntries) {
+    async setObservations(observationEntries, {withCoersion=false}={}) {
         // 
         // synchonous changes before bulk set
         // 
-        for (const observationEntry of observationEntries) {
-            // observationEntry = {
-            //     "createdAt": "1623456789.308420294042",
-            //     "type": "segment",
-            //     "videoId": "FLK5-00l0r4",
-            //     "startTime": 125.659,
-            //     "endTime": 127.661,
-            //     "observer": "CSCE636-Spring2021-WuAiSeDUdl-1",
-            //     "isHuman": true,
-            //     "observation": {
-            //         "label": "happy",
-            //         "labelConfidence": -0.99
-            //     },
-            //     "customInfo": {},
-            // }
-
-            // enforce unix timestamp (e.g. id)
-            if (!observationEntry.createdAt || `${observationEntry.createdAt}`.length < minSizeOfUnixTimestamp) {
-                observationEntry.createdAt = new Date().getTime() + `${Math.random()}`.slice(1)
+        if (withCoersion) {
+            for (const observationEntry of observationEntries) {
+                // observationEntry = {
+                //     "createdAt": "1623456789.308420294042",
+                //     "type": "segment",
+                //     "videoId": "FLK5-00l0r4",
+                //     "startTime": 125.659,
+                //     "endTime": 127.661,
+                //     "observer": "CSCE636-Spring2021-WuAiSeDUdl-1",
+                //     "isHuman": true,
+                //     "observation": {
+                //         "label": "happy",
+                //         "labelConfidence": -0.99
+                //     },
+                //     "customInfo": {},
+                // }
+                observationEntry = observationTooling.coerceObservation(observationEntry)
             }
-    
-            // enforce simplfied names
-            observationEntry.observation.label = toKebabCase(observationEntry.observation.label.toLowerCase())
-            observationEntry.observer = toKebabCase(observationEntry.observer.toLowerCase())
-            const { videoId, type, startTime, endTime, observer } = observationEntry
-            const { label, spacialInfo } = observationEntry.observation
+        }
+        // 
+        // validate
+        // 
+        const errorMessagesPerObservation = observationTooling.validateObservations(observationEntries)
+        if (errorMessagesPerObservation.some(each=>each.length>0)) {
+            throw new observationTooling.InvalidFormatError(errorMessagesPerObservation)
         }
     
         const entryIds = observationEntries.map(({createdAt})=>["observations", createdAt])
@@ -730,8 +729,8 @@ const fakeBackend = {
             ...Object.entries(newVideos   ).map(([key, value])=>[   ["videos",    key],   value,   ]),
         ])
     },
-    setObservation(observationEntry) {
-        return fakeBackend.setObservations([observationEntries])
+    setObservation(observationEntry, {withCoersion=false}={}) {
+        return fakeBackend.setObservations([observationEntries],{withCoersion})
     },
     changeDb() {
         // done (do nothing)

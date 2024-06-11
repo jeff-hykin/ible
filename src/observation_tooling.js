@@ -1,9 +1,11 @@
 import { toString, toRepresentation } from "./string.js"
+import * as yaml from 'yaml'
 
 const localVideoPrefix = "/videos/"
 
 export const isLocalVideo = (videoId) => toString(videoId).startsWith(localVideoPrefix)
 export const getLocalVideoName = (videoId) => toString(videoId).slice(localVideoPrefix.length)
+export const createUuid = ()=>new Date().getTime() + `${Math.random()}`.slice(1)
 export const minSizeOfUnixTimestamp = 10
 export const minSizeOfYouTubeVideoId = 11
 export const minSizeOfLocalVideoId = localVideoPrefix.length
@@ -15,87 +17,188 @@ function isValidName(value) {
     }
     return false
 }
+export class InvalidFormatError extends Error {
+    constructor(messages) {
+        super("InvalidFormatError")
+        this.messages = messages
+    }
+    toString() {
+        return yaml.stringify(this.messages)
+    }
+}
 
-export function validateObservations(observations) {
-    const errorMessagesPerObservation = []
-    for (const observationEntry of observations) {
-        const errorMessages = []
+// 
+// indvidual coercsion
+// 
+    export function coerceLabel(label) {
+        return toKebabCase(label.toLowerCase())
+    }
+    export function coerceObserver(observer) {
+        return toKebabCase(observer.toLowerCase())
+    }
+
+// 
+// indvidual checks
+// 
+    function createdAtIsValid(createdAt) {
+        if (typeof createdAt != "string" || createdAt.length < minSizeOfUnixTimestamp || !createdAt.match(/^\d+\.\d+$/)) {
+            return false
+        }
+        return true
+    }
+    function videoIdIsValid(videoId) {
+        if (typeof videoId == "string") {
+            if (isLocalVideo(videoId) || videoId.length == currentFixedSizeOfYouTubeVideoId) {
+                return true
+            }
+        }
+        return false
+    }
+    function labelConfidenceIsValid(labelConfidence) {
+        if (Number.isFinite(labelConfidence)) {
+            if (labelConfidence <= 1 || labelConfidence >= -1) {
+                return true
+            }
+        }
+        return false
+    }
+
+
+// 
+// aggregated checks
+// 
+    // NOTE: it would be nice to have checks for names that are too similar (misspelled) or startTimes/endTimes that go beyond the video duration
+        // however those can be a bit hard to check, particularly for video durations
+
+    // NOTE: this isn't necessarily a complete validation check
+    export function quickLocalValidationCheck({observationData, videoDuration}) {
+        return {
+            startTime: observationData.startTime >= 0 && observationData.startTime < observationData.endTime,
+            endTime: observationData.endTime > 0 && observationData.startTime < observationData.endTime && observationData.endTime <= videoDuration,
+            label: isValidName(observationData?.label),
+            observer: isValidName(observationData?.observer),
+            labelConfidence: labelConfidenceIsValid(observationData.labelConfidence),
+            videoId: videoIdIsValid(observationData.videoId),
+        }
+    }
+    /**
+     * guarentees createdAt will be correct and tries to help label, observer, startTime, endTime 
+     */
+    export function coerceObservation(observationEntry) {
+        observationEntry = {...observationEntry}
+        // 
+        // enforce unix timestamp (e.g. id)
+        // 
+        if (typeof observationEntry.createdAt != 'string') {
+            const asString = toString(observationEntry.createdAt)
+            if (createdAtIsValid(asString)) {
+                observationEntry.createdAt = asString
+            } else {
+                observationEntry.createdAt = createUuid()
+            }
+        }
         
         // 
-        // must be object
+        // enforce simplfied names
         // 
-        if (!(observationEntry instanceof Object)) {
-            errorMessages.push(`An observationEntry must be an object, instead it was ${observationEntry == null ? `${observationEntry}` : typeof observationEntry}`)
-        } else {
-            // 
-            // createdAt
-            // 
-            if (typeof observationEntry.createdAt != "string" || observationEntry.createdAt.length < minSizeOfUnixTimestamp || !observationEntry.createdAt.match(/^\d+\.\d+$/)) {
-                errorMessages.push(`(observationEntry.createdAt: ${toRepresentation(observationEntry.createdAt)})\n\nAn observationEntry must have a "createdAt" property\n- it needs to be a string\n- the string needs to contain digits of a decimal number\n- the base digits need of a unix timestamp (milliseconds)\n- and the a decimal needs to be a random number`)
-            }
+        observationEntry.observation.label = coerceLabel(observationEntry.observation.label)
+        observationEntry.observer = coerceObservation(observationEntry.observer)
 
+        // 
+        // enforce numeric start/endTimes 
+        // 
+        observationEntry.startTime -= 0
+        observationEntry.endTime   -= 0
+        
+        // help customInfo show up
+        observationEntry.customInfo = observationEntry.customInfo||{}
+        
+        return observationEntry
+    }
+    export function validateObservations(observations) {
+        const errorMessagesPerObservation = []
+        for (const observationEntry of observations) {
+            const errorMessages = []
+            
             // 
-            // videoId
+            // must be object
             // 
-            if (typeof observationEntry.videoId != "string" || videoId.length < Math.min([minSizeOfLocalVideoId, minSizeOfYouTubeVideoId])) {
-                errorMessages.push(`(observationEntry.videoId: ${toRepresentation(observationEntry.videoId)})\n\nAn observationEntry must have a "observer" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`)
-            }
+            if (!(observationEntry instanceof Object)) {
+                errorMessages.push(`An observationEntry must be an object, instead it was ${observationEntry == null ? `${observationEntry}` : typeof observationEntry}`)
+            } else {
+                // 
+                // createdAt
+                // 
+                if (typeof observationEntry.createdAt != "string" || observationEntry.createdAt.length < minSizeOfUnixTimestamp || !observationEntry.createdAt.match(/^\d+\.\d+$/)) {
+                    errorMessages.push(`(observationEntry.createdAt: ${toRepresentation(observationEntry.createdAt)})\n\nAn observationEntry must have a "createdAt" property\n- it needs to be a string\n- the string needs to contain digits of a decimal number\n- the base digits need of a unix timestamp (milliseconds)\n- and the a decimal needs to be a random number`)
+                }
 
-            // 
-            // startTime/endTime
-            // 
-            const startTimeIsNumeric = Number.isFinite(observationEntry.startTime) && observationEntry.startTime >= 0
-            const endTimeIsNumeric   = Number.isFinite(observationEntry.endTime)   && observationEntry.endTime >= 0
-            if (!startTimeIsNumeric) {
-                errorMessages.push(`(observationEntry.startTime: ${toRepresentation(observationEntry.startTime)})\n\nAn observationEntry must have a "startTime" property\n- it needs to be a positive number`)
-            }
-            if (!endTimeIsNumeric) {
-                errorMessages.push(`(observationEntry.endTime: ${toRepresentation(observationEntry.endTime)})\n\nAn observationEntry must have a "endTime" property\n- it needs to be a positive number`)
-            }
-            if (startTimeIsNumeric && endTimeIsNumeric) {
-                if (observationEntry.startTime >= observationEntry.endTime) {
-                    errorMessages.push(`(startTime: ${observationEntry.startTime}, endTime: ${observationEntry.endTime})\n\nAn observationEntry must have a startTime that is < endTime`)
+                // 
+                // videoId
+                // 
+                if (videoIdIsValid(observationEntry.videoId)) {
+                    errorMessages.push(`(observationEntry.videoId: ${toRepresentation(observationEntry.videoId)})\n\nAn observationEntry must have a "videoId" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to either start with "/videos/" for local videos or be exactly 11 characters long for YouTube video ids`)
+                }
+
+                // 
+                // startTime/endTime
+                // 
+                const startTimeIsNumeric = Number.isFinite(observationEntry.startTime) && observationEntry.startTime >= 0
+                const endTimeIsNumeric   = Number.isFinite(observationEntry.endTime)   && observationEntry.endTime >= 0
+                if (!startTimeIsNumeric) {
+                    errorMessages.push(`(observationEntry.startTime: ${toRepresentation(observationEntry.startTime)})\n\nAn observationEntry must have a "startTime" property\n- it needs to be a positive number`)
+                }
+                if (!endTimeIsNumeric) {
+                    errorMessages.push(`(observationEntry.endTime: ${toRepresentation(observationEntry.endTime)})\n\nAn observationEntry must have a "endTime" property\n- it needs to be a positive number`)
+                }
+                if (startTimeIsNumeric && endTimeIsNumeric) {
+                    if (observationEntry.startTime >= observationEntry.endTime) {
+                        errorMessages.push(`(startTime: ${observationEntry.startTime}, endTime: ${observationEntry.endTime})\n\nAn observationEntry must have a startTime that is < endTime`)
+                    }
+                }
+                
+                // 
+                // observer
+                // 
+                if (typeof observationEntry.observer != "string" || !isValidName(observationEntry.observer)) {
+                    errorMessages.push(`(observationEntry.observer: ${toRepresentation(observationEntry.observer)})\n\nAn observationEntry must have a "observer" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`)
+                }
+
+                // 
+                // observation
+                // 
+                if (!(observationEntry.observation instanceof Object) ) {
+                    errorMessages.push(`(observationEntry.observation: ${toRepresentation(observationEntry.observation)})\n\nAn observationEntry must have a "observation" property\n- it needs to be an object`)
+                }
+
+                // 
+                // label
+                // 
+                if (typeof observationEntry?.observation?.label != "string" || !isValidName(observationEntry.observation.label)) {
+                    errorMessages.push(`(observationEntry.observation.label: ${toRepresentation(observationEntry.observation.label)})\n\nAn observationEntry must have a "observation": { "label":  }\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`)
+                }
+                
+                // 
+                // confidence
+                // 
+                if (!labelConfidenceIsValid(observationEntry?.observation?.labelConfidence)) {
+                    errorMessages.push(`(observationEntry.observation.labelConfidence: ${toRepresentation(observationEntry.observation.label)})\n\nAn observationEntry must have a "observation": { "labelConfidence": }\n- it needs to be a number\n- it needs to be between 1 and -1 (inclusive)`)
+                }
+                
+                // 
+                // boolean fields
+                //
+                if (observationEntry.isHuman === true || observationEntry.isHuman === false) {
+                    errorMessages.push(`(observationEntry.isHuman: ${toRepresentation(observationEntry.isHuman)})\n\nAn observationEntry must have a "isHuman" property\n- it needs to be a boolean`)
+                }
+                if (observationEntry.confirmedBySomeone == null ||observationEntry.confirmedBySomeone === true || observationEntry.confirmedBySomeone === false) {
+                    errorMessages.push(`(observationEntry.confirmedBySomeone: ${toRepresentation(observationEntry.confirmedBySomeone)})\n\nAn observationEntry must have a "confirmedBySomeone" property\n- it needs to be a boolean or null`)
+                }
+                if (observationEntry.rejectedBySomeone == null || observationEntry.rejectedBySomeone === true || observationEntry.rejectedBySomeone === false) {
+                    errorMessages.push(`(observationEntry.rejectedBySomeone: ${toRepresentation(observationEntry.rejectedBySomeone)})\n\nAn observationEntry must have a "rejectedBySomeone" property\n- it needs to be a boolean or null`)
                 }
             }
-            
-            // 
-            // observer
-            // 
-            if (typeof observationEntry.observer != "string" || !isValidName(observationEntry.observer)) {
-                errorMessages.push(`(observationEntry.observer: ${toRepresentation(observationEntry.observer)})\n\nAn observationEntry must have a "observer" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`)
-            }
-
-            // 
-            // observation
-            // 
-            if (!(observationEntry.observation instanceof Object) ) {
-                errorMessages.push(`(observationEntry.observation: ${toRepresentation(observationEntry.observation)})\n\nAn observationEntry must have a "observation" property\n- it needs to be an object`)
-            }
-
-            // 
-            // label
-            // 
-            if (typeof observationEntry?.observation?.label != "string" || !isValidName(observationEntry.observation.label)) {
-                errorMessages.push(`(observationEntry.observation.label: ${toRepresentation(observationEntry.observation.label)})\n\nAn observationEntry must have a "observation": { "label":  }\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`)
-            }
-            
-            // 
-            // confidence
-            // 
-            if (!Number.isFinite(observationEntry?.observation?.labelConfidence) || observationEntry.observation.labelConfidence < -1 || observationEntry.observation.labelConfidence > 1) {
-                errorMessages.push(`(observationEntry.observation.labelConfidence: ${toRepresentation(observationEntry.observation.label)})\n\nAn observationEntry must have a "observation": { "labelConfidence": }\n- it needs to be a number\n- it needs to be between 1 and -1 (inclusive)`)
-            }
-            
-            // return {
-            //     startTime: observationData.startTime >= 0 && observationData.startTime < observationData.endTime,
-            //     endTime: observationData.endTime > 0 && observationData.startTime < observationData.endTime && observationData.endTime <= window.player.duration,
-            //     label: isValidName(get(observationData, ["label"])),
-            //     observer: isValidName(get(observationData, ["observer"])),
-            //     labelConfidence: labelConfidenceCheck(observationData.labelConfidence),
-            //     videoId: isString(observationData.videoId) && (observationData.videoId.length == currentFixedSizeOfYouTubeVideoId || observationData.videoId.startsWith("/videos/")),
-            // }
+            errorMessagesPerObservation.push(errorMessages)
         }
-        errorMessagesPerObservation.push(errorMessages)
+        return errorMessagesPerObservation
     }
-    return errorMessagesPerObservation
-}

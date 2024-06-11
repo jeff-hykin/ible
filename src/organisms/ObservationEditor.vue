@@ -163,10 +163,10 @@
 
 <script>
 import { toKebabCase } from '../string.js'
-import { isLocalVideo } from '../observation_tooling.js'
+import * as observationTooling from '../observation_tooling.js'
 let { backend, backendHelpers, fakeBackend } = require('../iilvd-api.js')
-let { getColor, currentFixedSizeOfYouTubeVideoId, labelConfidenceCheck, isValidName, storageObject } = require("../utils")
-const createUuid = ()=>new Date().getTime() + `${Math.random()}`.slice(1)
+let { getColor, currentFixedSizeOfYouTubeVideoId, isValidName, storageObject } = require("../utils")
+
 export default {
     props: [
         "currentTime",
@@ -178,7 +178,7 @@ export default {
     },
     data: ()=>({
         observationData: {
-            createdAt: createUuid(),
+            createdAt: observationTooling.createUuid(),
             videoId: null,
             startTime: 0,
             endTime: 0,
@@ -189,6 +189,7 @@ export default {
             confirmedBySomeone: false,
             rejectedBySomeone: false,
             customInfo: {},
+            spacialInfo: {},
         },
         uuidOfSelectedSegment: null,
         dataCopy: null,
@@ -200,7 +201,6 @@ export default {
     },
     mounted() {
         window.Editor = this // debugging
-        window.player = window.player || { currentTime: 0 }
         this.resetData()
     },
     computed: {
@@ -213,16 +213,11 @@ export default {
             return !Object.values(this.valid).some(value=>!value)
         },
         isValid() {
-            let observationData = this.observationData
-            return {
-                startTime: observationData.startTime >= 0 && observationData.startTime < observationData.endTime,
-                endTime: observationData.endTime > 0 && observationData.startTime < observationData.endTime && observationData.endTime <= window.player.duration,
-                label: isValidName(observationData?.label),
-                observer: isValidName(observationData?.observer),
-                labelConfidence: labelConfidenceCheck(observationData.labelConfidence),
-                videoId: isString(observationData.videoId) && (observationData.videoId.length == currentFixedSizeOfYouTubeVideoId || isLocalVideo(observationData.videoId)),
-            }
-        }
+            return observationTooling.quickLocalValidationCheck({
+                observationData: this.observationData,
+                videoDuration: window.player?.duration 
+            })
+        },
     },
     rootHooks: {
         watch: {
@@ -251,6 +246,7 @@ export default {
                         label:           (selectedSegment.observation||{}).label,
                         labelConfidence: (selectedSegment.observation||{}).labelConfidence,
                         customInfo:      selectedSegment.customInfo,
+                        spacialInfo: (selectedSegment.observation||{}).spacialInfo||{},
                     }
                 }
             },
@@ -276,7 +272,7 @@ export default {
                 }
             }
             if (eventObj.key == "m") {
-                this.observationData.endTime = window.player.currentTime.toFixed(3)
+                this.observationData.endTime = window.player?.currentTime.toFixed(3)
             }
             if (eventObj.key == "s" && this.editing) {
                 this.onSaveEdit()
@@ -286,12 +282,10 @@ export default {
     },
     methods: {
         onLabelChange() {
-            // enforce naming convention
-            this.observationData.label = toKebabCase(this.observationData.label.toLowerCase())
+            this.observationData.label = observationTooling.coerceLabel(this.observationData.label)
         },
         onObserverChange() {
-            // enforce naming convention
-            this.observationData.observer = toKebabCase(this.observationData.observer.toLowerCase())
+            this.observationData.observer = observationTooling.coerceObserver(this.observationData.observer)
         },
         preventBubbling(eventObject) {
             if (eventObject.ctrlKey && eventObject.key == "s") {
@@ -309,10 +303,10 @@ export default {
             if (!this.editing) {
                 this.dataCopy = {}
                 this.resetData()
-                this.observationData.startTime = window.player.currentTime.toFixed(3)
-                this.observationData.endTime = (window.player.currentTime+0.01).toFixed(3)
+                this.observationData.startTime = (window.player?.currentTime||0).toFixed(3)
+                this.observationData.endTime = ((window.player?.currentTime||0)+0.01).toFixed(3)
                 this.observationData.label = storageObject.recentLabel || this.$root?.routeData$?.labelName || "example-label"
-                this.uuidOfSelectedSegment = new Date().getTime() + `${Math.random()}`.slice(1)
+                this.uuidOfSelectedSegment = observationTooling.createUuid()
                 this.onEditObservation()
             }
         },
@@ -357,14 +351,9 @@ export default {
                 observation: {
                     label:           this.observationData.label,
                     labelConfidence: this.observationData.labelConfidence,
-                    spacialInfo: {},
+                    spacialInfo:     this.observationData.spacialInfo,
                 },
                 customInfo: this.observationData.customInfo,
-            }
-            const isNewObervation = !this.uuidOfSelectedSegment
-            if (isNewObervation) {
-                // if it is a new observation
-                this.uuidOfSelectedSegment = `${Math.random()}`
             }
             // 
             // save on storageObject
@@ -376,7 +365,7 @@ export default {
             
             try {
                 await backendHelpers.setObservation({uuidOfSelectedSegment, observation: observationEntry})
-                await fakeBackend.setObservation(observationEntry)
+                await fakeBackend.setObservation(observationEntry, {withCoersion:true})
             } catch (error) {
                 this.$toasted.show(`There was an error on the database`).goAway(5500)
                 console.error("# ")
@@ -420,10 +409,10 @@ export default {
         resetData() {
             this.$root.selectedSegment = null
             this.observationData = {
-                createdAt: new Date().getTime() + `${Math.random()}`.slice(1),
+                createdAt: observationTooling.createUuid(),
                 videoId: (this.$root.selectedVideo)&&this.$root.selectedVideo.$id,
-                startTime: window.player.currentTime || 0,
-                endTime: window.player.currentTime || window.player.duration || 0,
+                startTime: (window.player?.currentTime||0) || 0,
+                endTime: (window.player?.currentTime||0) || window.player.duration || 0,
                 observer: window.storageObject.observer || "",
                 label: this.$root?.routeData$?.labelName||"",
                 labelConfidence: 0.95,
@@ -433,10 +422,10 @@ export default {
             }
         },
         setStartToCurrentTime() {
-            this.observationData.startTime = window.player.currentTime.toFixed(3)
+            this.observationData.startTime = (window.player?.currentTime||0).toFixed(3)
         },
         setEndToCurrentTime() {
-            this.observationData.endTime = window.player.currentTime.toFixed(3)
+            this.observationData.endTime = (window.player?.currentTime||0).toFixed(3)
         },
     },
 }
