@@ -196,11 +196,11 @@ export default {
             let observationData = this.observationData
             return {
                 startTime: observationData.startTime >= 0 && observationData.startTime < observationData.endTime,
-                endTime: observationData.endTime > 0 && observationData.startTime < observationData.endTime && observationData.endTime <= this.duration,
+                endTime: observationData.endTime > 0 && observationData.startTime < observationData.endTime && observationData.endTime <= window.player.duration,
                 label: isValidName(get(observationData, ["label"])),
                 observer: isValidName(get(observationData, ["observer"])),
                 labelConfidence: labelConfidenceCheck(observationData.labelConfidence),
-                videoId: isString(observationData.videoId) && observationData.videoId.length == currentFixedSizeOfYouTubeVideoId
+                videoId: isString(observationData.videoId) && (observationData.videoId.length == currentFixedSizeOfYouTubeVideoId || observationData.videoId.startsWith("/videos/")),
             }
         }
     },
@@ -284,10 +284,9 @@ export default {
                 this.dataCopy = {}
                 this.resetData()
                 this.observationData.startTime = window.player.currentTime.toFixed(3)
-                this.observationData.endTime = (window.player.currentTime+1).toFixed(3)
-                this.observationData.label = get(this.$root, ["routeData$", "labelName"],"") || "(change me)"
-                this.uuidOfSelectedSegment = null
-                // start editing the newly created observation
+                this.observationData.endTime = (window.player.currentTime+0.01).toFixed(3)
+                this.observationData.label = storageObject.recentLabel || get(this.$root, ["routeData$", "labelName"],"") || "example-label"
+                this.uuidOfSelectedSegment = null // start editing the newly created observation
                 this.onEditObservation()
             }
         },
@@ -305,8 +304,11 @@ export default {
         },
         async onSaveEdit() {
             console.log(`onSaveEdit`)
-            if (this.observationData.observer) {
+            if (typeof this.observationData.observer == "string" && this.observationData.observer.length > 0) {
                 storageObject.observer = this.observationData.observer
+            }
+            if (typeof this.observationData.label == "string" && this.observationData.label.length > 0) {
+                storageObject.recentLabel = this.observationData.label
             }
             
             // convert to numbers 
@@ -400,7 +402,7 @@ export default {
             this.observationData = {
                 videoId: (this.$root.selectedVideo)&&this.$root.selectedVideo.$id,
                 startTime: window.player.currentTime || 0,
-                endTime: window.player.currentTime || this.duration || 0,
+                endTime: window.player.currentTime || window.player.duration || 0,
                 observer: window.storageObject.observer || "",
                 label: get(this,["$root", "routeData$", "labelName"], ""),
                 labelConfidence: 0.95,

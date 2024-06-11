@@ -216,7 +216,6 @@ export default {
             filterAndSort() {
                 this.$root.searchResults.finishedComputing = false
                 this.debouncedSubmitSearch()
-                storageObject.observer = this.$root.filterAndSort.observer
             }
         }
     }

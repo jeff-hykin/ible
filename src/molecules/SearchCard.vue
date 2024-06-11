@@ -10,6 +10,7 @@
 </template>
 
 <script>
+import { set } from '../object'
 export default {
     props: ["labelName", "label"],
     methods: {
@@ -20,6 +21,10 @@ export default {
             // get it from the cache (auto-adds to cache if needed)
             this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500)
             window.resetPlayer = true
+            
+            setTimeout(() => { // TODO: i should do a proper fix for this
+                window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
+            }, 100)
             this.$root.push({labelName, videoId: selectedVideoId})
         }
     }

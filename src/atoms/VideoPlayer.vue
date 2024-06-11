@@ -79,7 +79,7 @@ export default {
         window.VideoPlayer = this // debugging
         // init
         this.loadVideo()
-        this.intervalId = setInterval(this.focusWatcher, 500)
+        this.intervalId = setInterval(this.focusWatcher, 100)
     },
     // allow things to dynamically hook into the updated event
     updated() {

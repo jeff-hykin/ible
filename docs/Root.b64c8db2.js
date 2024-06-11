@@ -5808,7 +5808,11 @@ function createComment(text) {
 }
 
 function insertBefore(parentNode, newNode, referenceNode) {
-  parentNode.insertBefore(newNode, referenceNode);
+  try {
+    parentNode.insertBefore(newNode, referenceNode);
+  } catch (error) {
+    console.log(`error is:`, error);
+  }
 }
 
 function removeChild(node, child) {
@@ -33380,7 +33384,7 @@ function Bc(e, t) {
     var i = n > 0 ? t.cloneNode(!0) : t,
         r = e.parentNode,
         a = e.nextSibling;
-    i.appendChild(e), a ? r.insertBefore(i, a) : r.appendChild(i);
+    i.appendChild(e), a ? r && r.insertBefore(i, a) : r && r.appendChild(i);
   });
 }
 
@@ -65644,17 +65648,10 @@ var _default = {
         keySegments = Object.entries(keySegments).map(([eachKey, eachValue]) => (eachValue.$uuid = eachKey, eachValue)); // if theres no duration then the visual segments can't be generated
         // (wait for duration to change)
 
-        if (!this.videoDuration) {
-          console.debug(`SegmentDisplay: this.videoDuration wasn't available`);
-          return;
-        }
-
-        let duration = this.videoDuration; // check then assign
-
         if (originalVideoId == get(this.$root, ['routeData$', 'videoId'], null)) {
           this.$withoutWatchers("SegmentDisplay-retrieveFromBackend", () => {
             this.$root.selectedVideo.keySegments = this.processNewSegments({
-              duration,
+              duration: window.player.duration,
               keySegments
             });
           });

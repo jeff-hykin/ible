@@ -9149,7 +9149,3929 @@ var _goodVue = _interopRequireDefault(require("good-vue"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_goodVue.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","good-vue":"node_modules/good-vue/dist/index.js"}],"node_modules/keen-ui/dist/keen-ui.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","good-vue":"node_modules/good-vue/dist/index.js"}],"node_modules/portal-vue/dist/portal-vue.common.js":[function(require,module,exports) {
+
+ /*! 
+  * portal-vue © Thorsten Lünborg, 2019 
+  * 
+  * Version: 2.1.7
+  * 
+  * LICENCE: MIT 
+  * 
+  * https://github.com/linusborg/portal-vue
+  * 
+ */
+
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var Vue = _interopDefault(require('vue'));
+
+function _typeof(obj) {
+  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+    _typeof = function (obj) {
+      return typeof obj;
+    };
+  } else {
+    _typeof = function (obj) {
+      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+    };
+  }
+
+  return _typeof(obj);
+}
+
+function _toConsumableArray(arr) {
+  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
+}
+
+function _arrayWithoutHoles(arr) {
+  if (Array.isArray(arr)) {
+    for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+    return arr2;
+  }
+}
+
+function _iterableToArray(iter) {
+  if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
+}
+
+function _nonIterableSpread() {
+  throw new TypeError("Invalid attempt to spread non-iterable instance");
+}
+
+var inBrowser = typeof window !== 'undefined';
+function freeze(item) {
+  if (Array.isArray(item) || _typeof(item) === 'object') {
+    return Object.freeze(item);
+  }
+
+  return item;
+}
+function combinePassengers(transports) {
+  var slotProps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  return transports.reduce(function (passengers, transport) {
+    var temp = transport.passengers[0];
+    var newPassengers = typeof temp === 'function' ? temp(slotProps) : transport.passengers;
+    return passengers.concat(newPassengers);
+  }, []);
+}
+function stableSort(array, compareFn) {
+  return array.map(function (v, idx) {
+    return [idx, v];
+  }).sort(function (a, b) {
+    return compareFn(a[1], b[1]) || a[0] - b[0];
+  }).map(function (c) {
+    return c[1];
+  });
+}
+function pick(obj, keys) {
+  return keys.reduce(function (acc, key) {
+    if (obj.hasOwnProperty(key)) {
+      acc[key] = obj[key];
+    }
+
+    return acc;
+  }, {});
+}
+
+var transports = {};
+var targets = {};
+var sources = {};
+var Wormhole = Vue.extend({
+  data: function data() {
+    return {
+      transports: transports,
+      targets: targets,
+      sources: sources,
+      trackInstances: inBrowser
+    };
+  },
+  methods: {
+    open: function open(transport) {
+      if (!inBrowser) return;
+      var to = transport.to,
+          from = transport.from,
+          passengers = transport.passengers,
+          _transport$order = transport.order,
+          order = _transport$order === void 0 ? Infinity : _transport$order;
+      if (!to || !from || !passengers) return;
+      var newTransport = {
+        to: to,
+        from: from,
+        passengers: freeze(passengers),
+        order: order
+      };
+      var keys = Object.keys(this.transports);
+
+      if (keys.indexOf(to) === -1) {
+        Vue.set(this.transports, to, []);
+      }
+
+      var currentIndex = this.$_getTransportIndex(newTransport); // Copying the array here so that the PortalTarget change event will actually contain two distinct arrays
+
+      var newTransports = this.transports[to].slice(0);
+
+      if (currentIndex === -1) {
+        newTransports.push(newTransport);
+      } else {
+        newTransports[currentIndex] = newTransport;
+      }
+
+      this.transports[to] = stableSort(newTransports, function (a, b) {
+        return a.order - b.order;
+      });
+    },
+    close: function close(transport) {
+      var force = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      var to = transport.to,
+          from = transport.from;
+      if (!to || !from && force === false) return;
+
+      if (!this.transports[to]) {
+        return;
+      }
+
+      if (force) {
+        this.transports[to] = [];
+      } else {
+        var index = this.$_getTransportIndex(transport);
+
+        if (index >= 0) {
+          // Copying the array here so that the PortalTarget change event will actually contain two distinct arrays
+          var newTransports = this.transports[to].slice(0);
+          newTransports.splice(index, 1);
+          this.transports[to] = newTransports;
+        }
+      }
+    },
+    registerTarget: function registerTarget(target, vm, force) {
+      if (!inBrowser) return;
+
+      if (this.trackInstances && !force && this.targets[target]) {
+        console.warn("[portal-vue]: Target ".concat(target, " already exists"));
+      }
+
+      this.$set(this.targets, target, Object.freeze([vm]));
+    },
+    unregisterTarget: function unregisterTarget(target) {
+      this.$delete(this.targets, target);
+    },
+    registerSource: function registerSource(source, vm, force) {
+      if (!inBrowser) return;
+
+      if (this.trackInstances && !force && this.sources[source]) {
+        console.warn("[portal-vue]: source ".concat(source, " already exists"));
+      }
+
+      this.$set(this.sources, source, Object.freeze([vm]));
+    },
+    unregisterSource: function unregisterSource(source) {
+      this.$delete(this.sources, source);
+    },
+    hasTarget: function hasTarget(to) {
+      return !!(this.targets[to] && this.targets[to][0]);
+    },
+    hasSource: function hasSource(to) {
+      return !!(this.sources[to] && this.sources[to][0]);
+    },
+    hasContentFor: function hasContentFor(to) {
+      return !!this.transports[to] && !!this.transports[to].length;
+    },
+    // Internal
+    $_getTransportIndex: function $_getTransportIndex(_ref) {
+      var to = _ref.to,
+          from = _ref.from;
+
+      for (var i in this.transports[to]) {
+        if (this.transports[to][i].from === from) {
+          return +i;
+        }
+      }
+
+      return -1;
+    }
+  }
+});
+var wormhole = new Wormhole(transports);
+
+var _id = 1;
+var Portal = Vue.extend({
+  name: 'portal',
+  props: {
+    disabled: {
+      type: Boolean
+    },
+    name: {
+      type: String,
+      default: function _default() {
+        return String(_id++);
+      }
+    },
+    order: {
+      type: Number,
+      default: 0
+    },
+    slim: {
+      type: Boolean
+    },
+    slotProps: {
+      type: Object,
+      default: function _default() {
+        return {};
+      }
+    },
+    tag: {
+      type: String,
+      default: 'DIV'
+    },
+    to: {
+      type: String,
+      default: function _default() {
+        return String(Math.round(Math.random() * 10000000));
+      }
+    }
+  },
+  created: function created() {
+    var _this = this;
+
+    this.$nextTick(function () {
+      wormhole.registerSource(_this.name, _this);
+    });
+  },
+  mounted: function mounted() {
+    if (!this.disabled) {
+      this.sendUpdate();
+    }
+  },
+  updated: function updated() {
+    if (this.disabled) {
+      this.clear();
+    } else {
+      this.sendUpdate();
+    }
+  },
+  beforeDestroy: function beforeDestroy() {
+    wormhole.unregisterSource(this.name);
+    this.clear();
+  },
+  watch: {
+    to: function to(newValue, oldValue) {
+      oldValue && oldValue !== newValue && this.clear(oldValue);
+      this.sendUpdate();
+    }
+  },
+  methods: {
+    clear: function clear(target) {
+      var closer = {
+        from: this.name,
+        to: target || this.to
+      };
+      wormhole.close(closer);
+    },
+    normalizeSlots: function normalizeSlots() {
+      return this.$scopedSlots.default ? [this.$scopedSlots.default] : this.$slots.default;
+    },
+    normalizeOwnChildren: function normalizeOwnChildren(children) {
+      return typeof children === 'function' ? children(this.slotProps) : children;
+    },
+    sendUpdate: function sendUpdate() {
+      var slotContent = this.normalizeSlots();
+
+      if (slotContent) {
+        var transport = {
+          from: this.name,
+          to: this.to,
+          passengers: _toConsumableArray(slotContent),
+          order: this.order
+        };
+        wormhole.open(transport);
+      } else {
+        this.clear();
+      }
+    }
+  },
+  render: function render(h) {
+    var children = this.$slots.default || this.$scopedSlots.default || [];
+    var Tag = this.tag;
+
+    if (children && this.disabled) {
+      return children.length <= 1 && this.slim ? this.normalizeOwnChildren(children)[0] : h(Tag, [this.normalizeOwnChildren(children)]);
+    } else {
+      return this.slim ? h() : h(Tag, {
+        class: {
+          'v-portal': true
+        },
+        style: {
+          display: 'none'
+        },
+        key: 'v-portal-placeholder'
+      });
+    }
+  }
+});
+
+var PortalTarget = Vue.extend({
+  name: 'portalTarget',
+  props: {
+    multiple: {
+      type: Boolean,
+      default: false
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    slim: {
+      type: Boolean,
+      default: false
+    },
+    slotProps: {
+      type: Object,
+      default: function _default() {
+        return {};
+      }
+    },
+    tag: {
+      type: String,
+      default: 'div'
+    },
+    transition: {
+      type: [String, Object, Function]
+    }
+  },
+  data: function data() {
+    return {
+      transports: wormhole.transports,
+      firstRender: true
+    };
+  },
+  created: function created() {
+    var _this = this;
+
+    this.$nextTick(function () {
+      wormhole.registerTarget(_this.name, _this);
+    });
+  },
+  watch: {
+    ownTransports: function ownTransports() {
+      this.$emit('change', this.children().length > 0);
+    },
+    name: function name(newVal, oldVal) {
+      /**
+       * TODO
+       * This should warn as well ...
+       */
+      wormhole.unregisterTarget(oldVal);
+      wormhole.registerTarget(newVal, this);
+    }
+  },
+  mounted: function mounted() {
+    var _this2 = this;
+
+    if (this.transition) {
+      this.$nextTick(function () {
+        // only when we have a transition, because it causes a re-render
+        _this2.firstRender = false;
+      });
+    }
+  },
+  beforeDestroy: function beforeDestroy() {
+    wormhole.unregisterTarget(this.name);
+  },
+  computed: {
+    ownTransports: function ownTransports() {
+      var transports = this.transports[this.name] || [];
+
+      if (this.multiple) {
+        return transports;
+      }
+
+      return transports.length === 0 ? [] : [transports[transports.length - 1]];
+    },
+    passengers: function passengers() {
+      return combinePassengers(this.ownTransports, this.slotProps);
+    }
+  },
+  methods: {
+    // can't be a computed prop because it has to "react" to $slot changes.
+    children: function children() {
+      return this.passengers.length !== 0 ? this.passengers : this.$scopedSlots.default ? this.$scopedSlots.default(this.slotProps) : this.$slots.default || [];
+    },
+    // can't be a computed prop because it has to "react" to this.children().
+    noWrapper: function noWrapper() {
+      var noWrapper = this.slim && !this.transition;
+
+      if (noWrapper && this.children().length > 1) {
+        console.warn('[portal-vue]: PortalTarget with `slim` option received more than one child element.');
+      }
+
+      return noWrapper;
+    }
+  },
+  render: function render(h) {
+    var noWrapper = this.noWrapper();
+    var children = this.children();
+    var Tag = this.transition || this.tag;
+    return noWrapper ? children[0] : this.slim && !Tag ? h() : h(Tag, {
+      props: {
+        // if we have a transition component, pass the tag if it exists
+        tag: this.transition && this.tag ? this.tag : undefined
+      },
+      class: {
+        'vue-portal-target': true
+      }
+    }, children);
+  }
+});
+
+var _id$1 = 0;
+var portalProps = ['disabled', 'name', 'order', 'slim', 'slotProps', 'tag', 'to'];
+var targetProps = ['multiple', 'transition'];
+var MountingPortal = Vue.extend({
+  name: 'MountingPortal',
+  inheritAttrs: false,
+  props: {
+    append: {
+      type: [Boolean, String]
+    },
+    bail: {
+      type: Boolean
+    },
+    mountTo: {
+      type: String,
+      required: true
+    },
+    // Portal
+    disabled: {
+      type: Boolean
+    },
+    // name for the portal
+    name: {
+      type: String,
+      default: function _default() {
+        return 'mounted_' + String(_id$1++);
+      }
+    },
+    order: {
+      type: Number,
+      default: 0
+    },
+    slim: {
+      type: Boolean
+    },
+    slotProps: {
+      type: Object,
+      default: function _default() {
+        return {};
+      }
+    },
+    tag: {
+      type: String,
+      default: 'DIV'
+    },
+    // name for the target
+    to: {
+      type: String,
+      default: function _default() {
+        return String(Math.round(Math.random() * 10000000));
+      }
+    },
+    // Target
+    multiple: {
+      type: Boolean,
+      default: false
+    },
+    targetSlim: {
+      type: Boolean
+    },
+    targetSlotProps: {
+      type: Object,
+      default: function _default() {
+        return {};
+      }
+    },
+    targetTag: {
+      type: String,
+      default: 'div'
+    },
+    transition: {
+      type: [String, Object, Function]
+    }
+  },
+  created: function created() {
+    if (typeof document === 'undefined') return;
+    var el = document.querySelector(this.mountTo);
+
+    if (!el) {
+      console.error("[portal-vue]: Mount Point '".concat(this.mountTo, "' not found in document"));
+      return;
+    }
+
+    var props = this.$props; // Target already exists
+
+    if (wormhole.targets[props.name]) {
+      if (props.bail) {
+        console.warn("[portal-vue]: Target ".concat(props.name, " is already mounted.\n        Aborting because 'bail: true' is set"));
+      } else {
+        this.portalTarget = wormhole.targets[props.name];
+      }
+
+      return;
+    }
+
+    var append = props.append;
+
+    if (append) {
+      var type = typeof append === 'string' ? append : 'DIV';
+      var mountEl = document.createElement(type);
+      el.appendChild(mountEl);
+      el = mountEl;
+    } // get props for target from $props
+    // we have to rename a few of them
+
+
+    var _props = pick(this.$props, targetProps);
+
+    _props.slim = this.targetSlim;
+    _props.tag = this.targetTag;
+    _props.slotProps = this.targetSlotProps;
+    _props.name = this.to;
+    this.portalTarget = new PortalTarget({
+      el: el,
+      parent: this.$parent || this,
+      propsData: _props
+    });
+  },
+  beforeDestroy: function beforeDestroy() {
+    var target = this.portalTarget;
+
+    if (this.append) {
+      var el = target.$el;
+      el.parentNode.removeChild(el);
+    }
+
+    target.$destroy();
+  },
+  render: function render(h) {
+    if (!this.portalTarget) {
+      console.warn("[portal-vue] Target wasn't mounted");
+      return h();
+    } // if there's no "manual" scoped slot, so we create a <Portal> ourselves
+
+
+    if (!this.$scopedSlots.manual) {
+      var props = pick(this.$props, portalProps);
+      return h(Portal, {
+        props: props,
+        attrs: this.$attrs,
+        on: this.$listeners,
+        scopedSlots: this.$scopedSlots
+      }, this.$slots.default);
+    } // else, we render the scoped slot
+
+
+    var content = this.$scopedSlots.manual({
+      to: this.to
+    }); // if user used <template> for the scoped slot
+    // content will be an array
+
+    if (Array.isArray(content)) {
+      content = content[0];
+    }
+
+    if (!content) return h();
+    return content;
+  }
+});
+
+function install(Vue$$1) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  Vue$$1.component(options.portalName || 'Portal', Portal);
+  Vue$$1.component(options.portalTargetName || 'PortalTarget', PortalTarget);
+  Vue$$1.component(options.MountingPortalName || 'MountingPortal', MountingPortal);
+}
+
+var index = {
+  install: install
+};
+
+exports.default = index;
+exports.Portal = Portal;
+exports.PortalTarget = PortalTarget;
+exports.MountingPortal = MountingPortal;
+exports.Wormhole = wormhole;
+//# sourceMappingURL=portal-vue.common.js.map
+
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/portal-plugin.js":[function(require,module,exports) {
+"use strict";
+
+var _portalVue = _interopRequireDefault(require("portal-vue"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+let Vue = require("vue").default;
+
+Vue.use(_portalVue.default);
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","portal-vue":"node_modules/portal-vue/dist/portal-vue.common.js"}],"src/plugins/resolvables-plugin.js":[function(require,module,exports) {
+// api
+// resolvables:
+//     [resolvable].promise
+//     [resolvable].resolve()
+//     [resolvable].reject()
+//     [resolvable].done
+//     [resolvable].result
+let Vue = require("vue").default;
+
+Vue.prototype.$resolvables = {};
+const resolvablesSymbol = Symbol("resolvables");
+Vue.mixin(module.exports = {
+  beforeCreate() {
+    const newOption = this.$options.resolvables;
+
+    if (!newOption) {
+      return;
+    }
+
+    const vueStaticDestination = this.$resolvables || this;
+
+    if (vueStaticDestination instanceof Object) {
+      if (newOption instanceof Function) {
+        Object.assign(vueStaticDestination, newOption.apply(this));
+      } else if (typeof newOption === 'object') {
+        Object.assign(vueStaticDestination, newOption);
+      }
+    }
+
+    this[resolvablesSymbol] = {};
+
+    if (this.$resolvables instanceof Object) {
+      for (let [eachKey, eachValue] of Object.entries(this.$resolvables)) {
+        this[resolvablesSymbol][eachKey] = [];
+        let checkerFunction = eachValue;
+
+        if (checkerFunction.bind instanceof Function) {
+          checkerFunction = checkerFunction.bind(this);
+        } // 
+        // initial synchronous promise workaround
+        // 
+        // we can't extract the resolve/reject values outside of the promise
+        //     ex: new Promise((resolve, reject)=>{})
+        // because that function is loaded asyncly and this function is synchronous
+        // meaning the external resolve this function tries to create would
+        // fail if the user calls resolve() before the promise
+        // has had time to set itself up so this code here creates a stand-in
+        // resolve() function to handle that initial case
+
+
+        const beforeInitActionArg = Symbol();
+        const beforeInitResolveCalled = Symbol();
+        const beforeInitRejectCalled = Symbol();
+        const promiseKey = Symbol("promiseKey");
+        const resolveKey = Symbol("resolveKey");
+        const rejectKey = Symbol("rejectKey");
+        const checkerRunningKey = Symbol("checkerRunningKey");
+
+        let resetSyncCallbackData = () => {
+          this[resolvablesSymbol][eachKey][beforeInitActionArg] = undefined;
+          this[resolvablesSymbol][eachKey][beforeInitResolveCalled] = false;
+          this[resolvablesSymbol][eachKey][beforeInitRejectCalled] = false;
+          this[resolvablesSymbol][eachKey][checkerRunningKey] = false;
+        }; // 
+        // init the check
+        // 
+
+
+        resetSyncCallbackData();
+
+        checkerFunction.resolve = arg => {
+          // find and use the latest resolver if it exists
+          if (checkerFunction[promiseKey][resolveKey]) {
+            // call the low level resolver
+            checkerFunction[promiseKey][resolveKey](arg);
+
+            if (arg instanceof Array && arg.length == 12) {} // otherwise this function was called before any resolver was setup
+            // and it needs to fallback on the sync method
+            // the promise setup will look for (and cleanup) these values
+
+          } else {
+            this[resolvablesSymbol][eachKey][beforeInitResolveCalled] = true;
+            this[resolvablesSymbol][eachKey][beforeInitActionArg] = arg;
+          }
+        };
+
+        checkerFunction.reject = arg => {
+          // find and use the latest rejector if it exists
+          if (checkerFunction[promiseKey][rejectKey]) {
+            checkerFunction[promiseKey][rejectKey](arg); // otherwise this function was called before any resolver was setup
+            // and it needs to fallback on the sync method
+            // the promise setup will look for (and cleanup) these values
+          } else {
+            this[resolvablesSymbol][eachKey][beforeInitRejectCalled] = true;
+            this[resolvablesSymbol][eachKey][beforeInitActionArg] = arg;
+          }
+        };
+
+        checkerFunction.check = async () => {
+          // basically don't schedule a bunch of checks if the first one never finished
+          if (!this[resolvablesSymbol][eachKey][checkerRunningKey] && !checkerFunction.done) {
+            this[resolvablesSymbol][eachKey][checkerRunningKey] = true; // not sure if func will be async or not so wrap it inside async
+
+            let result = await (async () => checkerFunction(checkerFunction.resolve, checkerFunction.reject))();
+            this[resolvablesSymbol][eachKey][checkerRunningKey] = false;
+          }
+        }; // calling this mutliple times would
+
+
+        let synclyRefreshCheckerFunctionPromise = () => {
+          // create a new checking promise
+          let promiseData = {};
+          promiseData.id = Math.random();
+          const aPromise = new Promise((resolve, reject) => setTimeout(() => {
+            // check if it was synchronously resolved first
+            if (this[resolvablesSymbol][eachKey][beforeInitResolveCalled]) {
+              // resolve the promise
+              resolve(this[resolvablesSymbol][eachKey][beforeInitActionArg]);
+              checkerFunction.result = this[resolvablesSymbol][eachKey][beforeInitActionArg];
+              checkerFunction.done = true;
+              resetSyncCallbackData();
+              return;
+            } else if (this[resolvablesSymbol][eachKey][beforeInitRejectCalled]) {
+              reject(this[resolvablesSymbol][eachKey][beforeInitActionArg]);
+              checkerFunction.result = this[resolvablesSymbol][eachKey][beforeInitActionArg];
+              checkerFunction.done = true;
+              resetSyncCallbackData();
+              return;
+            } // then do the normal checking
+
+
+            promiseData[rejectKey] = arg => {
+              if (!checkerFunction.done) {
+                checkerFunction.result = arg;
+                checkerFunction.done = true;
+                reject(arg);
+                resetSyncCallbackData();
+              }
+            };
+
+            promiseData[resolveKey] = arg => {
+              if (!checkerFunction.done) {
+                checkerFunction.result = arg;
+                checkerFunction.done = true;
+                resolve(arg);
+                resetSyncCallbackData();
+              }
+            };
+
+            Object.assign(aPromise, promiseData); // immediately run the check
+
+            checkerFunction.check(); // check again after 1 second
+            // TODO: make this customizable
+
+            setTimeout(() => {
+              checkerFunction.check();
+            }, 1000); // if the promise isn't resolved after those checks
+            // then something else from somewhere else needs to call the resolve
+          }, 0)); // attach the new promise
+
+          checkerFunction[promiseKey] = Object.assign(aPromise, promiseData); // synchronously reset the resolved status
+
+          delete checkerFunction.result;
+          checkerFunction.done = false;
+          checkerFunction.id = promiseData.id;
+        }; // init the first promise
+
+
+        synclyRefreshCheckerFunctionPromise(); // add promise getter 
+
+        Object.defineProperty(checkerFunction, "promise", {
+          get() {
+            // if not yet resolved, check it, then return the existing promise
+            if (!checkerFunction.done) {
+              // run the check again, if the other checks are complete
+              checkerFunction.check(); // return the promise
+
+              return checkerFunction[promiseKey]; // if already resolved, then create a new promise
+              // so that the re-check can run
+            } else {
+              // this will call the check function as soon as the promise loads
+              synclyRefreshCheckerFunctionPromise();
+              return checkerFunction[promiseKey];
+            }
+          }
+
+        }); // create the property on the component
+
+        Object.defineProperty(this, eachKey, {
+          get() {
+            return checkerFunction;
+          }
+
+        });
+      }
+    }
+  }
+
+});
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"node_modules/vue-router/dist/vue-router.esm.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+/*!
+  * vue-router v3.4.9
+  * (c) 2020 Evan You
+  * @license MIT
+  */
+
+/*  */
+function assert(condition, message) {
+  if (!condition) {
+    throw new Error("[vue-router] " + message);
+  }
+}
+
+function warn(condition, message) {
+  if ("development" !== 'production' && !condition) {
+    typeof console !== 'undefined' && console.warn("[vue-router] " + message);
+  }
+}
+
+function extend(a, b) {
+  for (var key in b) {
+    a[key] = b[key];
+  }
+
+  return a;
+}
+/*  */
+
+
+var encodeReserveRE = /[!'()*]/g;
+
+var encodeReserveReplacer = function (c) {
+  return '%' + c.charCodeAt(0).toString(16);
+};
+
+var commaRE = /%2C/g; // fixed encodeURIComponent which is more conformant to RFC3986:
+// - escapes [!'()*]
+// - preserve commas
+
+var encode = function (str) {
+  return encodeURIComponent(str).replace(encodeReserveRE, encodeReserveReplacer).replace(commaRE, ',');
+};
+
+function decode(str) {
+  try {
+    return decodeURIComponent(str);
+  } catch (err) {
+    if ("development" !== 'production') {
+      warn(false, "Error decoding \"" + str + "\". Leaving it intact.");
+    }
+  }
+
+  return str;
+}
+
+function resolveQuery(query, extraQuery, _parseQuery) {
+  if (extraQuery === void 0) extraQuery = {};
+  var parse = _parseQuery || parseQuery;
+  var parsedQuery;
+
+  try {
+    parsedQuery = parse(query || '');
+  } catch (e) {
+    "development" !== 'production' && warn(false, e.message);
+    parsedQuery = {};
+  }
+
+  for (var key in extraQuery) {
+    var value = extraQuery[key];
+    parsedQuery[key] = Array.isArray(value) ? value.map(castQueryParamValue) : castQueryParamValue(value);
+  }
+
+  return parsedQuery;
+}
+
+var castQueryParamValue = function (value) {
+  return value == null || typeof value === 'object' ? value : String(value);
+};
+
+function parseQuery(query) {
+  var res = {};
+  query = query.trim().replace(/^(\?|#|&)/, '');
+
+  if (!query) {
+    return res;
+  }
+
+  query.split('&').forEach(function (param) {
+    var parts = param.replace(/\+/g, ' ').split('=');
+    var key = decode(parts.shift());
+    var val = parts.length > 0 ? decode(parts.join('=')) : null;
+
+    if (res[key] === undefined) {
+      res[key] = val;
+    } else if (Array.isArray(res[key])) {
+      res[key].push(val);
+    } else {
+      res[key] = [res[key], val];
+    }
+  });
+  return res;
+}
+
+function stringifyQuery(obj) {
+  var res = obj ? Object.keys(obj).map(function (key) {
+    var val = obj[key];
+
+    if (val === undefined) {
+      return '';
+    }
+
+    if (val === null) {
+      return encode(key);
+    }
+
+    if (Array.isArray(val)) {
+      var result = [];
+      val.forEach(function (val2) {
+        if (val2 === undefined) {
+          return;
+        }
+
+        if (val2 === null) {
+          result.push(encode(key));
+        } else {
+          result.push(encode(key) + '=' + encode(val2));
+        }
+      });
+      return result.join('&');
+    }
+
+    return encode(key) + '=' + encode(val);
+  }).filter(function (x) {
+    return x.length > 0;
+  }).join('&') : null;
+  return res ? "?" + res : '';
+}
+/*  */
+
+
+var trailingSlashRE = /\/?$/;
+
+function createRoute(record, location, redirectedFrom, router) {
+  var stringifyQuery = router && router.options.stringifyQuery;
+  var query = location.query || {};
+
+  try {
+    query = clone(query);
+  } catch (e) {}
+
+  var route = {
+    name: location.name || record && record.name,
+    meta: record && record.meta || {},
+    path: location.path || '/',
+    hash: location.hash || '',
+    query: query,
+    params: location.params || {},
+    fullPath: getFullPath(location, stringifyQuery),
+    matched: record ? formatMatch(record) : []
+  };
+
+  if (redirectedFrom) {
+    route.redirectedFrom = getFullPath(redirectedFrom, stringifyQuery);
+  }
+
+  return Object.freeze(route);
+}
+
+function clone(value) {
+  if (Array.isArray(value)) {
+    return value.map(clone);
+  } else if (value && typeof value === 'object') {
+    var res = {};
+
+    for (var key in value) {
+      res[key] = clone(value[key]);
+    }
+
+    return res;
+  } else {
+    return value;
+  }
+} // the starting route that represents the initial state
+
+
+var START = createRoute(null, {
+  path: '/'
+});
+
+function formatMatch(record) {
+  var res = [];
+
+  while (record) {
+    res.unshift(record);
+    record = record.parent;
+  }
+
+  return res;
+}
+
+function getFullPath(ref, _stringifyQuery) {
+  var path = ref.path;
+  var query = ref.query;
+  if (query === void 0) query = {};
+  var hash = ref.hash;
+  if (hash === void 0) hash = '';
+  var stringify = _stringifyQuery || stringifyQuery;
+  return (path || '/') + stringify(query) + hash;
+}
+
+function isSameRoute(a, b) {
+  if (b === START) {
+    return a === b;
+  } else if (!b) {
+    return false;
+  } else if (a.path && b.path) {
+    return a.path.replace(trailingSlashRE, '') === b.path.replace(trailingSlashRE, '') && a.hash === b.hash && isObjectEqual(a.query, b.query);
+  } else if (a.name && b.name) {
+    return a.name === b.name && a.hash === b.hash && isObjectEqual(a.query, b.query) && isObjectEqual(a.params, b.params);
+  } else {
+    return false;
+  }
+}
+
+function isObjectEqual(a, b) {
+  if (a === void 0) a = {};
+  if (b === void 0) b = {}; // handle null value #1566
+
+  if (!a || !b) {
+    return a === b;
+  }
+
+  var aKeys = Object.keys(a).sort();
+  var bKeys = Object.keys(b).sort();
+
+  if (aKeys.length !== bKeys.length) {
+    return false;
+  }
+
+  return aKeys.every(function (key, i) {
+    var aVal = a[key];
+    var bKey = bKeys[i];
+
+    if (bKey !== key) {
+      return false;
+    }
+
+    var bVal = b[key]; // query values can be null and undefined
+
+    if (aVal == null || bVal == null) {
+      return aVal === bVal;
+    } // check nested equality
+
+
+    if (typeof aVal === 'object' && typeof bVal === 'object') {
+      return isObjectEqual(aVal, bVal);
+    }
+
+    return String(aVal) === String(bVal);
+  });
+}
+
+function isIncludedRoute(current, target) {
+  return current.path.replace(trailingSlashRE, '/').indexOf(target.path.replace(trailingSlashRE, '/')) === 0 && (!target.hash || current.hash === target.hash) && queryIncludes(current.query, target.query);
+}
+
+function queryIncludes(current, target) {
+  for (var key in target) {
+    if (!(key in current)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function handleRouteEntered(route) {
+  for (var i = 0; i < route.matched.length; i++) {
+    var record = route.matched[i];
+
+    for (var name in record.instances) {
+      var instance = record.instances[name];
+      var cbs = record.enteredCbs[name];
+
+      if (!instance || !cbs) {
+        continue;
+      }
+
+      delete record.enteredCbs[name];
+
+      for (var i$1 = 0; i$1 < cbs.length; i$1++) {
+        if (!instance._isBeingDestroyed) {
+          cbs[i$1](instance);
+        }
+      }
+    }
+  }
+}
+
+var View = {
+  name: 'RouterView',
+  functional: true,
+  props: {
+    name: {
+      type: String,
+      default: 'default'
+    }
+  },
+  render: function render(_, ref) {
+    var props = ref.props;
+    var children = ref.children;
+    var parent = ref.parent;
+    var data = ref.data; // used by devtools to display a router-view badge
+
+    data.routerView = true; // directly use parent context's createElement() function
+    // so that components rendered by router-view can resolve named slots
+
+    var h = parent.$createElement;
+    var name = props.name;
+    var route = parent.$route;
+    var cache = parent._routerViewCache || (parent._routerViewCache = {}); // determine current view depth, also check to see if the tree
+    // has been toggled inactive but kept-alive.
+
+    var depth = 0;
+    var inactive = false;
+
+    while (parent && parent._routerRoot !== parent) {
+      var vnodeData = parent.$vnode ? parent.$vnode.data : {};
+
+      if (vnodeData.routerView) {
+        depth++;
+      }
+
+      if (vnodeData.keepAlive && parent._directInactive && parent._inactive) {
+        inactive = true;
+      }
+
+      parent = parent.$parent;
+    }
+
+    data.routerViewDepth = depth; // render previous view if the tree is inactive and kept-alive
+
+    if (inactive) {
+      var cachedData = cache[name];
+      var cachedComponent = cachedData && cachedData.component;
+
+      if (cachedComponent) {
+        // #2301
+        // pass props
+        if (cachedData.configProps) {
+          fillPropsinData(cachedComponent, data, cachedData.route, cachedData.configProps);
+        }
+
+        return h(cachedComponent, data, children);
+      } else {
+        // render previous empty view
+        return h();
+      }
+    }
+
+    var matched = route.matched[depth];
+    var component = matched && matched.components[name]; // render empty node if no matched route or no config component
+
+    if (!matched || !component) {
+      cache[name] = null;
+      return h();
+    } // cache component
+
+
+    cache[name] = {
+      component: component
+    }; // attach instance registration hook
+    // this will be called in the instance's injected lifecycle hooks
+
+    data.registerRouteInstance = function (vm, val) {
+      // val could be undefined for unregistration
+      var current = matched.instances[name];
+
+      if (val && current !== vm || !val && current === vm) {
+        matched.instances[name] = val;
+      }
+    } // also register instance in prepatch hook
+    // in case the same component instance is reused across different routes
+    ;
+
+    (data.hook || (data.hook = {})).prepatch = function (_, vnode) {
+      matched.instances[name] = vnode.componentInstance;
+    }; // register instance in init hook
+    // in case kept-alive component be actived when routes changed
+
+
+    data.hook.init = function (vnode) {
+      if (vnode.data.keepAlive && vnode.componentInstance && vnode.componentInstance !== matched.instances[name]) {
+        matched.instances[name] = vnode.componentInstance;
+      } // if the route transition has already been confirmed then we weren't
+      // able to call the cbs during confirmation as the component was not
+      // registered yet, so we call it here.
+
+
+      handleRouteEntered(route);
+    };
+
+    var configProps = matched.props && matched.props[name]; // save route and configProps in cache
+
+    if (configProps) {
+      extend(cache[name], {
+        route: route,
+        configProps: configProps
+      });
+      fillPropsinData(component, data, route, configProps);
+    }
+
+    return h(component, data, children);
+  }
+};
+
+function fillPropsinData(component, data, route, configProps) {
+  // resolve props
+  var propsToPass = data.props = resolveProps(route, configProps);
+
+  if (propsToPass) {
+    // clone to prevent mutation
+    propsToPass = data.props = extend({}, propsToPass); // pass non-declared props as attrs
+
+    var attrs = data.attrs = data.attrs || {};
+
+    for (var key in propsToPass) {
+      if (!component.props || !(key in component.props)) {
+        attrs[key] = propsToPass[key];
+        delete propsToPass[key];
+      }
+    }
+  }
+}
+
+function resolveProps(route, config) {
+  switch (typeof config) {
+    case 'undefined':
+      return;
+
+    case 'object':
+      return config;
+
+    case 'function':
+      return config(route);
+
+    case 'boolean':
+      return config ? route.params : undefined;
+
+    default:
+      if ("development" !== 'production') {
+        warn(false, "props in \"" + route.path + "\" is a " + typeof config + ", " + "expecting an object, function or boolean.");
+      }
+
+  }
+}
+/*  */
+
+
+function resolvePath(relative, base, append) {
+  var firstChar = relative.charAt(0);
+
+  if (firstChar === '/') {
+    return relative;
+  }
+
+  if (firstChar === '?' || firstChar === '#') {
+    return base + relative;
+  }
+
+  var stack = base.split('/'); // remove trailing segment if:
+  // - not appending
+  // - appending to trailing slash (last segment is empty)
+
+  if (!append || !stack[stack.length - 1]) {
+    stack.pop();
+  } // resolve relative path
+
+
+  var segments = relative.replace(/^\//, '').split('/');
+
+  for (var i = 0; i < segments.length; i++) {
+    var segment = segments[i];
+
+    if (segment === '..') {
+      stack.pop();
+    } else if (segment !== '.') {
+      stack.push(segment);
+    }
+  } // ensure leading slash
+
+
+  if (stack[0] !== '') {
+    stack.unshift('');
+  }
+
+  return stack.join('/');
+}
+
+function parsePath(path) {
+  var hash = '';
+  var query = '';
+  var hashIndex = path.indexOf('#');
+
+  if (hashIndex >= 0) {
+    hash = path.slice(hashIndex);
+    path = path.slice(0, hashIndex);
+  }
+
+  var queryIndex = path.indexOf('?');
+
+  if (queryIndex >= 0) {
+    query = path.slice(queryIndex + 1);
+    path = path.slice(0, queryIndex);
+  }
+
+  return {
+    path: path,
+    query: query,
+    hash: hash
+  };
+}
+
+function cleanPath(path) {
+  return path.replace(/\/\//g, '/');
+}
+
+var isarray = Array.isArray || function (arr) {
+  return Object.prototype.toString.call(arr) == '[object Array]';
+};
+/**
+ * Expose `pathToRegexp`.
+ */
+
+
+var pathToRegexp_1 = pathToRegexp;
+var parse_1 = parse;
+var compile_1 = compile;
+var tokensToFunction_1 = tokensToFunction;
+var tokensToRegExp_1 = tokensToRegExp;
+/**
+ * The main path matching regexp utility.
+ *
+ * @type {RegExp}
+ */
+
+var PATH_REGEXP = new RegExp([// Match escaped characters that would otherwise appear in future matches.
+// This allows the user to escape special characters that won't transform.
+'(\\\\.)', // Match Express-style parameters and un-named parameters with a prefix
+// and optional suffixes. Matches appear as:
+//
+// "/:test(\\d+)?" => ["/", "test", "\d+", undefined, "?", undefined]
+// "/route(\\d+)"  => [undefined, undefined, undefined, "\d+", undefined, undefined]
+// "/*"            => ["/", undefined, undefined, undefined, undefined, "*"]
+'([\\/.])?(?:(?:\\:(\\w+)(?:\\(((?:\\\\.|[^\\\\()])+)\\))?|\\(((?:\\\\.|[^\\\\()])+)\\))([+*?])?|(\\*))'].join('|'), 'g');
+/**
+ * Parse a string for the raw tokens.
+ *
+ * @param  {string}  str
+ * @param  {Object=} options
+ * @return {!Array}
+ */
+
+function parse(str, options) {
+  var tokens = [];
+  var key = 0;
+  var index = 0;
+  var path = '';
+  var defaultDelimiter = options && options.delimiter || '/';
+  var res;
+
+  while ((res = PATH_REGEXP.exec(str)) != null) {
+    var m = res[0];
+    var escaped = res[1];
+    var offset = res.index;
+    path += str.slice(index, offset);
+    index = offset + m.length; // Ignore already escaped sequences.
+
+    if (escaped) {
+      path += escaped[1];
+      continue;
+    }
+
+    var next = str[index];
+    var prefix = res[2];
+    var name = res[3];
+    var capture = res[4];
+    var group = res[5];
+    var modifier = res[6];
+    var asterisk = res[7]; // Push the current path onto the tokens.
+
+    if (path) {
+      tokens.push(path);
+      path = '';
+    }
+
+    var partial = prefix != null && next != null && next !== prefix;
+    var repeat = modifier === '+' || modifier === '*';
+    var optional = modifier === '?' || modifier === '*';
+    var delimiter = res[2] || defaultDelimiter;
+    var pattern = capture || group;
+    tokens.push({
+      name: name || key++,
+      prefix: prefix || '',
+      delimiter: delimiter,
+      optional: optional,
+      repeat: repeat,
+      partial: partial,
+      asterisk: !!asterisk,
+      pattern: pattern ? escapeGroup(pattern) : asterisk ? '.*' : '[^' + escapeString(delimiter) + ']+?'
+    });
+  } // Match any characters still remaining.
+
+
+  if (index < str.length) {
+    path += str.substr(index);
+  } // If the path exists, push it onto the end.
+
+
+  if (path) {
+    tokens.push(path);
+  }
+
+  return tokens;
+}
+/**
+ * Compile a string to a template function for the path.
+ *
+ * @param  {string}             str
+ * @param  {Object=}            options
+ * @return {!function(Object=, Object=)}
+ */
+
+
+function compile(str, options) {
+  return tokensToFunction(parse(str, options), options);
+}
+/**
+ * Prettier encoding of URI path segments.
+ *
+ * @param  {string}
+ * @return {string}
+ */
+
+
+function encodeURIComponentPretty(str) {
+  return encodeURI(str).replace(/[\/?#]/g, function (c) {
+    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+/**
+ * Encode the asterisk parameter. Similar to `pretty`, but allows slashes.
+ *
+ * @param  {string}
+ * @return {string}
+ */
+
+
+function encodeAsterisk(str) {
+  return encodeURI(str).replace(/[?#]/g, function (c) {
+    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+/**
+ * Expose a method for transforming tokens into the path function.
+ */
+
+
+function tokensToFunction(tokens, options) {
+  // Compile all the tokens into regexps.
+  var matches = new Array(tokens.length); // Compile all the patterns before compilation.
+
+  for (var i = 0; i < tokens.length; i++) {
+    if (typeof tokens[i] === 'object') {
+      matches[i] = new RegExp('^(?:' + tokens[i].pattern + ')$', flags(options));
+    }
+  }
+
+  return function (obj, opts) {
+    var path = '';
+    var data = obj || {};
+    var options = opts || {};
+    var encode = options.pretty ? encodeURIComponentPretty : encodeURIComponent;
+
+    for (var i = 0; i < tokens.length; i++) {
+      var token = tokens[i];
+
+      if (typeof token === 'string') {
+        path += token;
+        continue;
+      }
+
+      var value = data[token.name];
+      var segment;
+
+      if (value == null) {
+        if (token.optional) {
+          // Prepend partial segment prefixes.
+          if (token.partial) {
+            path += token.prefix;
+          }
+
+          continue;
+        } else {
+          throw new TypeError('Expected "' + token.name + '" to be defined');
+        }
+      }
+
+      if (isarray(value)) {
+        if (!token.repeat) {
+          throw new TypeError('Expected "' + token.name + '" to not repeat, but received `' + JSON.stringify(value) + '`');
+        }
+
+        if (value.length === 0) {
+          if (token.optional) {
+            continue;
+          } else {
+            throw new TypeError('Expected "' + token.name + '" to not be empty');
+          }
+        }
+
+        for (var j = 0; j < value.length; j++) {
+          segment = encode(value[j]);
+
+          if (!matches[i].test(segment)) {
+            throw new TypeError('Expected all "' + token.name + '" to match "' + token.pattern + '", but received `' + JSON.stringify(segment) + '`');
+          }
+
+          path += (j === 0 ? token.prefix : token.delimiter) + segment;
+        }
+
+        continue;
+      }
+
+      segment = token.asterisk ? encodeAsterisk(value) : encode(value);
+
+      if (!matches[i].test(segment)) {
+        throw new TypeError('Expected "' + token.name + '" to match "' + token.pattern + '", but received "' + segment + '"');
+      }
+
+      path += token.prefix + segment;
+    }
+
+    return path;
+  };
+}
+/**
+ * Escape a regular expression string.
+ *
+ * @param  {string} str
+ * @return {string}
+ */
+
+
+function escapeString(str) {
+  return str.replace(/([.+*?=^!:${}()[\]|\/\\])/g, '\\$1');
+}
+/**
+ * Escape the capturing group by escaping special characters and meaning.
+ *
+ * @param  {string} group
+ * @return {string}
+ */
+
+
+function escapeGroup(group) {
+  return group.replace(/([=!:$\/()])/g, '\\$1');
+}
+/**
+ * Attach the keys as a property of the regexp.
+ *
+ * @param  {!RegExp} re
+ * @param  {Array}   keys
+ * @return {!RegExp}
+ */
+
+
+function attachKeys(re, keys) {
+  re.keys = keys;
+  return re;
+}
+/**
+ * Get the flags for a regexp from the options.
+ *
+ * @param  {Object} options
+ * @return {string}
+ */
+
+
+function flags(options) {
+  return options && options.sensitive ? '' : 'i';
+}
+/**
+ * Pull out keys from a regexp.
+ *
+ * @param  {!RegExp} path
+ * @param  {!Array}  keys
+ * @return {!RegExp}
+ */
+
+
+function regexpToRegexp(path, keys) {
+  // Use a negative lookahead to match only capturing groups.
+  var groups = path.source.match(/\((?!\?)/g);
+
+  if (groups) {
+    for (var i = 0; i < groups.length; i++) {
+      keys.push({
+        name: i,
+        prefix: null,
+        delimiter: null,
+        optional: false,
+        repeat: false,
+        partial: false,
+        asterisk: false,
+        pattern: null
+      });
+    }
+  }
+
+  return attachKeys(path, keys);
+}
+/**
+ * Transform an array into a regexp.
+ *
+ * @param  {!Array}  path
+ * @param  {Array}   keys
+ * @param  {!Object} options
+ * @return {!RegExp}
+ */
+
+
+function arrayToRegexp(path, keys, options) {
+  var parts = [];
+
+  for (var i = 0; i < path.length; i++) {
+    parts.push(pathToRegexp(path[i], keys, options).source);
+  }
+
+  var regexp = new RegExp('(?:' + parts.join('|') + ')', flags(options));
+  return attachKeys(regexp, keys);
+}
+/**
+ * Create a path regexp from string input.
+ *
+ * @param  {string}  path
+ * @param  {!Array}  keys
+ * @param  {!Object} options
+ * @return {!RegExp}
+ */
+
+
+function stringToRegexp(path, keys, options) {
+  return tokensToRegExp(parse(path, options), keys, options);
+}
+/**
+ * Expose a function for taking tokens and returning a RegExp.
+ *
+ * @param  {!Array}          tokens
+ * @param  {(Array|Object)=} keys
+ * @param  {Object=}         options
+ * @return {!RegExp}
+ */
+
+
+function tokensToRegExp(tokens, keys, options) {
+  if (!isarray(keys)) {
+    options =
+    /** @type {!Object} */
+    keys || options;
+    keys = [];
+  }
+
+  options = options || {};
+  var strict = options.strict;
+  var end = options.end !== false;
+  var route = ''; // Iterate over the tokens and create our regexp string.
+
+  for (var i = 0; i < tokens.length; i++) {
+    var token = tokens[i];
+
+    if (typeof token === 'string') {
+      route += escapeString(token);
+    } else {
+      var prefix = escapeString(token.prefix);
+      var capture = '(?:' + token.pattern + ')';
+      keys.push(token);
+
+      if (token.repeat) {
+        capture += '(?:' + prefix + capture + ')*';
+      }
+
+      if (token.optional) {
+        if (!token.partial) {
+          capture = '(?:' + prefix + '(' + capture + '))?';
+        } else {
+          capture = prefix + '(' + capture + ')?';
+        }
+      } else {
+        capture = prefix + '(' + capture + ')';
+      }
+
+      route += capture;
+    }
+  }
+
+  var delimiter = escapeString(options.delimiter || '/');
+  var endsWithDelimiter = route.slice(-delimiter.length) === delimiter; // In non-strict mode we allow a slash at the end of match. If the path to
+  // match already ends with a slash, we remove it for consistency. The slash
+  // is valid at the end of a path match, not in the middle. This is important
+  // in non-ending mode, where "/test/" shouldn't match "/test//route".
+
+  if (!strict) {
+    route = (endsWithDelimiter ? route.slice(0, -delimiter.length) : route) + '(?:' + delimiter + '(?=$))?';
+  }
+
+  if (end) {
+    route += '$';
+  } else {
+    // In non-ending mode, we need the capturing groups to match as much as
+    // possible by using a positive lookahead to the end or next path segment.
+    route += strict && endsWithDelimiter ? '' : '(?=' + delimiter + '|$)';
+  }
+
+  return attachKeys(new RegExp('^' + route, flags(options)), keys);
+}
+/**
+ * Normalize the given path string, returning a regular expression.
+ *
+ * An empty array can be passed in for the keys, which will hold the
+ * placeholder key descriptions. For example, using `/user/:id`, `keys` will
+ * contain `[{ name: 'id', delimiter: '/', optional: false, repeat: false }]`.
+ *
+ * @param  {(string|RegExp|Array)} path
+ * @param  {(Array|Object)=}       keys
+ * @param  {Object=}               options
+ * @return {!RegExp}
+ */
+
+
+function pathToRegexp(path, keys, options) {
+  if (!isarray(keys)) {
+    options =
+    /** @type {!Object} */
+    keys || options;
+    keys = [];
+  }
+
+  options = options || {};
+
+  if (path instanceof RegExp) {
+    return regexpToRegexp(path,
+    /** @type {!Array} */
+    keys);
+  }
+
+  if (isarray(path)) {
+    return arrayToRegexp(
+    /** @type {!Array} */
+    path,
+    /** @type {!Array} */
+    keys, options);
+  }
+
+  return stringToRegexp(
+  /** @type {string} */
+  path,
+  /** @type {!Array} */
+  keys, options);
+}
+
+pathToRegexp_1.parse = parse_1;
+pathToRegexp_1.compile = compile_1;
+pathToRegexp_1.tokensToFunction = tokensToFunction_1;
+pathToRegexp_1.tokensToRegExp = tokensToRegExp_1;
+/*  */
+// $flow-disable-line
+
+var regexpCompileCache = Object.create(null);
+
+function fillParams(path, params, routeMsg) {
+  params = params || {};
+
+  try {
+    var filler = regexpCompileCache[path] || (regexpCompileCache[path] = pathToRegexp_1.compile(path)); // Fix #2505 resolving asterisk routes { name: 'not-found', params: { pathMatch: '/not-found' }}
+    // and fix #3106 so that you can work with location descriptor object having params.pathMatch equal to empty string
+
+    if (typeof params.pathMatch === 'string') {
+      params[0] = params.pathMatch;
+    }
+
+    return filler(params, {
+      pretty: true
+    });
+  } catch (e) {
+    if ("development" !== 'production') {
+      // Fix #3072 no warn if `pathMatch` is string
+      warn(typeof params.pathMatch === 'string', "missing param for " + routeMsg + ": " + e.message);
+    }
+
+    return '';
+  } finally {
+    // delete the 0 if it was added
+    delete params[0];
+  }
+}
+/*  */
+
+
+function normalizeLocation(raw, current, append, router) {
+  var next = typeof raw === 'string' ? {
+    path: raw
+  } : raw; // named target
+
+  if (next._normalized) {
+    return next;
+  } else if (next.name) {
+    next = extend({}, raw);
+    var params = next.params;
+
+    if (params && typeof params === 'object') {
+      next.params = extend({}, params);
+    }
+
+    return next;
+  } // relative params
+
+
+  if (!next.path && next.params && current) {
+    next = extend({}, next);
+    next._normalized = true;
+    var params$1 = extend(extend({}, current.params), next.params);
+
+    if (current.name) {
+      next.name = current.name;
+      next.params = params$1;
+    } else if (current.matched.length) {
+      var rawPath = current.matched[current.matched.length - 1].path;
+      next.path = fillParams(rawPath, params$1, "path " + current.path);
+    } else if ("development" !== 'production') {
+      warn(false, "relative params navigation requires a current route.");
+    }
+
+    return next;
+  }
+
+  var parsedPath = parsePath(next.path || '');
+  var basePath = current && current.path || '/';
+  var path = parsedPath.path ? resolvePath(parsedPath.path, basePath, append || next.append) : basePath;
+  var query = resolveQuery(parsedPath.query, next.query, router && router.options.parseQuery);
+  var hash = next.hash || parsedPath.hash;
+
+  if (hash && hash.charAt(0) !== '#') {
+    hash = "#" + hash;
+  }
+
+  return {
+    _normalized: true,
+    path: path,
+    query: query,
+    hash: hash
+  };
+}
+/*  */
+// work around weird flow bug
+
+
+var toTypes = [String, Object];
+var eventTypes = [String, Array];
+
+var noop = function () {};
+
+var Link = {
+  name: 'RouterLink',
+  props: {
+    to: {
+      type: toTypes,
+      required: true
+    },
+    tag: {
+      type: String,
+      default: 'a'
+    },
+    exact: Boolean,
+    append: Boolean,
+    replace: Boolean,
+    activeClass: String,
+    exactActiveClass: String,
+    ariaCurrentValue: {
+      type: String,
+      default: 'page'
+    },
+    event: {
+      type: eventTypes,
+      default: 'click'
+    }
+  },
+  render: function render(h) {
+    var this$1 = this;
+    var router = this.$router;
+    var current = this.$route;
+    var ref = router.resolve(this.to, current, this.append);
+    var location = ref.location;
+    var route = ref.route;
+    var href = ref.href;
+    var classes = {};
+    var globalActiveClass = router.options.linkActiveClass;
+    var globalExactActiveClass = router.options.linkExactActiveClass; // Support global empty active class
+
+    var activeClassFallback = globalActiveClass == null ? 'router-link-active' : globalActiveClass;
+    var exactActiveClassFallback = globalExactActiveClass == null ? 'router-link-exact-active' : globalExactActiveClass;
+    var activeClass = this.activeClass == null ? activeClassFallback : this.activeClass;
+    var exactActiveClass = this.exactActiveClass == null ? exactActiveClassFallback : this.exactActiveClass;
+    var compareTarget = route.redirectedFrom ? createRoute(null, normalizeLocation(route.redirectedFrom), null, router) : route;
+    classes[exactActiveClass] = isSameRoute(current, compareTarget);
+    classes[activeClass] = this.exact ? classes[exactActiveClass] : isIncludedRoute(current, compareTarget);
+    var ariaCurrentValue = classes[exactActiveClass] ? this.ariaCurrentValue : null;
+
+    var handler = function (e) {
+      if (guardEvent(e)) {
+        if (this$1.replace) {
+          router.replace(location, noop);
+        } else {
+          router.push(location, noop);
+        }
+      }
+    };
+
+    var on = {
+      click: guardEvent
+    };
+
+    if (Array.isArray(this.event)) {
+      this.event.forEach(function (e) {
+        on[e] = handler;
+      });
+    } else {
+      on[this.event] = handler;
+    }
+
+    var data = {
+      class: classes
+    };
+    var scopedSlot = !this.$scopedSlots.$hasNormal && this.$scopedSlots.default && this.$scopedSlots.default({
+      href: href,
+      route: route,
+      navigate: handler,
+      isActive: classes[activeClass],
+      isExactActive: classes[exactActiveClass]
+    });
+
+    if (scopedSlot) {
+      if (scopedSlot.length === 1) {
+        return scopedSlot[0];
+      } else if (scopedSlot.length > 1 || !scopedSlot.length) {
+        if ("development" !== 'production') {
+          warn(false, "RouterLink with to=\"" + this.to + "\" is trying to use a scoped slot but it didn't provide exactly one child. Wrapping the content with a span element.");
+        }
+
+        return scopedSlot.length === 0 ? h() : h('span', {}, scopedSlot);
+      }
+    }
+
+    if (this.tag === 'a') {
+      data.on = on;
+      data.attrs = {
+        href: href,
+        'aria-current': ariaCurrentValue
+      };
+    } else {
+      // find the first <a> child and apply listener and href
+      var a = findAnchor(this.$slots.default);
+
+      if (a) {
+        // in case the <a> is a static node
+        a.isStatic = false;
+        var aData = a.data = extend({}, a.data);
+        aData.on = aData.on || {}; // transform existing events in both objects into arrays so we can push later
+
+        for (var event in aData.on) {
+          var handler$1 = aData.on[event];
+
+          if (event in on) {
+            aData.on[event] = Array.isArray(handler$1) ? handler$1 : [handler$1];
+          }
+        } // append new listeners for router-link
+
+
+        for (var event$1 in on) {
+          if (event$1 in aData.on) {
+            // on[event] is always a function
+            aData.on[event$1].push(on[event$1]);
+          } else {
+            aData.on[event$1] = handler;
+          }
+        }
+
+        var aAttrs = a.data.attrs = extend({}, a.data.attrs);
+        aAttrs.href = href;
+        aAttrs['aria-current'] = ariaCurrentValue;
+      } else {
+        // doesn't have <a> child, apply listener to self
+        data.on = on;
+      }
+    }
+
+    return h(this.tag, data, this.$slots.default);
+  }
+};
+
+function guardEvent(e) {
+  // don't redirect with control keys
+  if (e.metaKey || e.altKey || e.ctrlKey || e.shiftKey) {
+    return;
+  } // don't redirect when preventDefault called
+
+
+  if (e.defaultPrevented) {
+    return;
+  } // don't redirect on right click
+
+
+  if (e.button !== undefined && e.button !== 0) {
+    return;
+  } // don't redirect if `target="_blank"`
+
+
+  if (e.currentTarget && e.currentTarget.getAttribute) {
+    var target = e.currentTarget.getAttribute('target');
+
+    if (/\b_blank\b/i.test(target)) {
+      return;
+    }
+  } // this may be a Weex event which doesn't have this method
+
+
+  if (e.preventDefault) {
+    e.preventDefault();
+  }
+
+  return true;
+}
+
+function findAnchor(children) {
+  if (children) {
+    var child;
+
+    for (var i = 0; i < children.length; i++) {
+      child = children[i];
+
+      if (child.tag === 'a') {
+        return child;
+      }
+
+      if (child.children && (child = findAnchor(child.children))) {
+        return child;
+      }
+    }
+  }
+}
+
+var _Vue;
+
+function install(Vue) {
+  if (install.installed && _Vue === Vue) {
+    return;
+  }
+
+  install.installed = true;
+  _Vue = Vue;
+
+  var isDef = function (v) {
+    return v !== undefined;
+  };
+
+  var registerInstance = function (vm, callVal) {
+    var i = vm.$options._parentVnode;
+
+    if (isDef(i) && isDef(i = i.data) && isDef(i = i.registerRouteInstance)) {
+      i(vm, callVal);
+    }
+  };
+
+  Vue.mixin({
+    beforeCreate: function beforeCreate() {
+      if (isDef(this.$options.router)) {
+        this._routerRoot = this;
+        this._router = this.$options.router;
+
+        this._router.init(this);
+
+        Vue.util.defineReactive(this, '_route', this._router.history.current);
+      } else {
+        this._routerRoot = this.$parent && this.$parent._routerRoot || this;
+      }
+
+      registerInstance(this, this);
+    },
+    destroyed: function destroyed() {
+      registerInstance(this);
+    }
+  });
+  Object.defineProperty(Vue.prototype, '$router', {
+    get: function get() {
+      return this._routerRoot._router;
+    }
+  });
+  Object.defineProperty(Vue.prototype, '$route', {
+    get: function get() {
+      return this._routerRoot._route;
+    }
+  });
+  Vue.component('RouterView', View);
+  Vue.component('RouterLink', Link);
+  var strats = Vue.config.optionMergeStrategies; // use the same hook merging strategy for route hooks
+
+  strats.beforeRouteEnter = strats.beforeRouteLeave = strats.beforeRouteUpdate = strats.created;
+}
+/*  */
+
+
+var inBrowser = typeof window !== 'undefined';
+/*  */
+
+function createRouteMap(routes, oldPathList, oldPathMap, oldNameMap) {
+  // the path list is used to control path matching priority
+  var pathList = oldPathList || []; // $flow-disable-line
+
+  var pathMap = oldPathMap || Object.create(null); // $flow-disable-line
+
+  var nameMap = oldNameMap || Object.create(null);
+  routes.forEach(function (route) {
+    addRouteRecord(pathList, pathMap, nameMap, route);
+  }); // ensure wildcard routes are always at the end
+
+  for (var i = 0, l = pathList.length; i < l; i++) {
+    if (pathList[i] === '*') {
+      pathList.push(pathList.splice(i, 1)[0]);
+      l--;
+      i--;
+    }
+  }
+
+  if ("development" === 'development') {
+    // warn if routes do not include leading slashes
+    var found = pathList // check for missing leading slash
+    .filter(function (path) {
+      return path && path.charAt(0) !== '*' && path.charAt(0) !== '/';
+    });
+
+    if (found.length > 0) {
+      var pathNames = found.map(function (path) {
+        return "- " + path;
+      }).join('\n');
+      warn(false, "Non-nested routes must include a leading slash character. Fix the following routes: \n" + pathNames);
+    }
+  }
+
+  return {
+    pathList: pathList,
+    pathMap: pathMap,
+    nameMap: nameMap
+  };
+}
+
+function addRouteRecord(pathList, pathMap, nameMap, route, parent, matchAs) {
+  var path = route.path;
+  var name = route.name;
+
+  if ("development" !== 'production') {
+    assert(path != null, "\"path\" is required in a route configuration.");
+    assert(typeof route.component !== 'string', "route config \"component\" for path: " + String(path || name) + " cannot be a " + "string id. Use an actual component instead.");
+    warn( // eslint-disable-next-line no-control-regex
+    !/[^\u0000-\u007F]+/.test(path), "Route with path \"" + path + "\" contains unencoded characters, make sure " + "your path is correctly encoded before passing it to the router. Use " + "encodeURI to encode static segments of your path.");
+  }
+
+  var pathToRegexpOptions = route.pathToRegexpOptions || {};
+  var normalizedPath = normalizePath(path, parent, pathToRegexpOptions.strict);
+
+  if (typeof route.caseSensitive === 'boolean') {
+    pathToRegexpOptions.sensitive = route.caseSensitive;
+  }
+
+  var record = {
+    path: normalizedPath,
+    regex: compileRouteRegex(normalizedPath, pathToRegexpOptions),
+    components: route.components || {
+      default: route.component
+    },
+    instances: {},
+    enteredCbs: {},
+    name: name,
+    parent: parent,
+    matchAs: matchAs,
+    redirect: route.redirect,
+    beforeEnter: route.beforeEnter,
+    meta: route.meta || {},
+    props: route.props == null ? {} : route.components ? route.props : {
+      default: route.props
+    }
+  };
+
+  if (route.children) {
+    // Warn if route is named, does not redirect and has a default child route.
+    // If users navigate to this route by name, the default child will
+    // not be rendered (GH Issue #629)
+    if ("development" !== 'production') {
+      if (route.name && !route.redirect && route.children.some(function (child) {
+        return /^\/?$/.test(child.path);
+      })) {
+        warn(false, "Named Route '" + route.name + "' has a default child route. " + "When navigating to this named route (:to=\"{name: '" + route.name + "'\"), " + "the default child route will not be rendered. Remove the name from " + "this route and use the name of the default child route for named " + "links instead.");
+      }
+    }
+
+    route.children.forEach(function (child) {
+      var childMatchAs = matchAs ? cleanPath(matchAs + "/" + child.path) : undefined;
+      addRouteRecord(pathList, pathMap, nameMap, child, record, childMatchAs);
+    });
+  }
+
+  if (!pathMap[record.path]) {
+    pathList.push(record.path);
+    pathMap[record.path] = record;
+  }
+
+  if (route.alias !== undefined) {
+    var aliases = Array.isArray(route.alias) ? route.alias : [route.alias];
+
+    for (var i = 0; i < aliases.length; ++i) {
+      var alias = aliases[i];
+
+      if ("development" !== 'production' && alias === path) {
+        warn(false, "Found an alias with the same value as the path: \"" + path + "\". You have to remove that alias. It will be ignored in development."); // skip in dev to make it work
+
+        continue;
+      }
+
+      var aliasRoute = {
+        path: alias,
+        children: route.children
+      };
+      addRouteRecord(pathList, pathMap, nameMap, aliasRoute, parent, record.path || '/' // matchAs
+      );
+    }
+  }
+
+  if (name) {
+    if (!nameMap[name]) {
+      nameMap[name] = record;
+    } else if ("development" !== 'production' && !matchAs) {
+      warn(false, "Duplicate named routes definition: " + "{ name: \"" + name + "\", path: \"" + record.path + "\" }");
+    }
+  }
+}
+
+function compileRouteRegex(path, pathToRegexpOptions) {
+  var regex = pathToRegexp_1(path, [], pathToRegexpOptions);
+
+  if ("development" !== 'production') {
+    var keys = Object.create(null);
+    regex.keys.forEach(function (key) {
+      warn(!keys[key.name], "Duplicate param keys in route with path: \"" + path + "\"");
+      keys[key.name] = true;
+    });
+  }
+
+  return regex;
+}
+
+function normalizePath(path, parent, strict) {
+  if (!strict) {
+    path = path.replace(/\/$/, '');
+  }
+
+  if (path[0] === '/') {
+    return path;
+  }
+
+  if (parent == null) {
+    return path;
+  }
+
+  return cleanPath(parent.path + "/" + path);
+}
+/*  */
+
+
+function createMatcher(routes, router) {
+  var ref = createRouteMap(routes);
+  var pathList = ref.pathList;
+  var pathMap = ref.pathMap;
+  var nameMap = ref.nameMap;
+
+  function addRoutes(routes) {
+    createRouteMap(routes, pathList, pathMap, nameMap);
+  }
+
+  function match(raw, currentRoute, redirectedFrom) {
+    var location = normalizeLocation(raw, currentRoute, false, router);
+    var name = location.name;
+
+    if (name) {
+      var record = nameMap[name];
+
+      if ("development" !== 'production') {
+        warn(record, "Route with name '" + name + "' does not exist");
+      }
+
+      if (!record) {
+        return _createRoute(null, location);
+      }
+
+      var paramNames = record.regex.keys.filter(function (key) {
+        return !key.optional;
+      }).map(function (key) {
+        return key.name;
+      });
+
+      if (typeof location.params !== 'object') {
+        location.params = {};
+      }
+
+      if (currentRoute && typeof currentRoute.params === 'object') {
+        for (var key in currentRoute.params) {
+          if (!(key in location.params) && paramNames.indexOf(key) > -1) {
+            location.params[key] = currentRoute.params[key];
+          }
+        }
+      }
+
+      location.path = fillParams(record.path, location.params, "named route \"" + name + "\"");
+      return _createRoute(record, location, redirectedFrom);
+    } else if (location.path) {
+      location.params = {};
+
+      for (var i = 0; i < pathList.length; i++) {
+        var path = pathList[i];
+        var record$1 = pathMap[path];
+
+        if (matchRoute(record$1.regex, location.path, location.params)) {
+          return _createRoute(record$1, location, redirectedFrom);
+        }
+      }
+    } // no match
+
+
+    return _createRoute(null, location);
+  }
+
+  function redirect(record, location) {
+    var originalRedirect = record.redirect;
+    var redirect = typeof originalRedirect === 'function' ? originalRedirect(createRoute(record, location, null, router)) : originalRedirect;
+
+    if (typeof redirect === 'string') {
+      redirect = {
+        path: redirect
+      };
+    }
+
+    if (!redirect || typeof redirect !== 'object') {
+      if ("development" !== 'production') {
+        warn(false, "invalid redirect option: " + JSON.stringify(redirect));
+      }
+
+      return _createRoute(null, location);
+    }
+
+    var re = redirect;
+    var name = re.name;
+    var path = re.path;
+    var query = location.query;
+    var hash = location.hash;
+    var params = location.params;
+    query = re.hasOwnProperty('query') ? re.query : query;
+    hash = re.hasOwnProperty('hash') ? re.hash : hash;
+    params = re.hasOwnProperty('params') ? re.params : params;
+
+    if (name) {
+      // resolved named direct
+      var targetRecord = nameMap[name];
+
+      if ("development" !== 'production') {
+        assert(targetRecord, "redirect failed: named route \"" + name + "\" not found.");
+      }
+
+      return match({
+        _normalized: true,
+        name: name,
+        query: query,
+        hash: hash,
+        params: params
+      }, undefined, location);
+    } else if (path) {
+      // 1. resolve relative redirect
+      var rawPath = resolveRecordPath(path, record); // 2. resolve params
+
+      var resolvedPath = fillParams(rawPath, params, "redirect route with path \"" + rawPath + "\""); // 3. rematch with existing query and hash
+
+      return match({
+        _normalized: true,
+        path: resolvedPath,
+        query: query,
+        hash: hash
+      }, undefined, location);
+    } else {
+      if ("development" !== 'production') {
+        warn(false, "invalid redirect option: " + JSON.stringify(redirect));
+      }
+
+      return _createRoute(null, location);
+    }
+  }
+
+  function alias(record, location, matchAs) {
+    var aliasedPath = fillParams(matchAs, location.params, "aliased route with path \"" + matchAs + "\"");
+    var aliasedMatch = match({
+      _normalized: true,
+      path: aliasedPath
+    });
+
+    if (aliasedMatch) {
+      var matched = aliasedMatch.matched;
+      var aliasedRecord = matched[matched.length - 1];
+      location.params = aliasedMatch.params;
+      return _createRoute(aliasedRecord, location);
+    }
+
+    return _createRoute(null, location);
+  }
+
+  function _createRoute(record, location, redirectedFrom) {
+    if (record && record.redirect) {
+      return redirect(record, redirectedFrom || location);
+    }
+
+    if (record && record.matchAs) {
+      return alias(record, location, record.matchAs);
+    }
+
+    return createRoute(record, location, redirectedFrom, router);
+  }
+
+  return {
+    match: match,
+    addRoutes: addRoutes
+  };
+}
+
+function matchRoute(regex, path, params) {
+  var m = path.match(regex);
+
+  if (!m) {
+    return false;
+  } else if (!params) {
+    return true;
+  }
+
+  for (var i = 1, len = m.length; i < len; ++i) {
+    var key = regex.keys[i - 1];
+
+    if (key) {
+      // Fix #1994: using * with props: true generates a param named 0
+      params[key.name || 'pathMatch'] = typeof m[i] === 'string' ? decode(m[i]) : m[i];
+    }
+  }
+
+  return true;
+}
+
+function resolveRecordPath(path, record) {
+  return resolvePath(path, record.parent ? record.parent.path : '/', true);
+}
+/*  */
+// use User Timing api (if present) for more accurate key precision
+
+
+var Time = inBrowser && window.performance && window.performance.now ? window.performance : Date;
+
+function genStateKey() {
+  return Time.now().toFixed(3);
+}
+
+var _key = genStateKey();
+
+function getStateKey() {
+  return _key;
+}
+
+function setStateKey(key) {
+  return _key = key;
+}
+/*  */
+
+
+var positionStore = Object.create(null);
+
+function setupScroll() {
+  // Prevent browser scroll behavior on History popstate
+  if ('scrollRestoration' in window.history) {
+    window.history.scrollRestoration = 'manual';
+  } // Fix for #1585 for Firefox
+  // Fix for #2195 Add optional third attribute to workaround a bug in safari https://bugs.webkit.org/show_bug.cgi?id=182678
+  // Fix for #2774 Support for apps loaded from Windows file shares not mapped to network drives: replaced location.origin with
+  // window.location.protocol + '//' + window.location.host
+  // location.host contains the port and location.hostname doesn't
+
+
+  var protocolAndPath = window.location.protocol + '//' + window.location.host;
+  var absolutePath = window.location.href.replace(protocolAndPath, ''); // preserve existing history state as it could be overriden by the user
+
+  var stateCopy = extend({}, window.history.state);
+  stateCopy.key = getStateKey();
+  window.history.replaceState(stateCopy, '', absolutePath);
+  window.addEventListener('popstate', handlePopState);
+  return function () {
+    window.removeEventListener('popstate', handlePopState);
+  };
+}
+
+function handleScroll(router, to, from, isPop) {
+  if (!router.app) {
+    return;
+  }
+
+  var behavior = router.options.scrollBehavior;
+
+  if (!behavior) {
+    return;
+  }
+
+  if ("development" !== 'production') {
+    assert(typeof behavior === 'function', "scrollBehavior must be a function");
+  } // wait until re-render finishes before scrolling
+
+
+  router.app.$nextTick(function () {
+    var position = getScrollPosition();
+    var shouldScroll = behavior.call(router, to, from, isPop ? position : null);
+
+    if (!shouldScroll) {
+      return;
+    }
+
+    if (typeof shouldScroll.then === 'function') {
+      shouldScroll.then(function (shouldScroll) {
+        scrollToPosition(shouldScroll, position);
+      }).catch(function (err) {
+        if ("development" !== 'production') {
+          assert(false, err.toString());
+        }
+      });
+    } else {
+      scrollToPosition(shouldScroll, position);
+    }
+  });
+}
+
+function saveScrollPosition() {
+  var key = getStateKey();
+
+  if (key) {
+    positionStore[key] = {
+      x: window.pageXOffset,
+      y: window.pageYOffset
+    };
+  }
+}
+
+function handlePopState(e) {
+  saveScrollPosition();
+
+  if (e.state && e.state.key) {
+    setStateKey(e.state.key);
+  }
+}
+
+function getScrollPosition() {
+  var key = getStateKey();
+
+  if (key) {
+    return positionStore[key];
+  }
+}
+
+function getElementPosition(el, offset) {
+  var docEl = document.documentElement;
+  var docRect = docEl.getBoundingClientRect();
+  var elRect = el.getBoundingClientRect();
+  return {
+    x: elRect.left - docRect.left - offset.x,
+    y: elRect.top - docRect.top - offset.y
+  };
+}
+
+function isValidPosition(obj) {
+  return isNumber(obj.x) || isNumber(obj.y);
+}
+
+function normalizePosition(obj) {
+  return {
+    x: isNumber(obj.x) ? obj.x : window.pageXOffset,
+    y: isNumber(obj.y) ? obj.y : window.pageYOffset
+  };
+}
+
+function normalizeOffset(obj) {
+  return {
+    x: isNumber(obj.x) ? obj.x : 0,
+    y: isNumber(obj.y) ? obj.y : 0
+  };
+}
+
+function isNumber(v) {
+  return typeof v === 'number';
+}
+
+var hashStartsWithNumberRE = /^#\d/;
+
+function scrollToPosition(shouldScroll, position) {
+  var isObject = typeof shouldScroll === 'object';
+
+  if (isObject && typeof shouldScroll.selector === 'string') {
+    // getElementById would still fail if the selector contains a more complicated query like #main[data-attr]
+    // but at the same time, it doesn't make much sense to select an element with an id and an extra selector
+    var el = hashStartsWithNumberRE.test(shouldScroll.selector) // $flow-disable-line
+    ? document.getElementById(shouldScroll.selector.slice(1)) // $flow-disable-line
+    : document.querySelector(shouldScroll.selector);
+
+    if (el) {
+      var offset = shouldScroll.offset && typeof shouldScroll.offset === 'object' ? shouldScroll.offset : {};
+      offset = normalizeOffset(offset);
+      position = getElementPosition(el, offset);
+    } else if (isValidPosition(shouldScroll)) {
+      position = normalizePosition(shouldScroll);
+    }
+  } else if (isObject && isValidPosition(shouldScroll)) {
+    position = normalizePosition(shouldScroll);
+  }
+
+  if (position) {
+    // $flow-disable-line
+    if ('scrollBehavior' in document.documentElement.style) {
+      window.scrollTo({
+        left: position.x,
+        top: position.y,
+        // $flow-disable-line
+        behavior: shouldScroll.behavior
+      });
+    } else {
+      window.scrollTo(position.x, position.y);
+    }
+  }
+}
+/*  */
+
+
+var supportsPushState = inBrowser && function () {
+  var ua = window.navigator.userAgent;
+
+  if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) {
+    return false;
+  }
+
+  return window.history && typeof window.history.pushState === 'function';
+}();
+
+function pushState(url, replace) {
+  saveScrollPosition(); // try...catch the pushState call to get around Safari
+  // DOM Exception 18 where it limits to 100 pushState calls
+
+  var history = window.history;
+
+  try {
+    if (replace) {
+      // preserve existing history state as it could be overriden by the user
+      var stateCopy = extend({}, history.state);
+      stateCopy.key = getStateKey();
+      history.replaceState(stateCopy, '', url);
+    } else {
+      history.pushState({
+        key: setStateKey(genStateKey())
+      }, '', url);
+    }
+  } catch (e) {
+    window.location[replace ? 'replace' : 'assign'](url);
+  }
+}
+
+function replaceState(url) {
+  pushState(url, true);
+}
+/*  */
+
+
+function runQueue(queue, fn, cb) {
+  var step = function (index) {
+    if (index >= queue.length) {
+      cb();
+    } else {
+      if (queue[index]) {
+        fn(queue[index], function () {
+          step(index + 1);
+        });
+      } else {
+        step(index + 1);
+      }
+    }
+  };
+
+  step(0);
+} // When changing thing, also edit router.d.ts
+
+
+var NavigationFailureType = {
+  redirected: 2,
+  aborted: 4,
+  cancelled: 8,
+  duplicated: 16
+};
+
+function createNavigationRedirectedError(from, to) {
+  return createRouterError(from, to, NavigationFailureType.redirected, "Redirected when going from \"" + from.fullPath + "\" to \"" + stringifyRoute(to) + "\" via a navigation guard.");
+}
+
+function createNavigationDuplicatedError(from, to) {
+  var error = createRouterError(from, to, NavigationFailureType.duplicated, "Avoided redundant navigation to current location: \"" + from.fullPath + "\"."); // backwards compatible with the first introduction of Errors
+
+  error.name = 'NavigationDuplicated';
+  return error;
+}
+
+function createNavigationCancelledError(from, to) {
+  return createRouterError(from, to, NavigationFailureType.cancelled, "Navigation cancelled from \"" + from.fullPath + "\" to \"" + to.fullPath + "\" with a new navigation.");
+}
+
+function createNavigationAbortedError(from, to) {
+  return createRouterError(from, to, NavigationFailureType.aborted, "Navigation aborted from \"" + from.fullPath + "\" to \"" + to.fullPath + "\" via a navigation guard.");
+}
+
+function createRouterError(from, to, type, message) {
+  var error = new Error(message);
+  error._isRouter = true;
+  error.from = from;
+  error.to = to;
+  error.type = type;
+  return error;
+}
+
+var propertiesToLog = ['params', 'query', 'hash'];
+
+function stringifyRoute(to) {
+  if (typeof to === 'string') {
+    return to;
+  }
+
+  if ('path' in to) {
+    return to.path;
+  }
+
+  var location = {};
+  propertiesToLog.forEach(function (key) {
+    if (key in to) {
+      location[key] = to[key];
+    }
+  });
+  return JSON.stringify(location, null, 2);
+}
+
+function isError(err) {
+  return Object.prototype.toString.call(err).indexOf('Error') > -1;
+}
+
+function isNavigationFailure(err, errorType) {
+  return isError(err) && err._isRouter && (errorType == null || err.type === errorType);
+}
+/*  */
+
+
+function resolveAsyncComponents(matched) {
+  return function (to, from, next) {
+    var hasAsync = false;
+    var pending = 0;
+    var error = null;
+    flatMapComponents(matched, function (def, _, match, key) {
+      // if it's a function and doesn't have cid attached,
+      // assume it's an async component resolve function.
+      // we are not using Vue's default async resolving mechanism because
+      // we want to halt the navigation until the incoming component has been
+      // resolved.
+      if (typeof def === 'function' && def.cid === undefined) {
+        hasAsync = true;
+        pending++;
+        var resolve = once(function (resolvedDef) {
+          if (isESModule(resolvedDef)) {
+            resolvedDef = resolvedDef.default;
+          } // save resolved on async factory in case it's used elsewhere
+
+
+          def.resolved = typeof resolvedDef === 'function' ? resolvedDef : _Vue.extend(resolvedDef);
+          match.components[key] = resolvedDef;
+          pending--;
+
+          if (pending <= 0) {
+            next();
+          }
+        });
+        var reject = once(function (reason) {
+          var msg = "Failed to resolve async component " + key + ": " + reason;
+          "development" !== 'production' && warn(false, msg);
+
+          if (!error) {
+            error = isError(reason) ? reason : new Error(msg);
+            next(error);
+          }
+        });
+        var res;
+
+        try {
+          res = def(resolve, reject);
+        } catch (e) {
+          reject(e);
+        }
+
+        if (res) {
+          if (typeof res.then === 'function') {
+            res.then(resolve, reject);
+          } else {
+            // new syntax in Vue 2.3
+            var comp = res.component;
+
+            if (comp && typeof comp.then === 'function') {
+              comp.then(resolve, reject);
+            }
+          }
+        }
+      }
+    });
+
+    if (!hasAsync) {
+      next();
+    }
+  };
+}
+
+function flatMapComponents(matched, fn) {
+  return flatten(matched.map(function (m) {
+    return Object.keys(m.components).map(function (key) {
+      return fn(m.components[key], m.instances[key], m, key);
+    });
+  }));
+}
+
+function flatten(arr) {
+  return Array.prototype.concat.apply([], arr);
+}
+
+var hasSymbol = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
+
+function isESModule(obj) {
+  return obj.__esModule || hasSymbol && obj[Symbol.toStringTag] === 'Module';
+} // in Webpack 2, require.ensure now also returns a Promise
+// so the resolve/reject functions may get called an extra time
+// if the user uses an arrow function shorthand that happens to
+// return that Promise.
+
+
+function once(fn) {
+  var called = false;
+  return function () {
+    var args = [],
+        len = arguments.length;
+
+    while (len--) args[len] = arguments[len];
+
+    if (called) {
+      return;
+    }
+
+    called = true;
+    return fn.apply(this, args);
+  };
+}
+/*  */
+
+
+var History = function History(router, base) {
+  this.router = router;
+  this.base = normalizeBase(base); // start with a route object that stands for "nowhere"
+
+  this.current = START;
+  this.pending = null;
+  this.ready = false;
+  this.readyCbs = [];
+  this.readyErrorCbs = [];
+  this.errorCbs = [];
+  this.listeners = [];
+};
+
+History.prototype.listen = function listen(cb) {
+  this.cb = cb;
+};
+
+History.prototype.onReady = function onReady(cb, errorCb) {
+  if (this.ready) {
+    cb();
+  } else {
+    this.readyCbs.push(cb);
+
+    if (errorCb) {
+      this.readyErrorCbs.push(errorCb);
+    }
+  }
+};
+
+History.prototype.onError = function onError(errorCb) {
+  this.errorCbs.push(errorCb);
+};
+
+History.prototype.transitionTo = function transitionTo(location, onComplete, onAbort) {
+  var this$1 = this;
+  var route; // catch redirect option https://github.com/vuejs/vue-router/issues/3201
+
+  try {
+    route = this.router.match(location, this.current);
+  } catch (e) {
+    this.errorCbs.forEach(function (cb) {
+      cb(e);
+    }); // Exception should still be thrown
+
+    throw e;
+  }
+
+  var prev = this.current;
+  this.confirmTransition(route, function () {
+    this$1.updateRoute(route);
+    onComplete && onComplete(route);
+    this$1.ensureURL();
+    this$1.router.afterHooks.forEach(function (hook) {
+      hook && hook(route, prev);
+    }); // fire ready cbs once
+
+    if (!this$1.ready) {
+      this$1.ready = true;
+      this$1.readyCbs.forEach(function (cb) {
+        cb(route);
+      });
+    }
+  }, function (err) {
+    if (onAbort) {
+      onAbort(err);
+    }
+
+    if (err && !this$1.ready) {
+      // Initial redirection should not mark the history as ready yet
+      // because it's triggered by the redirection instead
+      // https://github.com/vuejs/vue-router/issues/3225
+      // https://github.com/vuejs/vue-router/issues/3331
+      if (!isNavigationFailure(err, NavigationFailureType.redirected) || prev !== START) {
+        this$1.ready = true;
+        this$1.readyErrorCbs.forEach(function (cb) {
+          cb(err);
+        });
+      }
+    }
+  });
+};
+
+History.prototype.confirmTransition = function confirmTransition(route, onComplete, onAbort) {
+  var this$1 = this;
+  var current = this.current;
+  this.pending = route;
+
+  var abort = function (err) {
+    // changed after adding errors with
+    // https://github.com/vuejs/vue-router/pull/3047 before that change,
+    // redirect and aborted navigation would produce an err == null
+    if (!isNavigationFailure(err) && isError(err)) {
+      if (this$1.errorCbs.length) {
+        this$1.errorCbs.forEach(function (cb) {
+          cb(err);
+        });
+      } else {
+        warn(false, 'uncaught error during route navigation:');
+        console.error(err);
+      }
+    }
+
+    onAbort && onAbort(err);
+  };
+
+  var lastRouteIndex = route.matched.length - 1;
+  var lastCurrentIndex = current.matched.length - 1;
+
+  if (isSameRoute(route, current) && // in the case the route map has been dynamically appended to
+  lastRouteIndex === lastCurrentIndex && route.matched[lastRouteIndex] === current.matched[lastCurrentIndex]) {
+    this.ensureURL();
+    return abort(createNavigationDuplicatedError(current, route));
+  }
+
+  var ref = resolveQueue(this.current.matched, route.matched);
+  var updated = ref.updated;
+  var deactivated = ref.deactivated;
+  var activated = ref.activated;
+  var queue = [].concat( // in-component leave guards
+  extractLeaveGuards(deactivated), // global before hooks
+  this.router.beforeHooks, // in-component update hooks
+  extractUpdateHooks(updated), // in-config enter guards
+  activated.map(function (m) {
+    return m.beforeEnter;
+  }), // async components
+  resolveAsyncComponents(activated));
+
+  var iterator = function (hook, next) {
+    if (this$1.pending !== route) {
+      return abort(createNavigationCancelledError(current, route));
+    }
+
+    try {
+      hook(route, current, function (to) {
+        if (to === false) {
+          // next(false) -> abort navigation, ensure current URL
+          this$1.ensureURL(true);
+          abort(createNavigationAbortedError(current, route));
+        } else if (isError(to)) {
+          this$1.ensureURL(true);
+          abort(to);
+        } else if (typeof to === 'string' || typeof to === 'object' && (typeof to.path === 'string' || typeof to.name === 'string')) {
+          // next('/') or next({ path: '/' }) -> redirect
+          abort(createNavigationRedirectedError(current, route));
+
+          if (typeof to === 'object' && to.replace) {
+            this$1.replace(to);
+          } else {
+            this$1.push(to);
+          }
+        } else {
+          // confirm transition and pass on the value
+          next(to);
+        }
+      });
+    } catch (e) {
+      abort(e);
+    }
+  };
+
+  runQueue(queue, iterator, function () {
+    // wait until async components are resolved before
+    // extracting in-component enter guards
+    var enterGuards = extractEnterGuards(activated);
+    var queue = enterGuards.concat(this$1.router.resolveHooks);
+    runQueue(queue, iterator, function () {
+      if (this$1.pending !== route) {
+        return abort(createNavigationCancelledError(current, route));
+      }
+
+      this$1.pending = null;
+      onComplete(route);
+
+      if (this$1.router.app) {
+        this$1.router.app.$nextTick(function () {
+          handleRouteEntered(route);
+        });
+      }
+    });
+  });
+};
+
+History.prototype.updateRoute = function updateRoute(route) {
+  this.current = route;
+  this.cb && this.cb(route);
+};
+
+History.prototype.setupListeners = function setupListeners() {// Default implementation is empty
+};
+
+History.prototype.teardown = function teardown() {
+  // clean up event listeners
+  // https://github.com/vuejs/vue-router/issues/2341
+  this.listeners.forEach(function (cleanupListener) {
+    cleanupListener();
+  });
+  this.listeners = []; // reset current history route
+  // https://github.com/vuejs/vue-router/issues/3294
+
+  this.current = START;
+  this.pending = null;
+};
+
+function normalizeBase(base) {
+  if (!base) {
+    if (inBrowser) {
+      // respect <base> tag
+      var baseEl = document.querySelector('base');
+      base = baseEl && baseEl.getAttribute('href') || '/'; // strip full URL origin
+
+      base = base.replace(/^https?:\/\/[^\/]+/, '');
+    } else {
+      base = '/';
+    }
+  } // make sure there's the starting slash
+
+
+  if (base.charAt(0) !== '/') {
+    base = '/' + base;
+  } // remove trailing slash
+
+
+  return base.replace(/\/$/, '');
+}
+
+function resolveQueue(current, next) {
+  var i;
+  var max = Math.max(current.length, next.length);
+
+  for (i = 0; i < max; i++) {
+    if (current[i] !== next[i]) {
+      break;
+    }
+  }
+
+  return {
+    updated: next.slice(0, i),
+    activated: next.slice(i),
+    deactivated: current.slice(i)
+  };
+}
+
+function extractGuards(records, name, bind, reverse) {
+  var guards = flatMapComponents(records, function (def, instance, match, key) {
+    var guard = extractGuard(def, name);
+
+    if (guard) {
+      return Array.isArray(guard) ? guard.map(function (guard) {
+        return bind(guard, instance, match, key);
+      }) : bind(guard, instance, match, key);
+    }
+  });
+  return flatten(reverse ? guards.reverse() : guards);
+}
+
+function extractGuard(def, key) {
+  if (typeof def !== 'function') {
+    // extend now so that global mixins are applied.
+    def = _Vue.extend(def);
+  }
+
+  return def.options[key];
+}
+
+function extractLeaveGuards(deactivated) {
+  return extractGuards(deactivated, 'beforeRouteLeave', bindGuard, true);
+}
+
+function extractUpdateHooks(updated) {
+  return extractGuards(updated, 'beforeRouteUpdate', bindGuard);
+}
+
+function bindGuard(guard, instance) {
+  if (instance) {
+    return function boundRouteGuard() {
+      return guard.apply(instance, arguments);
+    };
+  }
+}
+
+function extractEnterGuards(activated) {
+  return extractGuards(activated, 'beforeRouteEnter', function (guard, _, match, key) {
+    return bindEnterGuard(guard, match, key);
+  });
+}
+
+function bindEnterGuard(guard, match, key) {
+  return function routeEnterGuard(to, from, next) {
+    return guard(to, from, function (cb) {
+      if (typeof cb === 'function') {
+        if (!match.enteredCbs[key]) {
+          match.enteredCbs[key] = [];
+        }
+
+        match.enteredCbs[key].push(cb);
+      }
+
+      next(cb);
+    });
+  };
+}
+/*  */
+
+
+var HTML5History = /*@__PURE__*/function (History) {
+  function HTML5History(router, base) {
+    History.call(this, router, base);
+    this._startLocation = getLocation(this.base);
+  }
+
+  if (History) HTML5History.__proto__ = History;
+  HTML5History.prototype = Object.create(History && History.prototype);
+  HTML5History.prototype.constructor = HTML5History;
+
+  HTML5History.prototype.setupListeners = function setupListeners() {
+    var this$1 = this;
+
+    if (this.listeners.length > 0) {
+      return;
+    }
+
+    var router = this.router;
+    var expectScroll = router.options.scrollBehavior;
+    var supportsScroll = supportsPushState && expectScroll;
+
+    if (supportsScroll) {
+      this.listeners.push(setupScroll());
+    }
+
+    var handleRoutingEvent = function () {
+      var current = this$1.current; // Avoiding first `popstate` event dispatched in some browsers but first
+      // history route not updated since async guard at the same time.
+
+      var location = getLocation(this$1.base);
+
+      if (this$1.current === START && location === this$1._startLocation) {
+        return;
+      }
+
+      this$1.transitionTo(location, function (route) {
+        if (supportsScroll) {
+          handleScroll(router, route, current, true);
+        }
+      });
+    };
+
+    window.addEventListener('popstate', handleRoutingEvent);
+    this.listeners.push(function () {
+      window.removeEventListener('popstate', handleRoutingEvent);
+    });
+  };
+
+  HTML5History.prototype.go = function go(n) {
+    window.history.go(n);
+  };
+
+  HTML5History.prototype.push = function push(location, onComplete, onAbort) {
+    var this$1 = this;
+    var ref = this;
+    var fromRoute = ref.current;
+    this.transitionTo(location, function (route) {
+      pushState(cleanPath(this$1.base + route.fullPath));
+      handleScroll(this$1.router, route, fromRoute, false);
+      onComplete && onComplete(route);
+    }, onAbort);
+  };
+
+  HTML5History.prototype.replace = function replace(location, onComplete, onAbort) {
+    var this$1 = this;
+    var ref = this;
+    var fromRoute = ref.current;
+    this.transitionTo(location, function (route) {
+      replaceState(cleanPath(this$1.base + route.fullPath));
+      handleScroll(this$1.router, route, fromRoute, false);
+      onComplete && onComplete(route);
+    }, onAbort);
+  };
+
+  HTML5History.prototype.ensureURL = function ensureURL(push) {
+    if (getLocation(this.base) !== this.current.fullPath) {
+      var current = cleanPath(this.base + this.current.fullPath);
+      push ? pushState(current) : replaceState(current);
+    }
+  };
+
+  HTML5History.prototype.getCurrentLocation = function getCurrentLocation() {
+    return getLocation(this.base);
+  };
+
+  return HTML5History;
+}(History);
+
+function getLocation(base) {
+  var path = window.location.pathname;
+
+  if (base && path.toLowerCase().indexOf(base.toLowerCase()) === 0) {
+    path = path.slice(base.length);
+  }
+
+  return (path || '/') + window.location.search + window.location.hash;
+}
+/*  */
+
+
+var HashHistory = /*@__PURE__*/function (History) {
+  function HashHistory(router, base, fallback) {
+    History.call(this, router, base); // check history fallback deeplinking
+
+    if (fallback && checkFallback(this.base)) {
+      return;
+    }
+
+    ensureSlash();
+  }
+
+  if (History) HashHistory.__proto__ = History;
+  HashHistory.prototype = Object.create(History && History.prototype);
+  HashHistory.prototype.constructor = HashHistory; // this is delayed until the app mounts
+  // to avoid the hashchange listener being fired too early
+
+  HashHistory.prototype.setupListeners = function setupListeners() {
+    var this$1 = this;
+
+    if (this.listeners.length > 0) {
+      return;
+    }
+
+    var router = this.router;
+    var expectScroll = router.options.scrollBehavior;
+    var supportsScroll = supportsPushState && expectScroll;
+
+    if (supportsScroll) {
+      this.listeners.push(setupScroll());
+    }
+
+    var handleRoutingEvent = function () {
+      var current = this$1.current;
+
+      if (!ensureSlash()) {
+        return;
+      }
+
+      this$1.transitionTo(getHash(), function (route) {
+        if (supportsScroll) {
+          handleScroll(this$1.router, route, current, true);
+        }
+
+        if (!supportsPushState) {
+          replaceHash(route.fullPath);
+        }
+      });
+    };
+
+    var eventType = supportsPushState ? 'popstate' : 'hashchange';
+    window.addEventListener(eventType, handleRoutingEvent);
+    this.listeners.push(function () {
+      window.removeEventListener(eventType, handleRoutingEvent);
+    });
+  };
+
+  HashHistory.prototype.push = function push(location, onComplete, onAbort) {
+    var this$1 = this;
+    var ref = this;
+    var fromRoute = ref.current;
+    this.transitionTo(location, function (route) {
+      pushHash(route.fullPath);
+      handleScroll(this$1.router, route, fromRoute, false);
+      onComplete && onComplete(route);
+    }, onAbort);
+  };
+
+  HashHistory.prototype.replace = function replace(location, onComplete, onAbort) {
+    var this$1 = this;
+    var ref = this;
+    var fromRoute = ref.current;
+    this.transitionTo(location, function (route) {
+      replaceHash(route.fullPath);
+      handleScroll(this$1.router, route, fromRoute, false);
+      onComplete && onComplete(route);
+    }, onAbort);
+  };
+
+  HashHistory.prototype.go = function go(n) {
+    window.history.go(n);
+  };
+
+  HashHistory.prototype.ensureURL = function ensureURL(push) {
+    var current = this.current.fullPath;
+
+    if (getHash() !== current) {
+      push ? pushHash(current) : replaceHash(current);
+    }
+  };
+
+  HashHistory.prototype.getCurrentLocation = function getCurrentLocation() {
+    return getHash();
+  };
+
+  return HashHistory;
+}(History);
+
+function checkFallback(base) {
+  var location = getLocation(base);
+
+  if (!/^\/#/.test(location)) {
+    window.location.replace(cleanPath(base + '/#' + location));
+    return true;
+  }
+}
+
+function ensureSlash() {
+  var path = getHash();
+
+  if (path.charAt(0) === '/') {
+    return true;
+  }
+
+  replaceHash('/' + path);
+  return false;
+}
+
+function getHash() {
+  // We can't use window.location.hash here because it's not
+  // consistent across browsers - Firefox will pre-decode it!
+  var href = window.location.href;
+  var index = href.indexOf('#'); // empty path
+
+  if (index < 0) {
+    return '';
+  }
+
+  href = href.slice(index + 1);
+  return href;
+}
+
+function getUrl(path) {
+  var href = window.location.href;
+  var i = href.indexOf('#');
+  var base = i >= 0 ? href.slice(0, i) : href;
+  return base + "#" + path;
+}
+
+function pushHash(path) {
+  if (supportsPushState) {
+    pushState(getUrl(path));
+  } else {
+    window.location.hash = path;
+  }
+}
+
+function replaceHash(path) {
+  if (supportsPushState) {
+    replaceState(getUrl(path));
+  } else {
+    window.location.replace(getUrl(path));
+  }
+}
+/*  */
+
+
+var AbstractHistory = /*@__PURE__*/function (History) {
+  function AbstractHistory(router, base) {
+    History.call(this, router, base);
+    this.stack = [];
+    this.index = -1;
+  }
+
+  if (History) AbstractHistory.__proto__ = History;
+  AbstractHistory.prototype = Object.create(History && History.prototype);
+  AbstractHistory.prototype.constructor = AbstractHistory;
+
+  AbstractHistory.prototype.push = function push(location, onComplete, onAbort) {
+    var this$1 = this;
+    this.transitionTo(location, function (route) {
+      this$1.stack = this$1.stack.slice(0, this$1.index + 1).concat(route);
+      this$1.index++;
+      onComplete && onComplete(route);
+    }, onAbort);
+  };
+
+  AbstractHistory.prototype.replace = function replace(location, onComplete, onAbort) {
+    var this$1 = this;
+    this.transitionTo(location, function (route) {
+      this$1.stack = this$1.stack.slice(0, this$1.index).concat(route);
+      onComplete && onComplete(route);
+    }, onAbort);
+  };
+
+  AbstractHistory.prototype.go = function go(n) {
+    var this$1 = this;
+    var targetIndex = this.index + n;
+
+    if (targetIndex < 0 || targetIndex >= this.stack.length) {
+      return;
+    }
+
+    var route = this.stack[targetIndex];
+    this.confirmTransition(route, function () {
+      var prev = this$1.current;
+      this$1.index = targetIndex;
+      this$1.updateRoute(route);
+      this$1.router.afterHooks.forEach(function (hook) {
+        hook && hook(route, prev);
+      });
+    }, function (err) {
+      if (isNavigationFailure(err, NavigationFailureType.duplicated)) {
+        this$1.index = targetIndex;
+      }
+    });
+  };
+
+  AbstractHistory.prototype.getCurrentLocation = function getCurrentLocation() {
+    var current = this.stack[this.stack.length - 1];
+    return current ? current.fullPath : '/';
+  };
+
+  AbstractHistory.prototype.ensureURL = function ensureURL() {// noop
+  };
+
+  return AbstractHistory;
+}(History);
+/*  */
+
+
+var VueRouter = function VueRouter(options) {
+  if (options === void 0) options = {};
+  this.app = null;
+  this.apps = [];
+  this.options = options;
+  this.beforeHooks = [];
+  this.resolveHooks = [];
+  this.afterHooks = [];
+  this.matcher = createMatcher(options.routes || [], this);
+  var mode = options.mode || 'hash';
+  this.fallback = mode === 'history' && !supportsPushState && options.fallback !== false;
+
+  if (this.fallback) {
+    mode = 'hash';
+  }
+
+  if (!inBrowser) {
+    mode = 'abstract';
+  }
+
+  this.mode = mode;
+
+  switch (mode) {
+    case 'history':
+      this.history = new HTML5History(this, options.base);
+      break;
+
+    case 'hash':
+      this.history = new HashHistory(this, options.base, this.fallback);
+      break;
+
+    case 'abstract':
+      this.history = new AbstractHistory(this, options.base);
+      break;
+
+    default:
+      if ("development" !== 'production') {
+        assert(false, "invalid mode: " + mode);
+      }
+
+  }
+};
+
+var prototypeAccessors = {
+  currentRoute: {
+    configurable: true
+  }
+};
+
+VueRouter.prototype.match = function match(raw, current, redirectedFrom) {
+  return this.matcher.match(raw, current, redirectedFrom);
+};
+
+prototypeAccessors.currentRoute.get = function () {
+  return this.history && this.history.current;
+};
+
+VueRouter.prototype.init = function init(app
+/* Vue component instance */
+) {
+  var this$1 = this;
+  "development" !== 'production' && assert(install.installed, "not installed. Make sure to call `Vue.use(VueRouter)` " + "before creating root instance.");
+  this.apps.push(app); // set up app destroyed handler
+  // https://github.com/vuejs/vue-router/issues/2639
+
+  app.$once('hook:destroyed', function () {
+    // clean out app from this.apps array once destroyed
+    var index = this$1.apps.indexOf(app);
+
+    if (index > -1) {
+      this$1.apps.splice(index, 1);
+    } // ensure we still have a main app or null if no apps
+    // we do not release the router so it can be reused
+
+
+    if (this$1.app === app) {
+      this$1.app = this$1.apps[0] || null;
+    }
+
+    if (!this$1.app) {
+      this$1.history.teardown();
+    }
+  }); // main app previously initialized
+  // return as we don't need to set up new history listener
+
+  if (this.app) {
+    return;
+  }
+
+  this.app = app;
+  var history = this.history;
+
+  if (history instanceof HTML5History || history instanceof HashHistory) {
+    var handleInitialScroll = function (routeOrError) {
+      var from = history.current;
+      var expectScroll = this$1.options.scrollBehavior;
+      var supportsScroll = supportsPushState && expectScroll;
+
+      if (supportsScroll && 'fullPath' in routeOrError) {
+        handleScroll(this$1, routeOrError, from, false);
+      }
+    };
+
+    var setupListeners = function (routeOrError) {
+      history.setupListeners();
+      handleInitialScroll(routeOrError);
+    };
+
+    history.transitionTo(history.getCurrentLocation(), setupListeners, setupListeners);
+  }
+
+  history.listen(function (route) {
+    this$1.apps.forEach(function (app) {
+      app._route = route;
+    });
+  });
+};
+
+VueRouter.prototype.beforeEach = function beforeEach(fn) {
+  return registerHook(this.beforeHooks, fn);
+};
+
+VueRouter.prototype.beforeResolve = function beforeResolve(fn) {
+  return registerHook(this.resolveHooks, fn);
+};
+
+VueRouter.prototype.afterEach = function afterEach(fn) {
+  return registerHook(this.afterHooks, fn);
+};
+
+VueRouter.prototype.onReady = function onReady(cb, errorCb) {
+  this.history.onReady(cb, errorCb);
+};
+
+VueRouter.prototype.onError = function onError(errorCb) {
+  this.history.onError(errorCb);
+};
+
+VueRouter.prototype.push = function push(location, onComplete, onAbort) {
+  var this$1 = this; // $flow-disable-line
+
+  if (!onComplete && !onAbort && typeof Promise !== 'undefined') {
+    return new Promise(function (resolve, reject) {
+      this$1.history.push(location, resolve, reject);
+    });
+  } else {
+    this.history.push(location, onComplete, onAbort);
+  }
+};
+
+VueRouter.prototype.replace = function replace(location, onComplete, onAbort) {
+  var this$1 = this; // $flow-disable-line
+
+  if (!onComplete && !onAbort && typeof Promise !== 'undefined') {
+    return new Promise(function (resolve, reject) {
+      this$1.history.replace(location, resolve, reject);
+    });
+  } else {
+    this.history.replace(location, onComplete, onAbort);
+  }
+};
+
+VueRouter.prototype.go = function go(n) {
+  this.history.go(n);
+};
+
+VueRouter.prototype.back = function back() {
+  this.go(-1);
+};
+
+VueRouter.prototype.forward = function forward() {
+  this.go(1);
+};
+
+VueRouter.prototype.getMatchedComponents = function getMatchedComponents(to) {
+  var route = to ? to.matched ? to : this.resolve(to).route : this.currentRoute;
+
+  if (!route) {
+    return [];
+  }
+
+  return [].concat.apply([], route.matched.map(function (m) {
+    return Object.keys(m.components).map(function (key) {
+      return m.components[key];
+    });
+  }));
+};
+
+VueRouter.prototype.resolve = function resolve(to, current, append) {
+  current = current || this.history.current;
+  var location = normalizeLocation(to, current, append, this);
+  var route = this.match(location, current);
+  var fullPath = route.redirectedFrom || route.fullPath;
+  var base = this.history.base;
+  var href = createHref(base, fullPath, this.mode);
+  return {
+    location: location,
+    route: route,
+    href: href,
+    // for backwards compat
+    normalizedTo: location,
+    resolved: route
+  };
+};
+
+VueRouter.prototype.addRoutes = function addRoutes(routes) {
+  this.matcher.addRoutes(routes);
+
+  if (this.history.current !== START) {
+    this.history.transitionTo(this.history.getCurrentLocation());
+  }
+};
+
+Object.defineProperties(VueRouter.prototype, prototypeAccessors);
+
+function registerHook(list, fn) {
+  list.push(fn);
+  return function () {
+    var i = list.indexOf(fn);
+
+    if (i > -1) {
+      list.splice(i, 1);
+    }
+  };
+}
+
+function createHref(base, fullPath, mode) {
+  var path = mode === 'hash' ? '#' + fullPath : fullPath;
+  return base ? cleanPath(base + '/' + path) : path;
+}
+
+VueRouter.install = install;
+VueRouter.version = '3.4.9';
+VueRouter.isNavigationFailure = isNavigationFailure;
+VueRouter.NavigationFailureType = NavigationFailureType;
+
+if (inBrowser && window.Vue) {
+  window.Vue.use(VueRouter);
+}
+
+var _default = VueRouter;
+exports.default = _default;
+},{}],"src/plugins/router-plugin.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+Object.defineProperty(exports, "Router", {
+  enumerable: true,
+  get: function () {
+    return _vueRouter.default;
+  }
+});
+
+var _vue = _interopRequireDefault(require("vue"));
+
+var _vueRouter = _interopRequireDefault(require("vue-router"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// Routes
+_vue.default.use(_vueRouter.default);
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-router":"node_modules/vue-router/dist/vue-router.esm.js"}],"node_modules/vue-toasted/dist/vue-toasted.min.js":[function(require,module,exports) {
+var define;
+!function(t,e){if("object"==typeof exports&&"object"==typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n=e();for(var r in n)("object"==typeof exports?exports:t)[r]=n[r]}}(this,function(){return function(t){function e(r){if(n[r])return n[r].exports;var i=n[r]={i:r,l:!1,exports:{}};return t[r].call(i.exports,i,i.exports,e),i.l=!0,i.exports}var n={};return e.m=t,e.c=n,e.i=function(t){return t},e.d=function(t,n,r){e.o(t,n)||Object.defineProperty(t,n,{configurable:!1,enumerable:!0,get:r})},e.n=function(t){var n=t&&t.__esModule?function(){return t.default}:function(){return t};return e.d(n,"a",n),n},e.o=function(t,e){return Object.prototype.hasOwnProperty.call(t,e)},e.p="/dist/",e(e.s=6)}([function(t,e,n){"use strict";function r(){d=!1}function i(t){if(!t)return void(f!==m&&(f=m,r()));if(t!==f){if(t.length!==m.length)throw new Error("Custom alphabet for shortid must be "+m.length+" unique characters. You submitted "+t.length+" characters: "+t);var e=t.split("").filter(function(t,e,n){return e!==n.lastIndexOf(t)});if(e.length)throw new Error("Custom alphabet for shortid must be "+m.length+" unique characters. These characters were not unique: "+e.join(", "));f=t,r()}}function o(t){return i(t),f}function a(t){h.seed(t),p!==t&&(r(),p=t)}function s(){f||i(m);for(var t,e=f.split(""),n=[],r=h.nextValue();e.length>0;)r=h.nextValue(),t=Math.floor(r*e.length),n.push(e.splice(t,1)[0]);return n.join("")}function c(){return d||(d=s())}function u(t){return c()[t]}function l(){return f||m}var f,p,d,h=n(19),m="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-";t.exports={get:l,characters:o,seed:a,lookup:u,shuffled:c}},function(t,e,n){"use strict";var r=n(5),i=n.n(r);e.a={animateIn:function(t){i()({targets:t,translateY:"-35px",opacity:1,duration:300,easing:"easeOutCubic"})},animateOut:function(t,e){i()({targets:t,opacity:0,marginTop:"-40px",duration:300,easing:"easeOutExpo",complete:e})},animateOutBottom:function(t,e){i()({targets:t,opacity:0,marginBottom:"-40px",duration:300,easing:"easeOutExpo",complete:e})},animateReset:function(t){i()({targets:t,left:0,opacity:1,duration:300,easing:"easeOutExpo"})},animatePanning:function(t,e,n){i()({targets:t,duration:10,easing:"easeOutQuad",left:e,opacity:n})},animatePanEnd:function(t,e){i()({targets:t,opacity:0,duration:300,easing:"easeOutExpo",complete:e})},clearAnimation:function(t){var e=i.a.timeline();t.forEach(function(t){e.add({targets:t.el,opacity:0,right:"-40px",duration:300,offset:"-=150",easing:"easeOutExpo",complete:function(){t.remove()}})})}}},function(t,e,n){"use strict";t.exports=n(16)},function(t,e,n){"use strict";n.d(e,"a",function(){return s});var r=n(8),i=n(1),o="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},a=n(2);n(11).polyfill();var s=function t(e){var n=this;return this.id=a.generate(),this.options=e,this.cached_options={},this.global={},this.groups=[],this.toasts=[],this.container=null,l(this),u(this),this.group=function(e){e||(e={}),e.globalToasts||(e.globalToasts={}),Object.assign(e.globalToasts,n.global);var r=new t(e);return n.groups.push(r),r},this.register=function(t,e,r){return r=r||{},f(n,t,e,r)},this.show=function(t,e){return c(n,t,e)},this.success=function(t,e){return e=e||{},e.type="success",c(n,t,e)},this.info=function(t,e){return e=e||{},e.type="info",c(n,t,e)},this.error=function(t,e){return e=e||{},e.type="error",c(n,t,e)},this.remove=function(t){n.toasts=n.toasts.filter(function(e){return e.el.hash!==t.hash}),t.parentNode&&t.parentNode.removeChild(t)},this.clear=function(t){return i.a.clearAnimation(n.toasts,function(){t&&t()}),n.toasts=[],!0},this},c=function(t,e,i){i=i||{};var a=null;if("object"!==(void 0===i?"undefined":o(i)))return console.error("Options should be a type of object. given : "+i),null;t.options.singleton&&t.toasts.length>0&&(t.cached_options=i,t.toasts[t.toasts.length-1].goAway(0));var s=Object.assign({},t.options);return Object.assign(s,i),a=n.i(r.a)(t,e,s),t.toasts.push(a),a},u=function(t){var e=t.options.globalToasts,n=function(e,n){return"string"==typeof n&&t[n]?t[n].apply(t,[e,{}]):c(t,e,n)};e&&(t.global={},Object.keys(e).forEach(function(r){t.global[r]=function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};return e[r].apply(null,[t,n])}}))},l=function(t){var e=document.createElement("div");e.id=t.id,e.setAttribute("role","status"),e.setAttribute("aria-live","polite"),e.setAttribute("aria-atomic","false"),document.body.appendChild(e),t.container=e},f=function(t,e,n,r){t.options.globalToasts||(t.options.globalToasts={}),t.options.globalToasts[e]=function(t,e){var i=null;return"string"==typeof n&&(i=n),"function"==typeof n&&(i=n(t)),e(i,r)},u(t)}},function(t,e,n){n(22);var r=n(21)(null,null,null,null);t.exports=r.exports},function(t,e,n){(function(n){var r,i,o,a={scope:{}};a.defineProperty="function"==typeof Object.defineProperties?Object.defineProperty:function(t,e,n){if(n.get||n.set)throw new TypeError("ES3 does not support getters and setters.");t!=Array.prototype&&t!=Object.prototype&&(t[e]=n.value)},a.getGlobal=function(t){return"undefined"!=typeof window&&window===t?t:void 0!==n&&null!=n?n:t},a.global=a.getGlobal(this),a.SYMBOL_PREFIX="jscomp_symbol_",a.initSymbol=function(){a.initSymbol=function(){},a.global.Symbol||(a.global.Symbol=a.Symbol)},a.symbolCounter_=0,a.Symbol=function(t){return a.SYMBOL_PREFIX+(t||"")+a.symbolCounter_++},a.initSymbolIterator=function(){a.initSymbol();var t=a.global.Symbol.iterator;t||(t=a.global.Symbol.iterator=a.global.Symbol("iterator")),"function"!=typeof Array.prototype[t]&&a.defineProperty(Array.prototype,t,{configurable:!0,writable:!0,value:function(){return a.arrayIterator(this)}}),a.initSymbolIterator=function(){}},a.arrayIterator=function(t){var e=0;return a.iteratorPrototype(function(){return e<t.length?{done:!1,value:t[e++]}:{done:!0}})},a.iteratorPrototype=function(t){return a.initSymbolIterator(),t={next:t},t[a.global.Symbol.iterator]=function(){return this},t},a.array=a.array||{},a.iteratorFromArray=function(t,e){a.initSymbolIterator(),t instanceof String&&(t+="");var n=0,r={next:function(){if(n<t.length){var i=n++;return{value:e(i,t[i]),done:!1}}return r.next=function(){return{done:!0,value:void 0}},r.next()}};return r[Symbol.iterator]=function(){return r},r},a.polyfill=function(t,e,n,r){if(e){for(n=a.global,t=t.split("."),r=0;r<t.length-1;r++){var i=t[r];i in n||(n[i]={}),n=n[i]}t=t[t.length-1],r=n[t],e=e(r),e!=r&&null!=e&&a.defineProperty(n,t,{configurable:!0,writable:!0,value:e})}},a.polyfill("Array.prototype.keys",function(t){return t||function(){return a.iteratorFromArray(this,function(t){return t})}},"es6-impl","es3");var s=this;!function(n,a){i=[],r=a,void 0!==(o="function"==typeof r?r.apply(e,i):r)&&(t.exports=o)}(0,function(){function t(t){if(!R.col(t))try{return document.querySelectorAll(t)}catch(t){}}function e(t,e){for(var n=t.length,r=2<=arguments.length?arguments[1]:void 0,i=[],o=0;o<n;o++)if(o in t){var a=t[o];e.call(r,a,o,t)&&i.push(a)}return i}function n(t){return t.reduce(function(t,e){return t.concat(R.arr(e)?n(e):e)},[])}function r(e){return R.arr(e)?e:(R.str(e)&&(e=t(e)||e),e instanceof NodeList||e instanceof HTMLCollection?[].slice.call(e):[e])}function i(t,e){return t.some(function(t){return t===e})}function o(t){var e,n={};for(e in t)n[e]=t[e];return n}function a(t,e){var n,r=o(t);for(n in t)r[n]=e.hasOwnProperty(n)?e[n]:t[n];return r}function c(t,e){var n,r=o(t);for(n in e)r[n]=R.und(t[n])?e[n]:t[n];return r}function u(t){t=t.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i,function(t,e,n,r){return e+e+n+n+r+r});var e=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(t);t=parseInt(e[1],16);var n=parseInt(e[2],16),e=parseInt(e[3],16);return"rgba("+t+","+n+","+e+",1)"}function l(t){function e(t,e,n){return 0>n&&(n+=1),1<n&&--n,n<1/6?t+6*(e-t)*n:.5>n?e:n<2/3?t+(e-t)*(2/3-n)*6:t}var n=/hsl\((\d+),\s*([\d.]+)%,\s*([\d.]+)%\)/g.exec(t)||/hsla\((\d+),\s*([\d.]+)%,\s*([\d.]+)%,\s*([\d.]+)\)/g.exec(t);t=parseInt(n[1])/360;var r=parseInt(n[2])/100,i=parseInt(n[3])/100,n=n[4]||1;if(0==r)i=r=t=i;else{var o=.5>i?i*(1+r):i+r-i*r,a=2*i-o,i=e(a,o,t+1/3),r=e(a,o,t);t=e(a,o,t-1/3)}return"rgba("+255*i+","+255*r+","+255*t+","+n+")"}function f(t){if(t=/([\+\-]?[0-9#\.]+)(%|px|pt|em|rem|in|cm|mm|ex|ch|pc|vw|vh|vmin|vmax|deg|rad|turn)?$/.exec(t))return t[2]}function p(t){return-1<t.indexOf("translate")||"perspective"===t?"px":-1<t.indexOf("rotate")||-1<t.indexOf("skew")?"deg":void 0}function d(t,e){return R.fnc(t)?t(e.target,e.id,e.total):t}function h(t,e){if(e in t.style)return getComputedStyle(t).getPropertyValue(e.replace(/([a-z])([A-Z])/g,"$1-$2").toLowerCase())||"0"}function m(t,e){return R.dom(t)&&i(D,e)?"transform":R.dom(t)&&(t.getAttribute(e)||R.svg(t)&&t[e])?"attribute":R.dom(t)&&"transform"!==e&&h(t,e)?"css":null!=t[e]?"object":void 0}function v(t,n){var r=p(n),r=-1<n.indexOf("scale")?1:0+r;if(!(t=t.style.transform))return r;for(var i=[],o=[],a=[],s=/(\w+)\((.+?)\)/g;i=s.exec(t);)o.push(i[1]),a.push(i[2]);return t=e(a,function(t,e){return o[e]===n}),t.length?t[0]:r}function g(t,e){switch(m(t,e)){case"transform":return v(t,e);case"css":return h(t,e);case"attribute":return t.getAttribute(e)}return t[e]||0}function y(t,e){var n=/^(\*=|\+=|-=)/.exec(t);if(!n)return t;var r=f(t)||0;switch(e=parseFloat(e),t=parseFloat(t.replace(n[0],"")),n[0][0]){case"+":return e+t+r;case"-":return e-t+r;case"*":return e*t+r}}function b(t,e){return Math.sqrt(Math.pow(e.x-t.x,2)+Math.pow(e.y-t.y,2))}function x(t){t=t.points;for(var e,n=0,r=0;r<t.numberOfItems;r++){var i=t.getItem(r);0<r&&(n+=b(e,i)),e=i}return n}function T(t){if(t.getTotalLength)return t.getTotalLength();switch(t.tagName.toLowerCase()){case"circle":return 2*Math.PI*t.getAttribute("r");case"rect":return 2*t.getAttribute("width")+2*t.getAttribute("height");case"line":return b({x:t.getAttribute("x1"),y:t.getAttribute("y1")},{x:t.getAttribute("x2"),y:t.getAttribute("y2")});case"polyline":return x(t);case"polygon":var e=t.points;return x(t)+b(e.getItem(e.numberOfItems-1),e.getItem(0))}}function w(t,e){function n(n){return n=void 0===n?0:n,t.el.getPointAtLength(1<=e+n?e+n:0)}var r=n(),i=n(-1),o=n(1);switch(t.property){case"x":return r.x;case"y":return r.y;case"angle":return 180*Math.atan2(o.y-i.y,o.x-i.x)/Math.PI}}function E(t,e){var n,r=/-?\d*\.?\d+/g;if(n=R.pth(t)?t.totalLength:t,R.col(n))if(R.rgb(n)){var i=/rgb\((\d+,\s*[\d]+,\s*[\d]+)\)/g.exec(n);n=i?"rgba("+i[1]+",1)":n}else n=R.hex(n)?u(n):R.hsl(n)?l(n):void 0;else i=(i=f(n))?n.substr(0,n.length-i.length):n,n=e&&!/\s/g.test(n)?i+e:i;return n+="",{original:n,numbers:n.match(r)?n.match(r).map(Number):[0],strings:R.str(t)||e?n.split(r):[]}}function C(t){return t=t?n(R.arr(t)?t.map(r):r(t)):[],e(t,function(t,e,n){return n.indexOf(t)===e})}function S(t){var e=C(t);return e.map(function(t,n){return{target:t,id:n,total:e.length}})}function O(t,e){var n=o(e);if(R.arr(t)){var i=t.length;2!==i||R.obj(t[0])?R.fnc(e.duration)||(n.duration=e.duration/i):t={value:t}}return r(t).map(function(t,n){return n=n?0:e.delay,t=R.obj(t)&&!R.pth(t)?t:{value:t},R.und(t.delay)&&(t.delay=n),t}).map(function(t){return c(t,n)})}function A(t,e){var n,r={};for(n in t){var i=d(t[n],e);R.arr(i)&&(i=i.map(function(t){return d(t,e)}),1===i.length&&(i=i[0])),r[n]=i}return r.duration=parseFloat(r.duration),r.delay=parseFloat(r.delay),r}function I(t){return R.arr(t)?F.apply(this,t):z[t]}function M(t,e){var n;return t.tweens.map(function(r){r=A(r,e);var i=r.value,o=g(e.target,t.name),a=n?n.to.original:o,a=R.arr(i)?i[0]:a,s=y(R.arr(i)?i[1]:i,a),o=f(s)||f(a)||f(o);return r.from=E(a,o),r.to=E(s,o),r.start=n?n.end:t.offset,r.end=r.start+r.delay+r.duration,r.easing=I(r.easing),r.elasticity=(1e3-Math.min(Math.max(r.elasticity,1),999))/1e3,r.isPath=R.pth(i),r.isColor=R.col(r.from.original),r.isColor&&(r.round=1),n=r})}function k(t,r){return e(n(t.map(function(t){return r.map(function(e){var n=m(t.target,e.name);if(n){var r=M(e,t);e={type:n,property:e.name,animatable:t,tweens:r,duration:r[r.length-1].end,delay:r[0].delay}}else e=void 0;return e})})),function(t){return!R.und(t)})}function P(t,e,n,r){var i="delay"===t;return e.length?(i?Math.min:Math.max).apply(Math,e.map(function(e){return e[t]})):i?r.delay:n.offset+r.delay+r.duration}function L(t){var e,n=a(_,t),r=a(X,t),i=S(t.targets),o=[],s=c(n,r);for(e in t)s.hasOwnProperty(e)||"targets"===e||o.push({name:e,offset:s.offset,tweens:O(t[e],r)});return t=k(i,o),c(n,{children:[],animatables:i,animations:t,duration:P("duration",t,n,r),delay:P("delay",t,n,r)})}function j(t){function n(){return window.Promise&&new Promise(function(t){return f=t})}function r(t){return d.reversed?d.duration-t:t}function i(t){for(var n=0,r={},i=d.animations,o=i.length;n<o;){var a=i[n],s=a.animatable,c=a.tweens,u=c.length-1,l=c[u];u&&(l=e(c,function(e){return t<e.end})[0]||l);for(var c=Math.min(Math.max(t-l.start-l.delay,0),l.duration)/l.duration,f=isNaN(c)?1:l.easing(c,l.elasticity),c=l.to.strings,p=l.round,u=[],m=void 0,m=l.to.numbers.length,v=0;v<m;v++){var g=void 0,g=l.to.numbers[v],y=l.from.numbers[v],g=l.isPath?w(l.value,f*g):y+f*(g-y);p&&(l.isColor&&2<v||(g=Math.round(g*p)/p)),u.push(g)}if(l=c.length)for(m=c[0],f=0;f<l;f++)p=c[f+1],v=u[f],isNaN(v)||(m=p?m+(v+p):m+(v+" "));else m=u[0];Y[a.type](s.target,a.property,m,r,s.id),a.currentValue=m,n++}if(n=Object.keys(r).length)for(i=0;i<n;i++)N||(N=h(document.body,"transform")?"transform":"-webkit-transform"),d.animatables[i].target.style[N]=r[i].join(" ");d.currentTime=t,d.progress=t/d.duration*100}function o(t){d[t]&&d[t](d)}function a(){d.remaining&&!0!==d.remaining&&d.remaining--}function s(t){var e=d.duration,s=d.offset,h=s+d.delay,m=d.currentTime,v=d.reversed,g=r(t);if(d.children.length){var y=d.children,b=y.length;if(g>=d.currentTime)for(var x=0;x<b;x++)y[x].seek(g);else for(;b--;)y[b].seek(g)}(g>=h||!e)&&(d.began||(d.began=!0,o("begin")),o("run")),g>s&&g<e?i(g):(g<=s&&0!==m&&(i(0),v&&a()),(g>=e&&m!==e||!e)&&(i(e),v||a())),o("update"),t>=e&&(d.remaining?(u=c,"alternate"===d.direction&&(d.reversed=!d.reversed)):(d.pause(),d.completed||(d.completed=!0,o("complete"),"Promise"in window&&(f(),p=n()))),l=0)}t=void 0===t?{}:t;var c,u,l=0,f=null,p=n(),d=L(t);return d.reset=function(){var t=d.direction,e=d.loop;for(d.currentTime=0,d.progress=0,d.paused=!0,d.began=!1,d.completed=!1,d.reversed="reverse"===t,d.remaining="alternate"===t&&1===e?2:e,i(0),t=d.children.length;t--;)d.children[t].reset()},d.tick=function(t){c=t,u||(u=c),s((l+c-u)*j.speed)},d.seek=function(t){s(r(t))},d.pause=function(){var t=H.indexOf(d);-1<t&&H.splice(t,1),d.paused=!0},d.play=function(){d.paused&&(d.paused=!1,u=0,l=r(d.currentTime),H.push(d),q||V())},d.reverse=function(){d.reversed=!d.reversed,u=0,l=r(d.currentTime)},d.restart=function(){d.pause(),d.reset(),d.play()},d.finished=p,d.reset(),d.autoplay&&d.play(),d}var N,_={update:void 0,begin:void 0,run:void 0,complete:void 0,loop:1,direction:"normal",autoplay:!0,offset:0},X={duration:1e3,delay:0,easing:"easeOutElastic",elasticity:500,round:0},D="translateX translateY translateZ rotate rotateX rotateY rotateZ scale scaleX scaleY scaleZ skewX skewY perspective".split(" "),R={arr:function(t){return Array.isArray(t)},obj:function(t){return-1<Object.prototype.toString.call(t).indexOf("Object")},pth:function(t){return R.obj(t)&&t.hasOwnProperty("totalLength")},svg:function(t){return t instanceof SVGElement},dom:function(t){return t.nodeType||R.svg(t)},str:function(t){return"string"==typeof t},fnc:function(t){return"function"==typeof t},und:function(t){return void 0===t},hex:function(t){return/(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(t)},rgb:function(t){return/^rgb/.test(t)},hsl:function(t){return/^hsl/.test(t)},col:function(t){return R.hex(t)||R.rgb(t)||R.hsl(t)}},F=function(){function t(t,e,n){return(((1-3*n+3*e)*t+(3*n-6*e))*t+3*e)*t}return function(e,n,r,i){if(0<=e&&1>=e&&0<=r&&1>=r){var o=new Float32Array(11);if(e!==n||r!==i)for(var a=0;11>a;++a)o[a]=t(.1*a,e,r);return function(a){if(e===n&&r===i)return a;if(0===a)return 0;if(1===a)return 1;for(var s=0,c=1;10!==c&&o[c]<=a;++c)s+=.1;--c;var c=s+(a-o[c])/(o[c+1]-o[c])*.1,u=3*(1-3*r+3*e)*c*c+2*(3*r-6*e)*c+3*e;if(.001<=u){for(s=0;4>s&&0!==(u=3*(1-3*r+3*e)*c*c+2*(3*r-6*e)*c+3*e);++s)var l=t(c,e,r)-a,c=c-l/u;a=c}else if(0===u)a=c;else{var c=s,s=s+.1,f=0;do{l=c+(s-c)/2,u=t(l,e,r)-a,0<u?s=l:c=l}while(1e-7<Math.abs(u)&&10>++f);a=l}return t(a,n,i)}}}}(),z=function(){function t(t,e){return 0===t||1===t?t:-Math.pow(2,10*(t-1))*Math.sin(2*(t-1-e/(2*Math.PI)*Math.asin(1))*Math.PI/e)}var e,n="Quad Cubic Quart Quint Sine Expo Circ Back Elastic".split(" "),r={In:[[.55,.085,.68,.53],[.55,.055,.675,.19],[.895,.03,.685,.22],[.755,.05,.855,.06],[.47,0,.745,.715],[.95,.05,.795,.035],[.6,.04,.98,.335],[.6,-.28,.735,.045],t],Out:[[.25,.46,.45,.94],[.215,.61,.355,1],[.165,.84,.44,1],[.23,1,.32,1],[.39,.575,.565,1],[.19,1,.22,1],[.075,.82,.165,1],[.175,.885,.32,1.275],function(e,n){return 1-t(1-e,n)}],InOut:[[.455,.03,.515,.955],[.645,.045,.355,1],[.77,0,.175,1],[.86,0,.07,1],[.445,.05,.55,.95],[1,0,0,1],[.785,.135,.15,.86],[.68,-.55,.265,1.55],function(e,n){return.5>e?t(2*e,n)/2:1-t(-2*e+2,n)/2}]},i={linear:F(.25,.25,.75,.75)},o={};for(e in r)o.type=e,r[o.type].forEach(function(t){return function(e,r){i["ease"+t.type+n[r]]=R.fnc(e)?e:F.apply(s,e)}}(o)),o={type:o.type};return i}(),Y={css:function(t,e,n){return t.style[e]=n},attribute:function(t,e,n){return t.setAttribute(e,n)},object:function(t,e,n){return t[e]=n},transform:function(t,e,n,r,i){r[i]||(r[i]=[]),r[i].push(e+"("+n+")")}},H=[],q=0,V=function(){function t(){q=requestAnimationFrame(e)}function e(e){var n=H.length;if(n){for(var r=0;r<n;)H[r]&&H[r].tick(e),r++;t()}else cancelAnimationFrame(q),q=0}return t}();return j.version="2.2.0",j.speed=1,j.running=H,j.remove=function(t){t=C(t);for(var e=H.length;e--;)for(var n=H[e],r=n.animations,o=r.length;o--;)i(t,r[o].animatable.target)&&(r.splice(o,1),r.length||n.pause())},j.getValue=g,j.path=function(e,n){var r=R.str(e)?t(e)[0]:e,i=n||100;return function(t){return{el:r,property:t,totalLength:T(r)*(i/100)}}},j.setDashoffset=function(t){var e=T(t);return t.setAttribute("stroke-dasharray",e),e},j.bezier=F,j.easings=z,j.timeline=function(t){var e=j(t);return e.pause(),e.duration=0,e.add=function(n){return e.children.forEach(function(t){t.began=!0,t.completed=!0}),r(n).forEach(function(n){var r=c(n,a(X,t||{}));r.targets=r.targets||t.targets,n=e.duration;var i=r.offset;r.autoplay=!1,r.direction=e.direction,r.offset=R.und(i)?n:y(i,n),e.began=!0,e.completed=!0,e.seek(r.offset),r=j(r),r.began=!0,r.completed=!0,r.duration>n&&(e.duration=r.duration),e.children.push(r)}),e.seek(0),e.reset(),e.autoplay&&e.restart(),e},e},j.random=function(t,e){return Math.floor(Math.random()*(e-t+1))+t},j})}).call(e,n(25))},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r=n(3),i=n(4),o=n.n(i),a={install:function(t,e){e||(e={});var n=new r.a(e);t.component("toasted",o.a),t.toasted=t.prototype.$toasted=n}};"undefined"!=typeof window&&window.Vue&&(window.Toasted=a),e.default=a},function(t,e,n){"use strict";n.d(e,"a",function(){return c});var r=n(1),i=this,o="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},a=function(t,e,n){return setTimeout(function(){if(n.cached_options.position&&n.cached_options.position.includes("bottom"))return void r.a.animateOutBottom(t,function(){n.remove(t)});r.a.animateOut(t,function(){n.remove(t)})},e),!0},s=function(t,e){return("object"===("undefined"==typeof HTMLElement?"undefined":o(HTMLElement))?e instanceof HTMLElement:e&&"object"===(void 0===e?"undefined":o(e))&&null!==e&&1===e.nodeType&&"string"==typeof e.nodeName)?t.appendChild(e):t.innerHTML=e,i},c=function(t,e){var n=!1;return{el:t,text:function(e){return s(t,e),this},goAway:function(){var r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:800;return n=!0,a(t,r,e)},remove:function(){e.remove(t)},disposed:function(){return n}}}},function(t,e,n){"use strict";var r=n(12),i=n.n(r),o=n(1),a=n(7),s="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},c=n(2);String.prototype.includes||Object.defineProperty(String.prototype,"includes",{value:function(t,e){return"number"!=typeof e&&(e=0),!(e+t.length>this.length)&&-1!==this.indexOf(t,e)}});var u={},l=null,f=function(t){return t.className=t.className||null,t.onComplete=t.onComplete||null,t.position=t.position||"top-right",t.duration=t.duration||null,t.keepOnHover=t.keepOnHover||!1,t.theme=t.theme||"toasted-primary",t.type=t.type||"default",t.containerClass=t.containerClass||null,t.fullWidth=t.fullWidth||!1,t.icon=t.icon||null,t.action=t.action||null,t.fitToScreen=t.fitToScreen||null,t.closeOnSwipe=void 0===t.closeOnSwipe||t.closeOnSwipe,t.iconPack=t.iconPack||"material",t.className&&"string"==typeof t.className&&(t.className=t.className.split(" ")),t.className||(t.className=[]),t.theme&&t.className.push(t.theme.trim()),t.type&&t.className.push(t.type),t.containerClass&&"string"==typeof t.containerClass&&(t.containerClass=t.containerClass.split(" ")),t.containerClass||(t.containerClass=[]),t.position&&t.containerClass.push(t.position.trim()),t.fullWidth&&t.containerClass.push("full-width"),t.fitToScreen&&t.containerClass.push("fit-to-screen"),u=t,t},p=function(t,e){var r=document.createElement("div");if(r.classList.add("toasted"),r.hash=c.generate(),e.className&&e.className.forEach(function(t){r.classList.add(t)}),("object"===("undefined"==typeof HTMLElement?"undefined":s(HTMLElement))?t instanceof HTMLElement:t&&"object"===(void 0===t?"undefined":s(t))&&null!==t&&1===t.nodeType&&"string"==typeof t.nodeName)?r.appendChild(t):r.innerHTML=t,d(e,r),e.closeOnSwipe){var u=new i.a(r,{prevent_default:!1});u.on("pan",function(t){var e=t.deltaX;r.classList.contains("panning")||r.classList.add("panning");var n=1-Math.abs(e/80);n<0&&(n=0),o.a.animatePanning(r,e,n)}),u.on("panend",function(t){var n=t.deltaX;Math.abs(n)>80?o.a.animatePanEnd(r,function(){"function"==typeof e.onComplete&&e.onComplete(),r.parentNode&&l.remove(r)}):(r.classList.remove("panning"),o.a.animateReset(r))})}if(Array.isArray(e.action))e.action.forEach(function(t){var e=m(t,n.i(a.a)(r,l));e&&r.appendChild(e)});else if("object"===s(e.action)){var f=m(e.action,n.i(a.a)(r,l));f&&r.appendChild(f)}return r},d=function(t,e){if(t.icon){var n=document.createElement("i");switch(n.setAttribute("aria-hidden","true"),t.iconPack){case"fontawesome":n.classList.add("fa");var r=t.icon.name?t.icon.name:t.icon;r.includes("fa-")?n.classList.add(r.trim()):n.classList.add("fa-"+r.trim());break;case"mdi":n.classList.add("mdi");var i=t.icon.name?t.icon.name:t.icon;i.includes("mdi-")?n.classList.add(i.trim()):n.classList.add("mdi-"+i.trim());break;case"custom-class":var o=t.icon.name?t.icon.name:t.icon;"string"==typeof o?o.split(" ").forEach(function(t){n.classList.add(t)}):Array.isArray(o)&&o.forEach(function(t){n.classList.add(t.trim())});break;case"callback":var a=t.icon&&t.icon instanceof Function?t.icon:null;a&&(n=a(n));break;default:n.classList.add("material-icons"),n.textContent=t.icon.name?t.icon.name:t.icon}t.icon.after&&n.classList.add("after"),h(t,n,e)}},h=function(t,e,n){t.icon&&(t.icon.after&&t.icon.name?n.appendChild(e):(t.icon.name,n.insertBefore(e,n.firstChild)))},m=function(t,e){if(!t)return null;var n=document.createElement("a");if(n.classList.add("action"),n.classList.add("ripple"),t.text&&(n.text=t.text),t.href&&(n.href=t.href),t.target&&(n.target=t.target),t.icon){n.classList.add("icon");var r=document.createElement("i");switch(u.iconPack){case"fontawesome":r.classList.add("fa"),t.icon.includes("fa-")?r.classList.add(t.icon.trim()):r.classList.add("fa-"+t.icon.trim());break;case"mdi":r.classList.add("mdi"),t.icon.includes("mdi-")?r.classList.add(t.icon.trim()):r.classList.add("mdi-"+t.icon.trim());break;case"custom-class":"string"==typeof t.icon?t.icon.split(" ").forEach(function(t){n.classList.add(t)}):Array.isArray(t.icon)&&t.icon.forEach(function(t){n.classList.add(t.trim())});break;default:r.classList.add("material-icons"),r.textContent=t.icon}n.appendChild(r)}return t.class&&("string"==typeof t.class?t.class.split(" ").forEach(function(t){n.classList.add(t)}):Array.isArray(t.class)&&t.class.forEach(function(t){n.classList.add(t.trim())})),t.push&&n.addEventListener("click",function(n){if(n.preventDefault(),!u.router)return void console.warn("[vue-toasted] : Vue Router instance is not attached. please check the docs");u.router.push(t.push),t.push.dontClose||e.goAway(0)}),t.onClick&&"function"==typeof t.onClick&&n.addEventListener("click",function(n){t.onClick&&(n.preventDefault(),t.onClick(n,e))}),n};e.a=function(t,e,r){l=t,r=f(r);var i=l.container;r.containerClass.unshift("toasted-container"),i.className!==r.containerClass.join(" ")&&(i.className="",r.containerClass.forEach(function(t){i.classList.add(t)}));var s=p(e,r);e&&i.appendChild(s),s.style.opacity=0,o.a.animateIn(s);var c=r.duration,u=void 0;if(null!==c){var d=function(){return setInterval(function(){null===s.parentNode&&window.clearInterval(u),s.classList.contains("panning")||(c-=20),c<=0&&(o.a.animateOut(s,function(){"function"==typeof r.onComplete&&r.onComplete(),s.parentNode&&l.remove(s)}),window.clearInterval(u))},20)};u=d(),r.keepOnHover&&(s.addEventListener("mouseover",function(){window.clearInterval(u)}),s.addEventListener("mouseout",function(){u=d()}))}return n.i(a.a)(s,l)}},function(t,e,n){e=t.exports=n(10)(),e.push([t.i,".toasted{padding:0 20px}.toasted.rounded{border-radius:24px}.toasted .primary,.toasted.toasted-primary{border-radius:2px;min-height:38px;line-height:1.1em;background-color:#353535;padding:6px 20px;font-size:15px;font-weight:300;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.24)}.toasted .primary.success,.toasted.toasted-primary.success{background:#4caf50}.toasted .primary.error,.toasted.toasted-primary.error{background:#f44336}.toasted .primary.info,.toasted.toasted-primary.info{background:#3f51b5}.toasted .primary .action,.toasted.toasted-primary .action{color:#a1c2fa}.toasted.bubble{border-radius:30px;min-height:38px;line-height:1.1em;background-color:#ff7043;padding:0 20px;font-size:15px;font-weight:300;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.24)}.toasted.bubble.success{background:#4caf50}.toasted.bubble.error{background:#f44336}.toasted.bubble.info{background:#3f51b5}.toasted.bubble .action{color:#8e2b0c}.toasted.outline{border-radius:30px;min-height:38px;line-height:1.1em;background-color:#fff;border:1px solid #676767;padding:0 20px;font-size:15px;color:#676767;box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.24);font-weight:700}.toasted.outline.success{color:#4caf50;border-color:#4caf50}.toasted.outline.error{color:#f44336;border-color:#f44336}.toasted.outline.info{color:#3f51b5;border-color:#3f51b5}.toasted.outline .action{color:#607d8b}.toasted-container{position:fixed;z-index:10000}.toasted-container,.toasted-container.full-width{display:-ms-flexbox;display:flex;-ms-flex-direction:column;flex-direction:column}.toasted-container.full-width{max-width:86%;width:100%}.toasted-container.full-width.fit-to-screen{min-width:100%}.toasted-container.full-width.fit-to-screen .toasted:first-child{margin-top:0}.toasted-container.full-width.fit-to-screen.top-right{top:0;right:0}.toasted-container.full-width.fit-to-screen.top-left{top:0;left:0}.toasted-container.full-width.fit-to-screen.top-center{top:0;left:0;-webkit-transform:translateX(0);transform:translateX(0)}.toasted-container.full-width.fit-to-screen.bottom-right{right:0;bottom:0}.toasted-container.full-width.fit-to-screen.bottom-left{left:0;bottom:0}.toasted-container.full-width.fit-to-screen.bottom-center{left:0;bottom:0;-webkit-transform:translateX(0);transform:translateX(0)}.toasted-container.top-right{top:10%;right:7%}.toasted-container.top-left{top:10%;left:7%}.toasted-container.top-center{top:10%;left:50%;-webkit-transform:translateX(-50%);transform:translateX(-50%)}.toasted-container.bottom-right{right:5%;bottom:7%}.toasted-container.bottom-left{left:5%;bottom:7%}.toasted-container.bottom-center{left:50%;-webkit-transform:translateX(-50%);transform:translateX(-50%);bottom:7%}.toasted-container.bottom-left .toasted,.toasted-container.top-left .toasted{float:left}.toasted-container.bottom-right .toasted,.toasted-container.top-right .toasted{float:right}.toasted-container .toasted{top:35px;width:auto;clear:both;margin-top:10px;position:relative;max-width:100%;height:auto;word-break:normal;display:-ms-flexbox;display:flex;-ms-flex-align:center;align-items:center;-ms-flex-pack:justify;justify-content:space-between;box-sizing:inherit}.toasted-container .toasted .fa,.toasted-container .toasted .fab,.toasted-container .toasted .far,.toasted-container .toasted .fas,.toasted-container .toasted .material-icons,.toasted-container .toasted .mdi{margin-right:.5rem;margin-left:-.4rem}.toasted-container .toasted .fa.after,.toasted-container .toasted .fab.after,.toasted-container .toasted .far.after,.toasted-container .toasted .fas.after,.toasted-container .toasted .material-icons.after,.toasted-container .toasted .mdi.after{margin-left:.5rem;margin-right:-.4rem}.toasted-container .toasted .action{text-decoration:none;font-size:.8rem;padding:8px;margin:5px -7px 5px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:.03em;font-weight:600;cursor:pointer}.toasted-container .toasted .action.icon{padding:4px;display:-ms-flexbox;display:flex;-ms-flex-align:center;align-items:center;-ms-flex-pack:center;justify-content:center}.toasted-container .toasted .action.icon .fa,.toasted-container .toasted .action.icon .material-icons,.toasted-container .toasted .action.icon .mdi{margin-right:0;margin-left:4px}.toasted-container .toasted .action.icon:hover{text-decoration:none}.toasted-container .toasted .action:hover{text-decoration:underline}@media only screen and (max-width:600px){.toasted-container{min-width:100%}.toasted-container .toasted:first-child{margin-top:0}.toasted-container.top-right{top:0;right:0}.toasted-container.top-left{top:0;left:0}.toasted-container.top-center{top:0;left:0;-webkit-transform:translateX(0);transform:translateX(0)}.toasted-container.bottom-right{right:0;bottom:0}.toasted-container.bottom-left{left:0;bottom:0}.toasted-container.bottom-center{left:0;bottom:0;-webkit-transform:translateX(0);transform:translateX(0)}.toasted-container.bottom-center,.toasted-container.top-center{-ms-flex-align:stretch!important;align-items:stretch!important}.toasted-container.bottom-left .toasted,.toasted-container.bottom-right .toasted,.toasted-container.top-left .toasted,.toasted-container.top-right .toasted{float:none}.toasted-container .toasted{border-radius:0}}",""])},function(t,e){t.exports=function(){var t=[];return t.toString=function(){for(var t=[],e=0;e<this.length;e++){var n=this[e];n[2]?t.push("@media "+n[2]+"{"+n[1]+"}"):t.push(n[1])}return t.join("")},t.i=function(e,n){"string"==typeof e&&(e=[[null,e,""]]);for(var r={},i=0;i<this.length;i++){var o=this[i][0];"number"==typeof o&&(r[o]=!0)}for(i=0;i<e.length;i++){var a=e[i];"number"==typeof a[0]&&r[a[0]]||(n&&!a[2]?a[2]=n:n&&(a[2]="("+a[2]+") and ("+n+")"),t.push(a))}},t}},function(t,e,n){"use strict";function r(t,e){if(void 0===t||null===t)throw new TypeError("Cannot convert first argument to object");for(var n=Object(t),r=1;r<arguments.length;r++){var i=arguments[r];if(void 0!==i&&null!==i)for(var o=Object.keys(Object(i)),a=0,s=o.length;a<s;a++){var c=o[a],u=Object.getOwnPropertyDescriptor(i,c);void 0!==u&&u.enumerable&&(n[c]=i[c])}}return n}function i(){Object.assign||Object.defineProperty(Object,"assign",{enumerable:!1,configurable:!0,writable:!0,value:r})}t.exports={assign:r,polyfill:i}},function(t,e,n){var r;!function(i,o,a,s){"use strict";function c(t,e,n){return setTimeout(d(t,n),e)}function u(t,e,n){return!!Array.isArray(t)&&(l(t,n[e],n),!0)}function l(t,e,n){var r;if(t)if(t.forEach)t.forEach(e,n);else if(t.length!==s)for(r=0;r<t.length;)e.call(n,t[r],r,t),r++;else for(r in t)t.hasOwnProperty(r)&&e.call(n,t[r],r,t)}function f(t,e,n){var r="DEPRECATED METHOD: "+e+"\n"+n+" AT \n";return function(){var e=new Error("get-stack-trace"),n=e&&e.stack?e.stack.replace(/^[^\(]+?[\n$]/gm,"").replace(/^\s+at\s+/gm,"").replace(/^Object.<anonymous>\s*\(/gm,"{anonymous}()@"):"Unknown Stack Trace",o=i.console&&(i.console.warn||i.console.log);return o&&o.call(i.console,r,n),t.apply(this,arguments)}}function p(t,e,n){var r,i=e.prototype;r=t.prototype=Object.create(i),r.constructor=t,r._super=i,n&&ht(r,n)}function d(t,e){return function(){return t.apply(e,arguments)}}function h(t,e){return typeof t==gt?t.apply(e?e[0]||s:s,e):t}function m(t,e){return t===s?e:t}function v(t,e,n){l(x(e),function(e){t.addEventListener(e,n,!1)})}function g(t,e,n){l(x(e),function(e){t.removeEventListener(e,n,!1)})}function y(t,e){for(;t;){if(t==e)return!0;t=t.parentNode}return!1}function b(t,e){return t.indexOf(e)>-1}function x(t){return t.trim().split(/\s+/g)}function T(t,e,n){if(t.indexOf&&!n)return t.indexOf(e);for(var r=0;r<t.length;){if(n&&t[r][n]==e||!n&&t[r]===e)return r;r++}return-1}function w(t){return Array.prototype.slice.call(t,0)}function E(t,e,n){for(var r=[],i=[],o=0;o<t.length;){var a=e?t[o][e]:t[o];T(i,a)<0&&r.push(t[o]),i[o]=a,o++}return n&&(r=e?r.sort(function(t,n){return t[e]>n[e]}):r.sort()),r}function C(t,e){for(var n,r,i=e[0].toUpperCase()+e.slice(1),o=0;o<mt.length;){if(n=mt[o],(r=n?n+i:e)in t)return r;o++}return s}function S(){return Et++}function O(t){var e=t.ownerDocument||t;return e.defaultView||e.parentWindow||i}function A(t,e){var n=this;this.manager=t,this.callback=e,this.element=t.element,this.target=t.options.inputTarget,this.domHandler=function(e){h(t.options.enable,[t])&&n.handler(e)},this.init()}function I(t){var e=t.options.inputClass;return new(e||(Ot?H:At?W:St?B:Y))(t,M)}function M(t,e,n){var r=n.pointers.length,i=n.changedPointers.length,o=e&Mt&&r-i==0,a=e&(Pt|Lt)&&r-i==0;n.isFirst=!!o,n.isFinal=!!a,o&&(t.session={}),n.eventType=e,k(t,n),t.emit("hammer.input",n),t.recognize(n),t.session.prevInput=n}function k(t,e){var n=t.session,r=e.pointers,i=r.length;n.firstInput||(n.firstInput=j(e)),i>1&&!n.firstMultiple?n.firstMultiple=j(e):1===i&&(n.firstMultiple=!1);var o=n.firstInput,a=n.firstMultiple,s=a?a.center:o.center,c=e.center=N(r);e.timeStamp=xt(),e.deltaTime=e.timeStamp-o.timeStamp,e.angle=R(s,c),e.distance=D(s,c),P(n,e),e.offsetDirection=X(e.deltaX,e.deltaY);var u=_(e.deltaTime,e.deltaX,e.deltaY);e.overallVelocityX=u.x,e.overallVelocityY=u.y,e.overallVelocity=bt(u.x)>bt(u.y)?u.x:u.y,e.scale=a?z(a.pointers,r):1,e.rotation=a?F(a.pointers,r):0,e.maxPointers=n.prevInput?e.pointers.length>n.prevInput.maxPointers?e.pointers.length:n.prevInput.maxPointers:e.pointers.length,L(n,e);var l=t.element;y(e.srcEvent.target,l)&&(l=e.srcEvent.target),e.target=l}function P(t,e){var n=e.center,r=t.offsetDelta||{},i=t.prevDelta||{},o=t.prevInput||{};e.eventType!==Mt&&o.eventType!==Pt||(i=t.prevDelta={x:o.deltaX||0,y:o.deltaY||0},r=t.offsetDelta={x:n.x,y:n.y}),e.deltaX=i.x+(n.x-r.x),e.deltaY=i.y+(n.y-r.y)}function L(t,e){var n,r,i,o,a=t.lastInterval||e,c=e.timeStamp-a.timeStamp;if(e.eventType!=Lt&&(c>It||a.velocity===s)){var u=e.deltaX-a.deltaX,l=e.deltaY-a.deltaY,f=_(c,u,l);r=f.x,i=f.y,n=bt(f.x)>bt(f.y)?f.x:f.y,o=X(u,l),t.lastInterval=e}else n=a.velocity,r=a.velocityX,i=a.velocityY,o=a.direction;e.velocity=n,e.velocityX=r,e.velocityY=i,e.direction=o}function j(t){for(var e=[],n=0;n<t.pointers.length;)e[n]={clientX:yt(t.pointers[n].clientX),clientY:yt(t.pointers[n].clientY)},n++;return{timeStamp:xt(),pointers:e,center:N(e),deltaX:t.deltaX,deltaY:t.deltaY}}function N(t){var e=t.length;if(1===e)return{x:yt(t[0].clientX),y:yt(t[0].clientY)};for(var n=0,r=0,i=0;i<e;)n+=t[i].clientX,r+=t[i].clientY,i++;return{x:yt(n/e),y:yt(r/e)}}function _(t,e,n){return{x:e/t||0,y:n/t||0}}function X(t,e){return t===e?jt:bt(t)>=bt(e)?t<0?Nt:_t:e<0?Xt:Dt}function D(t,e,n){n||(n=Yt);var r=e[n[0]]-t[n[0]],i=e[n[1]]-t[n[1]];return Math.sqrt(r*r+i*i)}function R(t,e,n){n||(n=Yt);var r=e[n[0]]-t[n[0]],i=e[n[1]]-t[n[1]];return 180*Math.atan2(i,r)/Math.PI}function F(t,e){return R(e[1],e[0],Ht)+R(t[1],t[0],Ht)}function z(t,e){return D(e[0],e[1],Ht)/D(t[0],t[1],Ht)}function Y(){this.evEl=Vt,this.evWin=Wt,this.pressed=!1,A.apply(this,arguments)}function H(){this.evEl=$t,this.evWin=Gt,A.apply(this,arguments),this.store=this.manager.session.pointerEvents=[]}function q(){this.evTarget=Qt,this.evWin=Jt,this.started=!1,A.apply(this,arguments)}function V(t,e){var n=w(t.touches),r=w(t.changedTouches);return e&(Pt|Lt)&&(n=E(n.concat(r),"identifier",!0)),[n,r]}function W(){this.evTarget=te,this.targetIds={},A.apply(this,arguments)}function U(t,e){var n=w(t.touches),r=this.targetIds;if(e&(Mt|kt)&&1===n.length)return r[n[0].identifier]=!0,[n,n];var i,o,a=w(t.changedTouches),s=[],c=this.target;if(o=n.filter(function(t){return y(t.target,c)}),e===Mt)for(i=0;i<o.length;)r[o[i].identifier]=!0,i++;for(i=0;i<a.length;)r[a[i].identifier]&&s.push(a[i]),e&(Pt|Lt)&&delete r[a[i].identifier],i++;return s.length?[E(o.concat(s),"identifier",!0),s]:void 0}function B(){A.apply(this,arguments);var t=d(this.handler,this);this.touch=new W(this.manager,t),this.mouse=new Y(this.manager,t),this.primaryTouch=null,this.lastTouches=[]}function $(t,e){t&Mt?(this.primaryTouch=e.changedPointers[0].identifier,G.call(this,e)):t&(Pt|Lt)&&G.call(this,e)}function G(t){var e=t.changedPointers[0];if(e.identifier===this.primaryTouch){var n={x:e.clientX,y:e.clientY};this.lastTouches.push(n);var r=this.lastTouches,i=function(){var t=r.indexOf(n);t>-1&&r.splice(t,1)};setTimeout(i,ee)}}function Z(t){for(var e=t.srcEvent.clientX,n=t.srcEvent.clientY,r=0;r<this.lastTouches.length;r++){var i=this.lastTouches[r],o=Math.abs(e-i.x),a=Math.abs(n-i.y);if(o<=ne&&a<=ne)return!0}return!1}function Q(t,e){this.manager=t,this.set(e)}function J(t){if(b(t,se))return se;var e=b(t,ce),n=b(t,ue);return e&&n?se:e||n?e?ce:ue:b(t,ae)?ae:oe}function K(t){this.options=ht({},this.defaults,t||{}),this.id=S(),this.manager=null,this.options.enable=m(this.options.enable,!0),this.state=fe,this.simultaneous={},this.requireFail=[]}function tt(t){return t&ve?"cancel":t&he?"end":t&de?"move":t&pe?"start":""}function et(t){return t==Dt?"down":t==Xt?"up":t==Nt?"left":t==_t?"right":""}function nt(t,e){var n=e.manager;return n?n.get(t):t}function rt(){K.apply(this,arguments)}function it(){rt.apply(this,arguments),this.pX=null,this.pY=null}function ot(){rt.apply(this,arguments)}function at(){K.apply(this,arguments),this._timer=null,this._input=null}function st(){rt.apply(this,arguments)}function ct(){rt.apply(this,arguments)}function ut(){K.apply(this,arguments),this.pTime=!1,this.pCenter=!1,this._timer=null,this._input=null,this.count=0}function lt(t,e){return e=e||{},e.recognizers=m(e.recognizers,lt.defaults.preset),new ft(t,e)}function ft(t,e){this.options=ht({},lt.defaults,e||{}),this.options.inputTarget=this.options.inputTarget||t,this.handlers={},this.session={},this.recognizers=[],this.oldCssProps={},this.element=t,this.input=I(this),this.touchAction=new Q(this,this.options.touchAction),pt(this,!0),l(this.options.recognizers,function(t){var e=this.add(new t[0](t[1]));t[2]&&e.recognizeWith(t[2]),t[3]&&e.requireFailure(t[3])},this)}function pt(t,e){var n=t.element;if(n.style){var r;l(t.options.cssProps,function(i,o){r=C(n.style,o),e?(t.oldCssProps[r]=n.style[r],n.style[r]=i):n.style[r]=t.oldCssProps[r]||""}),e||(t.oldCssProps={})}}function dt(t,e){var n=o.createEvent("Event");n.initEvent(t,!0,!0),n.gesture=e,e.target.dispatchEvent(n)}var ht,mt=["","webkit","Moz","MS","ms","o"],vt=o.createElement("div"),gt="function",yt=Math.round,bt=Math.abs,xt=Date.now;ht="function"!=typeof Object.assign?function(t){if(t===s||null===t)throw new TypeError("Cannot convert undefined or null to object");for(var e=Object(t),n=1;n<arguments.length;n++){var r=arguments[n];if(r!==s&&null!==r)for(var i in r)r.hasOwnProperty(i)&&(e[i]=r[i])}return e}:Object.assign;var Tt=f(function(t,e,n){for(var r=Object.keys(e),i=0;i<r.length;)(!n||n&&t[r[i]]===s)&&(t[r[i]]=e[r[i]]),i++;return t},"extend","Use `assign`."),wt=f(function(t,e){return Tt(t,e,!0)},"merge","Use `assign`."),Et=1,Ct=/mobile|tablet|ip(ad|hone|od)|android/i,St="ontouchstart"in i,Ot=C(i,"PointerEvent")!==s,At=St&&Ct.test(navigator.userAgent),It=25,Mt=1,kt=2,Pt=4,Lt=8,jt=1,Nt=2,_t=4,Xt=8,Dt=16,Rt=Nt|_t,Ft=Xt|Dt,zt=Rt|Ft,Yt=["x","y"],Ht=["clientX","clientY"];A.prototype={handler:function(){},init:function(){this.evEl&&v(this.element,this.evEl,this.domHandler),this.evTarget&&v(this.target,this.evTarget,this.domHandler),this.evWin&&v(O(this.element),this.evWin,this.domHandler)},destroy:function(){this.evEl&&g(this.element,this.evEl,this.domHandler),this.evTarget&&g(this.target,this.evTarget,this.domHandler),this.evWin&&g(O(this.element),this.evWin,this.domHandler)}};var qt={mousedown:Mt,mousemove:kt,mouseup:Pt},Vt="mousedown",Wt="mousemove mouseup";p(Y,A,{handler:function(t){var e=qt[t.type];e&Mt&&0===t.button&&(this.pressed=!0),e&kt&&1!==t.which&&(e=Pt),this.pressed&&(e&Pt&&(this.pressed=!1),this.callback(this.manager,e,{pointers:[t],changedPointers:[t],pointerType:"mouse",srcEvent:t}))}});var Ut={pointerdown:Mt,pointermove:kt,pointerup:Pt,pointercancel:Lt,pointerout:Lt},Bt={2:"touch",3:"pen",4:"mouse",5:"kinect"},$t="pointerdown",Gt="pointermove pointerup pointercancel";i.MSPointerEvent&&!i.PointerEvent&&($t="MSPointerDown",Gt="MSPointerMove MSPointerUp MSPointerCancel"),p(H,A,{handler:function(t){var e=this.store,n=!1,r=t.type.toLowerCase().replace("ms",""),i=Ut[r],o=Bt[t.pointerType]||t.pointerType,a="touch"==o,s=T(e,t.pointerId,"pointerId");i&Mt&&(0===t.button||a)?s<0&&(e.push(t),s=e.length-1):i&(Pt|Lt)&&(n=!0),s<0||(e[s]=t,this.callback(this.manager,i,{pointers:e,changedPointers:[t],pointerType:o,srcEvent:t}),n&&e.splice(s,1))}});var Zt={touchstart:Mt,touchmove:kt,touchend:Pt,touchcancel:Lt},Qt="touchstart",Jt="touchstart touchmove touchend touchcancel";p(q,A,{handler:function(t){var e=Zt[t.type];if(e===Mt&&(this.started=!0),this.started){var n=V.call(this,t,e);e&(Pt|Lt)&&n[0].length-n[1].length==0&&(this.started=!1),this.callback(this.manager,e,{pointers:n[0],changedPointers:n[1],pointerType:"touch",srcEvent:t})}}});var Kt={touchstart:Mt,touchmove:kt,touchend:Pt,touchcancel:Lt},te="touchstart touchmove touchend touchcancel";p(W,A,{handler:function(t){var e=Kt[t.type],n=U.call(this,t,e);n&&this.callback(this.manager,e,{pointers:n[0],changedPointers:n[1],pointerType:"touch",srcEvent:t})}});var ee=2500,ne=25;p(B,A,{handler:function(t,e,n){var r="touch"==n.pointerType,i="mouse"==n.pointerType;if(!(i&&n.sourceCapabilities&&n.sourceCapabilities.firesTouchEvents)){if(r)$.call(this,e,n);else if(i&&Z.call(this,n))return;this.callback(t,e,n)}},destroy:function(){this.touch.destroy(),this.mouse.destroy()}});var re=C(vt.style,"touchAction"),ie=re!==s,oe="auto",ae="manipulation",se="none",ce="pan-x",ue="pan-y",le=function(){if(!ie)return!1;var t={},e=i.CSS&&i.CSS.supports;return["auto","manipulation","pan-y","pan-x","pan-x pan-y","none"].forEach(function(n){t[n]=!e||i.CSS.supports("touch-action",n)}),t}();Q.prototype={set:function(t){"compute"==t&&(t=this.compute()),ie&&this.manager.element.style&&le[t]&&(this.manager.element.style[re]=t),this.actions=t.toLowerCase().trim()},update:function(){this.set(this.manager.options.touchAction)},compute:function(){var t=[];return l(this.manager.recognizers,function(e){h(e.options.enable,[e])&&(t=t.concat(e.getTouchAction()))}),J(t.join(" "))},preventDefaults:function(t){var e=t.srcEvent,n=t.offsetDirection;if(this.manager.session.prevented)return void e.preventDefault();var r=this.actions,i=b(r,se)&&!le[se],o=b(r,ue)&&!le[ue],a=b(r,ce)&&!le[ce];if(i){var s=1===t.pointers.length,c=t.distance<2,u=t.deltaTime<250;if(s&&c&&u)return}return a&&o?void 0:i||o&&n&Rt||a&&n&Ft?this.preventSrc(e):void 0},preventSrc:function(t){this.manager.session.prevented=!0,t.preventDefault()}};var fe=1,pe=2,de=4,he=8,me=he,ve=16;K.prototype={defaults:{},set:function(t){return ht(this.options,t),this.manager&&this.manager.touchAction.update(),this},recognizeWith:function(t){if(u(t,"recognizeWith",this))return this;var e=this.simultaneous;return t=nt(t,this),e[t.id]||(e[t.id]=t,t.recognizeWith(this)),this},dropRecognizeWith:function(t){return u(t,"dropRecognizeWith",this)?this:(t=nt(t,this),delete this.simultaneous[t.id],this)},requireFailure:function(t){if(u(t,"requireFailure",this))return this;var e=this.requireFail;return t=nt(t,this),-1===T(e,t)&&(e.push(t),t.requireFailure(this)),this},dropRequireFailure:function(t){if(u(t,"dropRequireFailure",this))return this;t=nt(t,this);var e=T(this.requireFail,t);return e>-1&&this.requireFail.splice(e,1),this},hasRequireFailures:function(){return this.requireFail.length>0},canRecognizeWith:function(t){return!!this.simultaneous[t.id]},emit:function(t){function e(e){n.manager.emit(e,t)}var n=this,r=this.state;r<he&&e(n.options.event+tt(r)),e(n.options.event),t.additionalEvent&&e(t.additionalEvent),r>=he&&e(n.options.event+tt(r))},tryEmit:function(t){if(this.canEmit())return this.emit(t);this.state=32},canEmit:function(){for(var t=0;t<this.requireFail.length;){if(!(this.requireFail[t].state&(32|fe)))return!1;t++}return!0},recognize:function(t){var e=ht({},t);if(!h(this.options.enable,[this,e]))return this.reset(),void(this.state=32);this.state&(me|ve|32)&&(this.state=fe),this.state=this.process(e),this.state&(pe|de|he|ve)&&this.tryEmit(e)},process:function(t){},getTouchAction:function(){},reset:function(){}},p(rt,K,{defaults:{pointers:1},attrTest:function(t){var e=this.options.pointers;return 0===e||t.pointers.length===e},process:function(t){var e=this.state,n=t.eventType,r=e&(pe|de),i=this.attrTest(t);return r&&(n&Lt||!i)?e|ve:r||i?n&Pt?e|he:e&pe?e|de:pe:32}}),p(it,rt,{defaults:{event:"pan",threshold:10,pointers:1,direction:zt},getTouchAction:function(){var t=this.options.direction,e=[];return t&Rt&&e.push(ue),t&Ft&&e.push(ce),e},directionTest:function(t){var e=this.options,n=!0,r=t.distance,i=t.direction,o=t.deltaX,a=t.deltaY;return i&e.direction||(e.direction&Rt?(i=0===o?jt:o<0?Nt:_t,n=o!=this.pX,r=Math.abs(t.deltaX)):(i=0===a?jt:a<0?Xt:Dt,n=a!=this.pY,r=Math.abs(t.deltaY))),t.direction=i,n&&r>e.threshold&&i&e.direction},attrTest:function(t){return rt.prototype.attrTest.call(this,t)&&(this.state&pe||!(this.state&pe)&&this.directionTest(t))},emit:function(t){this.pX=t.deltaX,this.pY=t.deltaY;var e=et(t.direction);e&&(t.additionalEvent=this.options.event+e),this._super.emit.call(this,t)}}),p(ot,rt,{defaults:{event:"pinch",threshold:0,pointers:2},getTouchAction:function(){return[se]},attrTest:function(t){return this._super.attrTest.call(this,t)&&(Math.abs(t.scale-1)>this.options.threshold||this.state&pe)},emit:function(t){if(1!==t.scale){var e=t.scale<1?"in":"out";t.additionalEvent=this.options.event+e}this._super.emit.call(this,t)}}),p(at,K,{defaults:{event:"press",pointers:1,time:251,threshold:9},getTouchAction:function(){return[oe]},process:function(t){var e=this.options,n=t.pointers.length===e.pointers,r=t.distance<e.threshold,i=t.deltaTime>e.time;if(this._input=t,!r||!n||t.eventType&(Pt|Lt)&&!i)this.reset();else if(t.eventType&Mt)this.reset(),this._timer=c(function(){this.state=me,this.tryEmit()},e.time,this);else if(t.eventType&Pt)return me;return 32},reset:function(){clearTimeout(this._timer)},emit:function(t){this.state===me&&(t&&t.eventType&Pt?this.manager.emit(this.options.event+"up",t):(this._input.timeStamp=xt(),this.manager.emit(this.options.event,this._input)))}}),p(st,rt,{defaults:{event:"rotate",threshold:0,pointers:2},getTouchAction:function(){return[se]},attrTest:function(t){return this._super.attrTest.call(this,t)&&(Math.abs(t.rotation)>this.options.threshold||this.state&pe)}}),p(ct,rt,{defaults:{event:"swipe",threshold:10,velocity:.3,direction:Rt|Ft,pointers:1},getTouchAction:function(){return it.prototype.getTouchAction.call(this)},attrTest:function(t){var e,n=this.options.direction;return n&(Rt|Ft)?e=t.overallVelocity:n&Rt?e=t.overallVelocityX:n&Ft&&(e=t.overallVelocityY),this._super.attrTest.call(this,t)&&n&t.offsetDirection&&t.distance>this.options.threshold&&t.maxPointers==this.options.pointers&&bt(e)>this.options.velocity&&t.eventType&Pt},emit:function(t){var e=et(t.offsetDirection);e&&this.manager.emit(this.options.event+e,t),this.manager.emit(this.options.event,t)}}),p(ut,K,{defaults:{event:"tap",pointers:1,taps:1,interval:300,time:250,threshold:9,posThreshold:10},getTouchAction:function(){return[ae]},process:function(t){var e=this.options,n=t.pointers.length===e.pointers,r=t.distance<e.threshold,i=t.deltaTime<e.time;if(this.reset(),t.eventType&Mt&&0===this.count)return this.failTimeout();if(r&&i&&n){if(t.eventType!=Pt)return this.failTimeout();var o=!this.pTime||t.timeStamp-this.pTime<e.interval,a=!this.pCenter||D(this.pCenter,t.center)<e.posThreshold;this.pTime=t.timeStamp,this.pCenter=t.center,a&&o?this.count+=1:this.count=1,this._input=t;if(0===this.count%e.taps)return this.hasRequireFailures()?(this._timer=c(function(){this.state=me,this.tryEmit()},e.interval,this),pe):me}return 32},failTimeout:function(){return this._timer=c(function(){this.state=32},this.options.interval,this),32},reset:function(){clearTimeout(this._timer)},emit:function(){this.state==me&&(this._input.tapCount=this.count,this.manager.emit(this.options.event,this._input))}}),lt.VERSION="2.0.7",lt.defaults={domEvents:!1,touchAction:"compute",enable:!0,inputTarget:null,inputClass:null,preset:[[st,{enable:!1}],[ot,{enable:!1},["rotate"]],[ct,{direction:Rt}],[it,{direction:Rt},["swipe"]],[ut],[ut,{event:"doubletap",taps:2},["tap"]],[at]],cssProps:{userSelect:"none",touchSelect:"none",touchCallout:"none",contentZooming:"none",userDrag:"none",tapHighlightColor:"rgba(0,0,0,0)"}};ft.prototype={set:function(t){return ht(this.options,t),t.touchAction&&this.touchAction.update(),t.inputTarget&&(this.input.destroy(),this.input.target=t.inputTarget,this.input.init()),this},stop:function(t){this.session.stopped=t?2:1},recognize:function(t){var e=this.session;if(!e.stopped){this.touchAction.preventDefaults(t);var n,r=this.recognizers,i=e.curRecognizer;(!i||i&&i.state&me)&&(i=e.curRecognizer=null);for(var o=0;o<r.length;)n=r[o],2===e.stopped||i&&n!=i&&!n.canRecognizeWith(i)?n.reset():n.recognize(t),!i&&n.state&(pe|de|he)&&(i=e.curRecognizer=n),o++}},get:function(t){if(t instanceof K)return t;for(var e=this.recognizers,n=0;n<e.length;n++)if(e[n].options.event==t)return e[n];return null},add:function(t){if(u(t,"add",this))return this;var e=this.get(t.options.event);return e&&this.remove(e),this.recognizers.push(t),t.manager=this,this.touchAction.update(),t},remove:function(t){if(u(t,"remove",this))return this;if(t=this.get(t)){var e=this.recognizers,n=T(e,t);-1!==n&&(e.splice(n,1),this.touchAction.update())}return this},on:function(t,e){if(t!==s&&e!==s){var n=this.handlers;return l(x(t),function(t){n[t]=n[t]||[],n[t].push(e)}),this}},off:function(t,e){if(t!==s){var n=this.handlers;return l(x(t),function(t){e?n[t]&&n[t].splice(T(n[t],e),1):delete n[t]}),this}},emit:function(t,e){this.options.domEvents&&dt(t,e);var n=this.handlers[t]&&this.handlers[t].slice();if(n&&n.length){e.type=t,e.preventDefault=function(){e.srcEvent.preventDefault()};for(var r=0;r<n.length;)n[r](e),r++}},destroy:function(){this.element&&pt(this,!1),this.handlers={},this.session={},this.input.destroy(),this.element=null}},ht(lt,{INPUT_START:Mt,INPUT_MOVE:kt,INPUT_END:Pt,INPUT_CANCEL:Lt,STATE_POSSIBLE:fe,STATE_BEGAN:pe,STATE_CHANGED:de,STATE_ENDED:he,STATE_RECOGNIZED:me,STATE_CANCELLED:ve,STATE_FAILED:32,DIRECTION_NONE:jt,DIRECTION_LEFT:Nt,DIRECTION_RIGHT:_t,DIRECTION_UP:Xt,DIRECTION_DOWN:Dt,DIRECTION_HORIZONTAL:Rt,DIRECTION_VERTICAL:Ft,DIRECTION_ALL:zt,Manager:ft,Input:A,TouchAction:Q,TouchInput:W,MouseInput:Y,PointerEventInput:H,TouchMouseInput:B,SingleTouchInput:q,Recognizer:K,AttrRecognizer:rt,Tap:ut,Pan:it,Swipe:ct,Pinch:ot,Rotate:st,Press:at,on:v,off:g,each:l,merge:wt,extend:Tt,assign:ht,inherit:p,bindFn:d,prefixed:C}),(void 0!==i?i:"undefined"!=typeof self?self:{}).Hammer=lt,(r=function(){return lt}.call(e,n,e,t))!==s&&(t.exports=r)}(window,document)},function(t,e){t.exports=function(t,e,n){for(var r=(2<<Math.log(e.length-1)/Math.LN2)-1,i=-~(1.6*r*n/e.length),o="";;)for(var a=t(i),s=i;s--;)if(o+=e[a[s]&r]||"",o.length===+n)return o}},function(t,e,n){"use strict";function r(t){var e="",n=Math.floor(.001*(Date.now()-s));return n===o?i++:(i=0,o=n),e+=a(c),e+=a(t),i>0&&(e+=a(i)),e+=a(n)}var i,o,a=n(15),s=(n(0),1567752802062),c=7;t.exports=r},function(t,e,n){"use strict";function r(t){for(var e,n=0,r="";!e;)r+=a(o,i.get(),1),e=t<Math.pow(16,n+1),n++;return r}var i=n(0),o=n(18),a=n(13);t.exports=r},function(t,e,n){"use strict";function r(e){return s.seed(e),t.exports}function i(e){return l=e,t.exports}function o(t){return void 0!==t&&s.characters(t),s.shuffled()}function a(){return c(l)}var s=n(0),c=n(14),u=n(17),l=n(20)||0;t.exports=a,t.exports.generate=a,t.exports.seed=r,t.exports.worker=i,t.exports.characters=o,t.exports.isValid=u},function(t,e,n){"use strict";function r(t){return!(!t||"string"!=typeof t||t.length<6)&&!new RegExp("[^"+i.get().replace(/[|\\{}()[\]^$+*?.-]/g,"\\$&")+"]").test(t)}var i=n(0);t.exports=r},function(t,e,n){"use strict";var r,i="object"==typeof window&&(window.crypto||window.msCrypto);r=i&&i.getRandomValues?function(t){return i.getRandomValues(new Uint8Array(t))}:function(t){for(var e=[],n=0;n<t;n++)e.push(Math.floor(256*Math.random()));return e},t.exports=r},function(t,e,n){"use strict";function r(){return(o=(9301*o+49297)%233280)/233280}function i(t){o=t}var o=1;t.exports={nextValue:r,seed:i}},function(t,e,n){"use strict";t.exports=0},function(t,e){t.exports=function(t,e,n,r){var i,o=t=t||{},a=typeof t.default;"object"!==a&&"function"!==a||(i=t,o=t.default);var s="function"==typeof o?o.options:o;if(e&&(s.render=e.render,s.staticRenderFns=e.staticRenderFns),n&&(s._scopeId=n),r){var c=Object.create(s.computed||null);Object.keys(r).forEach(function(t){var e=r[t];c[t]=function(){return e}}),s.computed=c}return{esModule:i,exports:o,options:s}}},function(t,e,n){var r=n(9);"string"==typeof r&&(r=[[t.i,r,""]]),r.locals&&(t.exports=r.locals);n(23)("df0682cc",r,!0,{})},function(t,e,n){function r(t){for(var e=0;e<t.length;e++){var n=t[e],r=l[n.id];if(r){r.refs++;for(var i=0;i<r.parts.length;i++)r.parts[i](n.parts[i]);for(;i<n.parts.length;i++)r.parts.push(o(n.parts[i]));r.parts.length>n.parts.length&&(r.parts.length=n.parts.length)}else{for(var a=[],i=0;i<n.parts.length;i++)a.push(o(n.parts[i]));l[n.id]={id:n.id,refs:1,parts:a}}}}function i(){var t=document.createElement("style");return t.type="text/css",f.appendChild(t),t}function o(t){var e,n,r=document.querySelector("style["+g+'~="'+t.id+'"]');if(r){if(h)return m;r.parentNode.removeChild(r)}if(y){var o=d++;r=p||(p=i()),e=a.bind(null,r,o,!1),n=a.bind(null,r,o,!0)}else r=i(),e=s.bind(null,r),n=function(){r.parentNode.removeChild(r)};return e(t),function(r){if(r){if(r.css===t.css&&r.media===t.media&&r.sourceMap===t.sourceMap)return;e(t=r)}else n()}}function a(t,e,n,r){var i=n?"":r.css;if(t.styleSheet)t.styleSheet.cssText=b(e,i);else{var o=document.createTextNode(i),a=t.childNodes;a[e]&&t.removeChild(a[e]),a.length?t.insertBefore(o,a[e]):t.appendChild(o)}}function s(t,e){var n=e.css,r=e.media,i=e.sourceMap;if(r&&t.setAttribute("media",r),v.ssrId&&t.setAttribute(g,e.id),i&&(n+="\n/*# sourceURL="+i.sources[0]+" */",n+="\n/*# sourceMappingURL=data:application/json;base64,"+btoa(unescape(encodeURIComponent(JSON.stringify(i))))+" */"),t.styleSheet)t.styleSheet.cssText=n;else{for(;t.firstChild;)t.removeChild(t.firstChild);t.appendChild(document.createTextNode(n))}}var c="undefined"!=typeof document;if("undefined"!=typeof DEBUG&&DEBUG&&!c)throw new Error("vue-style-loader cannot be used in a non-browser environment. Use { target: 'node' } in your Webpack config to indicate a server-rendering environment.");var u=n(24),l={},f=c&&(document.head||document.getElementsByTagName("head")[0]),p=null,d=0,h=!1,m=function(){},v=null,g="data-vue-ssr-id",y="undefined"!=typeof navigator&&/msie [6-9]\b/.test(navigator.userAgent.toLowerCase());t.exports=function(t,e,n,i){h=n,v=i||{};var o=u(t,e);return r(o),function(e){for(var n=[],i=0;i<o.length;i++){var a=o[i],s=l[a.id];s.refs--,n.push(s)}e?(o=u(t,e),r(o)):o=[];for(var i=0;i<n.length;i++){var s=n[i];if(0===s.refs){for(var c=0;c<s.parts.length;c++)s.parts[c]();delete l[s.id]}}}};var b=function(){var t=[];return function(e,n){return t[e]=n,t.filter(Boolean).join("\n")}}()},function(t,e){t.exports=function(t,e){for(var n=[],r={},i=0;i<e.length;i++){var o=e[i],a=o[0],s=o[1],c=o[2],u=o[3],l={id:t+":"+i,css:s,media:c,sourceMap:u};r[a]?r[a].parts.push(l):n.push(r[a]={id:a,parts:[l]})}return n}},function(t,e){var n;n=function(){return this}();try{n=n||Function("return this")()||(0,eval)("this")}catch(t){"object"==typeof window&&(n=window)}t.exports=n}])});
+},{}],"src/plugins/vue-toasted-plugin.js":[function(require,module,exports) {
+"use strict";
+
+var _vue = _interopRequireDefault(require("vue"));
+
+var _vueToasted = _interopRequireDefault(require("vue-toasted"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+_vue.default.use(_vueToasted.default);
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-toasted":"node_modules/vue-toasted/dist/vue-toasted.min.js"}],"src/plugins/window-listeners-plugin.js":[function(require,module,exports) {
+// api
+//     windowListeners:{}
+let Vue = require("vue").default;
+
+let windowListenersSymbol = Symbol("$windowListeners");
+Object.defineProperty(Vue.prototype, "$windowListeners", {
+  get() {
+    if (this[windowListenersSymbol] == undefined) {
+      this[windowListenersSymbol] = {};
+    }
+
+    return this[windowListenersSymbol];
+  },
+
+  set(value) {
+    this[windowListenersSymbol] = value;
+  }
+
+});
+Vue.mixin(module.exports = {
+  beforeCreate() {
+    const newOption = this.$options.windowListeners;
+
+    if (!newOption) {
+      return;
+    }
+
+    const vueStaticDestination = this.$windowListeners || this;
+
+    if (vueStaticDestination instanceof Object) {
+      if (newOption instanceof Function) {
+        Object.assign(vueStaticDestination, newOption.apply(this));
+      } else if (typeof newOption === 'object') {
+        Object.assign(vueStaticDestination, newOption);
+      }
+    }
+
+    if (this.$windowListeners instanceof Object) {
+      for (let [eachKey, eachValue] of Object.entries(this.$windowListeners)) {
+        if (eachValue.bind instanceof Function) {
+          eachValue = eachValue.bind(this);
+        }
+
+        window.addEventListener(eachKey, eachValue);
+      }
+    }
+  },
+
+  beforeDestroy() {
+    // remove all the listeners
+    if (this[windowListenersSymbol] instanceof Object) {
+      for (let [eachKey, eachValue] of Object.entries(this[windowListenersSymbol])) {
+        window.removeEventListener(eachKey, eachValue);
+      }
+    }
+  }
+
+});
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/without-watchers.js":[function(require,module,exports) {
+// api
+//     this.withoutWatchers(source, callback)
+let Vue = require("vue").default; // TODO: potenial issue if a second source calls this before the first one ends (async)
+// TODO: issues with dynamically added watchers
+
+
+Vue.mixin(module.exports = {
+  methods: {
+    $withoutWatchers(source, callback) {
+      const watchers = this._watchers.map(watcher => ({
+        cb: watcher.cb,
+        sync: watcher.sync
+      })); // disable
+
+
+      for (let index in this._watchers) {
+        this._watchers[index] = Object.assign(this._watchers[index], {
+          cb: () => null,
+          sync: true
+        });
+      }
+
+      if (this.$withoutWatchers.showSource) {
+        console.group(`[${source}] suspended all watch functions`);
+      }
+
+      callback();
+
+      if (this.$withoutWatchers.showSource) {
+        console.groupEnd();
+        console.log(`[${source}] resumed all watch functions`);
+      } // enable
+
+
+      for (let index in this._watchers) {
+        this._watchers[index] = Object.assign(this._watchers[index], watchers[index]);
+      }
+    }
+
+  }
+});
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"node_modules/keen-ui/dist/keen-ui.js":[function(require,module,exports) {
 var define;
 var global = arguments[3];
 /*!
@@ -25458,835 +29380,7 @@ require("keen-ui/dist/keen-ui.css");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_keenUi.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","keen-ui":"node_modules/keen-ui/dist/keen-ui.js","keen-ui/dist/keen-ui.css":"node_modules/keen-ui/dist/keen-ui.css"}],"node_modules/portal-vue/dist/portal-vue.common.js":[function(require,module,exports) {
-
- /*! 
-  * portal-vue © Thorsten Lünborg, 2019 
-  * 
-  * Version: 2.1.7
-  * 
-  * LICENCE: MIT 
-  * 
-  * https://github.com/linusborg/portal-vue
-  * 
- */
-
-'use strict';
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
-
-var Vue = _interopDefault(require('vue'));
-
-function _typeof(obj) {
-  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
-    _typeof = function (obj) {
-      return typeof obj;
-    };
-  } else {
-    _typeof = function (obj) {
-      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-    };
-  }
-
-  return _typeof(obj);
-}
-
-function _toConsumableArray(arr) {
-  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
-}
-
-function _arrayWithoutHoles(arr) {
-  if (Array.isArray(arr)) {
-    for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
-
-    return arr2;
-  }
-}
-
-function _iterableToArray(iter) {
-  if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
-}
-
-function _nonIterableSpread() {
-  throw new TypeError("Invalid attempt to spread non-iterable instance");
-}
-
-var inBrowser = typeof window !== 'undefined';
-function freeze(item) {
-  if (Array.isArray(item) || _typeof(item) === 'object') {
-    return Object.freeze(item);
-  }
-
-  return item;
-}
-function combinePassengers(transports) {
-  var slotProps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  return transports.reduce(function (passengers, transport) {
-    var temp = transport.passengers[0];
-    var newPassengers = typeof temp === 'function' ? temp(slotProps) : transport.passengers;
-    return passengers.concat(newPassengers);
-  }, []);
-}
-function stableSort(array, compareFn) {
-  return array.map(function (v, idx) {
-    return [idx, v];
-  }).sort(function (a, b) {
-    return compareFn(a[1], b[1]) || a[0] - b[0];
-  }).map(function (c) {
-    return c[1];
-  });
-}
-function pick(obj, keys) {
-  return keys.reduce(function (acc, key) {
-    if (obj.hasOwnProperty(key)) {
-      acc[key] = obj[key];
-    }
-
-    return acc;
-  }, {});
-}
-
-var transports = {};
-var targets = {};
-var sources = {};
-var Wormhole = Vue.extend({
-  data: function data() {
-    return {
-      transports: transports,
-      targets: targets,
-      sources: sources,
-      trackInstances: inBrowser
-    };
-  },
-  methods: {
-    open: function open(transport) {
-      if (!inBrowser) return;
-      var to = transport.to,
-          from = transport.from,
-          passengers = transport.passengers,
-          _transport$order = transport.order,
-          order = _transport$order === void 0 ? Infinity : _transport$order;
-      if (!to || !from || !passengers) return;
-      var newTransport = {
-        to: to,
-        from: from,
-        passengers: freeze(passengers),
-        order: order
-      };
-      var keys = Object.keys(this.transports);
-
-      if (keys.indexOf(to) === -1) {
-        Vue.set(this.transports, to, []);
-      }
-
-      var currentIndex = this.$_getTransportIndex(newTransport); // Copying the array here so that the PortalTarget change event will actually contain two distinct arrays
-
-      var newTransports = this.transports[to].slice(0);
-
-      if (currentIndex === -1) {
-        newTransports.push(newTransport);
-      } else {
-        newTransports[currentIndex] = newTransport;
-      }
-
-      this.transports[to] = stableSort(newTransports, function (a, b) {
-        return a.order - b.order;
-      });
-    },
-    close: function close(transport) {
-      var force = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-      var to = transport.to,
-          from = transport.from;
-      if (!to || !from && force === false) return;
-
-      if (!this.transports[to]) {
-        return;
-      }
-
-      if (force) {
-        this.transports[to] = [];
-      } else {
-        var index = this.$_getTransportIndex(transport);
-
-        if (index >= 0) {
-          // Copying the array here so that the PortalTarget change event will actually contain two distinct arrays
-          var newTransports = this.transports[to].slice(0);
-          newTransports.splice(index, 1);
-          this.transports[to] = newTransports;
-        }
-      }
-    },
-    registerTarget: function registerTarget(target, vm, force) {
-      if (!inBrowser) return;
-
-      if (this.trackInstances && !force && this.targets[target]) {
-        console.warn("[portal-vue]: Target ".concat(target, " already exists"));
-      }
-
-      this.$set(this.targets, target, Object.freeze([vm]));
-    },
-    unregisterTarget: function unregisterTarget(target) {
-      this.$delete(this.targets, target);
-    },
-    registerSource: function registerSource(source, vm, force) {
-      if (!inBrowser) return;
-
-      if (this.trackInstances && !force && this.sources[source]) {
-        console.warn("[portal-vue]: source ".concat(source, " already exists"));
-      }
-
-      this.$set(this.sources, source, Object.freeze([vm]));
-    },
-    unregisterSource: function unregisterSource(source) {
-      this.$delete(this.sources, source);
-    },
-    hasTarget: function hasTarget(to) {
-      return !!(this.targets[to] && this.targets[to][0]);
-    },
-    hasSource: function hasSource(to) {
-      return !!(this.sources[to] && this.sources[to][0]);
-    },
-    hasContentFor: function hasContentFor(to) {
-      return !!this.transports[to] && !!this.transports[to].length;
-    },
-    // Internal
-    $_getTransportIndex: function $_getTransportIndex(_ref) {
-      var to = _ref.to,
-          from = _ref.from;
-
-      for (var i in this.transports[to]) {
-        if (this.transports[to][i].from === from) {
-          return +i;
-        }
-      }
-
-      return -1;
-    }
-  }
-});
-var wormhole = new Wormhole(transports);
-
-var _id = 1;
-var Portal = Vue.extend({
-  name: 'portal',
-  props: {
-    disabled: {
-      type: Boolean
-    },
-    name: {
-      type: String,
-      default: function _default() {
-        return String(_id++);
-      }
-    },
-    order: {
-      type: Number,
-      default: 0
-    },
-    slim: {
-      type: Boolean
-    },
-    slotProps: {
-      type: Object,
-      default: function _default() {
-        return {};
-      }
-    },
-    tag: {
-      type: String,
-      default: 'DIV'
-    },
-    to: {
-      type: String,
-      default: function _default() {
-        return String(Math.round(Math.random() * 10000000));
-      }
-    }
-  },
-  created: function created() {
-    var _this = this;
-
-    this.$nextTick(function () {
-      wormhole.registerSource(_this.name, _this);
-    });
-  },
-  mounted: function mounted() {
-    if (!this.disabled) {
-      this.sendUpdate();
-    }
-  },
-  updated: function updated() {
-    if (this.disabled) {
-      this.clear();
-    } else {
-      this.sendUpdate();
-    }
-  },
-  beforeDestroy: function beforeDestroy() {
-    wormhole.unregisterSource(this.name);
-    this.clear();
-  },
-  watch: {
-    to: function to(newValue, oldValue) {
-      oldValue && oldValue !== newValue && this.clear(oldValue);
-      this.sendUpdate();
-    }
-  },
-  methods: {
-    clear: function clear(target) {
-      var closer = {
-        from: this.name,
-        to: target || this.to
-      };
-      wormhole.close(closer);
-    },
-    normalizeSlots: function normalizeSlots() {
-      return this.$scopedSlots.default ? [this.$scopedSlots.default] : this.$slots.default;
-    },
-    normalizeOwnChildren: function normalizeOwnChildren(children) {
-      return typeof children === 'function' ? children(this.slotProps) : children;
-    },
-    sendUpdate: function sendUpdate() {
-      var slotContent = this.normalizeSlots();
-
-      if (slotContent) {
-        var transport = {
-          from: this.name,
-          to: this.to,
-          passengers: _toConsumableArray(slotContent),
-          order: this.order
-        };
-        wormhole.open(transport);
-      } else {
-        this.clear();
-      }
-    }
-  },
-  render: function render(h) {
-    var children = this.$slots.default || this.$scopedSlots.default || [];
-    var Tag = this.tag;
-
-    if (children && this.disabled) {
-      return children.length <= 1 && this.slim ? this.normalizeOwnChildren(children)[0] : h(Tag, [this.normalizeOwnChildren(children)]);
-    } else {
-      return this.slim ? h() : h(Tag, {
-        class: {
-          'v-portal': true
-        },
-        style: {
-          display: 'none'
-        },
-        key: 'v-portal-placeholder'
-      });
-    }
-  }
-});
-
-var PortalTarget = Vue.extend({
-  name: 'portalTarget',
-  props: {
-    multiple: {
-      type: Boolean,
-      default: false
-    },
-    name: {
-      type: String,
-      required: true
-    },
-    slim: {
-      type: Boolean,
-      default: false
-    },
-    slotProps: {
-      type: Object,
-      default: function _default() {
-        return {};
-      }
-    },
-    tag: {
-      type: String,
-      default: 'div'
-    },
-    transition: {
-      type: [String, Object, Function]
-    }
-  },
-  data: function data() {
-    return {
-      transports: wormhole.transports,
-      firstRender: true
-    };
-  },
-  created: function created() {
-    var _this = this;
-
-    this.$nextTick(function () {
-      wormhole.registerTarget(_this.name, _this);
-    });
-  },
-  watch: {
-    ownTransports: function ownTransports() {
-      this.$emit('change', this.children().length > 0);
-    },
-    name: function name(newVal, oldVal) {
-      /**
-       * TODO
-       * This should warn as well ...
-       */
-      wormhole.unregisterTarget(oldVal);
-      wormhole.registerTarget(newVal, this);
-    }
-  },
-  mounted: function mounted() {
-    var _this2 = this;
-
-    if (this.transition) {
-      this.$nextTick(function () {
-        // only when we have a transition, because it causes a re-render
-        _this2.firstRender = false;
-      });
-    }
-  },
-  beforeDestroy: function beforeDestroy() {
-    wormhole.unregisterTarget(this.name);
-  },
-  computed: {
-    ownTransports: function ownTransports() {
-      var transports = this.transports[this.name] || [];
-
-      if (this.multiple) {
-        return transports;
-      }
-
-      return transports.length === 0 ? [] : [transports[transports.length - 1]];
-    },
-    passengers: function passengers() {
-      return combinePassengers(this.ownTransports, this.slotProps);
-    }
-  },
-  methods: {
-    // can't be a computed prop because it has to "react" to $slot changes.
-    children: function children() {
-      return this.passengers.length !== 0 ? this.passengers : this.$scopedSlots.default ? this.$scopedSlots.default(this.slotProps) : this.$slots.default || [];
-    },
-    // can't be a computed prop because it has to "react" to this.children().
-    noWrapper: function noWrapper() {
-      var noWrapper = this.slim && !this.transition;
-
-      if (noWrapper && this.children().length > 1) {
-        console.warn('[portal-vue]: PortalTarget with `slim` option received more than one child element.');
-      }
-
-      return noWrapper;
-    }
-  },
-  render: function render(h) {
-    var noWrapper = this.noWrapper();
-    var children = this.children();
-    var Tag = this.transition || this.tag;
-    return noWrapper ? children[0] : this.slim && !Tag ? h() : h(Tag, {
-      props: {
-        // if we have a transition component, pass the tag if it exists
-        tag: this.transition && this.tag ? this.tag : undefined
-      },
-      class: {
-        'vue-portal-target': true
-      }
-    }, children);
-  }
-});
-
-var _id$1 = 0;
-var portalProps = ['disabled', 'name', 'order', 'slim', 'slotProps', 'tag', 'to'];
-var targetProps = ['multiple', 'transition'];
-var MountingPortal = Vue.extend({
-  name: 'MountingPortal',
-  inheritAttrs: false,
-  props: {
-    append: {
-      type: [Boolean, String]
-    },
-    bail: {
-      type: Boolean
-    },
-    mountTo: {
-      type: String,
-      required: true
-    },
-    // Portal
-    disabled: {
-      type: Boolean
-    },
-    // name for the portal
-    name: {
-      type: String,
-      default: function _default() {
-        return 'mounted_' + String(_id$1++);
-      }
-    },
-    order: {
-      type: Number,
-      default: 0
-    },
-    slim: {
-      type: Boolean
-    },
-    slotProps: {
-      type: Object,
-      default: function _default() {
-        return {};
-      }
-    },
-    tag: {
-      type: String,
-      default: 'DIV'
-    },
-    // name for the target
-    to: {
-      type: String,
-      default: function _default() {
-        return String(Math.round(Math.random() * 10000000));
-      }
-    },
-    // Target
-    multiple: {
-      type: Boolean,
-      default: false
-    },
-    targetSlim: {
-      type: Boolean
-    },
-    targetSlotProps: {
-      type: Object,
-      default: function _default() {
-        return {};
-      }
-    },
-    targetTag: {
-      type: String,
-      default: 'div'
-    },
-    transition: {
-      type: [String, Object, Function]
-    }
-  },
-  created: function created() {
-    if (typeof document === 'undefined') return;
-    var el = document.querySelector(this.mountTo);
-
-    if (!el) {
-      console.error("[portal-vue]: Mount Point '".concat(this.mountTo, "' not found in document"));
-      return;
-    }
-
-    var props = this.$props; // Target already exists
-
-    if (wormhole.targets[props.name]) {
-      if (props.bail) {
-        console.warn("[portal-vue]: Target ".concat(props.name, " is already mounted.\n        Aborting because 'bail: true' is set"));
-      } else {
-        this.portalTarget = wormhole.targets[props.name];
-      }
-
-      return;
-    }
-
-    var append = props.append;
-
-    if (append) {
-      var type = typeof append === 'string' ? append : 'DIV';
-      var mountEl = document.createElement(type);
-      el.appendChild(mountEl);
-      el = mountEl;
-    } // get props for target from $props
-    // we have to rename a few of them
-
-
-    var _props = pick(this.$props, targetProps);
-
-    _props.slim = this.targetSlim;
-    _props.tag = this.targetTag;
-    _props.slotProps = this.targetSlotProps;
-    _props.name = this.to;
-    this.portalTarget = new PortalTarget({
-      el: el,
-      parent: this.$parent || this,
-      propsData: _props
-    });
-  },
-  beforeDestroy: function beforeDestroy() {
-    var target = this.portalTarget;
-
-    if (this.append) {
-      var el = target.$el;
-      el.parentNode.removeChild(el);
-    }
-
-    target.$destroy();
-  },
-  render: function render(h) {
-    if (!this.portalTarget) {
-      console.warn("[portal-vue] Target wasn't mounted");
-      return h();
-    } // if there's no "manual" scoped slot, so we create a <Portal> ourselves
-
-
-    if (!this.$scopedSlots.manual) {
-      var props = pick(this.$props, portalProps);
-      return h(Portal, {
-        props: props,
-        attrs: this.$attrs,
-        on: this.$listeners,
-        scopedSlots: this.$scopedSlots
-      }, this.$slots.default);
-    } // else, we render the scoped slot
-
-
-    var content = this.$scopedSlots.manual({
-      to: this.to
-    }); // if user used <template> for the scoped slot
-    // content will be an array
-
-    if (Array.isArray(content)) {
-      content = content[0];
-    }
-
-    if (!content) return h();
-    return content;
-  }
-});
-
-function install(Vue$$1) {
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  Vue$$1.component(options.portalName || 'Portal', Portal);
-  Vue$$1.component(options.portalTargetName || 'PortalTarget', PortalTarget);
-  Vue$$1.component(options.MountingPortalName || 'MountingPortal', MountingPortal);
-}
-
-var index = {
-  install: install
-};
-
-exports.default = index;
-exports.Portal = Portal;
-exports.PortalTarget = PortalTarget;
-exports.MountingPortal = MountingPortal;
-exports.Wormhole = wormhole;
-//# sourceMappingURL=portal-vue.common.js.map
-
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/portal-plugin.js":[function(require,module,exports) {
-"use strict";
-
-var _portalVue = _interopRequireDefault(require("portal-vue"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-let Vue = require("vue").default;
-
-Vue.use(_portalVue.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","portal-vue":"node_modules/portal-vue/dist/portal-vue.common.js"}],"src/plugins/resolvables-plugin.js":[function(require,module,exports) {
-// api
-// resolvables:
-//     [resolvable].promise
-//     [resolvable].resolve()
-//     [resolvable].reject()
-//     [resolvable].done
-//     [resolvable].result
-let Vue = require("vue").default;
-
-Vue.prototype.$resolvables = {};
-const resolvablesSymbol = Symbol("resolvables");
-Vue.mixin(module.exports = {
-  beforeCreate() {
-    const newOption = this.$options.resolvables;
-
-    if (!newOption) {
-      return;
-    }
-
-    const vueStaticDestination = this.$resolvables || this;
-
-    if (vueStaticDestination instanceof Object) {
-      if (newOption instanceof Function) {
-        Object.assign(vueStaticDestination, newOption.apply(this));
-      } else if (typeof newOption === 'object') {
-        Object.assign(vueStaticDestination, newOption);
-      }
-    }
-
-    this[resolvablesSymbol] = {};
-
-    if (this.$resolvables instanceof Object) {
-      for (let [eachKey, eachValue] of Object.entries(this.$resolvables)) {
-        this[resolvablesSymbol][eachKey] = [];
-        let checkerFunction = eachValue;
-
-        if (checkerFunction.bind instanceof Function) {
-          checkerFunction = checkerFunction.bind(this);
-        } // 
-        // initial synchronous promise workaround
-        // 
-        // we can't extract the resolve/reject values outside of the promise
-        //     ex: new Promise((resolve, reject)=>{})
-        // because that function is loaded asyncly and this function is synchronous
-        // meaning the external resolve this function tries to create would
-        // fail if the user calls resolve() before the promise
-        // has had time to set itself up so this code here creates a stand-in
-        // resolve() function to handle that initial case
-
-
-        const beforeInitActionArg = Symbol();
-        const beforeInitResolveCalled = Symbol();
-        const beforeInitRejectCalled = Symbol();
-        const promiseKey = Symbol("promiseKey");
-        const resolveKey = Symbol("resolveKey");
-        const rejectKey = Symbol("rejectKey");
-        const checkerRunningKey = Symbol("checkerRunningKey");
-
-        let resetSyncCallbackData = () => {
-          this[resolvablesSymbol][eachKey][beforeInitActionArg] = undefined;
-          this[resolvablesSymbol][eachKey][beforeInitResolveCalled] = false;
-          this[resolvablesSymbol][eachKey][beforeInitRejectCalled] = false;
-          this[resolvablesSymbol][eachKey][checkerRunningKey] = false;
-        }; // 
-        // init the check
-        // 
-
-
-        resetSyncCallbackData();
-
-        checkerFunction.resolve = arg => {
-          // find and use the latest resolver if it exists
-          if (checkerFunction[promiseKey][resolveKey]) {
-            // call the low level resolver
-            checkerFunction[promiseKey][resolveKey](arg);
-
-            if (arg instanceof Array && arg.length == 12) {} // otherwise this function was called before any resolver was setup
-            // and it needs to fallback on the sync method
-            // the promise setup will look for (and cleanup) these values
-
-          } else {
-            this[resolvablesSymbol][eachKey][beforeInitResolveCalled] = true;
-            this[resolvablesSymbol][eachKey][beforeInitActionArg] = arg;
-          }
-        };
-
-        checkerFunction.reject = arg => {
-          // find and use the latest rejector if it exists
-          if (checkerFunction[promiseKey][rejectKey]) {
-            checkerFunction[promiseKey][rejectKey](arg); // otherwise this function was called before any resolver was setup
-            // and it needs to fallback on the sync method
-            // the promise setup will look for (and cleanup) these values
-          } else {
-            this[resolvablesSymbol][eachKey][beforeInitRejectCalled] = true;
-            this[resolvablesSymbol][eachKey][beforeInitActionArg] = arg;
-          }
-        };
-
-        checkerFunction.check = async () => {
-          // basically don't schedule a bunch of checks if the first one never finished
-          if (!this[resolvablesSymbol][eachKey][checkerRunningKey] && !checkerFunction.done) {
-            this[resolvablesSymbol][eachKey][checkerRunningKey] = true; // not sure if func will be async or not so wrap it inside async
-
-            let result = await (async () => checkerFunction(checkerFunction.resolve, checkerFunction.reject))();
-            this[resolvablesSymbol][eachKey][checkerRunningKey] = false;
-          }
-        }; // calling this mutliple times would
-
-
-        let synclyRefreshCheckerFunctionPromise = () => {
-          // create a new checking promise
-          let promiseData = {};
-          promiseData.id = Math.random();
-          const aPromise = new Promise((resolve, reject) => setTimeout(() => {
-            // check if it was synchronously resolved first
-            if (this[resolvablesSymbol][eachKey][beforeInitResolveCalled]) {
-              // resolve the promise
-              resolve(this[resolvablesSymbol][eachKey][beforeInitActionArg]);
-              checkerFunction.result = this[resolvablesSymbol][eachKey][beforeInitActionArg];
-              checkerFunction.done = true;
-              resetSyncCallbackData();
-              return;
-            } else if (this[resolvablesSymbol][eachKey][beforeInitRejectCalled]) {
-              reject(this[resolvablesSymbol][eachKey][beforeInitActionArg]);
-              checkerFunction.result = this[resolvablesSymbol][eachKey][beforeInitActionArg];
-              checkerFunction.done = true;
-              resetSyncCallbackData();
-              return;
-            } // then do the normal checking
-
-
-            promiseData[rejectKey] = arg => {
-              if (!checkerFunction.done) {
-                checkerFunction.result = arg;
-                checkerFunction.done = true;
-                reject(arg);
-                resetSyncCallbackData();
-              }
-            };
-
-            promiseData[resolveKey] = arg => {
-              if (!checkerFunction.done) {
-                checkerFunction.result = arg;
-                checkerFunction.done = true;
-                resolve(arg);
-                resetSyncCallbackData();
-              }
-            };
-
-            Object.assign(aPromise, promiseData); // immediately run the check
-
-            checkerFunction.check(); // check again after 1 second
-            // TODO: make this customizable
-
-            setTimeout(() => {
-              checkerFunction.check();
-            }, 1000); // if the promise isn't resolved after those checks
-            // then something else from somewhere else needs to call the resolve
-          }, 0)); // attach the new promise
-
-          checkerFunction[promiseKey] = Object.assign(aPromise, promiseData); // synchronously reset the resolved status
-
-          delete checkerFunction.result;
-          checkerFunction.done = false;
-          checkerFunction.id = promiseData.id;
-        }; // init the first promise
-
-
-        synclyRefreshCheckerFunctionPromise(); // add promise getter 
-
-        Object.defineProperty(checkerFunction, "promise", {
-          get() {
-            // if not yet resolved, check it, then return the existing promise
-            if (!checkerFunction.done) {
-              // run the check again, if the other checks are complete
-              checkerFunction.check(); // return the promise
-
-              return checkerFunction[promiseKey]; // if already resolved, then create a new promise
-              // so that the re-check can run
-            } else {
-              // this will call the check function as soon as the promise loads
-              synclyRefreshCheckerFunctionPromise();
-              return checkerFunction[promiseKey];
-            }
-          }
-
-        }); // create the property on the component
-
-        Object.defineProperty(this, eachKey, {
-          get() {
-            return checkerFunction;
-          }
-
-        });
-      }
-    }
-  }
-
-});
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/root-hooks-plugin.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","keen-ui":"node_modules/keen-ui/dist/keen-ui.js","keen-ui/dist/keen-ui.css":"node_modules/keen-ui/dist/keen-ui.css"}],"src/plugins/root-hooks-plugin.js":[function(require,module,exports) {
 // TODO: fix potential issue of the "this" somehow not refering to the active component (maybe hotreload/debugging issue)
 // api
 //     rootHooks
@@ -26354,3100 +29448,6 @@ Vue.mixin(module.exports = {
     }
   }
 
-});
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"node_modules/vue-router/dist/vue-router.esm.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-/*!
-  * vue-router v3.4.9
-  * (c) 2020 Evan You
-  * @license MIT
-  */
-
-/*  */
-function assert(condition, message) {
-  if (!condition) {
-    throw new Error("[vue-router] " + message);
-  }
-}
-
-function warn(condition, message) {
-  if ("development" !== 'production' && !condition) {
-    typeof console !== 'undefined' && console.warn("[vue-router] " + message);
-  }
-}
-
-function extend(a, b) {
-  for (var key in b) {
-    a[key] = b[key];
-  }
-
-  return a;
-}
-/*  */
-
-
-var encodeReserveRE = /[!'()*]/g;
-
-var encodeReserveReplacer = function (c) {
-  return '%' + c.charCodeAt(0).toString(16);
-};
-
-var commaRE = /%2C/g; // fixed encodeURIComponent which is more conformant to RFC3986:
-// - escapes [!'()*]
-// - preserve commas
-
-var encode = function (str) {
-  return encodeURIComponent(str).replace(encodeReserveRE, encodeReserveReplacer).replace(commaRE, ',');
-};
-
-function decode(str) {
-  try {
-    return decodeURIComponent(str);
-  } catch (err) {
-    if ("development" !== 'production') {
-      warn(false, "Error decoding \"" + str + "\". Leaving it intact.");
-    }
-  }
-
-  return str;
-}
-
-function resolveQuery(query, extraQuery, _parseQuery) {
-  if (extraQuery === void 0) extraQuery = {};
-  var parse = _parseQuery || parseQuery;
-  var parsedQuery;
-
-  try {
-    parsedQuery = parse(query || '');
-  } catch (e) {
-    "development" !== 'production' && warn(false, e.message);
-    parsedQuery = {};
-  }
-
-  for (var key in extraQuery) {
-    var value = extraQuery[key];
-    parsedQuery[key] = Array.isArray(value) ? value.map(castQueryParamValue) : castQueryParamValue(value);
-  }
-
-  return parsedQuery;
-}
-
-var castQueryParamValue = function (value) {
-  return value == null || typeof value === 'object' ? value : String(value);
-};
-
-function parseQuery(query) {
-  var res = {};
-  query = query.trim().replace(/^(\?|#|&)/, '');
-
-  if (!query) {
-    return res;
-  }
-
-  query.split('&').forEach(function (param) {
-    var parts = param.replace(/\+/g, ' ').split('=');
-    var key = decode(parts.shift());
-    var val = parts.length > 0 ? decode(parts.join('=')) : null;
-
-    if (res[key] === undefined) {
-      res[key] = val;
-    } else if (Array.isArray(res[key])) {
-      res[key].push(val);
-    } else {
-      res[key] = [res[key], val];
-    }
-  });
-  return res;
-}
-
-function stringifyQuery(obj) {
-  var res = obj ? Object.keys(obj).map(function (key) {
-    var val = obj[key];
-
-    if (val === undefined) {
-      return '';
-    }
-
-    if (val === null) {
-      return encode(key);
-    }
-
-    if (Array.isArray(val)) {
-      var result = [];
-      val.forEach(function (val2) {
-        if (val2 === undefined) {
-          return;
-        }
-
-        if (val2 === null) {
-          result.push(encode(key));
-        } else {
-          result.push(encode(key) + '=' + encode(val2));
-        }
-      });
-      return result.join('&');
-    }
-
-    return encode(key) + '=' + encode(val);
-  }).filter(function (x) {
-    return x.length > 0;
-  }).join('&') : null;
-  return res ? "?" + res : '';
-}
-/*  */
-
-
-var trailingSlashRE = /\/?$/;
-
-function createRoute(record, location, redirectedFrom, router) {
-  var stringifyQuery = router && router.options.stringifyQuery;
-  var query = location.query || {};
-
-  try {
-    query = clone(query);
-  } catch (e) {}
-
-  var route = {
-    name: location.name || record && record.name,
-    meta: record && record.meta || {},
-    path: location.path || '/',
-    hash: location.hash || '',
-    query: query,
-    params: location.params || {},
-    fullPath: getFullPath(location, stringifyQuery),
-    matched: record ? formatMatch(record) : []
-  };
-
-  if (redirectedFrom) {
-    route.redirectedFrom = getFullPath(redirectedFrom, stringifyQuery);
-  }
-
-  return Object.freeze(route);
-}
-
-function clone(value) {
-  if (Array.isArray(value)) {
-    return value.map(clone);
-  } else if (value && typeof value === 'object') {
-    var res = {};
-
-    for (var key in value) {
-      res[key] = clone(value[key]);
-    }
-
-    return res;
-  } else {
-    return value;
-  }
-} // the starting route that represents the initial state
-
-
-var START = createRoute(null, {
-  path: '/'
-});
-
-function formatMatch(record) {
-  var res = [];
-
-  while (record) {
-    res.unshift(record);
-    record = record.parent;
-  }
-
-  return res;
-}
-
-function getFullPath(ref, _stringifyQuery) {
-  var path = ref.path;
-  var query = ref.query;
-  if (query === void 0) query = {};
-  var hash = ref.hash;
-  if (hash === void 0) hash = '';
-  var stringify = _stringifyQuery || stringifyQuery;
-  return (path || '/') + stringify(query) + hash;
-}
-
-function isSameRoute(a, b) {
-  if (b === START) {
-    return a === b;
-  } else if (!b) {
-    return false;
-  } else if (a.path && b.path) {
-    return a.path.replace(trailingSlashRE, '') === b.path.replace(trailingSlashRE, '') && a.hash === b.hash && isObjectEqual(a.query, b.query);
-  } else if (a.name && b.name) {
-    return a.name === b.name && a.hash === b.hash && isObjectEqual(a.query, b.query) && isObjectEqual(a.params, b.params);
-  } else {
-    return false;
-  }
-}
-
-function isObjectEqual(a, b) {
-  if (a === void 0) a = {};
-  if (b === void 0) b = {}; // handle null value #1566
-
-  if (!a || !b) {
-    return a === b;
-  }
-
-  var aKeys = Object.keys(a).sort();
-  var bKeys = Object.keys(b).sort();
-
-  if (aKeys.length !== bKeys.length) {
-    return false;
-  }
-
-  return aKeys.every(function (key, i) {
-    var aVal = a[key];
-    var bKey = bKeys[i];
-
-    if (bKey !== key) {
-      return false;
-    }
-
-    var bVal = b[key]; // query values can be null and undefined
-
-    if (aVal == null || bVal == null) {
-      return aVal === bVal;
-    } // check nested equality
-
-
-    if (typeof aVal === 'object' && typeof bVal === 'object') {
-      return isObjectEqual(aVal, bVal);
-    }
-
-    return String(aVal) === String(bVal);
-  });
-}
-
-function isIncludedRoute(current, target) {
-  return current.path.replace(trailingSlashRE, '/').indexOf(target.path.replace(trailingSlashRE, '/')) === 0 && (!target.hash || current.hash === target.hash) && queryIncludes(current.query, target.query);
-}
-
-function queryIncludes(current, target) {
-  for (var key in target) {
-    if (!(key in current)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-function handleRouteEntered(route) {
-  for (var i = 0; i < route.matched.length; i++) {
-    var record = route.matched[i];
-
-    for (var name in record.instances) {
-      var instance = record.instances[name];
-      var cbs = record.enteredCbs[name];
-
-      if (!instance || !cbs) {
-        continue;
-      }
-
-      delete record.enteredCbs[name];
-
-      for (var i$1 = 0; i$1 < cbs.length; i$1++) {
-        if (!instance._isBeingDestroyed) {
-          cbs[i$1](instance);
-        }
-      }
-    }
-  }
-}
-
-var View = {
-  name: 'RouterView',
-  functional: true,
-  props: {
-    name: {
-      type: String,
-      default: 'default'
-    }
-  },
-  render: function render(_, ref) {
-    var props = ref.props;
-    var children = ref.children;
-    var parent = ref.parent;
-    var data = ref.data; // used by devtools to display a router-view badge
-
-    data.routerView = true; // directly use parent context's createElement() function
-    // so that components rendered by router-view can resolve named slots
-
-    var h = parent.$createElement;
-    var name = props.name;
-    var route = parent.$route;
-    var cache = parent._routerViewCache || (parent._routerViewCache = {}); // determine current view depth, also check to see if the tree
-    // has been toggled inactive but kept-alive.
-
-    var depth = 0;
-    var inactive = false;
-
-    while (parent && parent._routerRoot !== parent) {
-      var vnodeData = parent.$vnode ? parent.$vnode.data : {};
-
-      if (vnodeData.routerView) {
-        depth++;
-      }
-
-      if (vnodeData.keepAlive && parent._directInactive && parent._inactive) {
-        inactive = true;
-      }
-
-      parent = parent.$parent;
-    }
-
-    data.routerViewDepth = depth; // render previous view if the tree is inactive and kept-alive
-
-    if (inactive) {
-      var cachedData = cache[name];
-      var cachedComponent = cachedData && cachedData.component;
-
-      if (cachedComponent) {
-        // #2301
-        // pass props
-        if (cachedData.configProps) {
-          fillPropsinData(cachedComponent, data, cachedData.route, cachedData.configProps);
-        }
-
-        return h(cachedComponent, data, children);
-      } else {
-        // render previous empty view
-        return h();
-      }
-    }
-
-    var matched = route.matched[depth];
-    var component = matched && matched.components[name]; // render empty node if no matched route or no config component
-
-    if (!matched || !component) {
-      cache[name] = null;
-      return h();
-    } // cache component
-
-
-    cache[name] = {
-      component: component
-    }; // attach instance registration hook
-    // this will be called in the instance's injected lifecycle hooks
-
-    data.registerRouteInstance = function (vm, val) {
-      // val could be undefined for unregistration
-      var current = matched.instances[name];
-
-      if (val && current !== vm || !val && current === vm) {
-        matched.instances[name] = val;
-      }
-    } // also register instance in prepatch hook
-    // in case the same component instance is reused across different routes
-    ;
-
-    (data.hook || (data.hook = {})).prepatch = function (_, vnode) {
-      matched.instances[name] = vnode.componentInstance;
-    }; // register instance in init hook
-    // in case kept-alive component be actived when routes changed
-
-
-    data.hook.init = function (vnode) {
-      if (vnode.data.keepAlive && vnode.componentInstance && vnode.componentInstance !== matched.instances[name]) {
-        matched.instances[name] = vnode.componentInstance;
-      } // if the route transition has already been confirmed then we weren't
-      // able to call the cbs during confirmation as the component was not
-      // registered yet, so we call it here.
-
-
-      handleRouteEntered(route);
-    };
-
-    var configProps = matched.props && matched.props[name]; // save route and configProps in cache
-
-    if (configProps) {
-      extend(cache[name], {
-        route: route,
-        configProps: configProps
-      });
-      fillPropsinData(component, data, route, configProps);
-    }
-
-    return h(component, data, children);
-  }
-};
-
-function fillPropsinData(component, data, route, configProps) {
-  // resolve props
-  var propsToPass = data.props = resolveProps(route, configProps);
-
-  if (propsToPass) {
-    // clone to prevent mutation
-    propsToPass = data.props = extend({}, propsToPass); // pass non-declared props as attrs
-
-    var attrs = data.attrs = data.attrs || {};
-
-    for (var key in propsToPass) {
-      if (!component.props || !(key in component.props)) {
-        attrs[key] = propsToPass[key];
-        delete propsToPass[key];
-      }
-    }
-  }
-}
-
-function resolveProps(route, config) {
-  switch (typeof config) {
-    case 'undefined':
-      return;
-
-    case 'object':
-      return config;
-
-    case 'function':
-      return config(route);
-
-    case 'boolean':
-      return config ? route.params : undefined;
-
-    default:
-      if ("development" !== 'production') {
-        warn(false, "props in \"" + route.path + "\" is a " + typeof config + ", " + "expecting an object, function or boolean.");
-      }
-
-  }
-}
-/*  */
-
-
-function resolvePath(relative, base, append) {
-  var firstChar = relative.charAt(0);
-
-  if (firstChar === '/') {
-    return relative;
-  }
-
-  if (firstChar === '?' || firstChar === '#') {
-    return base + relative;
-  }
-
-  var stack = base.split('/'); // remove trailing segment if:
-  // - not appending
-  // - appending to trailing slash (last segment is empty)
-
-  if (!append || !stack[stack.length - 1]) {
-    stack.pop();
-  } // resolve relative path
-
-
-  var segments = relative.replace(/^\//, '').split('/');
-
-  for (var i = 0; i < segments.length; i++) {
-    var segment = segments[i];
-
-    if (segment === '..') {
-      stack.pop();
-    } else if (segment !== '.') {
-      stack.push(segment);
-    }
-  } // ensure leading slash
-
-
-  if (stack[0] !== '') {
-    stack.unshift('');
-  }
-
-  return stack.join('/');
-}
-
-function parsePath(path) {
-  var hash = '';
-  var query = '';
-  var hashIndex = path.indexOf('#');
-
-  if (hashIndex >= 0) {
-    hash = path.slice(hashIndex);
-    path = path.slice(0, hashIndex);
-  }
-
-  var queryIndex = path.indexOf('?');
-
-  if (queryIndex >= 0) {
-    query = path.slice(queryIndex + 1);
-    path = path.slice(0, queryIndex);
-  }
-
-  return {
-    path: path,
-    query: query,
-    hash: hash
-  };
-}
-
-function cleanPath(path) {
-  return path.replace(/\/\//g, '/');
-}
-
-var isarray = Array.isArray || function (arr) {
-  return Object.prototype.toString.call(arr) == '[object Array]';
-};
-/**
- * Expose `pathToRegexp`.
- */
-
-
-var pathToRegexp_1 = pathToRegexp;
-var parse_1 = parse;
-var compile_1 = compile;
-var tokensToFunction_1 = tokensToFunction;
-var tokensToRegExp_1 = tokensToRegExp;
-/**
- * The main path matching regexp utility.
- *
- * @type {RegExp}
- */
-
-var PATH_REGEXP = new RegExp([// Match escaped characters that would otherwise appear in future matches.
-// This allows the user to escape special characters that won't transform.
-'(\\\\.)', // Match Express-style parameters and un-named parameters with a prefix
-// and optional suffixes. Matches appear as:
-//
-// "/:test(\\d+)?" => ["/", "test", "\d+", undefined, "?", undefined]
-// "/route(\\d+)"  => [undefined, undefined, undefined, "\d+", undefined, undefined]
-// "/*"            => ["/", undefined, undefined, undefined, undefined, "*"]
-'([\\/.])?(?:(?:\\:(\\w+)(?:\\(((?:\\\\.|[^\\\\()])+)\\))?|\\(((?:\\\\.|[^\\\\()])+)\\))([+*?])?|(\\*))'].join('|'), 'g');
-/**
- * Parse a string for the raw tokens.
- *
- * @param  {string}  str
- * @param  {Object=} options
- * @return {!Array}
- */
-
-function parse(str, options) {
-  var tokens = [];
-  var key = 0;
-  var index = 0;
-  var path = '';
-  var defaultDelimiter = options && options.delimiter || '/';
-  var res;
-
-  while ((res = PATH_REGEXP.exec(str)) != null) {
-    var m = res[0];
-    var escaped = res[1];
-    var offset = res.index;
-    path += str.slice(index, offset);
-    index = offset + m.length; // Ignore already escaped sequences.
-
-    if (escaped) {
-      path += escaped[1];
-      continue;
-    }
-
-    var next = str[index];
-    var prefix = res[2];
-    var name = res[3];
-    var capture = res[4];
-    var group = res[5];
-    var modifier = res[6];
-    var asterisk = res[7]; // Push the current path onto the tokens.
-
-    if (path) {
-      tokens.push(path);
-      path = '';
-    }
-
-    var partial = prefix != null && next != null && next !== prefix;
-    var repeat = modifier === '+' || modifier === '*';
-    var optional = modifier === '?' || modifier === '*';
-    var delimiter = res[2] || defaultDelimiter;
-    var pattern = capture || group;
-    tokens.push({
-      name: name || key++,
-      prefix: prefix || '',
-      delimiter: delimiter,
-      optional: optional,
-      repeat: repeat,
-      partial: partial,
-      asterisk: !!asterisk,
-      pattern: pattern ? escapeGroup(pattern) : asterisk ? '.*' : '[^' + escapeString(delimiter) + ']+?'
-    });
-  } // Match any characters still remaining.
-
-
-  if (index < str.length) {
-    path += str.substr(index);
-  } // If the path exists, push it onto the end.
-
-
-  if (path) {
-    tokens.push(path);
-  }
-
-  return tokens;
-}
-/**
- * Compile a string to a template function for the path.
- *
- * @param  {string}             str
- * @param  {Object=}            options
- * @return {!function(Object=, Object=)}
- */
-
-
-function compile(str, options) {
-  return tokensToFunction(parse(str, options), options);
-}
-/**
- * Prettier encoding of URI path segments.
- *
- * @param  {string}
- * @return {string}
- */
-
-
-function encodeURIComponentPretty(str) {
-  return encodeURI(str).replace(/[\/?#]/g, function (c) {
-    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
-  });
-}
-/**
- * Encode the asterisk parameter. Similar to `pretty`, but allows slashes.
- *
- * @param  {string}
- * @return {string}
- */
-
-
-function encodeAsterisk(str) {
-  return encodeURI(str).replace(/[?#]/g, function (c) {
-    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
-  });
-}
-/**
- * Expose a method for transforming tokens into the path function.
- */
-
-
-function tokensToFunction(tokens, options) {
-  // Compile all the tokens into regexps.
-  var matches = new Array(tokens.length); // Compile all the patterns before compilation.
-
-  for (var i = 0; i < tokens.length; i++) {
-    if (typeof tokens[i] === 'object') {
-      matches[i] = new RegExp('^(?:' + tokens[i].pattern + ')$', flags(options));
-    }
-  }
-
-  return function (obj, opts) {
-    var path = '';
-    var data = obj || {};
-    var options = opts || {};
-    var encode = options.pretty ? encodeURIComponentPretty : encodeURIComponent;
-
-    for (var i = 0; i < tokens.length; i++) {
-      var token = tokens[i];
-
-      if (typeof token === 'string') {
-        path += token;
-        continue;
-      }
-
-      var value = data[token.name];
-      var segment;
-
-      if (value == null) {
-        if (token.optional) {
-          // Prepend partial segment prefixes.
-          if (token.partial) {
-            path += token.prefix;
-          }
-
-          continue;
-        } else {
-          throw new TypeError('Expected "' + token.name + '" to be defined');
-        }
-      }
-
-      if (isarray(value)) {
-        if (!token.repeat) {
-          throw new TypeError('Expected "' + token.name + '" to not repeat, but received `' + JSON.stringify(value) + '`');
-        }
-
-        if (value.length === 0) {
-          if (token.optional) {
-            continue;
-          } else {
-            throw new TypeError('Expected "' + token.name + '" to not be empty');
-          }
-        }
-
-        for (var j = 0; j < value.length; j++) {
-          segment = encode(value[j]);
-
-          if (!matches[i].test(segment)) {
-            throw new TypeError('Expected all "' + token.name + '" to match "' + token.pattern + '", but received `' + JSON.stringify(segment) + '`');
-          }
-
-          path += (j === 0 ? token.prefix : token.delimiter) + segment;
-        }
-
-        continue;
-      }
-
-      segment = token.asterisk ? encodeAsterisk(value) : encode(value);
-
-      if (!matches[i].test(segment)) {
-        throw new TypeError('Expected "' + token.name + '" to match "' + token.pattern + '", but received "' + segment + '"');
-      }
-
-      path += token.prefix + segment;
-    }
-
-    return path;
-  };
-}
-/**
- * Escape a regular expression string.
- *
- * @param  {string} str
- * @return {string}
- */
-
-
-function escapeString(str) {
-  return str.replace(/([.+*?=^!:${}()[\]|\/\\])/g, '\\$1');
-}
-/**
- * Escape the capturing group by escaping special characters and meaning.
- *
- * @param  {string} group
- * @return {string}
- */
-
-
-function escapeGroup(group) {
-  return group.replace(/([=!:$\/()])/g, '\\$1');
-}
-/**
- * Attach the keys as a property of the regexp.
- *
- * @param  {!RegExp} re
- * @param  {Array}   keys
- * @return {!RegExp}
- */
-
-
-function attachKeys(re, keys) {
-  re.keys = keys;
-  return re;
-}
-/**
- * Get the flags for a regexp from the options.
- *
- * @param  {Object} options
- * @return {string}
- */
-
-
-function flags(options) {
-  return options && options.sensitive ? '' : 'i';
-}
-/**
- * Pull out keys from a regexp.
- *
- * @param  {!RegExp} path
- * @param  {!Array}  keys
- * @return {!RegExp}
- */
-
-
-function regexpToRegexp(path, keys) {
-  // Use a negative lookahead to match only capturing groups.
-  var groups = path.source.match(/\((?!\?)/g);
-
-  if (groups) {
-    for (var i = 0; i < groups.length; i++) {
-      keys.push({
-        name: i,
-        prefix: null,
-        delimiter: null,
-        optional: false,
-        repeat: false,
-        partial: false,
-        asterisk: false,
-        pattern: null
-      });
-    }
-  }
-
-  return attachKeys(path, keys);
-}
-/**
- * Transform an array into a regexp.
- *
- * @param  {!Array}  path
- * @param  {Array}   keys
- * @param  {!Object} options
- * @return {!RegExp}
- */
-
-
-function arrayToRegexp(path, keys, options) {
-  var parts = [];
-
-  for (var i = 0; i < path.length; i++) {
-    parts.push(pathToRegexp(path[i], keys, options).source);
-  }
-
-  var regexp = new RegExp('(?:' + parts.join('|') + ')', flags(options));
-  return attachKeys(regexp, keys);
-}
-/**
- * Create a path regexp from string input.
- *
- * @param  {string}  path
- * @param  {!Array}  keys
- * @param  {!Object} options
- * @return {!RegExp}
- */
-
-
-function stringToRegexp(path, keys, options) {
-  return tokensToRegExp(parse(path, options), keys, options);
-}
-/**
- * Expose a function for taking tokens and returning a RegExp.
- *
- * @param  {!Array}          tokens
- * @param  {(Array|Object)=} keys
- * @param  {Object=}         options
- * @return {!RegExp}
- */
-
-
-function tokensToRegExp(tokens, keys, options) {
-  if (!isarray(keys)) {
-    options =
-    /** @type {!Object} */
-    keys || options;
-    keys = [];
-  }
-
-  options = options || {};
-  var strict = options.strict;
-  var end = options.end !== false;
-  var route = ''; // Iterate over the tokens and create our regexp string.
-
-  for (var i = 0; i < tokens.length; i++) {
-    var token = tokens[i];
-
-    if (typeof token === 'string') {
-      route += escapeString(token);
-    } else {
-      var prefix = escapeString(token.prefix);
-      var capture = '(?:' + token.pattern + ')';
-      keys.push(token);
-
-      if (token.repeat) {
-        capture += '(?:' + prefix + capture + ')*';
-      }
-
-      if (token.optional) {
-        if (!token.partial) {
-          capture = '(?:' + prefix + '(' + capture + '))?';
-        } else {
-          capture = prefix + '(' + capture + ')?';
-        }
-      } else {
-        capture = prefix + '(' + capture + ')';
-      }
-
-      route += capture;
-    }
-  }
-
-  var delimiter = escapeString(options.delimiter || '/');
-  var endsWithDelimiter = route.slice(-delimiter.length) === delimiter; // In non-strict mode we allow a slash at the end of match. If the path to
-  // match already ends with a slash, we remove it for consistency. The slash
-  // is valid at the end of a path match, not in the middle. This is important
-  // in non-ending mode, where "/test/" shouldn't match "/test//route".
-
-  if (!strict) {
-    route = (endsWithDelimiter ? route.slice(0, -delimiter.length) : route) + '(?:' + delimiter + '(?=$))?';
-  }
-
-  if (end) {
-    route += '$';
-  } else {
-    // In non-ending mode, we need the capturing groups to match as much as
-    // possible by using a positive lookahead to the end or next path segment.
-    route += strict && endsWithDelimiter ? '' : '(?=' + delimiter + '|$)';
-  }
-
-  return attachKeys(new RegExp('^' + route, flags(options)), keys);
-}
-/**
- * Normalize the given path string, returning a regular expression.
- *
- * An empty array can be passed in for the keys, which will hold the
- * placeholder key descriptions. For example, using `/user/:id`, `keys` will
- * contain `[{ name: 'id', delimiter: '/', optional: false, repeat: false }]`.
- *
- * @param  {(string|RegExp|Array)} path
- * @param  {(Array|Object)=}       keys
- * @param  {Object=}               options
- * @return {!RegExp}
- */
-
-
-function pathToRegexp(path, keys, options) {
-  if (!isarray(keys)) {
-    options =
-    /** @type {!Object} */
-    keys || options;
-    keys = [];
-  }
-
-  options = options || {};
-
-  if (path instanceof RegExp) {
-    return regexpToRegexp(path,
-    /** @type {!Array} */
-    keys);
-  }
-
-  if (isarray(path)) {
-    return arrayToRegexp(
-    /** @type {!Array} */
-    path,
-    /** @type {!Array} */
-    keys, options);
-  }
-
-  return stringToRegexp(
-  /** @type {string} */
-  path,
-  /** @type {!Array} */
-  keys, options);
-}
-
-pathToRegexp_1.parse = parse_1;
-pathToRegexp_1.compile = compile_1;
-pathToRegexp_1.tokensToFunction = tokensToFunction_1;
-pathToRegexp_1.tokensToRegExp = tokensToRegExp_1;
-/*  */
-// $flow-disable-line
-
-var regexpCompileCache = Object.create(null);
-
-function fillParams(path, params, routeMsg) {
-  params = params || {};
-
-  try {
-    var filler = regexpCompileCache[path] || (regexpCompileCache[path] = pathToRegexp_1.compile(path)); // Fix #2505 resolving asterisk routes { name: 'not-found', params: { pathMatch: '/not-found' }}
-    // and fix #3106 so that you can work with location descriptor object having params.pathMatch equal to empty string
-
-    if (typeof params.pathMatch === 'string') {
-      params[0] = params.pathMatch;
-    }
-
-    return filler(params, {
-      pretty: true
-    });
-  } catch (e) {
-    if ("development" !== 'production') {
-      // Fix #3072 no warn if `pathMatch` is string
-      warn(typeof params.pathMatch === 'string', "missing param for " + routeMsg + ": " + e.message);
-    }
-
-    return '';
-  } finally {
-    // delete the 0 if it was added
-    delete params[0];
-  }
-}
-/*  */
-
-
-function normalizeLocation(raw, current, append, router) {
-  var next = typeof raw === 'string' ? {
-    path: raw
-  } : raw; // named target
-
-  if (next._normalized) {
-    return next;
-  } else if (next.name) {
-    next = extend({}, raw);
-    var params = next.params;
-
-    if (params && typeof params === 'object') {
-      next.params = extend({}, params);
-    }
-
-    return next;
-  } // relative params
-
-
-  if (!next.path && next.params && current) {
-    next = extend({}, next);
-    next._normalized = true;
-    var params$1 = extend(extend({}, current.params), next.params);
-
-    if (current.name) {
-      next.name = current.name;
-      next.params = params$1;
-    } else if (current.matched.length) {
-      var rawPath = current.matched[current.matched.length - 1].path;
-      next.path = fillParams(rawPath, params$1, "path " + current.path);
-    } else if ("development" !== 'production') {
-      warn(false, "relative params navigation requires a current route.");
-    }
-
-    return next;
-  }
-
-  var parsedPath = parsePath(next.path || '');
-  var basePath = current && current.path || '/';
-  var path = parsedPath.path ? resolvePath(parsedPath.path, basePath, append || next.append) : basePath;
-  var query = resolveQuery(parsedPath.query, next.query, router && router.options.parseQuery);
-  var hash = next.hash || parsedPath.hash;
-
-  if (hash && hash.charAt(0) !== '#') {
-    hash = "#" + hash;
-  }
-
-  return {
-    _normalized: true,
-    path: path,
-    query: query,
-    hash: hash
-  };
-}
-/*  */
-// work around weird flow bug
-
-
-var toTypes = [String, Object];
-var eventTypes = [String, Array];
-
-var noop = function () {};
-
-var Link = {
-  name: 'RouterLink',
-  props: {
-    to: {
-      type: toTypes,
-      required: true
-    },
-    tag: {
-      type: String,
-      default: 'a'
-    },
-    exact: Boolean,
-    append: Boolean,
-    replace: Boolean,
-    activeClass: String,
-    exactActiveClass: String,
-    ariaCurrentValue: {
-      type: String,
-      default: 'page'
-    },
-    event: {
-      type: eventTypes,
-      default: 'click'
-    }
-  },
-  render: function render(h) {
-    var this$1 = this;
-    var router = this.$router;
-    var current = this.$route;
-    var ref = router.resolve(this.to, current, this.append);
-    var location = ref.location;
-    var route = ref.route;
-    var href = ref.href;
-    var classes = {};
-    var globalActiveClass = router.options.linkActiveClass;
-    var globalExactActiveClass = router.options.linkExactActiveClass; // Support global empty active class
-
-    var activeClassFallback = globalActiveClass == null ? 'router-link-active' : globalActiveClass;
-    var exactActiveClassFallback = globalExactActiveClass == null ? 'router-link-exact-active' : globalExactActiveClass;
-    var activeClass = this.activeClass == null ? activeClassFallback : this.activeClass;
-    var exactActiveClass = this.exactActiveClass == null ? exactActiveClassFallback : this.exactActiveClass;
-    var compareTarget = route.redirectedFrom ? createRoute(null, normalizeLocation(route.redirectedFrom), null, router) : route;
-    classes[exactActiveClass] = isSameRoute(current, compareTarget);
-    classes[activeClass] = this.exact ? classes[exactActiveClass] : isIncludedRoute(current, compareTarget);
-    var ariaCurrentValue = classes[exactActiveClass] ? this.ariaCurrentValue : null;
-
-    var handler = function (e) {
-      if (guardEvent(e)) {
-        if (this$1.replace) {
-          router.replace(location, noop);
-        } else {
-          router.push(location, noop);
-        }
-      }
-    };
-
-    var on = {
-      click: guardEvent
-    };
-
-    if (Array.isArray(this.event)) {
-      this.event.forEach(function (e) {
-        on[e] = handler;
-      });
-    } else {
-      on[this.event] = handler;
-    }
-
-    var data = {
-      class: classes
-    };
-    var scopedSlot = !this.$scopedSlots.$hasNormal && this.$scopedSlots.default && this.$scopedSlots.default({
-      href: href,
-      route: route,
-      navigate: handler,
-      isActive: classes[activeClass],
-      isExactActive: classes[exactActiveClass]
-    });
-
-    if (scopedSlot) {
-      if (scopedSlot.length === 1) {
-        return scopedSlot[0];
-      } else if (scopedSlot.length > 1 || !scopedSlot.length) {
-        if ("development" !== 'production') {
-          warn(false, "RouterLink with to=\"" + this.to + "\" is trying to use a scoped slot but it didn't provide exactly one child. Wrapping the content with a span element.");
-        }
-
-        return scopedSlot.length === 0 ? h() : h('span', {}, scopedSlot);
-      }
-    }
-
-    if (this.tag === 'a') {
-      data.on = on;
-      data.attrs = {
-        href: href,
-        'aria-current': ariaCurrentValue
-      };
-    } else {
-      // find the first <a> child and apply listener and href
-      var a = findAnchor(this.$slots.default);
-
-      if (a) {
-        // in case the <a> is a static node
-        a.isStatic = false;
-        var aData = a.data = extend({}, a.data);
-        aData.on = aData.on || {}; // transform existing events in both objects into arrays so we can push later
-
-        for (var event in aData.on) {
-          var handler$1 = aData.on[event];
-
-          if (event in on) {
-            aData.on[event] = Array.isArray(handler$1) ? handler$1 : [handler$1];
-          }
-        } // append new listeners for router-link
-
-
-        for (var event$1 in on) {
-          if (event$1 in aData.on) {
-            // on[event] is always a function
-            aData.on[event$1].push(on[event$1]);
-          } else {
-            aData.on[event$1] = handler;
-          }
-        }
-
-        var aAttrs = a.data.attrs = extend({}, a.data.attrs);
-        aAttrs.href = href;
-        aAttrs['aria-current'] = ariaCurrentValue;
-      } else {
-        // doesn't have <a> child, apply listener to self
-        data.on = on;
-      }
-    }
-
-    return h(this.tag, data, this.$slots.default);
-  }
-};
-
-function guardEvent(e) {
-  // don't redirect with control keys
-  if (e.metaKey || e.altKey || e.ctrlKey || e.shiftKey) {
-    return;
-  } // don't redirect when preventDefault called
-
-
-  if (e.defaultPrevented) {
-    return;
-  } // don't redirect on right click
-
-
-  if (e.button !== undefined && e.button !== 0) {
-    return;
-  } // don't redirect if `target="_blank"`
-
-
-  if (e.currentTarget && e.currentTarget.getAttribute) {
-    var target = e.currentTarget.getAttribute('target');
-
-    if (/\b_blank\b/i.test(target)) {
-      return;
-    }
-  } // this may be a Weex event which doesn't have this method
-
-
-  if (e.preventDefault) {
-    e.preventDefault();
-  }
-
-  return true;
-}
-
-function findAnchor(children) {
-  if (children) {
-    var child;
-
-    for (var i = 0; i < children.length; i++) {
-      child = children[i];
-
-      if (child.tag === 'a') {
-        return child;
-      }
-
-      if (child.children && (child = findAnchor(child.children))) {
-        return child;
-      }
-    }
-  }
-}
-
-var _Vue;
-
-function install(Vue) {
-  if (install.installed && _Vue === Vue) {
-    return;
-  }
-
-  install.installed = true;
-  _Vue = Vue;
-
-  var isDef = function (v) {
-    return v !== undefined;
-  };
-
-  var registerInstance = function (vm, callVal) {
-    var i = vm.$options._parentVnode;
-
-    if (isDef(i) && isDef(i = i.data) && isDef(i = i.registerRouteInstance)) {
-      i(vm, callVal);
-    }
-  };
-
-  Vue.mixin({
-    beforeCreate: function beforeCreate() {
-      if (isDef(this.$options.router)) {
-        this._routerRoot = this;
-        this._router = this.$options.router;
-
-        this._router.init(this);
-
-        Vue.util.defineReactive(this, '_route', this._router.history.current);
-      } else {
-        this._routerRoot = this.$parent && this.$parent._routerRoot || this;
-      }
-
-      registerInstance(this, this);
-    },
-    destroyed: function destroyed() {
-      registerInstance(this);
-    }
-  });
-  Object.defineProperty(Vue.prototype, '$router', {
-    get: function get() {
-      return this._routerRoot._router;
-    }
-  });
-  Object.defineProperty(Vue.prototype, '$route', {
-    get: function get() {
-      return this._routerRoot._route;
-    }
-  });
-  Vue.component('RouterView', View);
-  Vue.component('RouterLink', Link);
-  var strats = Vue.config.optionMergeStrategies; // use the same hook merging strategy for route hooks
-
-  strats.beforeRouteEnter = strats.beforeRouteLeave = strats.beforeRouteUpdate = strats.created;
-}
-/*  */
-
-
-var inBrowser = typeof window !== 'undefined';
-/*  */
-
-function createRouteMap(routes, oldPathList, oldPathMap, oldNameMap) {
-  // the path list is used to control path matching priority
-  var pathList = oldPathList || []; // $flow-disable-line
-
-  var pathMap = oldPathMap || Object.create(null); // $flow-disable-line
-
-  var nameMap = oldNameMap || Object.create(null);
-  routes.forEach(function (route) {
-    addRouteRecord(pathList, pathMap, nameMap, route);
-  }); // ensure wildcard routes are always at the end
-
-  for (var i = 0, l = pathList.length; i < l; i++) {
-    if (pathList[i] === '*') {
-      pathList.push(pathList.splice(i, 1)[0]);
-      l--;
-      i--;
-    }
-  }
-
-  if ("development" === 'development') {
-    // warn if routes do not include leading slashes
-    var found = pathList // check for missing leading slash
-    .filter(function (path) {
-      return path && path.charAt(0) !== '*' && path.charAt(0) !== '/';
-    });
-
-    if (found.length > 0) {
-      var pathNames = found.map(function (path) {
-        return "- " + path;
-      }).join('\n');
-      warn(false, "Non-nested routes must include a leading slash character. Fix the following routes: \n" + pathNames);
-    }
-  }
-
-  return {
-    pathList: pathList,
-    pathMap: pathMap,
-    nameMap: nameMap
-  };
-}
-
-function addRouteRecord(pathList, pathMap, nameMap, route, parent, matchAs) {
-  var path = route.path;
-  var name = route.name;
-
-  if ("development" !== 'production') {
-    assert(path != null, "\"path\" is required in a route configuration.");
-    assert(typeof route.component !== 'string', "route config \"component\" for path: " + String(path || name) + " cannot be a " + "string id. Use an actual component instead.");
-    warn( // eslint-disable-next-line no-control-regex
-    !/[^\u0000-\u007F]+/.test(path), "Route with path \"" + path + "\" contains unencoded characters, make sure " + "your path is correctly encoded before passing it to the router. Use " + "encodeURI to encode static segments of your path.");
-  }
-
-  var pathToRegexpOptions = route.pathToRegexpOptions || {};
-  var normalizedPath = normalizePath(path, parent, pathToRegexpOptions.strict);
-
-  if (typeof route.caseSensitive === 'boolean') {
-    pathToRegexpOptions.sensitive = route.caseSensitive;
-  }
-
-  var record = {
-    path: normalizedPath,
-    regex: compileRouteRegex(normalizedPath, pathToRegexpOptions),
-    components: route.components || {
-      default: route.component
-    },
-    instances: {},
-    enteredCbs: {},
-    name: name,
-    parent: parent,
-    matchAs: matchAs,
-    redirect: route.redirect,
-    beforeEnter: route.beforeEnter,
-    meta: route.meta || {},
-    props: route.props == null ? {} : route.components ? route.props : {
-      default: route.props
-    }
-  };
-
-  if (route.children) {
-    // Warn if route is named, does not redirect and has a default child route.
-    // If users navigate to this route by name, the default child will
-    // not be rendered (GH Issue #629)
-    if ("development" !== 'production') {
-      if (route.name && !route.redirect && route.children.some(function (child) {
-        return /^\/?$/.test(child.path);
-      })) {
-        warn(false, "Named Route '" + route.name + "' has a default child route. " + "When navigating to this named route (:to=\"{name: '" + route.name + "'\"), " + "the default child route will not be rendered. Remove the name from " + "this route and use the name of the default child route for named " + "links instead.");
-      }
-    }
-
-    route.children.forEach(function (child) {
-      var childMatchAs = matchAs ? cleanPath(matchAs + "/" + child.path) : undefined;
-      addRouteRecord(pathList, pathMap, nameMap, child, record, childMatchAs);
-    });
-  }
-
-  if (!pathMap[record.path]) {
-    pathList.push(record.path);
-    pathMap[record.path] = record;
-  }
-
-  if (route.alias !== undefined) {
-    var aliases = Array.isArray(route.alias) ? route.alias : [route.alias];
-
-    for (var i = 0; i < aliases.length; ++i) {
-      var alias = aliases[i];
-
-      if ("development" !== 'production' && alias === path) {
-        warn(false, "Found an alias with the same value as the path: \"" + path + "\". You have to remove that alias. It will be ignored in development."); // skip in dev to make it work
-
-        continue;
-      }
-
-      var aliasRoute = {
-        path: alias,
-        children: route.children
-      };
-      addRouteRecord(pathList, pathMap, nameMap, aliasRoute, parent, record.path || '/' // matchAs
-      );
-    }
-  }
-
-  if (name) {
-    if (!nameMap[name]) {
-      nameMap[name] = record;
-    } else if ("development" !== 'production' && !matchAs) {
-      warn(false, "Duplicate named routes definition: " + "{ name: \"" + name + "\", path: \"" + record.path + "\" }");
-    }
-  }
-}
-
-function compileRouteRegex(path, pathToRegexpOptions) {
-  var regex = pathToRegexp_1(path, [], pathToRegexpOptions);
-
-  if ("development" !== 'production') {
-    var keys = Object.create(null);
-    regex.keys.forEach(function (key) {
-      warn(!keys[key.name], "Duplicate param keys in route with path: \"" + path + "\"");
-      keys[key.name] = true;
-    });
-  }
-
-  return regex;
-}
-
-function normalizePath(path, parent, strict) {
-  if (!strict) {
-    path = path.replace(/\/$/, '');
-  }
-
-  if (path[0] === '/') {
-    return path;
-  }
-
-  if (parent == null) {
-    return path;
-  }
-
-  return cleanPath(parent.path + "/" + path);
-}
-/*  */
-
-
-function createMatcher(routes, router) {
-  var ref = createRouteMap(routes);
-  var pathList = ref.pathList;
-  var pathMap = ref.pathMap;
-  var nameMap = ref.nameMap;
-
-  function addRoutes(routes) {
-    createRouteMap(routes, pathList, pathMap, nameMap);
-  }
-
-  function match(raw, currentRoute, redirectedFrom) {
-    var location = normalizeLocation(raw, currentRoute, false, router);
-    var name = location.name;
-
-    if (name) {
-      var record = nameMap[name];
-
-      if ("development" !== 'production') {
-        warn(record, "Route with name '" + name + "' does not exist");
-      }
-
-      if (!record) {
-        return _createRoute(null, location);
-      }
-
-      var paramNames = record.regex.keys.filter(function (key) {
-        return !key.optional;
-      }).map(function (key) {
-        return key.name;
-      });
-
-      if (typeof location.params !== 'object') {
-        location.params = {};
-      }
-
-      if (currentRoute && typeof currentRoute.params === 'object') {
-        for (var key in currentRoute.params) {
-          if (!(key in location.params) && paramNames.indexOf(key) > -1) {
-            location.params[key] = currentRoute.params[key];
-          }
-        }
-      }
-
-      location.path = fillParams(record.path, location.params, "named route \"" + name + "\"");
-      return _createRoute(record, location, redirectedFrom);
-    } else if (location.path) {
-      location.params = {};
-
-      for (var i = 0; i < pathList.length; i++) {
-        var path = pathList[i];
-        var record$1 = pathMap[path];
-
-        if (matchRoute(record$1.regex, location.path, location.params)) {
-          return _createRoute(record$1, location, redirectedFrom);
-        }
-      }
-    } // no match
-
-
-    return _createRoute(null, location);
-  }
-
-  function redirect(record, location) {
-    var originalRedirect = record.redirect;
-    var redirect = typeof originalRedirect === 'function' ? originalRedirect(createRoute(record, location, null, router)) : originalRedirect;
-
-    if (typeof redirect === 'string') {
-      redirect = {
-        path: redirect
-      };
-    }
-
-    if (!redirect || typeof redirect !== 'object') {
-      if ("development" !== 'production') {
-        warn(false, "invalid redirect option: " + JSON.stringify(redirect));
-      }
-
-      return _createRoute(null, location);
-    }
-
-    var re = redirect;
-    var name = re.name;
-    var path = re.path;
-    var query = location.query;
-    var hash = location.hash;
-    var params = location.params;
-    query = re.hasOwnProperty('query') ? re.query : query;
-    hash = re.hasOwnProperty('hash') ? re.hash : hash;
-    params = re.hasOwnProperty('params') ? re.params : params;
-
-    if (name) {
-      // resolved named direct
-      var targetRecord = nameMap[name];
-
-      if ("development" !== 'production') {
-        assert(targetRecord, "redirect failed: named route \"" + name + "\" not found.");
-      }
-
-      return match({
-        _normalized: true,
-        name: name,
-        query: query,
-        hash: hash,
-        params: params
-      }, undefined, location);
-    } else if (path) {
-      // 1. resolve relative redirect
-      var rawPath = resolveRecordPath(path, record); // 2. resolve params
-
-      var resolvedPath = fillParams(rawPath, params, "redirect route with path \"" + rawPath + "\""); // 3. rematch with existing query and hash
-
-      return match({
-        _normalized: true,
-        path: resolvedPath,
-        query: query,
-        hash: hash
-      }, undefined, location);
-    } else {
-      if ("development" !== 'production') {
-        warn(false, "invalid redirect option: " + JSON.stringify(redirect));
-      }
-
-      return _createRoute(null, location);
-    }
-  }
-
-  function alias(record, location, matchAs) {
-    var aliasedPath = fillParams(matchAs, location.params, "aliased route with path \"" + matchAs + "\"");
-    var aliasedMatch = match({
-      _normalized: true,
-      path: aliasedPath
-    });
-
-    if (aliasedMatch) {
-      var matched = aliasedMatch.matched;
-      var aliasedRecord = matched[matched.length - 1];
-      location.params = aliasedMatch.params;
-      return _createRoute(aliasedRecord, location);
-    }
-
-    return _createRoute(null, location);
-  }
-
-  function _createRoute(record, location, redirectedFrom) {
-    if (record && record.redirect) {
-      return redirect(record, redirectedFrom || location);
-    }
-
-    if (record && record.matchAs) {
-      return alias(record, location, record.matchAs);
-    }
-
-    return createRoute(record, location, redirectedFrom, router);
-  }
-
-  return {
-    match: match,
-    addRoutes: addRoutes
-  };
-}
-
-function matchRoute(regex, path, params) {
-  var m = path.match(regex);
-
-  if (!m) {
-    return false;
-  } else if (!params) {
-    return true;
-  }
-
-  for (var i = 1, len = m.length; i < len; ++i) {
-    var key = regex.keys[i - 1];
-
-    if (key) {
-      // Fix #1994: using * with props: true generates a param named 0
-      params[key.name || 'pathMatch'] = typeof m[i] === 'string' ? decode(m[i]) : m[i];
-    }
-  }
-
-  return true;
-}
-
-function resolveRecordPath(path, record) {
-  return resolvePath(path, record.parent ? record.parent.path : '/', true);
-}
-/*  */
-// use User Timing api (if present) for more accurate key precision
-
-
-var Time = inBrowser && window.performance && window.performance.now ? window.performance : Date;
-
-function genStateKey() {
-  return Time.now().toFixed(3);
-}
-
-var _key = genStateKey();
-
-function getStateKey() {
-  return _key;
-}
-
-function setStateKey(key) {
-  return _key = key;
-}
-/*  */
-
-
-var positionStore = Object.create(null);
-
-function setupScroll() {
-  // Prevent browser scroll behavior on History popstate
-  if ('scrollRestoration' in window.history) {
-    window.history.scrollRestoration = 'manual';
-  } // Fix for #1585 for Firefox
-  // Fix for #2195 Add optional third attribute to workaround a bug in safari https://bugs.webkit.org/show_bug.cgi?id=182678
-  // Fix for #2774 Support for apps loaded from Windows file shares not mapped to network drives: replaced location.origin with
-  // window.location.protocol + '//' + window.location.host
-  // location.host contains the port and location.hostname doesn't
-
-
-  var protocolAndPath = window.location.protocol + '//' + window.location.host;
-  var absolutePath = window.location.href.replace(protocolAndPath, ''); // preserve existing history state as it could be overriden by the user
-
-  var stateCopy = extend({}, window.history.state);
-  stateCopy.key = getStateKey();
-  window.history.replaceState(stateCopy, '', absolutePath);
-  window.addEventListener('popstate', handlePopState);
-  return function () {
-    window.removeEventListener('popstate', handlePopState);
-  };
-}
-
-function handleScroll(router, to, from, isPop) {
-  if (!router.app) {
-    return;
-  }
-
-  var behavior = router.options.scrollBehavior;
-
-  if (!behavior) {
-    return;
-  }
-
-  if ("development" !== 'production') {
-    assert(typeof behavior === 'function', "scrollBehavior must be a function");
-  } // wait until re-render finishes before scrolling
-
-
-  router.app.$nextTick(function () {
-    var position = getScrollPosition();
-    var shouldScroll = behavior.call(router, to, from, isPop ? position : null);
-
-    if (!shouldScroll) {
-      return;
-    }
-
-    if (typeof shouldScroll.then === 'function') {
-      shouldScroll.then(function (shouldScroll) {
-        scrollToPosition(shouldScroll, position);
-      }).catch(function (err) {
-        if ("development" !== 'production') {
-          assert(false, err.toString());
-        }
-      });
-    } else {
-      scrollToPosition(shouldScroll, position);
-    }
-  });
-}
-
-function saveScrollPosition() {
-  var key = getStateKey();
-
-  if (key) {
-    positionStore[key] = {
-      x: window.pageXOffset,
-      y: window.pageYOffset
-    };
-  }
-}
-
-function handlePopState(e) {
-  saveScrollPosition();
-
-  if (e.state && e.state.key) {
-    setStateKey(e.state.key);
-  }
-}
-
-function getScrollPosition() {
-  var key = getStateKey();
-
-  if (key) {
-    return positionStore[key];
-  }
-}
-
-function getElementPosition(el, offset) {
-  var docEl = document.documentElement;
-  var docRect = docEl.getBoundingClientRect();
-  var elRect = el.getBoundingClientRect();
-  return {
-    x: elRect.left - docRect.left - offset.x,
-    y: elRect.top - docRect.top - offset.y
-  };
-}
-
-function isValidPosition(obj) {
-  return isNumber(obj.x) || isNumber(obj.y);
-}
-
-function normalizePosition(obj) {
-  return {
-    x: isNumber(obj.x) ? obj.x : window.pageXOffset,
-    y: isNumber(obj.y) ? obj.y : window.pageYOffset
-  };
-}
-
-function normalizeOffset(obj) {
-  return {
-    x: isNumber(obj.x) ? obj.x : 0,
-    y: isNumber(obj.y) ? obj.y : 0
-  };
-}
-
-function isNumber(v) {
-  return typeof v === 'number';
-}
-
-var hashStartsWithNumberRE = /^#\d/;
-
-function scrollToPosition(shouldScroll, position) {
-  var isObject = typeof shouldScroll === 'object';
-
-  if (isObject && typeof shouldScroll.selector === 'string') {
-    // getElementById would still fail if the selector contains a more complicated query like #main[data-attr]
-    // but at the same time, it doesn't make much sense to select an element with an id and an extra selector
-    var el = hashStartsWithNumberRE.test(shouldScroll.selector) // $flow-disable-line
-    ? document.getElementById(shouldScroll.selector.slice(1)) // $flow-disable-line
-    : document.querySelector(shouldScroll.selector);
-
-    if (el) {
-      var offset = shouldScroll.offset && typeof shouldScroll.offset === 'object' ? shouldScroll.offset : {};
-      offset = normalizeOffset(offset);
-      position = getElementPosition(el, offset);
-    } else if (isValidPosition(shouldScroll)) {
-      position = normalizePosition(shouldScroll);
-    }
-  } else if (isObject && isValidPosition(shouldScroll)) {
-    position = normalizePosition(shouldScroll);
-  }
-
-  if (position) {
-    // $flow-disable-line
-    if ('scrollBehavior' in document.documentElement.style) {
-      window.scrollTo({
-        left: position.x,
-        top: position.y,
-        // $flow-disable-line
-        behavior: shouldScroll.behavior
-      });
-    } else {
-      window.scrollTo(position.x, position.y);
-    }
-  }
-}
-/*  */
-
-
-var supportsPushState = inBrowser && function () {
-  var ua = window.navigator.userAgent;
-
-  if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) {
-    return false;
-  }
-
-  return window.history && typeof window.history.pushState === 'function';
-}();
-
-function pushState(url, replace) {
-  saveScrollPosition(); // try...catch the pushState call to get around Safari
-  // DOM Exception 18 where it limits to 100 pushState calls
-
-  var history = window.history;
-
-  try {
-    if (replace) {
-      // preserve existing history state as it could be overriden by the user
-      var stateCopy = extend({}, history.state);
-      stateCopy.key = getStateKey();
-      history.replaceState(stateCopy, '', url);
-    } else {
-      history.pushState({
-        key: setStateKey(genStateKey())
-      }, '', url);
-    }
-  } catch (e) {
-    window.location[replace ? 'replace' : 'assign'](url);
-  }
-}
-
-function replaceState(url) {
-  pushState(url, true);
-}
-/*  */
-
-
-function runQueue(queue, fn, cb) {
-  var step = function (index) {
-    if (index >= queue.length) {
-      cb();
-    } else {
-      if (queue[index]) {
-        fn(queue[index], function () {
-          step(index + 1);
-        });
-      } else {
-        step(index + 1);
-      }
-    }
-  };
-
-  step(0);
-} // When changing thing, also edit router.d.ts
-
-
-var NavigationFailureType = {
-  redirected: 2,
-  aborted: 4,
-  cancelled: 8,
-  duplicated: 16
-};
-
-function createNavigationRedirectedError(from, to) {
-  return createRouterError(from, to, NavigationFailureType.redirected, "Redirected when going from \"" + from.fullPath + "\" to \"" + stringifyRoute(to) + "\" via a navigation guard.");
-}
-
-function createNavigationDuplicatedError(from, to) {
-  var error = createRouterError(from, to, NavigationFailureType.duplicated, "Avoided redundant navigation to current location: \"" + from.fullPath + "\"."); // backwards compatible with the first introduction of Errors
-
-  error.name = 'NavigationDuplicated';
-  return error;
-}
-
-function createNavigationCancelledError(from, to) {
-  return createRouterError(from, to, NavigationFailureType.cancelled, "Navigation cancelled from \"" + from.fullPath + "\" to \"" + to.fullPath + "\" with a new navigation.");
-}
-
-function createNavigationAbortedError(from, to) {
-  return createRouterError(from, to, NavigationFailureType.aborted, "Navigation aborted from \"" + from.fullPath + "\" to \"" + to.fullPath + "\" via a navigation guard.");
-}
-
-function createRouterError(from, to, type, message) {
-  var error = new Error(message);
-  error._isRouter = true;
-  error.from = from;
-  error.to = to;
-  error.type = type;
-  return error;
-}
-
-var propertiesToLog = ['params', 'query', 'hash'];
-
-function stringifyRoute(to) {
-  if (typeof to === 'string') {
-    return to;
-  }
-
-  if ('path' in to) {
-    return to.path;
-  }
-
-  var location = {};
-  propertiesToLog.forEach(function (key) {
-    if (key in to) {
-      location[key] = to[key];
-    }
-  });
-  return JSON.stringify(location, null, 2);
-}
-
-function isError(err) {
-  return Object.prototype.toString.call(err).indexOf('Error') > -1;
-}
-
-function isNavigationFailure(err, errorType) {
-  return isError(err) && err._isRouter && (errorType == null || err.type === errorType);
-}
-/*  */
-
-
-function resolveAsyncComponents(matched) {
-  return function (to, from, next) {
-    var hasAsync = false;
-    var pending = 0;
-    var error = null;
-    flatMapComponents(matched, function (def, _, match, key) {
-      // if it's a function and doesn't have cid attached,
-      // assume it's an async component resolve function.
-      // we are not using Vue's default async resolving mechanism because
-      // we want to halt the navigation until the incoming component has been
-      // resolved.
-      if (typeof def === 'function' && def.cid === undefined) {
-        hasAsync = true;
-        pending++;
-        var resolve = once(function (resolvedDef) {
-          if (isESModule(resolvedDef)) {
-            resolvedDef = resolvedDef.default;
-          } // save resolved on async factory in case it's used elsewhere
-
-
-          def.resolved = typeof resolvedDef === 'function' ? resolvedDef : _Vue.extend(resolvedDef);
-          match.components[key] = resolvedDef;
-          pending--;
-
-          if (pending <= 0) {
-            next();
-          }
-        });
-        var reject = once(function (reason) {
-          var msg = "Failed to resolve async component " + key + ": " + reason;
-          "development" !== 'production' && warn(false, msg);
-
-          if (!error) {
-            error = isError(reason) ? reason : new Error(msg);
-            next(error);
-          }
-        });
-        var res;
-
-        try {
-          res = def(resolve, reject);
-        } catch (e) {
-          reject(e);
-        }
-
-        if (res) {
-          if (typeof res.then === 'function') {
-            res.then(resolve, reject);
-          } else {
-            // new syntax in Vue 2.3
-            var comp = res.component;
-
-            if (comp && typeof comp.then === 'function') {
-              comp.then(resolve, reject);
-            }
-          }
-        }
-      }
-    });
-
-    if (!hasAsync) {
-      next();
-    }
-  };
-}
-
-function flatMapComponents(matched, fn) {
-  return flatten(matched.map(function (m) {
-    return Object.keys(m.components).map(function (key) {
-      return fn(m.components[key], m.instances[key], m, key);
-    });
-  }));
-}
-
-function flatten(arr) {
-  return Array.prototype.concat.apply([], arr);
-}
-
-var hasSymbol = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
-
-function isESModule(obj) {
-  return obj.__esModule || hasSymbol && obj[Symbol.toStringTag] === 'Module';
-} // in Webpack 2, require.ensure now also returns a Promise
-// so the resolve/reject functions may get called an extra time
-// if the user uses an arrow function shorthand that happens to
-// return that Promise.
-
-
-function once(fn) {
-  var called = false;
-  return function () {
-    var args = [],
-        len = arguments.length;
-
-    while (len--) args[len] = arguments[len];
-
-    if (called) {
-      return;
-    }
-
-    called = true;
-    return fn.apply(this, args);
-  };
-}
-/*  */
-
-
-var History = function History(router, base) {
-  this.router = router;
-  this.base = normalizeBase(base); // start with a route object that stands for "nowhere"
-
-  this.current = START;
-  this.pending = null;
-  this.ready = false;
-  this.readyCbs = [];
-  this.readyErrorCbs = [];
-  this.errorCbs = [];
-  this.listeners = [];
-};
-
-History.prototype.listen = function listen(cb) {
-  this.cb = cb;
-};
-
-History.prototype.onReady = function onReady(cb, errorCb) {
-  if (this.ready) {
-    cb();
-  } else {
-    this.readyCbs.push(cb);
-
-    if (errorCb) {
-      this.readyErrorCbs.push(errorCb);
-    }
-  }
-};
-
-History.prototype.onError = function onError(errorCb) {
-  this.errorCbs.push(errorCb);
-};
-
-History.prototype.transitionTo = function transitionTo(location, onComplete, onAbort) {
-  var this$1 = this;
-  var route; // catch redirect option https://github.com/vuejs/vue-router/issues/3201
-
-  try {
-    route = this.router.match(location, this.current);
-  } catch (e) {
-    this.errorCbs.forEach(function (cb) {
-      cb(e);
-    }); // Exception should still be thrown
-
-    throw e;
-  }
-
-  var prev = this.current;
-  this.confirmTransition(route, function () {
-    this$1.updateRoute(route);
-    onComplete && onComplete(route);
-    this$1.ensureURL();
-    this$1.router.afterHooks.forEach(function (hook) {
-      hook && hook(route, prev);
-    }); // fire ready cbs once
-
-    if (!this$1.ready) {
-      this$1.ready = true;
-      this$1.readyCbs.forEach(function (cb) {
-        cb(route);
-      });
-    }
-  }, function (err) {
-    if (onAbort) {
-      onAbort(err);
-    }
-
-    if (err && !this$1.ready) {
-      // Initial redirection should not mark the history as ready yet
-      // because it's triggered by the redirection instead
-      // https://github.com/vuejs/vue-router/issues/3225
-      // https://github.com/vuejs/vue-router/issues/3331
-      if (!isNavigationFailure(err, NavigationFailureType.redirected) || prev !== START) {
-        this$1.ready = true;
-        this$1.readyErrorCbs.forEach(function (cb) {
-          cb(err);
-        });
-      }
-    }
-  });
-};
-
-History.prototype.confirmTransition = function confirmTransition(route, onComplete, onAbort) {
-  var this$1 = this;
-  var current = this.current;
-  this.pending = route;
-
-  var abort = function (err) {
-    // changed after adding errors with
-    // https://github.com/vuejs/vue-router/pull/3047 before that change,
-    // redirect and aborted navigation would produce an err == null
-    if (!isNavigationFailure(err) && isError(err)) {
-      if (this$1.errorCbs.length) {
-        this$1.errorCbs.forEach(function (cb) {
-          cb(err);
-        });
-      } else {
-        warn(false, 'uncaught error during route navigation:');
-        console.error(err);
-      }
-    }
-
-    onAbort && onAbort(err);
-  };
-
-  var lastRouteIndex = route.matched.length - 1;
-  var lastCurrentIndex = current.matched.length - 1;
-
-  if (isSameRoute(route, current) && // in the case the route map has been dynamically appended to
-  lastRouteIndex === lastCurrentIndex && route.matched[lastRouteIndex] === current.matched[lastCurrentIndex]) {
-    this.ensureURL();
-    return abort(createNavigationDuplicatedError(current, route));
-  }
-
-  var ref = resolveQueue(this.current.matched, route.matched);
-  var updated = ref.updated;
-  var deactivated = ref.deactivated;
-  var activated = ref.activated;
-  var queue = [].concat( // in-component leave guards
-  extractLeaveGuards(deactivated), // global before hooks
-  this.router.beforeHooks, // in-component update hooks
-  extractUpdateHooks(updated), // in-config enter guards
-  activated.map(function (m) {
-    return m.beforeEnter;
-  }), // async components
-  resolveAsyncComponents(activated));
-
-  var iterator = function (hook, next) {
-    if (this$1.pending !== route) {
-      return abort(createNavigationCancelledError(current, route));
-    }
-
-    try {
-      hook(route, current, function (to) {
-        if (to === false) {
-          // next(false) -> abort navigation, ensure current URL
-          this$1.ensureURL(true);
-          abort(createNavigationAbortedError(current, route));
-        } else if (isError(to)) {
-          this$1.ensureURL(true);
-          abort(to);
-        } else if (typeof to === 'string' || typeof to === 'object' && (typeof to.path === 'string' || typeof to.name === 'string')) {
-          // next('/') or next({ path: '/' }) -> redirect
-          abort(createNavigationRedirectedError(current, route));
-
-          if (typeof to === 'object' && to.replace) {
-            this$1.replace(to);
-          } else {
-            this$1.push(to);
-          }
-        } else {
-          // confirm transition and pass on the value
-          next(to);
-        }
-      });
-    } catch (e) {
-      abort(e);
-    }
-  };
-
-  runQueue(queue, iterator, function () {
-    // wait until async components are resolved before
-    // extracting in-component enter guards
-    var enterGuards = extractEnterGuards(activated);
-    var queue = enterGuards.concat(this$1.router.resolveHooks);
-    runQueue(queue, iterator, function () {
-      if (this$1.pending !== route) {
-        return abort(createNavigationCancelledError(current, route));
-      }
-
-      this$1.pending = null;
-      onComplete(route);
-
-      if (this$1.router.app) {
-        this$1.router.app.$nextTick(function () {
-          handleRouteEntered(route);
-        });
-      }
-    });
-  });
-};
-
-History.prototype.updateRoute = function updateRoute(route) {
-  this.current = route;
-  this.cb && this.cb(route);
-};
-
-History.prototype.setupListeners = function setupListeners() {// Default implementation is empty
-};
-
-History.prototype.teardown = function teardown() {
-  // clean up event listeners
-  // https://github.com/vuejs/vue-router/issues/2341
-  this.listeners.forEach(function (cleanupListener) {
-    cleanupListener();
-  });
-  this.listeners = []; // reset current history route
-  // https://github.com/vuejs/vue-router/issues/3294
-
-  this.current = START;
-  this.pending = null;
-};
-
-function normalizeBase(base) {
-  if (!base) {
-    if (inBrowser) {
-      // respect <base> tag
-      var baseEl = document.querySelector('base');
-      base = baseEl && baseEl.getAttribute('href') || '/'; // strip full URL origin
-
-      base = base.replace(/^https?:\/\/[^\/]+/, '');
-    } else {
-      base = '/';
-    }
-  } // make sure there's the starting slash
-
-
-  if (base.charAt(0) !== '/') {
-    base = '/' + base;
-  } // remove trailing slash
-
-
-  return base.replace(/\/$/, '');
-}
-
-function resolveQueue(current, next) {
-  var i;
-  var max = Math.max(current.length, next.length);
-
-  for (i = 0; i < max; i++) {
-    if (current[i] !== next[i]) {
-      break;
-    }
-  }
-
-  return {
-    updated: next.slice(0, i),
-    activated: next.slice(i),
-    deactivated: current.slice(i)
-  };
-}
-
-function extractGuards(records, name, bind, reverse) {
-  var guards = flatMapComponents(records, function (def, instance, match, key) {
-    var guard = extractGuard(def, name);
-
-    if (guard) {
-      return Array.isArray(guard) ? guard.map(function (guard) {
-        return bind(guard, instance, match, key);
-      }) : bind(guard, instance, match, key);
-    }
-  });
-  return flatten(reverse ? guards.reverse() : guards);
-}
-
-function extractGuard(def, key) {
-  if (typeof def !== 'function') {
-    // extend now so that global mixins are applied.
-    def = _Vue.extend(def);
-  }
-
-  return def.options[key];
-}
-
-function extractLeaveGuards(deactivated) {
-  return extractGuards(deactivated, 'beforeRouteLeave', bindGuard, true);
-}
-
-function extractUpdateHooks(updated) {
-  return extractGuards(updated, 'beforeRouteUpdate', bindGuard);
-}
-
-function bindGuard(guard, instance) {
-  if (instance) {
-    return function boundRouteGuard() {
-      return guard.apply(instance, arguments);
-    };
-  }
-}
-
-function extractEnterGuards(activated) {
-  return extractGuards(activated, 'beforeRouteEnter', function (guard, _, match, key) {
-    return bindEnterGuard(guard, match, key);
-  });
-}
-
-function bindEnterGuard(guard, match, key) {
-  return function routeEnterGuard(to, from, next) {
-    return guard(to, from, function (cb) {
-      if (typeof cb === 'function') {
-        if (!match.enteredCbs[key]) {
-          match.enteredCbs[key] = [];
-        }
-
-        match.enteredCbs[key].push(cb);
-      }
-
-      next(cb);
-    });
-  };
-}
-/*  */
-
-
-var HTML5History = /*@__PURE__*/function (History) {
-  function HTML5History(router, base) {
-    History.call(this, router, base);
-    this._startLocation = getLocation(this.base);
-  }
-
-  if (History) HTML5History.__proto__ = History;
-  HTML5History.prototype = Object.create(History && History.prototype);
-  HTML5History.prototype.constructor = HTML5History;
-
-  HTML5History.prototype.setupListeners = function setupListeners() {
-    var this$1 = this;
-
-    if (this.listeners.length > 0) {
-      return;
-    }
-
-    var router = this.router;
-    var expectScroll = router.options.scrollBehavior;
-    var supportsScroll = supportsPushState && expectScroll;
-
-    if (supportsScroll) {
-      this.listeners.push(setupScroll());
-    }
-
-    var handleRoutingEvent = function () {
-      var current = this$1.current; // Avoiding first `popstate` event dispatched in some browsers but first
-      // history route not updated since async guard at the same time.
-
-      var location = getLocation(this$1.base);
-
-      if (this$1.current === START && location === this$1._startLocation) {
-        return;
-      }
-
-      this$1.transitionTo(location, function (route) {
-        if (supportsScroll) {
-          handleScroll(router, route, current, true);
-        }
-      });
-    };
-
-    window.addEventListener('popstate', handleRoutingEvent);
-    this.listeners.push(function () {
-      window.removeEventListener('popstate', handleRoutingEvent);
-    });
-  };
-
-  HTML5History.prototype.go = function go(n) {
-    window.history.go(n);
-  };
-
-  HTML5History.prototype.push = function push(location, onComplete, onAbort) {
-    var this$1 = this;
-    var ref = this;
-    var fromRoute = ref.current;
-    this.transitionTo(location, function (route) {
-      pushState(cleanPath(this$1.base + route.fullPath));
-      handleScroll(this$1.router, route, fromRoute, false);
-      onComplete && onComplete(route);
-    }, onAbort);
-  };
-
-  HTML5History.prototype.replace = function replace(location, onComplete, onAbort) {
-    var this$1 = this;
-    var ref = this;
-    var fromRoute = ref.current;
-    this.transitionTo(location, function (route) {
-      replaceState(cleanPath(this$1.base + route.fullPath));
-      handleScroll(this$1.router, route, fromRoute, false);
-      onComplete && onComplete(route);
-    }, onAbort);
-  };
-
-  HTML5History.prototype.ensureURL = function ensureURL(push) {
-    if (getLocation(this.base) !== this.current.fullPath) {
-      var current = cleanPath(this.base + this.current.fullPath);
-      push ? pushState(current) : replaceState(current);
-    }
-  };
-
-  HTML5History.prototype.getCurrentLocation = function getCurrentLocation() {
-    return getLocation(this.base);
-  };
-
-  return HTML5History;
-}(History);
-
-function getLocation(base) {
-  var path = window.location.pathname;
-
-  if (base && path.toLowerCase().indexOf(base.toLowerCase()) === 0) {
-    path = path.slice(base.length);
-  }
-
-  return (path || '/') + window.location.search + window.location.hash;
-}
-/*  */
-
-
-var HashHistory = /*@__PURE__*/function (History) {
-  function HashHistory(router, base, fallback) {
-    History.call(this, router, base); // check history fallback deeplinking
-
-    if (fallback && checkFallback(this.base)) {
-      return;
-    }
-
-    ensureSlash();
-  }
-
-  if (History) HashHistory.__proto__ = History;
-  HashHistory.prototype = Object.create(History && History.prototype);
-  HashHistory.prototype.constructor = HashHistory; // this is delayed until the app mounts
-  // to avoid the hashchange listener being fired too early
-
-  HashHistory.prototype.setupListeners = function setupListeners() {
-    var this$1 = this;
-
-    if (this.listeners.length > 0) {
-      return;
-    }
-
-    var router = this.router;
-    var expectScroll = router.options.scrollBehavior;
-    var supportsScroll = supportsPushState && expectScroll;
-
-    if (supportsScroll) {
-      this.listeners.push(setupScroll());
-    }
-
-    var handleRoutingEvent = function () {
-      var current = this$1.current;
-
-      if (!ensureSlash()) {
-        return;
-      }
-
-      this$1.transitionTo(getHash(), function (route) {
-        if (supportsScroll) {
-          handleScroll(this$1.router, route, current, true);
-        }
-
-        if (!supportsPushState) {
-          replaceHash(route.fullPath);
-        }
-      });
-    };
-
-    var eventType = supportsPushState ? 'popstate' : 'hashchange';
-    window.addEventListener(eventType, handleRoutingEvent);
-    this.listeners.push(function () {
-      window.removeEventListener(eventType, handleRoutingEvent);
-    });
-  };
-
-  HashHistory.prototype.push = function push(location, onComplete, onAbort) {
-    var this$1 = this;
-    var ref = this;
-    var fromRoute = ref.current;
-    this.transitionTo(location, function (route) {
-      pushHash(route.fullPath);
-      handleScroll(this$1.router, route, fromRoute, false);
-      onComplete && onComplete(route);
-    }, onAbort);
-  };
-
-  HashHistory.prototype.replace = function replace(location, onComplete, onAbort) {
-    var this$1 = this;
-    var ref = this;
-    var fromRoute = ref.current;
-    this.transitionTo(location, function (route) {
-      replaceHash(route.fullPath);
-      handleScroll(this$1.router, route, fromRoute, false);
-      onComplete && onComplete(route);
-    }, onAbort);
-  };
-
-  HashHistory.prototype.go = function go(n) {
-    window.history.go(n);
-  };
-
-  HashHistory.prototype.ensureURL = function ensureURL(push) {
-    var current = this.current.fullPath;
-
-    if (getHash() !== current) {
-      push ? pushHash(current) : replaceHash(current);
-    }
-  };
-
-  HashHistory.prototype.getCurrentLocation = function getCurrentLocation() {
-    return getHash();
-  };
-
-  return HashHistory;
-}(History);
-
-function checkFallback(base) {
-  var location = getLocation(base);
-
-  if (!/^\/#/.test(location)) {
-    window.location.replace(cleanPath(base + '/#' + location));
-    return true;
-  }
-}
-
-function ensureSlash() {
-  var path = getHash();
-
-  if (path.charAt(0) === '/') {
-    return true;
-  }
-
-  replaceHash('/' + path);
-  return false;
-}
-
-function getHash() {
-  // We can't use window.location.hash here because it's not
-  // consistent across browsers - Firefox will pre-decode it!
-  var href = window.location.href;
-  var index = href.indexOf('#'); // empty path
-
-  if (index < 0) {
-    return '';
-  }
-
-  href = href.slice(index + 1);
-  return href;
-}
-
-function getUrl(path) {
-  var href = window.location.href;
-  var i = href.indexOf('#');
-  var base = i >= 0 ? href.slice(0, i) : href;
-  return base + "#" + path;
-}
-
-function pushHash(path) {
-  if (supportsPushState) {
-    pushState(getUrl(path));
-  } else {
-    window.location.hash = path;
-  }
-}
-
-function replaceHash(path) {
-  if (supportsPushState) {
-    replaceState(getUrl(path));
-  } else {
-    window.location.replace(getUrl(path));
-  }
-}
-/*  */
-
-
-var AbstractHistory = /*@__PURE__*/function (History) {
-  function AbstractHistory(router, base) {
-    History.call(this, router, base);
-    this.stack = [];
-    this.index = -1;
-  }
-
-  if (History) AbstractHistory.__proto__ = History;
-  AbstractHistory.prototype = Object.create(History && History.prototype);
-  AbstractHistory.prototype.constructor = AbstractHistory;
-
-  AbstractHistory.prototype.push = function push(location, onComplete, onAbort) {
-    var this$1 = this;
-    this.transitionTo(location, function (route) {
-      this$1.stack = this$1.stack.slice(0, this$1.index + 1).concat(route);
-      this$1.index++;
-      onComplete && onComplete(route);
-    }, onAbort);
-  };
-
-  AbstractHistory.prototype.replace = function replace(location, onComplete, onAbort) {
-    var this$1 = this;
-    this.transitionTo(location, function (route) {
-      this$1.stack = this$1.stack.slice(0, this$1.index).concat(route);
-      onComplete && onComplete(route);
-    }, onAbort);
-  };
-
-  AbstractHistory.prototype.go = function go(n) {
-    var this$1 = this;
-    var targetIndex = this.index + n;
-
-    if (targetIndex < 0 || targetIndex >= this.stack.length) {
-      return;
-    }
-
-    var route = this.stack[targetIndex];
-    this.confirmTransition(route, function () {
-      var prev = this$1.current;
-      this$1.index = targetIndex;
-      this$1.updateRoute(route);
-      this$1.router.afterHooks.forEach(function (hook) {
-        hook && hook(route, prev);
-      });
-    }, function (err) {
-      if (isNavigationFailure(err, NavigationFailureType.duplicated)) {
-        this$1.index = targetIndex;
-      }
-    });
-  };
-
-  AbstractHistory.prototype.getCurrentLocation = function getCurrentLocation() {
-    var current = this.stack[this.stack.length - 1];
-    return current ? current.fullPath : '/';
-  };
-
-  AbstractHistory.prototype.ensureURL = function ensureURL() {// noop
-  };
-
-  return AbstractHistory;
-}(History);
-/*  */
-
-
-var VueRouter = function VueRouter(options) {
-  if (options === void 0) options = {};
-  this.app = null;
-  this.apps = [];
-  this.options = options;
-  this.beforeHooks = [];
-  this.resolveHooks = [];
-  this.afterHooks = [];
-  this.matcher = createMatcher(options.routes || [], this);
-  var mode = options.mode || 'hash';
-  this.fallback = mode === 'history' && !supportsPushState && options.fallback !== false;
-
-  if (this.fallback) {
-    mode = 'hash';
-  }
-
-  if (!inBrowser) {
-    mode = 'abstract';
-  }
-
-  this.mode = mode;
-
-  switch (mode) {
-    case 'history':
-      this.history = new HTML5History(this, options.base);
-      break;
-
-    case 'hash':
-      this.history = new HashHistory(this, options.base, this.fallback);
-      break;
-
-    case 'abstract':
-      this.history = new AbstractHistory(this, options.base);
-      break;
-
-    default:
-      if ("development" !== 'production') {
-        assert(false, "invalid mode: " + mode);
-      }
-
-  }
-};
-
-var prototypeAccessors = {
-  currentRoute: {
-    configurable: true
-  }
-};
-
-VueRouter.prototype.match = function match(raw, current, redirectedFrom) {
-  return this.matcher.match(raw, current, redirectedFrom);
-};
-
-prototypeAccessors.currentRoute.get = function () {
-  return this.history && this.history.current;
-};
-
-VueRouter.prototype.init = function init(app
-/* Vue component instance */
-) {
-  var this$1 = this;
-  "development" !== 'production' && assert(install.installed, "not installed. Make sure to call `Vue.use(VueRouter)` " + "before creating root instance.");
-  this.apps.push(app); // set up app destroyed handler
-  // https://github.com/vuejs/vue-router/issues/2639
-
-  app.$once('hook:destroyed', function () {
-    // clean out app from this.apps array once destroyed
-    var index = this$1.apps.indexOf(app);
-
-    if (index > -1) {
-      this$1.apps.splice(index, 1);
-    } // ensure we still have a main app or null if no apps
-    // we do not release the router so it can be reused
-
-
-    if (this$1.app === app) {
-      this$1.app = this$1.apps[0] || null;
-    }
-
-    if (!this$1.app) {
-      this$1.history.teardown();
-    }
-  }); // main app previously initialized
-  // return as we don't need to set up new history listener
-
-  if (this.app) {
-    return;
-  }
-
-  this.app = app;
-  var history = this.history;
-
-  if (history instanceof HTML5History || history instanceof HashHistory) {
-    var handleInitialScroll = function (routeOrError) {
-      var from = history.current;
-      var expectScroll = this$1.options.scrollBehavior;
-      var supportsScroll = supportsPushState && expectScroll;
-
-      if (supportsScroll && 'fullPath' in routeOrError) {
-        handleScroll(this$1, routeOrError, from, false);
-      }
-    };
-
-    var setupListeners = function (routeOrError) {
-      history.setupListeners();
-      handleInitialScroll(routeOrError);
-    };
-
-    history.transitionTo(history.getCurrentLocation(), setupListeners, setupListeners);
-  }
-
-  history.listen(function (route) {
-    this$1.apps.forEach(function (app) {
-      app._route = route;
-    });
-  });
-};
-
-VueRouter.prototype.beforeEach = function beforeEach(fn) {
-  return registerHook(this.beforeHooks, fn);
-};
-
-VueRouter.prototype.beforeResolve = function beforeResolve(fn) {
-  return registerHook(this.resolveHooks, fn);
-};
-
-VueRouter.prototype.afterEach = function afterEach(fn) {
-  return registerHook(this.afterHooks, fn);
-};
-
-VueRouter.prototype.onReady = function onReady(cb, errorCb) {
-  this.history.onReady(cb, errorCb);
-};
-
-VueRouter.prototype.onError = function onError(errorCb) {
-  this.history.onError(errorCb);
-};
-
-VueRouter.prototype.push = function push(location, onComplete, onAbort) {
-  var this$1 = this; // $flow-disable-line
-
-  if (!onComplete && !onAbort && typeof Promise !== 'undefined') {
-    return new Promise(function (resolve, reject) {
-      this$1.history.push(location, resolve, reject);
-    });
-  } else {
-    this.history.push(location, onComplete, onAbort);
-  }
-};
-
-VueRouter.prototype.replace = function replace(location, onComplete, onAbort) {
-  var this$1 = this; // $flow-disable-line
-
-  if (!onComplete && !onAbort && typeof Promise !== 'undefined') {
-    return new Promise(function (resolve, reject) {
-      this$1.history.replace(location, resolve, reject);
-    });
-  } else {
-    this.history.replace(location, onComplete, onAbort);
-  }
-};
-
-VueRouter.prototype.go = function go(n) {
-  this.history.go(n);
-};
-
-VueRouter.prototype.back = function back() {
-  this.go(-1);
-};
-
-VueRouter.prototype.forward = function forward() {
-  this.go(1);
-};
-
-VueRouter.prototype.getMatchedComponents = function getMatchedComponents(to) {
-  var route = to ? to.matched ? to : this.resolve(to).route : this.currentRoute;
-
-  if (!route) {
-    return [];
-  }
-
-  return [].concat.apply([], route.matched.map(function (m) {
-    return Object.keys(m.components).map(function (key) {
-      return m.components[key];
-    });
-  }));
-};
-
-VueRouter.prototype.resolve = function resolve(to, current, append) {
-  current = current || this.history.current;
-  var location = normalizeLocation(to, current, append, this);
-  var route = this.match(location, current);
-  var fullPath = route.redirectedFrom || route.fullPath;
-  var base = this.history.base;
-  var href = createHref(base, fullPath, this.mode);
-  return {
-    location: location,
-    route: route,
-    href: href,
-    // for backwards compat
-    normalizedTo: location,
-    resolved: route
-  };
-};
-
-VueRouter.prototype.addRoutes = function addRoutes(routes) {
-  this.matcher.addRoutes(routes);
-
-  if (this.history.current !== START) {
-    this.history.transitionTo(this.history.getCurrentLocation());
-  }
-};
-
-Object.defineProperties(VueRouter.prototype, prototypeAccessors);
-
-function registerHook(list, fn) {
-  list.push(fn);
-  return function () {
-    var i = list.indexOf(fn);
-
-    if (i > -1) {
-      list.splice(i, 1);
-    }
-  };
-}
-
-function createHref(base, fullPath, mode) {
-  var path = mode === 'hash' ? '#' + fullPath : fullPath;
-  return base ? cleanPath(base + '/' + path) : path;
-}
-
-VueRouter.install = install;
-VueRouter.version = '3.4.9';
-VueRouter.isNavigationFailure = isNavigationFailure;
-VueRouter.NavigationFailureType = NavigationFailureType;
-
-if (inBrowser && window.Vue) {
-  window.Vue.use(VueRouter);
-}
-
-var _default = VueRouter;
-exports.default = _default;
-},{}],"src/plugins/router-plugin.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-Object.defineProperty(exports, "Router", {
-  enumerable: true,
-  get: function () {
-    return _vueRouter.default;
-  }
-});
-
-var _vue = _interopRequireDefault(require("vue"));
-
-var _vueRouter = _interopRequireDefault(require("vue-router"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-// Routes
-_vue.default.use(_vueRouter.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-router":"node_modules/vue-router/dist/vue-router.esm.js"}],"node_modules/vue-toasted/dist/vue-toasted.min.js":[function(require,module,exports) {
-var define;
-!function(t,e){if("object"==typeof exports&&"object"==typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n=e();for(var r in n)("object"==typeof exports?exports:t)[r]=n[r]}}(this,function(){return function(t){function e(r){if(n[r])return n[r].exports;var i=n[r]={i:r,l:!1,exports:{}};return t[r].call(i.exports,i,i.exports,e),i.l=!0,i.exports}var n={};return e.m=t,e.c=n,e.i=function(t){return t},e.d=function(t,n,r){e.o(t,n)||Object.defineProperty(t,n,{configurable:!1,enumerable:!0,get:r})},e.n=function(t){var n=t&&t.__esModule?function(){return t.default}:function(){return t};return e.d(n,"a",n),n},e.o=function(t,e){return Object.prototype.hasOwnProperty.call(t,e)},e.p="/dist/",e(e.s=6)}([function(t,e,n){"use strict";function r(){d=!1}function i(t){if(!t)return void(f!==m&&(f=m,r()));if(t!==f){if(t.length!==m.length)throw new Error("Custom alphabet for shortid must be "+m.length+" unique characters. You submitted "+t.length+" characters: "+t);var e=t.split("").filter(function(t,e,n){return e!==n.lastIndexOf(t)});if(e.length)throw new Error("Custom alphabet for shortid must be "+m.length+" unique characters. These characters were not unique: "+e.join(", "));f=t,r()}}function o(t){return i(t),f}function a(t){h.seed(t),p!==t&&(r(),p=t)}function s(){f||i(m);for(var t,e=f.split(""),n=[],r=h.nextValue();e.length>0;)r=h.nextValue(),t=Math.floor(r*e.length),n.push(e.splice(t,1)[0]);return n.join("")}function c(){return d||(d=s())}function u(t){return c()[t]}function l(){return f||m}var f,p,d,h=n(19),m="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-";t.exports={get:l,characters:o,seed:a,lookup:u,shuffled:c}},function(t,e,n){"use strict";var r=n(5),i=n.n(r);e.a={animateIn:function(t){i()({targets:t,translateY:"-35px",opacity:1,duration:300,easing:"easeOutCubic"})},animateOut:function(t,e){i()({targets:t,opacity:0,marginTop:"-40px",duration:300,easing:"easeOutExpo",complete:e})},animateOutBottom:function(t,e){i()({targets:t,opacity:0,marginBottom:"-40px",duration:300,easing:"easeOutExpo",complete:e})},animateReset:function(t){i()({targets:t,left:0,opacity:1,duration:300,easing:"easeOutExpo"})},animatePanning:function(t,e,n){i()({targets:t,duration:10,easing:"easeOutQuad",left:e,opacity:n})},animatePanEnd:function(t,e){i()({targets:t,opacity:0,duration:300,easing:"easeOutExpo",complete:e})},clearAnimation:function(t){var e=i.a.timeline();t.forEach(function(t){e.add({targets:t.el,opacity:0,right:"-40px",duration:300,offset:"-=150",easing:"easeOutExpo",complete:function(){t.remove()}})})}}},function(t,e,n){"use strict";t.exports=n(16)},function(t,e,n){"use strict";n.d(e,"a",function(){return s});var r=n(8),i=n(1),o="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},a=n(2);n(11).polyfill();var s=function t(e){var n=this;return this.id=a.generate(),this.options=e,this.cached_options={},this.global={},this.groups=[],this.toasts=[],this.container=null,l(this),u(this),this.group=function(e){e||(e={}),e.globalToasts||(e.globalToasts={}),Object.assign(e.globalToasts,n.global);var r=new t(e);return n.groups.push(r),r},this.register=function(t,e,r){return r=r||{},f(n,t,e,r)},this.show=function(t,e){return c(n,t,e)},this.success=function(t,e){return e=e||{},e.type="success",c(n,t,e)},this.info=function(t,e){return e=e||{},e.type="info",c(n,t,e)},this.error=function(t,e){return e=e||{},e.type="error",c(n,t,e)},this.remove=function(t){n.toasts=n.toasts.filter(function(e){return e.el.hash!==t.hash}),t.parentNode&&t.parentNode.removeChild(t)},this.clear=function(t){return i.a.clearAnimation(n.toasts,function(){t&&t()}),n.toasts=[],!0},this},c=function(t,e,i){i=i||{};var a=null;if("object"!==(void 0===i?"undefined":o(i)))return console.error("Options should be a type of object. given : "+i),null;t.options.singleton&&t.toasts.length>0&&(t.cached_options=i,t.toasts[t.toasts.length-1].goAway(0));var s=Object.assign({},t.options);return Object.assign(s,i),a=n.i(r.a)(t,e,s),t.toasts.push(a),a},u=function(t){var e=t.options.globalToasts,n=function(e,n){return"string"==typeof n&&t[n]?t[n].apply(t,[e,{}]):c(t,e,n)};e&&(t.global={},Object.keys(e).forEach(function(r){t.global[r]=function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};return e[r].apply(null,[t,n])}}))},l=function(t){var e=document.createElement("div");e.id=t.id,e.setAttribute("role","status"),e.setAttribute("aria-live","polite"),e.setAttribute("aria-atomic","false"),document.body.appendChild(e),t.container=e},f=function(t,e,n,r){t.options.globalToasts||(t.options.globalToasts={}),t.options.globalToasts[e]=function(t,e){var i=null;return"string"==typeof n&&(i=n),"function"==typeof n&&(i=n(t)),e(i,r)},u(t)}},function(t,e,n){n(22);var r=n(21)(null,null,null,null);t.exports=r.exports},function(t,e,n){(function(n){var r,i,o,a={scope:{}};a.defineProperty="function"==typeof Object.defineProperties?Object.defineProperty:function(t,e,n){if(n.get||n.set)throw new TypeError("ES3 does not support getters and setters.");t!=Array.prototype&&t!=Object.prototype&&(t[e]=n.value)},a.getGlobal=function(t){return"undefined"!=typeof window&&window===t?t:void 0!==n&&null!=n?n:t},a.global=a.getGlobal(this),a.SYMBOL_PREFIX="jscomp_symbol_",a.initSymbol=function(){a.initSymbol=function(){},a.global.Symbol||(a.global.Symbol=a.Symbol)},a.symbolCounter_=0,a.Symbol=function(t){return a.SYMBOL_PREFIX+(t||"")+a.symbolCounter_++},a.initSymbolIterator=function(){a.initSymbol();var t=a.global.Symbol.iterator;t||(t=a.global.Symbol.iterator=a.global.Symbol("iterator")),"function"!=typeof Array.prototype[t]&&a.defineProperty(Array.prototype,t,{configurable:!0,writable:!0,value:function(){return a.arrayIterator(this)}}),a.initSymbolIterator=function(){}},a.arrayIterator=function(t){var e=0;return a.iteratorPrototype(function(){return e<t.length?{done:!1,value:t[e++]}:{done:!0}})},a.iteratorPrototype=function(t){return a.initSymbolIterator(),t={next:t},t[a.global.Symbol.iterator]=function(){return this},t},a.array=a.array||{},a.iteratorFromArray=function(t,e){a.initSymbolIterator(),t instanceof String&&(t+="");var n=0,r={next:function(){if(n<t.length){var i=n++;return{value:e(i,t[i]),done:!1}}return r.next=function(){return{done:!0,value:void 0}},r.next()}};return r[Symbol.iterator]=function(){return r},r},a.polyfill=function(t,e,n,r){if(e){for(n=a.global,t=t.split("."),r=0;r<t.length-1;r++){var i=t[r];i in n||(n[i]={}),n=n[i]}t=t[t.length-1],r=n[t],e=e(r),e!=r&&null!=e&&a.defineProperty(n,t,{configurable:!0,writable:!0,value:e})}},a.polyfill("Array.prototype.keys",function(t){return t||function(){return a.iteratorFromArray(this,function(t){return t})}},"es6-impl","es3");var s=this;!function(n,a){i=[],r=a,void 0!==(o="function"==typeof r?r.apply(e,i):r)&&(t.exports=o)}(0,function(){function t(t){if(!R.col(t))try{return document.querySelectorAll(t)}catch(t){}}function e(t,e){for(var n=t.length,r=2<=arguments.length?arguments[1]:void 0,i=[],o=0;o<n;o++)if(o in t){var a=t[o];e.call(r,a,o,t)&&i.push(a)}return i}function n(t){return t.reduce(function(t,e){return t.concat(R.arr(e)?n(e):e)},[])}function r(e){return R.arr(e)?e:(R.str(e)&&(e=t(e)||e),e instanceof NodeList||e instanceof HTMLCollection?[].slice.call(e):[e])}function i(t,e){return t.some(function(t){return t===e})}function o(t){var e,n={};for(e in t)n[e]=t[e];return n}function a(t,e){var n,r=o(t);for(n in t)r[n]=e.hasOwnProperty(n)?e[n]:t[n];return r}function c(t,e){var n,r=o(t);for(n in e)r[n]=R.und(t[n])?e[n]:t[n];return r}function u(t){t=t.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i,function(t,e,n,r){return e+e+n+n+r+r});var e=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(t);t=parseInt(e[1],16);var n=parseInt(e[2],16),e=parseInt(e[3],16);return"rgba("+t+","+n+","+e+",1)"}function l(t){function e(t,e,n){return 0>n&&(n+=1),1<n&&--n,n<1/6?t+6*(e-t)*n:.5>n?e:n<2/3?t+(e-t)*(2/3-n)*6:t}var n=/hsl\((\d+),\s*([\d.]+)%,\s*([\d.]+)%\)/g.exec(t)||/hsla\((\d+),\s*([\d.]+)%,\s*([\d.]+)%,\s*([\d.]+)\)/g.exec(t);t=parseInt(n[1])/360;var r=parseInt(n[2])/100,i=parseInt(n[3])/100,n=n[4]||1;if(0==r)i=r=t=i;else{var o=.5>i?i*(1+r):i+r-i*r,a=2*i-o,i=e(a,o,t+1/3),r=e(a,o,t);t=e(a,o,t-1/3)}return"rgba("+255*i+","+255*r+","+255*t+","+n+")"}function f(t){if(t=/([\+\-]?[0-9#\.]+)(%|px|pt|em|rem|in|cm|mm|ex|ch|pc|vw|vh|vmin|vmax|deg|rad|turn)?$/.exec(t))return t[2]}function p(t){return-1<t.indexOf("translate")||"perspective"===t?"px":-1<t.indexOf("rotate")||-1<t.indexOf("skew")?"deg":void 0}function d(t,e){return R.fnc(t)?t(e.target,e.id,e.total):t}function h(t,e){if(e in t.style)return getComputedStyle(t).getPropertyValue(e.replace(/([a-z])([A-Z])/g,"$1-$2").toLowerCase())||"0"}function m(t,e){return R.dom(t)&&i(D,e)?"transform":R.dom(t)&&(t.getAttribute(e)||R.svg(t)&&t[e])?"attribute":R.dom(t)&&"transform"!==e&&h(t,e)?"css":null!=t[e]?"object":void 0}function v(t,n){var r=p(n),r=-1<n.indexOf("scale")?1:0+r;if(!(t=t.style.transform))return r;for(var i=[],o=[],a=[],s=/(\w+)\((.+?)\)/g;i=s.exec(t);)o.push(i[1]),a.push(i[2]);return t=e(a,function(t,e){return o[e]===n}),t.length?t[0]:r}function g(t,e){switch(m(t,e)){case"transform":return v(t,e);case"css":return h(t,e);case"attribute":return t.getAttribute(e)}return t[e]||0}function y(t,e){var n=/^(\*=|\+=|-=)/.exec(t);if(!n)return t;var r=f(t)||0;switch(e=parseFloat(e),t=parseFloat(t.replace(n[0],"")),n[0][0]){case"+":return e+t+r;case"-":return e-t+r;case"*":return e*t+r}}function b(t,e){return Math.sqrt(Math.pow(e.x-t.x,2)+Math.pow(e.y-t.y,2))}function x(t){t=t.points;for(var e,n=0,r=0;r<t.numberOfItems;r++){var i=t.getItem(r);0<r&&(n+=b(e,i)),e=i}return n}function T(t){if(t.getTotalLength)return t.getTotalLength();switch(t.tagName.toLowerCase()){case"circle":return 2*Math.PI*t.getAttribute("r");case"rect":return 2*t.getAttribute("width")+2*t.getAttribute("height");case"line":return b({x:t.getAttribute("x1"),y:t.getAttribute("y1")},{x:t.getAttribute("x2"),y:t.getAttribute("y2")});case"polyline":return x(t);case"polygon":var e=t.points;return x(t)+b(e.getItem(e.numberOfItems-1),e.getItem(0))}}function w(t,e){function n(n){return n=void 0===n?0:n,t.el.getPointAtLength(1<=e+n?e+n:0)}var r=n(),i=n(-1),o=n(1);switch(t.property){case"x":return r.x;case"y":return r.y;case"angle":return 180*Math.atan2(o.y-i.y,o.x-i.x)/Math.PI}}function E(t,e){var n,r=/-?\d*\.?\d+/g;if(n=R.pth(t)?t.totalLength:t,R.col(n))if(R.rgb(n)){var i=/rgb\((\d+,\s*[\d]+,\s*[\d]+)\)/g.exec(n);n=i?"rgba("+i[1]+",1)":n}else n=R.hex(n)?u(n):R.hsl(n)?l(n):void 0;else i=(i=f(n))?n.substr(0,n.length-i.length):n,n=e&&!/\s/g.test(n)?i+e:i;return n+="",{original:n,numbers:n.match(r)?n.match(r).map(Number):[0],strings:R.str(t)||e?n.split(r):[]}}function C(t){return t=t?n(R.arr(t)?t.map(r):r(t)):[],e(t,function(t,e,n){return n.indexOf(t)===e})}function S(t){var e=C(t);return e.map(function(t,n){return{target:t,id:n,total:e.length}})}function O(t,e){var n=o(e);if(R.arr(t)){var i=t.length;2!==i||R.obj(t[0])?R.fnc(e.duration)||(n.duration=e.duration/i):t={value:t}}return r(t).map(function(t,n){return n=n?0:e.delay,t=R.obj(t)&&!R.pth(t)?t:{value:t},R.und(t.delay)&&(t.delay=n),t}).map(function(t){return c(t,n)})}function A(t,e){var n,r={};for(n in t){var i=d(t[n],e);R.arr(i)&&(i=i.map(function(t){return d(t,e)}),1===i.length&&(i=i[0])),r[n]=i}return r.duration=parseFloat(r.duration),r.delay=parseFloat(r.delay),r}function I(t){return R.arr(t)?F.apply(this,t):z[t]}function M(t,e){var n;return t.tweens.map(function(r){r=A(r,e);var i=r.value,o=g(e.target,t.name),a=n?n.to.original:o,a=R.arr(i)?i[0]:a,s=y(R.arr(i)?i[1]:i,a),o=f(s)||f(a)||f(o);return r.from=E(a,o),r.to=E(s,o),r.start=n?n.end:t.offset,r.end=r.start+r.delay+r.duration,r.easing=I(r.easing),r.elasticity=(1e3-Math.min(Math.max(r.elasticity,1),999))/1e3,r.isPath=R.pth(i),r.isColor=R.col(r.from.original),r.isColor&&(r.round=1),n=r})}function k(t,r){return e(n(t.map(function(t){return r.map(function(e){var n=m(t.target,e.name);if(n){var r=M(e,t);e={type:n,property:e.name,animatable:t,tweens:r,duration:r[r.length-1].end,delay:r[0].delay}}else e=void 0;return e})})),function(t){return!R.und(t)})}function P(t,e,n,r){var i="delay"===t;return e.length?(i?Math.min:Math.max).apply(Math,e.map(function(e){return e[t]})):i?r.delay:n.offset+r.delay+r.duration}function L(t){var e,n=a(_,t),r=a(X,t),i=S(t.targets),o=[],s=c(n,r);for(e in t)s.hasOwnProperty(e)||"targets"===e||o.push({name:e,offset:s.offset,tweens:O(t[e],r)});return t=k(i,o),c(n,{children:[],animatables:i,animations:t,duration:P("duration",t,n,r),delay:P("delay",t,n,r)})}function j(t){function n(){return window.Promise&&new Promise(function(t){return f=t})}function r(t){return d.reversed?d.duration-t:t}function i(t){for(var n=0,r={},i=d.animations,o=i.length;n<o;){var a=i[n],s=a.animatable,c=a.tweens,u=c.length-1,l=c[u];u&&(l=e(c,function(e){return t<e.end})[0]||l);for(var c=Math.min(Math.max(t-l.start-l.delay,0),l.duration)/l.duration,f=isNaN(c)?1:l.easing(c,l.elasticity),c=l.to.strings,p=l.round,u=[],m=void 0,m=l.to.numbers.length,v=0;v<m;v++){var g=void 0,g=l.to.numbers[v],y=l.from.numbers[v],g=l.isPath?w(l.value,f*g):y+f*(g-y);p&&(l.isColor&&2<v||(g=Math.round(g*p)/p)),u.push(g)}if(l=c.length)for(m=c[0],f=0;f<l;f++)p=c[f+1],v=u[f],isNaN(v)||(m=p?m+(v+p):m+(v+" "));else m=u[0];Y[a.type](s.target,a.property,m,r,s.id),a.currentValue=m,n++}if(n=Object.keys(r).length)for(i=0;i<n;i++)N||(N=h(document.body,"transform")?"transform":"-webkit-transform"),d.animatables[i].target.style[N]=r[i].join(" ");d.currentTime=t,d.progress=t/d.duration*100}function o(t){d[t]&&d[t](d)}function a(){d.remaining&&!0!==d.remaining&&d.remaining--}function s(t){var e=d.duration,s=d.offset,h=s+d.delay,m=d.currentTime,v=d.reversed,g=r(t);if(d.children.length){var y=d.children,b=y.length;if(g>=d.currentTime)for(var x=0;x<b;x++)y[x].seek(g);else for(;b--;)y[b].seek(g)}(g>=h||!e)&&(d.began||(d.began=!0,o("begin")),o("run")),g>s&&g<e?i(g):(g<=s&&0!==m&&(i(0),v&&a()),(g>=e&&m!==e||!e)&&(i(e),v||a())),o("update"),t>=e&&(d.remaining?(u=c,"alternate"===d.direction&&(d.reversed=!d.reversed)):(d.pause(),d.completed||(d.completed=!0,o("complete"),"Promise"in window&&(f(),p=n()))),l=0)}t=void 0===t?{}:t;var c,u,l=0,f=null,p=n(),d=L(t);return d.reset=function(){var t=d.direction,e=d.loop;for(d.currentTime=0,d.progress=0,d.paused=!0,d.began=!1,d.completed=!1,d.reversed="reverse"===t,d.remaining="alternate"===t&&1===e?2:e,i(0),t=d.children.length;t--;)d.children[t].reset()},d.tick=function(t){c=t,u||(u=c),s((l+c-u)*j.speed)},d.seek=function(t){s(r(t))},d.pause=function(){var t=H.indexOf(d);-1<t&&H.splice(t,1),d.paused=!0},d.play=function(){d.paused&&(d.paused=!1,u=0,l=r(d.currentTime),H.push(d),q||V())},d.reverse=function(){d.reversed=!d.reversed,u=0,l=r(d.currentTime)},d.restart=function(){d.pause(),d.reset(),d.play()},d.finished=p,d.reset(),d.autoplay&&d.play(),d}var N,_={update:void 0,begin:void 0,run:void 0,complete:void 0,loop:1,direction:"normal",autoplay:!0,offset:0},X={duration:1e3,delay:0,easing:"easeOutElastic",elasticity:500,round:0},D="translateX translateY translateZ rotate rotateX rotateY rotateZ scale scaleX scaleY scaleZ skewX skewY perspective".split(" "),R={arr:function(t){return Array.isArray(t)},obj:function(t){return-1<Object.prototype.toString.call(t).indexOf("Object")},pth:function(t){return R.obj(t)&&t.hasOwnProperty("totalLength")},svg:function(t){return t instanceof SVGElement},dom:function(t){return t.nodeType||R.svg(t)},str:function(t){return"string"==typeof t},fnc:function(t){return"function"==typeof t},und:function(t){return void 0===t},hex:function(t){return/(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(t)},rgb:function(t){return/^rgb/.test(t)},hsl:function(t){return/^hsl/.test(t)},col:function(t){return R.hex(t)||R.rgb(t)||R.hsl(t)}},F=function(){function t(t,e,n){return(((1-3*n+3*e)*t+(3*n-6*e))*t+3*e)*t}return function(e,n,r,i){if(0<=e&&1>=e&&0<=r&&1>=r){var o=new Float32Array(11);if(e!==n||r!==i)for(var a=0;11>a;++a)o[a]=t(.1*a,e,r);return function(a){if(e===n&&r===i)return a;if(0===a)return 0;if(1===a)return 1;for(var s=0,c=1;10!==c&&o[c]<=a;++c)s+=.1;--c;var c=s+(a-o[c])/(o[c+1]-o[c])*.1,u=3*(1-3*r+3*e)*c*c+2*(3*r-6*e)*c+3*e;if(.001<=u){for(s=0;4>s&&0!==(u=3*(1-3*r+3*e)*c*c+2*(3*r-6*e)*c+3*e);++s)var l=t(c,e,r)-a,c=c-l/u;a=c}else if(0===u)a=c;else{var c=s,s=s+.1,f=0;do{l=c+(s-c)/2,u=t(l,e,r)-a,0<u?s=l:c=l}while(1e-7<Math.abs(u)&&10>++f);a=l}return t(a,n,i)}}}}(),z=function(){function t(t,e){return 0===t||1===t?t:-Math.pow(2,10*(t-1))*Math.sin(2*(t-1-e/(2*Math.PI)*Math.asin(1))*Math.PI/e)}var e,n="Quad Cubic Quart Quint Sine Expo Circ Back Elastic".split(" "),r={In:[[.55,.085,.68,.53],[.55,.055,.675,.19],[.895,.03,.685,.22],[.755,.05,.855,.06],[.47,0,.745,.715],[.95,.05,.795,.035],[.6,.04,.98,.335],[.6,-.28,.735,.045],t],Out:[[.25,.46,.45,.94],[.215,.61,.355,1],[.165,.84,.44,1],[.23,1,.32,1],[.39,.575,.565,1],[.19,1,.22,1],[.075,.82,.165,1],[.175,.885,.32,1.275],function(e,n){return 1-t(1-e,n)}],InOut:[[.455,.03,.515,.955],[.645,.045,.355,1],[.77,0,.175,1],[.86,0,.07,1],[.445,.05,.55,.95],[1,0,0,1],[.785,.135,.15,.86],[.68,-.55,.265,1.55],function(e,n){return.5>e?t(2*e,n)/2:1-t(-2*e+2,n)/2}]},i={linear:F(.25,.25,.75,.75)},o={};for(e in r)o.type=e,r[o.type].forEach(function(t){return function(e,r){i["ease"+t.type+n[r]]=R.fnc(e)?e:F.apply(s,e)}}(o)),o={type:o.type};return i}(),Y={css:function(t,e,n){return t.style[e]=n},attribute:function(t,e,n){return t.setAttribute(e,n)},object:function(t,e,n){return t[e]=n},transform:function(t,e,n,r,i){r[i]||(r[i]=[]),r[i].push(e+"("+n+")")}},H=[],q=0,V=function(){function t(){q=requestAnimationFrame(e)}function e(e){var n=H.length;if(n){for(var r=0;r<n;)H[r]&&H[r].tick(e),r++;t()}else cancelAnimationFrame(q),q=0}return t}();return j.version="2.2.0",j.speed=1,j.running=H,j.remove=function(t){t=C(t);for(var e=H.length;e--;)for(var n=H[e],r=n.animations,o=r.length;o--;)i(t,r[o].animatable.target)&&(r.splice(o,1),r.length||n.pause())},j.getValue=g,j.path=function(e,n){var r=R.str(e)?t(e)[0]:e,i=n||100;return function(t){return{el:r,property:t,totalLength:T(r)*(i/100)}}},j.setDashoffset=function(t){var e=T(t);return t.setAttribute("stroke-dasharray",e),e},j.bezier=F,j.easings=z,j.timeline=function(t){var e=j(t);return e.pause(),e.duration=0,e.add=function(n){return e.children.forEach(function(t){t.began=!0,t.completed=!0}),r(n).forEach(function(n){var r=c(n,a(X,t||{}));r.targets=r.targets||t.targets,n=e.duration;var i=r.offset;r.autoplay=!1,r.direction=e.direction,r.offset=R.und(i)?n:y(i,n),e.began=!0,e.completed=!0,e.seek(r.offset),r=j(r),r.began=!0,r.completed=!0,r.duration>n&&(e.duration=r.duration),e.children.push(r)}),e.seek(0),e.reset(),e.autoplay&&e.restart(),e},e},j.random=function(t,e){return Math.floor(Math.random()*(e-t+1))+t},j})}).call(e,n(25))},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r=n(3),i=n(4),o=n.n(i),a={install:function(t,e){e||(e={});var n=new r.a(e);t.component("toasted",o.a),t.toasted=t.prototype.$toasted=n}};"undefined"!=typeof window&&window.Vue&&(window.Toasted=a),e.default=a},function(t,e,n){"use strict";n.d(e,"a",function(){return c});var r=n(1),i=this,o="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},a=function(t,e,n){return setTimeout(function(){if(n.cached_options.position&&n.cached_options.position.includes("bottom"))return void r.a.animateOutBottom(t,function(){n.remove(t)});r.a.animateOut(t,function(){n.remove(t)})},e),!0},s=function(t,e){return("object"===("undefined"==typeof HTMLElement?"undefined":o(HTMLElement))?e instanceof HTMLElement:e&&"object"===(void 0===e?"undefined":o(e))&&null!==e&&1===e.nodeType&&"string"==typeof e.nodeName)?t.appendChild(e):t.innerHTML=e,i},c=function(t,e){var n=!1;return{el:t,text:function(e){return s(t,e),this},goAway:function(){var r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:800;return n=!0,a(t,r,e)},remove:function(){e.remove(t)},disposed:function(){return n}}}},function(t,e,n){"use strict";var r=n(12),i=n.n(r),o=n(1),a=n(7),s="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},c=n(2);String.prototype.includes||Object.defineProperty(String.prototype,"includes",{value:function(t,e){return"number"!=typeof e&&(e=0),!(e+t.length>this.length)&&-1!==this.indexOf(t,e)}});var u={},l=null,f=function(t){return t.className=t.className||null,t.onComplete=t.onComplete||null,t.position=t.position||"top-right",t.duration=t.duration||null,t.keepOnHover=t.keepOnHover||!1,t.theme=t.theme||"toasted-primary",t.type=t.type||"default",t.containerClass=t.containerClass||null,t.fullWidth=t.fullWidth||!1,t.icon=t.icon||null,t.action=t.action||null,t.fitToScreen=t.fitToScreen||null,t.closeOnSwipe=void 0===t.closeOnSwipe||t.closeOnSwipe,t.iconPack=t.iconPack||"material",t.className&&"string"==typeof t.className&&(t.className=t.className.split(" ")),t.className||(t.className=[]),t.theme&&t.className.push(t.theme.trim()),t.type&&t.className.push(t.type),t.containerClass&&"string"==typeof t.containerClass&&(t.containerClass=t.containerClass.split(" ")),t.containerClass||(t.containerClass=[]),t.position&&t.containerClass.push(t.position.trim()),t.fullWidth&&t.containerClass.push("full-width"),t.fitToScreen&&t.containerClass.push("fit-to-screen"),u=t,t},p=function(t,e){var r=document.createElement("div");if(r.classList.add("toasted"),r.hash=c.generate(),e.className&&e.className.forEach(function(t){r.classList.add(t)}),("object"===("undefined"==typeof HTMLElement?"undefined":s(HTMLElement))?t instanceof HTMLElement:t&&"object"===(void 0===t?"undefined":s(t))&&null!==t&&1===t.nodeType&&"string"==typeof t.nodeName)?r.appendChild(t):r.innerHTML=t,d(e,r),e.closeOnSwipe){var u=new i.a(r,{prevent_default:!1});u.on("pan",function(t){var e=t.deltaX;r.classList.contains("panning")||r.classList.add("panning");var n=1-Math.abs(e/80);n<0&&(n=0),o.a.animatePanning(r,e,n)}),u.on("panend",function(t){var n=t.deltaX;Math.abs(n)>80?o.a.animatePanEnd(r,function(){"function"==typeof e.onComplete&&e.onComplete(),r.parentNode&&l.remove(r)}):(r.classList.remove("panning"),o.a.animateReset(r))})}if(Array.isArray(e.action))e.action.forEach(function(t){var e=m(t,n.i(a.a)(r,l));e&&r.appendChild(e)});else if("object"===s(e.action)){var f=m(e.action,n.i(a.a)(r,l));f&&r.appendChild(f)}return r},d=function(t,e){if(t.icon){var n=document.createElement("i");switch(n.setAttribute("aria-hidden","true"),t.iconPack){case"fontawesome":n.classList.add("fa");var r=t.icon.name?t.icon.name:t.icon;r.includes("fa-")?n.classList.add(r.trim()):n.classList.add("fa-"+r.trim());break;case"mdi":n.classList.add("mdi");var i=t.icon.name?t.icon.name:t.icon;i.includes("mdi-")?n.classList.add(i.trim()):n.classList.add("mdi-"+i.trim());break;case"custom-class":var o=t.icon.name?t.icon.name:t.icon;"string"==typeof o?o.split(" ").forEach(function(t){n.classList.add(t)}):Array.isArray(o)&&o.forEach(function(t){n.classList.add(t.trim())});break;case"callback":var a=t.icon&&t.icon instanceof Function?t.icon:null;a&&(n=a(n));break;default:n.classList.add("material-icons"),n.textContent=t.icon.name?t.icon.name:t.icon}t.icon.after&&n.classList.add("after"),h(t,n,e)}},h=function(t,e,n){t.icon&&(t.icon.after&&t.icon.name?n.appendChild(e):(t.icon.name,n.insertBefore(e,n.firstChild)))},m=function(t,e){if(!t)return null;var n=document.createElement("a");if(n.classList.add("action"),n.classList.add("ripple"),t.text&&(n.text=t.text),t.href&&(n.href=t.href),t.target&&(n.target=t.target),t.icon){n.classList.add("icon");var r=document.createElement("i");switch(u.iconPack){case"fontawesome":r.classList.add("fa"),t.icon.includes("fa-")?r.classList.add(t.icon.trim()):r.classList.add("fa-"+t.icon.trim());break;case"mdi":r.classList.add("mdi"),t.icon.includes("mdi-")?r.classList.add(t.icon.trim()):r.classList.add("mdi-"+t.icon.trim());break;case"custom-class":"string"==typeof t.icon?t.icon.split(" ").forEach(function(t){n.classList.add(t)}):Array.isArray(t.icon)&&t.icon.forEach(function(t){n.classList.add(t.trim())});break;default:r.classList.add("material-icons"),r.textContent=t.icon}n.appendChild(r)}return t.class&&("string"==typeof t.class?t.class.split(" ").forEach(function(t){n.classList.add(t)}):Array.isArray(t.class)&&t.class.forEach(function(t){n.classList.add(t.trim())})),t.push&&n.addEventListener("click",function(n){if(n.preventDefault(),!u.router)return void console.warn("[vue-toasted] : Vue Router instance is not attached. please check the docs");u.router.push(t.push),t.push.dontClose||e.goAway(0)}),t.onClick&&"function"==typeof t.onClick&&n.addEventListener("click",function(n){t.onClick&&(n.preventDefault(),t.onClick(n,e))}),n};e.a=function(t,e,r){l=t,r=f(r);var i=l.container;r.containerClass.unshift("toasted-container"),i.className!==r.containerClass.join(" ")&&(i.className="",r.containerClass.forEach(function(t){i.classList.add(t)}));var s=p(e,r);e&&i.appendChild(s),s.style.opacity=0,o.a.animateIn(s);var c=r.duration,u=void 0;if(null!==c){var d=function(){return setInterval(function(){null===s.parentNode&&window.clearInterval(u),s.classList.contains("panning")||(c-=20),c<=0&&(o.a.animateOut(s,function(){"function"==typeof r.onComplete&&r.onComplete(),s.parentNode&&l.remove(s)}),window.clearInterval(u))},20)};u=d(),r.keepOnHover&&(s.addEventListener("mouseover",function(){window.clearInterval(u)}),s.addEventListener("mouseout",function(){u=d()}))}return n.i(a.a)(s,l)}},function(t,e,n){e=t.exports=n(10)(),e.push([t.i,".toasted{padding:0 20px}.toasted.rounded{border-radius:24px}.toasted .primary,.toasted.toasted-primary{border-radius:2px;min-height:38px;line-height:1.1em;background-color:#353535;padding:6px 20px;font-size:15px;font-weight:300;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.24)}.toasted .primary.success,.toasted.toasted-primary.success{background:#4caf50}.toasted .primary.error,.toasted.toasted-primary.error{background:#f44336}.toasted .primary.info,.toasted.toasted-primary.info{background:#3f51b5}.toasted .primary .action,.toasted.toasted-primary .action{color:#a1c2fa}.toasted.bubble{border-radius:30px;min-height:38px;line-height:1.1em;background-color:#ff7043;padding:0 20px;font-size:15px;font-weight:300;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.24)}.toasted.bubble.success{background:#4caf50}.toasted.bubble.error{background:#f44336}.toasted.bubble.info{background:#3f51b5}.toasted.bubble .action{color:#8e2b0c}.toasted.outline{border-radius:30px;min-height:38px;line-height:1.1em;background-color:#fff;border:1px solid #676767;padding:0 20px;font-size:15px;color:#676767;box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.24);font-weight:700}.toasted.outline.success{color:#4caf50;border-color:#4caf50}.toasted.outline.error{color:#f44336;border-color:#f44336}.toasted.outline.info{color:#3f51b5;border-color:#3f51b5}.toasted.outline .action{color:#607d8b}.toasted-container{position:fixed;z-index:10000}.toasted-container,.toasted-container.full-width{display:-ms-flexbox;display:flex;-ms-flex-direction:column;flex-direction:column}.toasted-container.full-width{max-width:86%;width:100%}.toasted-container.full-width.fit-to-screen{min-width:100%}.toasted-container.full-width.fit-to-screen .toasted:first-child{margin-top:0}.toasted-container.full-width.fit-to-screen.top-right{top:0;right:0}.toasted-container.full-width.fit-to-screen.top-left{top:0;left:0}.toasted-container.full-width.fit-to-screen.top-center{top:0;left:0;-webkit-transform:translateX(0);transform:translateX(0)}.toasted-container.full-width.fit-to-screen.bottom-right{right:0;bottom:0}.toasted-container.full-width.fit-to-screen.bottom-left{left:0;bottom:0}.toasted-container.full-width.fit-to-screen.bottom-center{left:0;bottom:0;-webkit-transform:translateX(0);transform:translateX(0)}.toasted-container.top-right{top:10%;right:7%}.toasted-container.top-left{top:10%;left:7%}.toasted-container.top-center{top:10%;left:50%;-webkit-transform:translateX(-50%);transform:translateX(-50%)}.toasted-container.bottom-right{right:5%;bottom:7%}.toasted-container.bottom-left{left:5%;bottom:7%}.toasted-container.bottom-center{left:50%;-webkit-transform:translateX(-50%);transform:translateX(-50%);bottom:7%}.toasted-container.bottom-left .toasted,.toasted-container.top-left .toasted{float:left}.toasted-container.bottom-right .toasted,.toasted-container.top-right .toasted{float:right}.toasted-container .toasted{top:35px;width:auto;clear:both;margin-top:10px;position:relative;max-width:100%;height:auto;word-break:normal;display:-ms-flexbox;display:flex;-ms-flex-align:center;align-items:center;-ms-flex-pack:justify;justify-content:space-between;box-sizing:inherit}.toasted-container .toasted .fa,.toasted-container .toasted .fab,.toasted-container .toasted .far,.toasted-container .toasted .fas,.toasted-container .toasted .material-icons,.toasted-container .toasted .mdi{margin-right:.5rem;margin-left:-.4rem}.toasted-container .toasted .fa.after,.toasted-container .toasted .fab.after,.toasted-container .toasted .far.after,.toasted-container .toasted .fas.after,.toasted-container .toasted .material-icons.after,.toasted-container .toasted .mdi.after{margin-left:.5rem;margin-right:-.4rem}.toasted-container .toasted .action{text-decoration:none;font-size:.8rem;padding:8px;margin:5px -7px 5px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:.03em;font-weight:600;cursor:pointer}.toasted-container .toasted .action.icon{padding:4px;display:-ms-flexbox;display:flex;-ms-flex-align:center;align-items:center;-ms-flex-pack:center;justify-content:center}.toasted-container .toasted .action.icon .fa,.toasted-container .toasted .action.icon .material-icons,.toasted-container .toasted .action.icon .mdi{margin-right:0;margin-left:4px}.toasted-container .toasted .action.icon:hover{text-decoration:none}.toasted-container .toasted .action:hover{text-decoration:underline}@media only screen and (max-width:600px){.toasted-container{min-width:100%}.toasted-container .toasted:first-child{margin-top:0}.toasted-container.top-right{top:0;right:0}.toasted-container.top-left{top:0;left:0}.toasted-container.top-center{top:0;left:0;-webkit-transform:translateX(0);transform:translateX(0)}.toasted-container.bottom-right{right:0;bottom:0}.toasted-container.bottom-left{left:0;bottom:0}.toasted-container.bottom-center{left:0;bottom:0;-webkit-transform:translateX(0);transform:translateX(0)}.toasted-container.bottom-center,.toasted-container.top-center{-ms-flex-align:stretch!important;align-items:stretch!important}.toasted-container.bottom-left .toasted,.toasted-container.bottom-right .toasted,.toasted-container.top-left .toasted,.toasted-container.top-right .toasted{float:none}.toasted-container .toasted{border-radius:0}}",""])},function(t,e){t.exports=function(){var t=[];return t.toString=function(){for(var t=[],e=0;e<this.length;e++){var n=this[e];n[2]?t.push("@media "+n[2]+"{"+n[1]+"}"):t.push(n[1])}return t.join("")},t.i=function(e,n){"string"==typeof e&&(e=[[null,e,""]]);for(var r={},i=0;i<this.length;i++){var o=this[i][0];"number"==typeof o&&(r[o]=!0)}for(i=0;i<e.length;i++){var a=e[i];"number"==typeof a[0]&&r[a[0]]||(n&&!a[2]?a[2]=n:n&&(a[2]="("+a[2]+") and ("+n+")"),t.push(a))}},t}},function(t,e,n){"use strict";function r(t,e){if(void 0===t||null===t)throw new TypeError("Cannot convert first argument to object");for(var n=Object(t),r=1;r<arguments.length;r++){var i=arguments[r];if(void 0!==i&&null!==i)for(var o=Object.keys(Object(i)),a=0,s=o.length;a<s;a++){var c=o[a],u=Object.getOwnPropertyDescriptor(i,c);void 0!==u&&u.enumerable&&(n[c]=i[c])}}return n}function i(){Object.assign||Object.defineProperty(Object,"assign",{enumerable:!1,configurable:!0,writable:!0,value:r})}t.exports={assign:r,polyfill:i}},function(t,e,n){var r;!function(i,o,a,s){"use strict";function c(t,e,n){return setTimeout(d(t,n),e)}function u(t,e,n){return!!Array.isArray(t)&&(l(t,n[e],n),!0)}function l(t,e,n){var r;if(t)if(t.forEach)t.forEach(e,n);else if(t.length!==s)for(r=0;r<t.length;)e.call(n,t[r],r,t),r++;else for(r in t)t.hasOwnProperty(r)&&e.call(n,t[r],r,t)}function f(t,e,n){var r="DEPRECATED METHOD: "+e+"\n"+n+" AT \n";return function(){var e=new Error("get-stack-trace"),n=e&&e.stack?e.stack.replace(/^[^\(]+?[\n$]/gm,"").replace(/^\s+at\s+/gm,"").replace(/^Object.<anonymous>\s*\(/gm,"{anonymous}()@"):"Unknown Stack Trace",o=i.console&&(i.console.warn||i.console.log);return o&&o.call(i.console,r,n),t.apply(this,arguments)}}function p(t,e,n){var r,i=e.prototype;r=t.prototype=Object.create(i),r.constructor=t,r._super=i,n&&ht(r,n)}function d(t,e){return function(){return t.apply(e,arguments)}}function h(t,e){return typeof t==gt?t.apply(e?e[0]||s:s,e):t}function m(t,e){return t===s?e:t}function v(t,e,n){l(x(e),function(e){t.addEventListener(e,n,!1)})}function g(t,e,n){l(x(e),function(e){t.removeEventListener(e,n,!1)})}function y(t,e){for(;t;){if(t==e)return!0;t=t.parentNode}return!1}function b(t,e){return t.indexOf(e)>-1}function x(t){return t.trim().split(/\s+/g)}function T(t,e,n){if(t.indexOf&&!n)return t.indexOf(e);for(var r=0;r<t.length;){if(n&&t[r][n]==e||!n&&t[r]===e)return r;r++}return-1}function w(t){return Array.prototype.slice.call(t,0)}function E(t,e,n){for(var r=[],i=[],o=0;o<t.length;){var a=e?t[o][e]:t[o];T(i,a)<0&&r.push(t[o]),i[o]=a,o++}return n&&(r=e?r.sort(function(t,n){return t[e]>n[e]}):r.sort()),r}function C(t,e){for(var n,r,i=e[0].toUpperCase()+e.slice(1),o=0;o<mt.length;){if(n=mt[o],(r=n?n+i:e)in t)return r;o++}return s}function S(){return Et++}function O(t){var e=t.ownerDocument||t;return e.defaultView||e.parentWindow||i}function A(t,e){var n=this;this.manager=t,this.callback=e,this.element=t.element,this.target=t.options.inputTarget,this.domHandler=function(e){h(t.options.enable,[t])&&n.handler(e)},this.init()}function I(t){var e=t.options.inputClass;return new(e||(Ot?H:At?W:St?B:Y))(t,M)}function M(t,e,n){var r=n.pointers.length,i=n.changedPointers.length,o=e&Mt&&r-i==0,a=e&(Pt|Lt)&&r-i==0;n.isFirst=!!o,n.isFinal=!!a,o&&(t.session={}),n.eventType=e,k(t,n),t.emit("hammer.input",n),t.recognize(n),t.session.prevInput=n}function k(t,e){var n=t.session,r=e.pointers,i=r.length;n.firstInput||(n.firstInput=j(e)),i>1&&!n.firstMultiple?n.firstMultiple=j(e):1===i&&(n.firstMultiple=!1);var o=n.firstInput,a=n.firstMultiple,s=a?a.center:o.center,c=e.center=N(r);e.timeStamp=xt(),e.deltaTime=e.timeStamp-o.timeStamp,e.angle=R(s,c),e.distance=D(s,c),P(n,e),e.offsetDirection=X(e.deltaX,e.deltaY);var u=_(e.deltaTime,e.deltaX,e.deltaY);e.overallVelocityX=u.x,e.overallVelocityY=u.y,e.overallVelocity=bt(u.x)>bt(u.y)?u.x:u.y,e.scale=a?z(a.pointers,r):1,e.rotation=a?F(a.pointers,r):0,e.maxPointers=n.prevInput?e.pointers.length>n.prevInput.maxPointers?e.pointers.length:n.prevInput.maxPointers:e.pointers.length,L(n,e);var l=t.element;y(e.srcEvent.target,l)&&(l=e.srcEvent.target),e.target=l}function P(t,e){var n=e.center,r=t.offsetDelta||{},i=t.prevDelta||{},o=t.prevInput||{};e.eventType!==Mt&&o.eventType!==Pt||(i=t.prevDelta={x:o.deltaX||0,y:o.deltaY||0},r=t.offsetDelta={x:n.x,y:n.y}),e.deltaX=i.x+(n.x-r.x),e.deltaY=i.y+(n.y-r.y)}function L(t,e){var n,r,i,o,a=t.lastInterval||e,c=e.timeStamp-a.timeStamp;if(e.eventType!=Lt&&(c>It||a.velocity===s)){var u=e.deltaX-a.deltaX,l=e.deltaY-a.deltaY,f=_(c,u,l);r=f.x,i=f.y,n=bt(f.x)>bt(f.y)?f.x:f.y,o=X(u,l),t.lastInterval=e}else n=a.velocity,r=a.velocityX,i=a.velocityY,o=a.direction;e.velocity=n,e.velocityX=r,e.velocityY=i,e.direction=o}function j(t){for(var e=[],n=0;n<t.pointers.length;)e[n]={clientX:yt(t.pointers[n].clientX),clientY:yt(t.pointers[n].clientY)},n++;return{timeStamp:xt(),pointers:e,center:N(e),deltaX:t.deltaX,deltaY:t.deltaY}}function N(t){var e=t.length;if(1===e)return{x:yt(t[0].clientX),y:yt(t[0].clientY)};for(var n=0,r=0,i=0;i<e;)n+=t[i].clientX,r+=t[i].clientY,i++;return{x:yt(n/e),y:yt(r/e)}}function _(t,e,n){return{x:e/t||0,y:n/t||0}}function X(t,e){return t===e?jt:bt(t)>=bt(e)?t<0?Nt:_t:e<0?Xt:Dt}function D(t,e,n){n||(n=Yt);var r=e[n[0]]-t[n[0]],i=e[n[1]]-t[n[1]];return Math.sqrt(r*r+i*i)}function R(t,e,n){n||(n=Yt);var r=e[n[0]]-t[n[0]],i=e[n[1]]-t[n[1]];return 180*Math.atan2(i,r)/Math.PI}function F(t,e){return R(e[1],e[0],Ht)+R(t[1],t[0],Ht)}function z(t,e){return D(e[0],e[1],Ht)/D(t[0],t[1],Ht)}function Y(){this.evEl=Vt,this.evWin=Wt,this.pressed=!1,A.apply(this,arguments)}function H(){this.evEl=$t,this.evWin=Gt,A.apply(this,arguments),this.store=this.manager.session.pointerEvents=[]}function q(){this.evTarget=Qt,this.evWin=Jt,this.started=!1,A.apply(this,arguments)}function V(t,e){var n=w(t.touches),r=w(t.changedTouches);return e&(Pt|Lt)&&(n=E(n.concat(r),"identifier",!0)),[n,r]}function W(){this.evTarget=te,this.targetIds={},A.apply(this,arguments)}function U(t,e){var n=w(t.touches),r=this.targetIds;if(e&(Mt|kt)&&1===n.length)return r[n[0].identifier]=!0,[n,n];var i,o,a=w(t.changedTouches),s=[],c=this.target;if(o=n.filter(function(t){return y(t.target,c)}),e===Mt)for(i=0;i<o.length;)r[o[i].identifier]=!0,i++;for(i=0;i<a.length;)r[a[i].identifier]&&s.push(a[i]),e&(Pt|Lt)&&delete r[a[i].identifier],i++;return s.length?[E(o.concat(s),"identifier",!0),s]:void 0}function B(){A.apply(this,arguments);var t=d(this.handler,this);this.touch=new W(this.manager,t),this.mouse=new Y(this.manager,t),this.primaryTouch=null,this.lastTouches=[]}function $(t,e){t&Mt?(this.primaryTouch=e.changedPointers[0].identifier,G.call(this,e)):t&(Pt|Lt)&&G.call(this,e)}function G(t){var e=t.changedPointers[0];if(e.identifier===this.primaryTouch){var n={x:e.clientX,y:e.clientY};this.lastTouches.push(n);var r=this.lastTouches,i=function(){var t=r.indexOf(n);t>-1&&r.splice(t,1)};setTimeout(i,ee)}}function Z(t){for(var e=t.srcEvent.clientX,n=t.srcEvent.clientY,r=0;r<this.lastTouches.length;r++){var i=this.lastTouches[r],o=Math.abs(e-i.x),a=Math.abs(n-i.y);if(o<=ne&&a<=ne)return!0}return!1}function Q(t,e){this.manager=t,this.set(e)}function J(t){if(b(t,se))return se;var e=b(t,ce),n=b(t,ue);return e&&n?se:e||n?e?ce:ue:b(t,ae)?ae:oe}function K(t){this.options=ht({},this.defaults,t||{}),this.id=S(),this.manager=null,this.options.enable=m(this.options.enable,!0),this.state=fe,this.simultaneous={},this.requireFail=[]}function tt(t){return t&ve?"cancel":t&he?"end":t&de?"move":t&pe?"start":""}function et(t){return t==Dt?"down":t==Xt?"up":t==Nt?"left":t==_t?"right":""}function nt(t,e){var n=e.manager;return n?n.get(t):t}function rt(){K.apply(this,arguments)}function it(){rt.apply(this,arguments),this.pX=null,this.pY=null}function ot(){rt.apply(this,arguments)}function at(){K.apply(this,arguments),this._timer=null,this._input=null}function st(){rt.apply(this,arguments)}function ct(){rt.apply(this,arguments)}function ut(){K.apply(this,arguments),this.pTime=!1,this.pCenter=!1,this._timer=null,this._input=null,this.count=0}function lt(t,e){return e=e||{},e.recognizers=m(e.recognizers,lt.defaults.preset),new ft(t,e)}function ft(t,e){this.options=ht({},lt.defaults,e||{}),this.options.inputTarget=this.options.inputTarget||t,this.handlers={},this.session={},this.recognizers=[],this.oldCssProps={},this.element=t,this.input=I(this),this.touchAction=new Q(this,this.options.touchAction),pt(this,!0),l(this.options.recognizers,function(t){var e=this.add(new t[0](t[1]));t[2]&&e.recognizeWith(t[2]),t[3]&&e.requireFailure(t[3])},this)}function pt(t,e){var n=t.element;if(n.style){var r;l(t.options.cssProps,function(i,o){r=C(n.style,o),e?(t.oldCssProps[r]=n.style[r],n.style[r]=i):n.style[r]=t.oldCssProps[r]||""}),e||(t.oldCssProps={})}}function dt(t,e){var n=o.createEvent("Event");n.initEvent(t,!0,!0),n.gesture=e,e.target.dispatchEvent(n)}var ht,mt=["","webkit","Moz","MS","ms","o"],vt=o.createElement("div"),gt="function",yt=Math.round,bt=Math.abs,xt=Date.now;ht="function"!=typeof Object.assign?function(t){if(t===s||null===t)throw new TypeError("Cannot convert undefined or null to object");for(var e=Object(t),n=1;n<arguments.length;n++){var r=arguments[n];if(r!==s&&null!==r)for(var i in r)r.hasOwnProperty(i)&&(e[i]=r[i])}return e}:Object.assign;var Tt=f(function(t,e,n){for(var r=Object.keys(e),i=0;i<r.length;)(!n||n&&t[r[i]]===s)&&(t[r[i]]=e[r[i]]),i++;return t},"extend","Use `assign`."),wt=f(function(t,e){return Tt(t,e,!0)},"merge","Use `assign`."),Et=1,Ct=/mobile|tablet|ip(ad|hone|od)|android/i,St="ontouchstart"in i,Ot=C(i,"PointerEvent")!==s,At=St&&Ct.test(navigator.userAgent),It=25,Mt=1,kt=2,Pt=4,Lt=8,jt=1,Nt=2,_t=4,Xt=8,Dt=16,Rt=Nt|_t,Ft=Xt|Dt,zt=Rt|Ft,Yt=["x","y"],Ht=["clientX","clientY"];A.prototype={handler:function(){},init:function(){this.evEl&&v(this.element,this.evEl,this.domHandler),this.evTarget&&v(this.target,this.evTarget,this.domHandler),this.evWin&&v(O(this.element),this.evWin,this.domHandler)},destroy:function(){this.evEl&&g(this.element,this.evEl,this.domHandler),this.evTarget&&g(this.target,this.evTarget,this.domHandler),this.evWin&&g(O(this.element),this.evWin,this.domHandler)}};var qt={mousedown:Mt,mousemove:kt,mouseup:Pt},Vt="mousedown",Wt="mousemove mouseup";p(Y,A,{handler:function(t){var e=qt[t.type];e&Mt&&0===t.button&&(this.pressed=!0),e&kt&&1!==t.which&&(e=Pt),this.pressed&&(e&Pt&&(this.pressed=!1),this.callback(this.manager,e,{pointers:[t],changedPointers:[t],pointerType:"mouse",srcEvent:t}))}});var Ut={pointerdown:Mt,pointermove:kt,pointerup:Pt,pointercancel:Lt,pointerout:Lt},Bt={2:"touch",3:"pen",4:"mouse",5:"kinect"},$t="pointerdown",Gt="pointermove pointerup pointercancel";i.MSPointerEvent&&!i.PointerEvent&&($t="MSPointerDown",Gt="MSPointerMove MSPointerUp MSPointerCancel"),p(H,A,{handler:function(t){var e=this.store,n=!1,r=t.type.toLowerCase().replace("ms",""),i=Ut[r],o=Bt[t.pointerType]||t.pointerType,a="touch"==o,s=T(e,t.pointerId,"pointerId");i&Mt&&(0===t.button||a)?s<0&&(e.push(t),s=e.length-1):i&(Pt|Lt)&&(n=!0),s<0||(e[s]=t,this.callback(this.manager,i,{pointers:e,changedPointers:[t],pointerType:o,srcEvent:t}),n&&e.splice(s,1))}});var Zt={touchstart:Mt,touchmove:kt,touchend:Pt,touchcancel:Lt},Qt="touchstart",Jt="touchstart touchmove touchend touchcancel";p(q,A,{handler:function(t){var e=Zt[t.type];if(e===Mt&&(this.started=!0),this.started){var n=V.call(this,t,e);e&(Pt|Lt)&&n[0].length-n[1].length==0&&(this.started=!1),this.callback(this.manager,e,{pointers:n[0],changedPointers:n[1],pointerType:"touch",srcEvent:t})}}});var Kt={touchstart:Mt,touchmove:kt,touchend:Pt,touchcancel:Lt},te="touchstart touchmove touchend touchcancel";p(W,A,{handler:function(t){var e=Kt[t.type],n=U.call(this,t,e);n&&this.callback(this.manager,e,{pointers:n[0],changedPointers:n[1],pointerType:"touch",srcEvent:t})}});var ee=2500,ne=25;p(B,A,{handler:function(t,e,n){var r="touch"==n.pointerType,i="mouse"==n.pointerType;if(!(i&&n.sourceCapabilities&&n.sourceCapabilities.firesTouchEvents)){if(r)$.call(this,e,n);else if(i&&Z.call(this,n))return;this.callback(t,e,n)}},destroy:function(){this.touch.destroy(),this.mouse.destroy()}});var re=C(vt.style,"touchAction"),ie=re!==s,oe="auto",ae="manipulation",se="none",ce="pan-x",ue="pan-y",le=function(){if(!ie)return!1;var t={},e=i.CSS&&i.CSS.supports;return["auto","manipulation","pan-y","pan-x","pan-x pan-y","none"].forEach(function(n){t[n]=!e||i.CSS.supports("touch-action",n)}),t}();Q.prototype={set:function(t){"compute"==t&&(t=this.compute()),ie&&this.manager.element.style&&le[t]&&(this.manager.element.style[re]=t),this.actions=t.toLowerCase().trim()},update:function(){this.set(this.manager.options.touchAction)},compute:function(){var t=[];return l(this.manager.recognizers,function(e){h(e.options.enable,[e])&&(t=t.concat(e.getTouchAction()))}),J(t.join(" "))},preventDefaults:function(t){var e=t.srcEvent,n=t.offsetDirection;if(this.manager.session.prevented)return void e.preventDefault();var r=this.actions,i=b(r,se)&&!le[se],o=b(r,ue)&&!le[ue],a=b(r,ce)&&!le[ce];if(i){var s=1===t.pointers.length,c=t.distance<2,u=t.deltaTime<250;if(s&&c&&u)return}return a&&o?void 0:i||o&&n&Rt||a&&n&Ft?this.preventSrc(e):void 0},preventSrc:function(t){this.manager.session.prevented=!0,t.preventDefault()}};var fe=1,pe=2,de=4,he=8,me=he,ve=16;K.prototype={defaults:{},set:function(t){return ht(this.options,t),this.manager&&this.manager.touchAction.update(),this},recognizeWith:function(t){if(u(t,"recognizeWith",this))return this;var e=this.simultaneous;return t=nt(t,this),e[t.id]||(e[t.id]=t,t.recognizeWith(this)),this},dropRecognizeWith:function(t){return u(t,"dropRecognizeWith",this)?this:(t=nt(t,this),delete this.simultaneous[t.id],this)},requireFailure:function(t){if(u(t,"requireFailure",this))return this;var e=this.requireFail;return t=nt(t,this),-1===T(e,t)&&(e.push(t),t.requireFailure(this)),this},dropRequireFailure:function(t){if(u(t,"dropRequireFailure",this))return this;t=nt(t,this);var e=T(this.requireFail,t);return e>-1&&this.requireFail.splice(e,1),this},hasRequireFailures:function(){return this.requireFail.length>0},canRecognizeWith:function(t){return!!this.simultaneous[t.id]},emit:function(t){function e(e){n.manager.emit(e,t)}var n=this,r=this.state;r<he&&e(n.options.event+tt(r)),e(n.options.event),t.additionalEvent&&e(t.additionalEvent),r>=he&&e(n.options.event+tt(r))},tryEmit:function(t){if(this.canEmit())return this.emit(t);this.state=32},canEmit:function(){for(var t=0;t<this.requireFail.length;){if(!(this.requireFail[t].state&(32|fe)))return!1;t++}return!0},recognize:function(t){var e=ht({},t);if(!h(this.options.enable,[this,e]))return this.reset(),void(this.state=32);this.state&(me|ve|32)&&(this.state=fe),this.state=this.process(e),this.state&(pe|de|he|ve)&&this.tryEmit(e)},process:function(t){},getTouchAction:function(){},reset:function(){}},p(rt,K,{defaults:{pointers:1},attrTest:function(t){var e=this.options.pointers;return 0===e||t.pointers.length===e},process:function(t){var e=this.state,n=t.eventType,r=e&(pe|de),i=this.attrTest(t);return r&&(n&Lt||!i)?e|ve:r||i?n&Pt?e|he:e&pe?e|de:pe:32}}),p(it,rt,{defaults:{event:"pan",threshold:10,pointers:1,direction:zt},getTouchAction:function(){var t=this.options.direction,e=[];return t&Rt&&e.push(ue),t&Ft&&e.push(ce),e},directionTest:function(t){var e=this.options,n=!0,r=t.distance,i=t.direction,o=t.deltaX,a=t.deltaY;return i&e.direction||(e.direction&Rt?(i=0===o?jt:o<0?Nt:_t,n=o!=this.pX,r=Math.abs(t.deltaX)):(i=0===a?jt:a<0?Xt:Dt,n=a!=this.pY,r=Math.abs(t.deltaY))),t.direction=i,n&&r>e.threshold&&i&e.direction},attrTest:function(t){return rt.prototype.attrTest.call(this,t)&&(this.state&pe||!(this.state&pe)&&this.directionTest(t))},emit:function(t){this.pX=t.deltaX,this.pY=t.deltaY;var e=et(t.direction);e&&(t.additionalEvent=this.options.event+e),this._super.emit.call(this,t)}}),p(ot,rt,{defaults:{event:"pinch",threshold:0,pointers:2},getTouchAction:function(){return[se]},attrTest:function(t){return this._super.attrTest.call(this,t)&&(Math.abs(t.scale-1)>this.options.threshold||this.state&pe)},emit:function(t){if(1!==t.scale){var e=t.scale<1?"in":"out";t.additionalEvent=this.options.event+e}this._super.emit.call(this,t)}}),p(at,K,{defaults:{event:"press",pointers:1,time:251,threshold:9},getTouchAction:function(){return[oe]},process:function(t){var e=this.options,n=t.pointers.length===e.pointers,r=t.distance<e.threshold,i=t.deltaTime>e.time;if(this._input=t,!r||!n||t.eventType&(Pt|Lt)&&!i)this.reset();else if(t.eventType&Mt)this.reset(),this._timer=c(function(){this.state=me,this.tryEmit()},e.time,this);else if(t.eventType&Pt)return me;return 32},reset:function(){clearTimeout(this._timer)},emit:function(t){this.state===me&&(t&&t.eventType&Pt?this.manager.emit(this.options.event+"up",t):(this._input.timeStamp=xt(),this.manager.emit(this.options.event,this._input)))}}),p(st,rt,{defaults:{event:"rotate",threshold:0,pointers:2},getTouchAction:function(){return[se]},attrTest:function(t){return this._super.attrTest.call(this,t)&&(Math.abs(t.rotation)>this.options.threshold||this.state&pe)}}),p(ct,rt,{defaults:{event:"swipe",threshold:10,velocity:.3,direction:Rt|Ft,pointers:1},getTouchAction:function(){return it.prototype.getTouchAction.call(this)},attrTest:function(t){var e,n=this.options.direction;return n&(Rt|Ft)?e=t.overallVelocity:n&Rt?e=t.overallVelocityX:n&Ft&&(e=t.overallVelocityY),this._super.attrTest.call(this,t)&&n&t.offsetDirection&&t.distance>this.options.threshold&&t.maxPointers==this.options.pointers&&bt(e)>this.options.velocity&&t.eventType&Pt},emit:function(t){var e=et(t.offsetDirection);e&&this.manager.emit(this.options.event+e,t),this.manager.emit(this.options.event,t)}}),p(ut,K,{defaults:{event:"tap",pointers:1,taps:1,interval:300,time:250,threshold:9,posThreshold:10},getTouchAction:function(){return[ae]},process:function(t){var e=this.options,n=t.pointers.length===e.pointers,r=t.distance<e.threshold,i=t.deltaTime<e.time;if(this.reset(),t.eventType&Mt&&0===this.count)return this.failTimeout();if(r&&i&&n){if(t.eventType!=Pt)return this.failTimeout();var o=!this.pTime||t.timeStamp-this.pTime<e.interval,a=!this.pCenter||D(this.pCenter,t.center)<e.posThreshold;this.pTime=t.timeStamp,this.pCenter=t.center,a&&o?this.count+=1:this.count=1,this._input=t;if(0===this.count%e.taps)return this.hasRequireFailures()?(this._timer=c(function(){this.state=me,this.tryEmit()},e.interval,this),pe):me}return 32},failTimeout:function(){return this._timer=c(function(){this.state=32},this.options.interval,this),32},reset:function(){clearTimeout(this._timer)},emit:function(){this.state==me&&(this._input.tapCount=this.count,this.manager.emit(this.options.event,this._input))}}),lt.VERSION="2.0.7",lt.defaults={domEvents:!1,touchAction:"compute",enable:!0,inputTarget:null,inputClass:null,preset:[[st,{enable:!1}],[ot,{enable:!1},["rotate"]],[ct,{direction:Rt}],[it,{direction:Rt},["swipe"]],[ut],[ut,{event:"doubletap",taps:2},["tap"]],[at]],cssProps:{userSelect:"none",touchSelect:"none",touchCallout:"none",contentZooming:"none",userDrag:"none",tapHighlightColor:"rgba(0,0,0,0)"}};ft.prototype={set:function(t){return ht(this.options,t),t.touchAction&&this.touchAction.update(),t.inputTarget&&(this.input.destroy(),this.input.target=t.inputTarget,this.input.init()),this},stop:function(t){this.session.stopped=t?2:1},recognize:function(t){var e=this.session;if(!e.stopped){this.touchAction.preventDefaults(t);var n,r=this.recognizers,i=e.curRecognizer;(!i||i&&i.state&me)&&(i=e.curRecognizer=null);for(var o=0;o<r.length;)n=r[o],2===e.stopped||i&&n!=i&&!n.canRecognizeWith(i)?n.reset():n.recognize(t),!i&&n.state&(pe|de|he)&&(i=e.curRecognizer=n),o++}},get:function(t){if(t instanceof K)return t;for(var e=this.recognizers,n=0;n<e.length;n++)if(e[n].options.event==t)return e[n];return null},add:function(t){if(u(t,"add",this))return this;var e=this.get(t.options.event);return e&&this.remove(e),this.recognizers.push(t),t.manager=this,this.touchAction.update(),t},remove:function(t){if(u(t,"remove",this))return this;if(t=this.get(t)){var e=this.recognizers,n=T(e,t);-1!==n&&(e.splice(n,1),this.touchAction.update())}return this},on:function(t,e){if(t!==s&&e!==s){var n=this.handlers;return l(x(t),function(t){n[t]=n[t]||[],n[t].push(e)}),this}},off:function(t,e){if(t!==s){var n=this.handlers;return l(x(t),function(t){e?n[t]&&n[t].splice(T(n[t],e),1):delete n[t]}),this}},emit:function(t,e){this.options.domEvents&&dt(t,e);var n=this.handlers[t]&&this.handlers[t].slice();if(n&&n.length){e.type=t,e.preventDefault=function(){e.srcEvent.preventDefault()};for(var r=0;r<n.length;)n[r](e),r++}},destroy:function(){this.element&&pt(this,!1),this.handlers={},this.session={},this.input.destroy(),this.element=null}},ht(lt,{INPUT_START:Mt,INPUT_MOVE:kt,INPUT_END:Pt,INPUT_CANCEL:Lt,STATE_POSSIBLE:fe,STATE_BEGAN:pe,STATE_CHANGED:de,STATE_ENDED:he,STATE_RECOGNIZED:me,STATE_CANCELLED:ve,STATE_FAILED:32,DIRECTION_NONE:jt,DIRECTION_LEFT:Nt,DIRECTION_RIGHT:_t,DIRECTION_UP:Xt,DIRECTION_DOWN:Dt,DIRECTION_HORIZONTAL:Rt,DIRECTION_VERTICAL:Ft,DIRECTION_ALL:zt,Manager:ft,Input:A,TouchAction:Q,TouchInput:W,MouseInput:Y,PointerEventInput:H,TouchMouseInput:B,SingleTouchInput:q,Recognizer:K,AttrRecognizer:rt,Tap:ut,Pan:it,Swipe:ct,Pinch:ot,Rotate:st,Press:at,on:v,off:g,each:l,merge:wt,extend:Tt,assign:ht,inherit:p,bindFn:d,prefixed:C}),(void 0!==i?i:"undefined"!=typeof self?self:{}).Hammer=lt,(r=function(){return lt}.call(e,n,e,t))!==s&&(t.exports=r)}(window,document)},function(t,e){t.exports=function(t,e,n){for(var r=(2<<Math.log(e.length-1)/Math.LN2)-1,i=-~(1.6*r*n/e.length),o="";;)for(var a=t(i),s=i;s--;)if(o+=e[a[s]&r]||"",o.length===+n)return o}},function(t,e,n){"use strict";function r(t){var e="",n=Math.floor(.001*(Date.now()-s));return n===o?i++:(i=0,o=n),e+=a(c),e+=a(t),i>0&&(e+=a(i)),e+=a(n)}var i,o,a=n(15),s=(n(0),1567752802062),c=7;t.exports=r},function(t,e,n){"use strict";function r(t){for(var e,n=0,r="";!e;)r+=a(o,i.get(),1),e=t<Math.pow(16,n+1),n++;return r}var i=n(0),o=n(18),a=n(13);t.exports=r},function(t,e,n){"use strict";function r(e){return s.seed(e),t.exports}function i(e){return l=e,t.exports}function o(t){return void 0!==t&&s.characters(t),s.shuffled()}function a(){return c(l)}var s=n(0),c=n(14),u=n(17),l=n(20)||0;t.exports=a,t.exports.generate=a,t.exports.seed=r,t.exports.worker=i,t.exports.characters=o,t.exports.isValid=u},function(t,e,n){"use strict";function r(t){return!(!t||"string"!=typeof t||t.length<6)&&!new RegExp("[^"+i.get().replace(/[|\\{}()[\]^$+*?.-]/g,"\\$&")+"]").test(t)}var i=n(0);t.exports=r},function(t,e,n){"use strict";var r,i="object"==typeof window&&(window.crypto||window.msCrypto);r=i&&i.getRandomValues?function(t){return i.getRandomValues(new Uint8Array(t))}:function(t){for(var e=[],n=0;n<t;n++)e.push(Math.floor(256*Math.random()));return e},t.exports=r},function(t,e,n){"use strict";function r(){return(o=(9301*o+49297)%233280)/233280}function i(t){o=t}var o=1;t.exports={nextValue:r,seed:i}},function(t,e,n){"use strict";t.exports=0},function(t,e){t.exports=function(t,e,n,r){var i,o=t=t||{},a=typeof t.default;"object"!==a&&"function"!==a||(i=t,o=t.default);var s="function"==typeof o?o.options:o;if(e&&(s.render=e.render,s.staticRenderFns=e.staticRenderFns),n&&(s._scopeId=n),r){var c=Object.create(s.computed||null);Object.keys(r).forEach(function(t){var e=r[t];c[t]=function(){return e}}),s.computed=c}return{esModule:i,exports:o,options:s}}},function(t,e,n){var r=n(9);"string"==typeof r&&(r=[[t.i,r,""]]),r.locals&&(t.exports=r.locals);n(23)("df0682cc",r,!0,{})},function(t,e,n){function r(t){for(var e=0;e<t.length;e++){var n=t[e],r=l[n.id];if(r){r.refs++;for(var i=0;i<r.parts.length;i++)r.parts[i](n.parts[i]);for(;i<n.parts.length;i++)r.parts.push(o(n.parts[i]));r.parts.length>n.parts.length&&(r.parts.length=n.parts.length)}else{for(var a=[],i=0;i<n.parts.length;i++)a.push(o(n.parts[i]));l[n.id]={id:n.id,refs:1,parts:a}}}}function i(){var t=document.createElement("style");return t.type="text/css",f.appendChild(t),t}function o(t){var e,n,r=document.querySelector("style["+g+'~="'+t.id+'"]');if(r){if(h)return m;r.parentNode.removeChild(r)}if(y){var o=d++;r=p||(p=i()),e=a.bind(null,r,o,!1),n=a.bind(null,r,o,!0)}else r=i(),e=s.bind(null,r),n=function(){r.parentNode.removeChild(r)};return e(t),function(r){if(r){if(r.css===t.css&&r.media===t.media&&r.sourceMap===t.sourceMap)return;e(t=r)}else n()}}function a(t,e,n,r){var i=n?"":r.css;if(t.styleSheet)t.styleSheet.cssText=b(e,i);else{var o=document.createTextNode(i),a=t.childNodes;a[e]&&t.removeChild(a[e]),a.length?t.insertBefore(o,a[e]):t.appendChild(o)}}function s(t,e){var n=e.css,r=e.media,i=e.sourceMap;if(r&&t.setAttribute("media",r),v.ssrId&&t.setAttribute(g,e.id),i&&(n+="\n/*# sourceURL="+i.sources[0]+" */",n+="\n/*# sourceMappingURL=data:application/json;base64,"+btoa(unescape(encodeURIComponent(JSON.stringify(i))))+" */"),t.styleSheet)t.styleSheet.cssText=n;else{for(;t.firstChild;)t.removeChild(t.firstChild);t.appendChild(document.createTextNode(n))}}var c="undefined"!=typeof document;if("undefined"!=typeof DEBUG&&DEBUG&&!c)throw new Error("vue-style-loader cannot be used in a non-browser environment. Use { target: 'node' } in your Webpack config to indicate a server-rendering environment.");var u=n(24),l={},f=c&&(document.head||document.getElementsByTagName("head")[0]),p=null,d=0,h=!1,m=function(){},v=null,g="data-vue-ssr-id",y="undefined"!=typeof navigator&&/msie [6-9]\b/.test(navigator.userAgent.toLowerCase());t.exports=function(t,e,n,i){h=n,v=i||{};var o=u(t,e);return r(o),function(e){for(var n=[],i=0;i<o.length;i++){var a=o[i],s=l[a.id];s.refs--,n.push(s)}e?(o=u(t,e),r(o)):o=[];for(var i=0;i<n.length;i++){var s=n[i];if(0===s.refs){for(var c=0;c<s.parts.length;c++)s.parts[c]();delete l[s.id]}}}};var b=function(){var t=[];return function(e,n){return t[e]=n,t.filter(Boolean).join("\n")}}()},function(t,e){t.exports=function(t,e){for(var n=[],r={},i=0;i<e.length;i++){var o=e[i],a=o[0],s=o[1],c=o[2],u=o[3],l={id:t+":"+i,css:s,media:c,sourceMap:u};r[a]?r[a].parts.push(l):n.push(r[a]={id:a,parts:[l]})}return n}},function(t,e){var n;n=function(){return this}();try{n=n||Function("return this")()||(0,eval)("this")}catch(t){"object"==typeof window&&(n=window)}t.exports=n}])});
-},{}],"src/plugins/vue-toasted-plugin.js":[function(require,module,exports) {
-"use strict";
-
-var _vue = _interopRequireDefault(require("vue"));
-
-var _vueToasted = _interopRequireDefault(require("vue-toasted"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-_vue.default.use(_vueToasted.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-toasted":"node_modules/vue-toasted/dist/vue-toasted.min.js"}],"src/plugins/window-listeners-plugin.js":[function(require,module,exports) {
-// api
-//     windowListeners:{}
-let Vue = require("vue").default;
-
-let windowListenersSymbol = Symbol("$windowListeners");
-Object.defineProperty(Vue.prototype, "$windowListeners", {
-  get() {
-    if (this[windowListenersSymbol] == undefined) {
-      this[windowListenersSymbol] = {};
-    }
-
-    return this[windowListenersSymbol];
-  },
-
-  set(value) {
-    this[windowListenersSymbol] = value;
-  }
-
-});
-Vue.mixin(module.exports = {
-  beforeCreate() {
-    const newOption = this.$options.windowListeners;
-
-    if (!newOption) {
-      return;
-    }
-
-    const vueStaticDestination = this.$windowListeners || this;
-
-    if (vueStaticDestination instanceof Object) {
-      if (newOption instanceof Function) {
-        Object.assign(vueStaticDestination, newOption.apply(this));
-      } else if (typeof newOption === 'object') {
-        Object.assign(vueStaticDestination, newOption);
-      }
-    }
-
-    if (this.$windowListeners instanceof Object) {
-      for (let [eachKey, eachValue] of Object.entries(this.$windowListeners)) {
-        if (eachValue.bind instanceof Function) {
-          eachValue = eachValue.bind(this);
-        }
-
-        window.addEventListener(eachKey, eachValue);
-      }
-    }
-  },
-
-  beforeDestroy() {
-    // remove all the listeners
-    if (this[windowListenersSymbol] instanceof Object) {
-      for (let [eachKey, eachValue] of Object.entries(this[windowListenersSymbol])) {
-        window.removeEventListener(eachKey, eachValue);
-      }
-    }
-  }
-
-});
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/without-watchers.js":[function(require,module,exports) {
-// api
-//     this.withoutWatchers(source, callback)
-let Vue = require("vue").default; // TODO: potenial issue if a second source calls this before the first one ends (async)
-// TODO: issues with dynamically added watchers
-
-
-Vue.mixin(module.exports = {
-  methods: {
-    $withoutWatchers(source, callback) {
-      const watchers = this._watchers.map(watcher => ({
-        cb: watcher.cb,
-        sync: watcher.sync
-      })); // disable
-
-
-      for (let index in this._watchers) {
-        this._watchers[index] = Object.assign(this._watchers[index], {
-          cb: () => null,
-          sync: true
-        });
-      }
-
-      if (this.$withoutWatchers.showSource) {
-        console.group(`[${source}] suspended all watch functions`);
-      }
-
-      callback();
-
-      if (this.$withoutWatchers.showSource) {
-        console.groupEnd();
-        console.log(`[${source}] resumed all watch functions`);
-      } // enable
-
-
-      for (let index in this._watchers) {
-        this._watchers[index] = Object.assign(this._watchers[index], watchers[index]);
-      }
-    }
-
-  }
 });
 },{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/workers-plugin.js":[function(require,module,exports) {
 // api
@@ -37508,8 +37508,8 @@ _vue.default.use(_vuePlyr.default, {
     // default skip amount is 5 seconds
     hideControls: false,
     keyboard: {
-      focused: true,
-      global: true
+      focused: false,
+      global: false
     },
     tooltips: {
       controls: true,
@@ -37532,18 +37532,18 @@ module.exports = {
   "child": require("./child.js"),
   "css-baseline-plugin": require("./css-baseline-plugin.js"),
   "good-vue-plugin": require("./good-vue-plugin.js"),
-  "keen-ui-plugin": require("./keen-ui-plugin.js"),
   "portal-plugin": require("./portal-plugin.js"),
   "resolvables-plugin": require("./resolvables-plugin.js"),
-  "root-hooks-plugin": require("./root-hooks-plugin.js"),
   "router-plugin": require("./router-plugin.js"),
   "vue-toasted-plugin": require("./vue-toasted-plugin.js"),
   "window-listeners-plugin": require("./window-listeners-plugin.js"),
   "without-watchers": require("./without-watchers.js"),
+  "keen-ui-plugin": require("./keen-ui-plugin.js"),
+  "root-hooks-plugin": require("./root-hooks-plugin.js"),
   "workers-plugin": require("./workers-plugin.js"),
   "youtube-player-plugin": require("./youtube-player-plugin.js")
 };
-},{"./child.js":"src/plugins/child.js","./css-baseline-plugin.js":"src/plugins/css-baseline-plugin.js","./good-vue-plugin.js":"src/plugins/good-vue-plugin.js","./keen-ui-plugin.js":"src/plugins/keen-ui-plugin.js","./portal-plugin.js":"src/plugins/portal-plugin.js","./resolvables-plugin.js":"src/plugins/resolvables-plugin.js","./root-hooks-plugin.js":"src/plugins/root-hooks-plugin.js","./router-plugin.js":"src/plugins/router-plugin.js","./vue-toasted-plugin.js":"src/plugins/vue-toasted-plugin.js","./window-listeners-plugin.js":"src/plugins/window-listeners-plugin.js","./without-watchers.js":"src/plugins/without-watchers.js","./workers-plugin.js":"src/plugins/workers-plugin.js","./youtube-player-plugin.js":"src/plugins/youtube-player-plugin.js"}],"node_modules/file-saver/dist/FileSaver.min.js":[function(require,module,exports) {
+},{"./child.js":"src/plugins/child.js","./css-baseline-plugin.js":"src/plugins/css-baseline-plugin.js","./good-vue-plugin.js":"src/plugins/good-vue-plugin.js","./portal-plugin.js":"src/plugins/portal-plugin.js","./resolvables-plugin.js":"src/plugins/resolvables-plugin.js","./router-plugin.js":"src/plugins/router-plugin.js","./vue-toasted-plugin.js":"src/plugins/vue-toasted-plugin.js","./window-listeners-plugin.js":"src/plugins/window-listeners-plugin.js","./without-watchers.js":"src/plugins/without-watchers.js","./keen-ui-plugin.js":"src/plugins/keen-ui-plugin.js","./root-hooks-plugin.js":"src/plugins/root-hooks-plugin.js","./workers-plugin.js":"src/plugins/workers-plugin.js","./youtube-player-plugin.js":"src/plugins/youtube-player-plugin.js"}],"node_modules/file-saver/dist/FileSaver.min.js":[function(require,module,exports) {
 var define;
 var global = arguments[3];
 (function(a,b){if("function"==typeof define&&define.amd)define([],b);else if("undefined"!=typeof exports)b();else{b(),a.FileSaver={exports:{}}.exports}})(this,function(){"use strict";function b(a,b){return"undefined"==typeof b?b={autoBom:!1}:"object"!=typeof b&&(console.warn("Deprecated: Expected third argument to be a object"),b={autoBom:!b}),b.autoBom&&/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(a.type)?new Blob(["\uFEFF",a],{type:a.type}):a}function c(a,b,c){var d=new XMLHttpRequest;d.open("GET",a),d.responseType="blob",d.onload=function(){g(d.response,b,c)},d.onerror=function(){console.error("could not download file")},d.send()}function d(a){var b=new XMLHttpRequest;b.open("HEAD",a,!1);try{b.send()}catch(a){}return 200<=b.status&&299>=b.status}function e(a){try{a.dispatchEvent(new MouseEvent("click"))}catch(c){var b=document.createEvent("MouseEvents");b.initMouseEvent("click",!0,!0,window,0,0,0,80,20,!1,!1,!1,!1,0,null),a.dispatchEvent(b)}}var f="object"==typeof window&&window.window===window?window:"object"==typeof self&&self.self===self?self:"object"==typeof global&&global.global===global?global:void 0,a=f.navigator&&/Macintosh/.test(navigator.userAgent)&&/AppleWebKit/.test(navigator.userAgent)&&!/Safari/.test(navigator.userAgent),g=f.saveAs||("object"!=typeof window||window!==f?function(){}:"download"in HTMLAnchorElement.prototype&&!a?function(b,g,h){var i=f.URL||f.webkitURL,j=document.createElement("a");g=g||b.name||"download",j.download=g,j.rel="noopener","string"==typeof b?(j.href=b,j.origin===location.origin?e(j):d(j.href)?c(b,g,h):e(j,j.target="_blank")):(j.href=i.createObjectURL(b),setTimeout(function(){i.revokeObjectURL(j.href)},4E4),setTimeout(function(){e(j)},0))}:"msSaveOrOpenBlob"in navigator?function(f,g,h){if(g=g||f.name||"download","string"!=typeof f)navigator.msSaveOrOpenBlob(b(f,h),g);else if(d(f))c(f,g,h);else{var i=document.createElement("a");i.href=f,i.target="_blank",setTimeout(function(){e(i)})}}:function(b,d,e,g){if(g=g||open("","_blank"),g&&(g.document.title=g.document.body.innerText="downloading..."),"string"==typeof b)return c(b,d,e);var h="application/octet-stream"===b.type,i=/constructor/i.test(f.HTMLElement)||f.safari,j=/CriOS\/[\d]+/.test(navigator.userAgent);if((j||h&&i||a)&&"undefined"!=typeof FileReader){var k=new FileReader;k.onloadend=function(){var a=k.result;a=j?a:a.replace(/^data:[^;]*;/,"data:attachment/file;"),g?g.location.href=a:location=a,g=null},k.readAsDataURL(b)}else{var l=f.URL||f.webkitURL,m=l.createObjectURL(b);g?g.location=m:location.href=m,g=null,setTimeout(function(){l.revokeObjectURL(m)},4E4)}});f.saveAs=g.saveAs=g,"undefined"!=typeof module&&(module.exports=g)});
@@ -42043,6 +42043,7 @@ const toKebabCase = str => {
 };
 
 exports.toKebabCase = toKebabCase;
+window.toKebabCase = toKebabCase;
 
 const toSnakeCase = str => {
   const words = wordList(str);
@@ -42588,6 +42589,990 @@ function removeCommonSuffix(listOfStrings) {
 //         each=>[...each].reverse().join("")
 //     )
 // }
+},{}],"node_modules/good-js/index.js":[function(require,module,exports) {
+// if node/serverside
+if (typeof document == 'undefined')
+    {
+    }
+// if browswer/clientside
+else
+    {
+        var valueIsObject   = (aValue)=>aValue instanceof Object && !(aValue instanceof Function) && !(aValue instanceof Array)
+        var valueIsArray    = (aValue)=>aValue instanceof Array
+        var valueIsEmptyish = (aValue)=>
+            {
+                if ((aValue instanceof Array && aValue.length == 0) || aValue === "" || aValue == null) {
+                    return true
+                }
+                else if (aValue instanceof Object) {
+                    return Object.keys(aValue).length == 0
+                }
+                else {
+                    return false
+                }
+            }
+        // 
+        // Create a function for viewing any object
+        // 
+        var objectContainerStyle = {
+            boxShadow: "0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2)",
+            display: "grid",
+            gridTemplateColumns: "min-content min-content",
+            padding: "5px",
+            marginBottom: "10px",
+            borderRadius: "11px",
+            width: "min-intrinsic",
+        }
+        var normalKeyNameStyle = {
+            padding: "0px 10px",
+            justifySelf: "self-end",
+        }
+        var objectKeyNameStyle = {
+            padding: "0px 10px",
+            fontWeight: "bold",
+            justifySelf: "self-end",
+        }
+        var keyValueStyle = {
+            justifySelf: "flex-start",
+            paddingRight: "5px",
+        }
+        module.exports.objectAsHtml = (object) => 
+            {
+                var container = New("div")
+                container.classList.add("object-container")
+                Object.assign(container.style, objectContainerStyle);
+                if (valueIsObject( object) && !valueIsEmptyish(object)) 
+                    {
+                        var object_names = []
+                        for (var each of Object.keys(object))
+                            {
+                                // check if child is an object or not 
+                                if ((valueIsObject(object[each]) || valueIsArray(object[each])) && !valueIsEmptyish(object[each]))
+                                    {
+                                        object_names.push(each)
+                                    }
+                                // if not an object, go ahead and add it
+                                else
+                                    {
+                                        var key_name = New("div")
+                                        key_name.classList.add("normal-key-name")
+                                        Object.assign(key_name.style, normalKeyNameStyle);
+                                        key_name.innerText = `${each}: `
+                                        container.appendChild(key_name)
+                                        container.appendChild(objectAsHtml(object[each]))
+                                    }
+                            }
+                        // now add all the child-objects to the bottom
+                        for (var each of object_names)
+                            {
+                                var key_name = New("div")
+                                key_name.classList.add("object-key-name")
+                                Object.assign(key_name.style, objectKeyNameStyle);
+                                key_name.innerText = `${each}: `
+                                container.appendChild(key_name)
+                                container.appendChild(objectAsHtml(object[each]))
+                            }
+                        return container
+                    }
+                // if array
+                else if (valueIsArray( object) && !valueIsEmptyish(object))
+                    {
+                        for (var each of object)
+                            {
+                                var key_name = New("div")
+                                key_name.classList.add("normal-key-name")
+                                Object.assign(key_name.style, normalKeyNameStyle);
+                                key_name.innerText = `-`
+                                container.appendChild(key_name)
+                                container.appendChild(objectAsHtml(each))
+                            }
+                        return container
+                    }
+                // if not an object, or if empty
+                else
+                    {
+                        var key_value = New("div")
+                        key_value.classList.add("key-value")
+                        Object.assign(key_value.style, keyValueStyle);
+                        if (valueIsObject(object))
+                            {
+                                key_value.innerText = `{ }`
+                            }
+                        else if (valueIsArray(object))
+                            {
+                                key_value.innerText = `[ ]`
+                            }
+                        else
+                            {
+                                key_value.innerText = `${object}`
+                            }
+                        return key_value
+                    }
+            }
+
+    }
+
+// 
+// 
+// Changes to prototypes
+// 
+// 
+//  allow "for(let each of a)" when a is an object
+// Object.prototype[Symbol.iterator] = function* () 
+//     {
+//         for (let each of Object.keys(this))
+//             {
+//                 yield this[each]
+//             }
+//     }
+
+
+
+// 
+// 
+// Useful functions
+// 
+// 
+module.exports.log          = console.log
+/**
+ * Checks type according to English
+ *
+ * @param {Object} args.value - any possible value 
+ * @param {Object} args.is - a class or string-description Object, Array, null, "nullish", "number", Number, Boolean, Function
+ * @return {Boolean} the legitmate/intuitive answer
+ * 
+ * @note
+ *     Object means can-be-a JSON-object
+ * 
+ * @example
+ *     checkIf({value: undefined , is: null     }) // false
+ *     checkIf({value: undefined , is: 'nullish'}) // true
+ *     checkIf({value: null      , is: 'nullish'}) // true
+ *     checkIf({value: NaN       , is: 'nullish'}) // true
+ *     checkIf({value: null      , is: Object   }) // false
+ *     checkIf({value: NaN       , is: NaN      }) // true!
+ *     checkIf({value: NaN       , is: Number   }) // false!
+ *     checkIf({value: ("string"), is: Object   }) // false
+ *     checkIf({value: {blah: 10}, is: Object   }) // true!
+ *     checkIf({value: new Date(), is: Object   }) // false!
+ *     checkIf({value: new CustomClass()         , is: Object}) // true!
+ *     checkIf({value: ()=>{return "imma func"}  , is: Object}) // false
+ *     checkIf({value: ["I", "am", "an", "array"], is: Object}) // false
+ *     checkIf({value: new CustomClass()         , is: Date})   // false
+ */
+module.exports.checkIf = ({ value, is }) => {
+    return module.exports.valueIs(is, value)
+}
+/**
+ * Throws error if type requirement isn't met
+ *
+ * @param {Object} args.value - any possible value 
+ * @param {Object} args.is - a class or string-description Object, Array, null, "nullish", "number", Number, Boolean, Function
+ * @param {string} args.failMessage - a string to be added to the top of the error message
+ * @return {undefined}
+ * 
+ * 
+ * @example
+ * // see checkIf() for more argument examples
+ * requireThat({
+ *     value: arg1.size,
+ *     is: Number,
+ *     failMessage: "The size of the first argument needs to be a number"
+ * })
+ */
+module.exports.requireThat = ({ value, is, failMessage }={}) => {
+    if (!module.exports.checkIf({ value, is})) {
+        let requiredType = (is instanceof Object) ? is.prototype.constructor.name : is
+        // 
+        // figure out the real type of the object
+        // 
+        let actualType
+        if (value instanceof Object) {
+            actualType = value.constructor.prototype.constructor.name
+        } else {
+            if (value !== value) {
+                actualType = "NaN"
+            } else if (value === null) {
+                actualType = "null"
+            } else {
+                actualType = typeof value
+            }
+        }
+        failMessage = failMessage ? `Error Message: ${failMessage}` : ""
+        throw Error(`Failed to pass a type check created by requireThat()\n    the value is considered to be: ${actualType}\n    which fails to meet the requirement of: ${requiredType}\n    the failing value is: ${value}\n\n${failMessage}`)
+    }
+}
+/**
+ * Checks type properly
+ *
+ * @param {Object} typeOrClass - ex: Object, Array, null, "nullish", "number", Number, Boolean, Function
+ * @return {Boolean} the legitmate/intuitive answer
+ *
+ * @example
+ *     valueIs(Number, NaN)                        // false!
+ *     valueIs('nullish', null)                    // true
+ *     valueIs('nullish', NaN)                     // true
+ *     valueIs('nullish', undefined)               // true
+ *     valueIs(null, undefined)                    // false
+ *     valueIs(Object, null)                       // false
+ *     valueIs(Object, ()=>{return "imma func"})   // false
+ *     valueIs(Object, ["I", "am", "an", "array"]) // false
+ *     valueIs(Object, ("string"))                 // false
+ *     valueIs(Object, {blah: 10})                 // true!
+ *     valueIs(Object, new Date())                 // false!
+ *     valueIs(Object, new CustomClass())          // true!
+ *     valueIs(Date, new CustomClass())            // false
+ */
+module.exports.valueIs      = (typeOrClass, aValue) => {
+        // 
+        // Check typeOrClass
+        // 
+        // see if typeOrClass is actually a class 
+        if (typeof typeOrClass == 'function') {
+            var aClass = typeOrClass
+            typeOrClass = aClass.name
+        }
+        // lowercase any string-names it
+        if (typeof typeOrClass == 'string') {
+            typeOrClass = typeOrClass.toLowerCase()
+        }
+
+        //
+        // Strict Values
+        //
+        // object (non-null, non-function, non-array)
+        if (typeOrClass === "object") {
+            if (!(aValue instanceof Object)) {
+                return false
+            } else if (aValue instanceof Array || aValue instanceof Function || aValue instanceof Date) {
+                return false
+            // check if its stringified+parsed form is also an object 
+            // (this is to remove things like BigInt and BigInt64Array and other built-in pseudo-primitives)
+            } else {
+                let stringified = JSON.stringify(aValue)
+                // note that this is not == '"undefined"'
+                if (stringified === 'undefined') {
+                    return false
+                } else if (JSON.parse(stringified) instanceof Object) {
+                    return true
+                } else {
+                    return false
+                }
+            }
+        }
+        // undefined
+        else if (typeof typeOrClass === 'undefined' || typeOrClass == 'undefined') {
+            return typeof aValue === 'undefined'
+        }
+        // null
+        else if (typeOrClass === null || typeOrClass == 'null') {
+            return aValue === null
+        }
+        // NaN
+        else if ((typeOrClass !== typeOrClass && typeof typeOrClass == 'number') || typeOrClass == 'nan') {
+            return aValue !== aValue && typeof aValue == 'number'
+        }
+        // false
+        else if (typeOrClass === false) {
+            return aValue === false
+        }
+        // true
+        else if (typeOrClass === true) {
+            return aValue === true
+        }
+        // bool
+        else if (typeOrClass === "bool" || typeOrClass === "boolean") {
+            return aValue === true || aValue === false
+        }
+        // empty string
+        else if (typeOrClass === "") {
+            return aValue === ""
+        }
+        // empty list
+        else if (typeOrClass === "[]" || Array.isArray(typeOrClass) && typeOrClass.length == 0) {
+            return aValue instanceof Array && aValue.length == 0
+        }
+        // function
+        else if (typeOrClass === "function") {
+            return typeof aValue == "function"
+        }
+        // number
+        else if (typeOrClass == "number" || typeOrClass == Number) {
+            if (aValue !== aValue) {
+                return false
+            }
+            else {
+                return typeof aValue == "number" || aValue instanceof Number
+            }
+        }
+        // string
+        else if (typeOrClass == "string") {
+            return typeof aValue == "string" || aValue instanceof String
+        }
+        // array
+        else if (typeOrClass == "array") {
+            return aValue instanceof Array
+        }
+        // symbol
+        else if (typeOrClass == "symbol") {
+            return typeof aValue == "symbol"
+        }
+
+        // 
+        // Unstrict values
+        // 
+        // nullish (null, undefined, NaN)
+        else if (typeOrClass === 'nullish') {
+            return aValue == null || aValue !== aValue
+        }
+        // emptyish ({},[],"",null,undefined)
+        else if (typeOrClass === 'emptyish') {
+            if ((aValue instanceof Array && aValue.length == 0) || aValue === "" || aValue == null) {
+                return true
+            }
+            else if (aValue instanceof Object) {
+                return Object.keys(aValue).length == 0
+            }
+            else {
+                return false
+            }
+        }
+        // falsey ("0",0,false,null,undefined,NaN)
+        else if (typeOrClass === 'falsey' || typeOrClass === 'falsy' || typeOrClass === 'falseish' || typeOrClass === 'falsish') {
+            return aValue == null || aValue === false || aValue !== aValue || aValue === 0 || aValue === "0"
+        }
+        // falsey-or-empty ({},[],"","0",0,false,null,undefined,NaN)
+        else if (typeOrClass === 'falsey-or-empty' || typeOrClass === 'falsy-or-empty' || typeOrClass === 'falseish-or-empty' || typeOrClass === 'falsish-or-empty') {
+            // empty array
+            if (aValue instanceof Array && aValue.length == 0) {
+                return true
+            }
+            // empty object
+            else if (aValue instanceof Object) {
+                return Object.keys(aValue).length == 0
+            }
+            else {
+                return (aValue ? true : false)
+            }
+        }
+        // numberish 
+        else if (typeOrClass == 'numberish') {
+            return (aValue != aValue) || !isNaN(aValue - 0)
+        }
+        // 
+        // class type
+        // 
+        else if (aClass) {
+            // if no constructor
+            if (aValue === null || aValue === undefined) {
+                return false
+            }
+            else {
+                // see if constructors match
+                if (aValue.constructor.name === typeOrClass) {
+                    return true
+                }
+                // check instanceof 
+                else {
+                    return aValue instanceof aClass
+                }
+            }
+        }
+        // 
+        // failed to recognize
+        // 
+        else {
+            console.error("when you call isValue(), I'm not recoginizing the type or class:", typeOrClass)
+        }
+    }
+
+//
+/**
+ * Indent logging lines
+ *
+ * @param {string} args.name - name to be printed at the start/end of block
+ * @param {Object} args.context - the context (e.g. this) to be given to the block
+ * @return {Boolean} the output is a
+ *
+ * @example
+ *     debugBlock({name: "call API"}, ()=>{
+ *         api.call('thing')
+ *     })
+ */
+module.exports.logBlock   = ({name, context}, codeBlock,) => {
+    if (!name) {
+        console.group()
+    } else {
+        console.group(`[starting: ${name}]`)
+    }
+    let output
+    if (context) {
+        output = codeBlock.apply(context, [])
+    } else {
+        output = codeBlock()
+    }
+    if (output instanceof Promise) {
+        return new Promise(async (resolve, reject)=>{
+            let awaitedOutput = await output
+            console.groupEnd()
+            if (name) {
+                console.log(`[finished: ${name}]`)
+            }
+            resolve(awaitedOutput)
+        })
+    } else {
+        console.groupEnd()
+        if (name) {
+            console.log(`[finished: ${name}]`)
+        }
+        return output
+    }
+}
+/**
+ * Print tons of info about a value
+ *
+ * @param {Object} value - any possible value
+ *
+ * @example
+ *     info(anUnknownThing)
+ */
+module.exports.info         = (value) => {
+        var valueIsFalsey = value ? true : false
+        var valueEquivFalse = value == false
+        var valueEquivNull = value == null
+        var valueInstanceObj = value instanceof Object
+        var valueMinus0 = value - 0
+        console.log(`info about:`, value)
+        if (!valueEquivNull) // valueOf
+        {
+            console.log(`    valueOf()`, value.valueOf())
+        }
+        console.log(`    type `, typeof value)
+        console.log(`    (value instanceof Object)?`, valueInstanceObj)
+        if (!valueEquivNull) // constructor.name
+        {
+            console.log(`    constructor.name`, value.constructor.name)
+        }
+        console.log(`    (value)?`, valueIsFalsey)
+        console.log(`    (value == false)?`, valueEquivFalse)
+        console.log(`    (value == null)?`, valueEquivNull)
+        console.log(`    (value - 0)`, value - 0)
+        if (valueInstanceObj) {
+            console.log(`    Object.keys:`)
+            for (var each of Object.keys(value)) {
+                console.log(`        `, each)
+            }
+            console.log(`     Object.getOwnPropertyNames`)
+            for (var each of Object.getOwnPropertyNames(value)) {
+                try {
+                    if (value != null && each != null) {
+                        var descriptor = Object.getOwnPropertyDescriptor(value, each)
+                        console.log(`        `, each, descriptor)
+                    }
+                }
+                catch (e) {
+
+                }
+
+            }
+            console.log(`     Object.getOwnPropertySymbols`)
+            for (var each of Object.getOwnPropertySymbols(value)) {
+                try {
+                    if (value != null && each != null) {
+                        var descriptor = Object.getOwnPropertyDescriptor(value, each)
+                        console.log(`        `, each, descriptor)
+                    }
+                }
+                catch (e) {
+
+                }
+
+            }
+        }
+    }
+/**
+ * Safely get nested values
+ *
+ * @param {any} obj.from - what object/value you're extracting from
+ * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
+ * @param {any} obj.failValue - what to return in the event of an error
+ * @return {any} either the failValue or the actual value
+ *
+ * @example
+ *     let obj = { key1: {} }
+ *     // equivlent to obj.key1.subKey.subSubKey
+ *     get({
+ *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+ *         from: obj,
+ *     })
+ *     get({
+ *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+ *         from: null,
+ *     })
+ *     get({
+ *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+ *         from: null,
+ *         failValue: 0
+ *     })
+ */
+module.exports.get          = (obj, keyList=undefined, failValue=null) => {
+        // process args
+        let from
+        if (keyList == undefined) {
+            ({ from, keyList, failValue } = obj)
+            obj = from
+        }
+        // convert string values into lists
+        if (typeof keyList == 'string') {
+            if (keyList.length == 0) {
+                keyList = []
+            } else {
+                keyList = keyList.split('.')
+            }
+        }
+        // iterate over nested values
+        try {
+            for (var each of keyList) {
+                if (obj instanceof Object && (each in obj)) {
+                    obj = obj[each]
+                } else {
+                    return failValue
+                }
+            }
+        } catch (error) {
+            return failValue
+        }
+        return obj
+    }
+/**
+ * Forcefully set nested values
+ *
+ * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
+ * @param {any} obj.to - what the new value should be
+ * @param {any} obj.on - what object/value you're modifying
+ * @return {Object} - the object given (object is still mutated)
+ * @error
+ * only if the argument is not an object
+ * 
+ * @example
+ *     let obj = { key1: {} }
+ *     // equivlent to obj.key1.subKey.subSubKey
+ *     set({
+ *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+ *         to: 10,
+ *         on: obj,
+ *     })
+ *     set({
+ *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+ *         to: 10,
+ *         on: obj,
+ *     })
+ */
+module.exports.set          = function (obj, keyList=undefined, value=undefined) {
+        // process args
+        let on
+        if (keyList == undefined) {
+            ({ on, keyList, to } = obj)
+            obj = on
+            value = to
+        }
+
+        // convert string values into lists
+        if (typeof keyList == 'string') {
+            if (keyList.length == 0) {
+                keyList = []
+            } else {
+                keyList = keyList.split('.')
+            }
+        }
+        
+        if (keyList instanceof Array) {
+            try {
+                var lastAttribute = keyList.pop()
+                for (var elem of keyList) {
+                    // create each parent if it doesnt exist
+                    if (!(obj[elem] instanceof Object)) {
+                        obj[elem] = {}
+                    }
+                    // change the object reference be the nested element
+                    obj = obj[elem]
+                }
+                obj[lastAttribute] = value
+            } catch (error) {
+                console.warn("the set function was unable to set the value for some reason, here is the original error message",error)
+                console.warn(`the set obj was:`,obj)
+                console.warn(`the set keyList was:`,keyList)
+                console.warn(`the set value was:`,value)
+            }
+        } else {
+            console.log(`obj is:`,obj)
+            console.log(`keyList is:`,keyList)
+            console.log(`value is:`,value)
+            console.error(`There is a 'set' function somewhere being called and its second argument isn't a string or a list (see values above)`);
+        }
+        return obj
+    }
+/**
+ * Safely delete nested values
+ *
+ * @param {any} obj.from - what object/value you're extracting from
+ * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
+ * @return {undefined}
+ *
+ * @example
+ *     let obj = { key1: {} }
+ *     // equivlent to obj.key1.subKey.subSubKey
+ *     delete({
+ *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
+ *         from: obj,
+ *     })
+ */
+module.exports.delete       = function ({ keyList, from }) {
+        // convert string values into lists
+        if (typeof keyList == 'string') {
+            if (keyList.length == 0) {
+                keyList = []
+            } else {
+                keyList = keyList.split('.')
+            }
+        }
+
+        if (keyList.length == 1) {
+            try {
+                delete from[keyList[0]]
+            } catch (error) {
+                return false
+            }
+        } else if (keyList.length > 1) {
+            keyList = [...keyList]
+            let last = keyList.pop()
+            let parentObj = module.exports.get({keyList, from})
+            return module.exports.delete({ keyList: [last], from: parentObj })
+        }
+    }
+/**
+ * Function to sort alphabetically an array of objects by some specific key.
+ * 
+ * @param {String|Symbol|string[]} property Key of the object to sort.
+ */
+module.exports.dynamicSort        = function (property, reverse=false) {
+    if (property instanceof Array) {
+        if (reverse) {
+            return (a,b) => {
+                let aValue = module.exports.get(a,property,-Infinity)
+                let bValue = module.exports.get(b,property,-Infinity)
+                let type = typeof bValue
+                if (type == 'number') {
+                    return bValue - aValue
+                } else if (type == 'string') {
+                    return bValue.localeCompare(aValue)
+                }
+            }
+        } else {
+            return (b,a) => {
+                let aValue = module.exports.get(a,property,-Infinity)
+                let bValue = module.exports.get(b,property,-Infinity)
+                let type = typeof bValue
+                if (type == 'number') {
+                    return bValue - aValue
+                } else if (type == 'string') {
+                    return bValue.localeCompare(aValue)
+                }
+            }
+        }
+    }
+    if (reverse) {
+        return (a,b) => {
+            let type = typeof a[property]
+            if (type == 'number') {
+                return b[property] - a[property]
+            } else if (type == 'string') {
+                return b[property].localeCompare(a[property])
+            }
+        }
+    } else {
+        return (b,a) => {
+            let type = typeof a[property]
+            if (type == 'number') {
+                return b[property] - a[property]
+            } else if (type == 'string') {
+                return b[property].localeCompare(a[property])
+            }
+        }
+    }
+}
+module.exports.merge        = (obj, overwritingObj) => {
+        // if its not an object, then it immediately overwrites the value
+        if (!(overwritingObj instanceof Object) || !(obj instanceof Object)) {
+            return overwritingObj
+        }
+        // default value for all keys is the original object
+        let output = {}
+        overwritingObj instanceof Array && (output = [])
+        Object.assign(output, obj)
+        for (const key in overwritingObj) {
+            // if no conflict, then assign as normal
+            if (!(key in output)) {
+                output[key] = overwritingObj[key]
+            // if there is a conflict, then be recursive
+            } else {
+                output[key] = module.exports.merge(obj[key], overwritingObj[key])
+            }
+        }
+        return output
+    }
+module.exports.copyFunc     = (someFunction,theContext=this) => (...args) => someFunction.apply(theContext,args)
+module.exports.currentTime  = function () { return new Date().getTime() }
+module.exports.sleepSyncly  = function (miliseconds)
+    {
+        var currentTime = new Date().getTime();
+        while (currentTime + miliseconds >= new Date().getTime()) {}
+    }
+module.exports.sleepAsyncly = function (miliseconds)
+    {
+        return new Promise(resolve => 
+            {
+                setTimeout(()=>{ resolve(null) }, miliseconds)
+            })
+    }
+module.exports.debounce = function (wait, immediate, func) // only calls the function after a period of inactivity
+    {
+        var timeout
+        return () => {
+            const context = this, args = arguments
+            const later = function() 
+                {
+                    timeout = null
+                    if (!immediate) 
+                        {
+                            func.apply(context, args)
+                        }
+                }
+            const callNow = immediate && !timeout
+            clearTimeout(timeout)
+            timeout = setTimeout(later, wait)
+            if (callNow) 
+                {
+                    func.apply(context, args)
+                }
+        }
+    }
+module.exports.rateLimit = function (coolDown, func) // call the returned func often as you like, it'll only run once per coolDown time
+    {
+        let mostRecentArgs
+        // an analogy
+        let triggerWasPulledButNotReleased = false
+        let barrelTooHot = false
+        let shoot
+        shoot = () => {
+            // run the function
+            func.apply(this, mostRecentArgs)
+            // meaning trigger was just released
+            triggerWasPulledButNotReleased = false
+            // barrel is now hot
+            barrelTooHot = true
+            // barrel will cool down though
+            setTimeout(() => {
+                // if trigger was pulled in the meantime
+                if (triggerWasPulledButNotReleased) {
+                    // then shoot again (which will cause a recursive settimeout)
+                    shoot()
+                // if the trigger wasn't pulled
+                } else {
+                    // the the barrel has successfully cooled off
+                    barrelTooHot = false
+                }
+            }, coolDown)
+        }
+        let pullTrigger = (...args) => {
+            mostRecentArgs = args
+            if (barrelTooHot) {
+                // tell the shooter to que a shot (function execution)
+                triggerWasPulledButNotReleased = true
+            // if its not too hot then just shoot immediately!
+            } else {
+                shoot()
+            }
+        }
+        return pullTrigger
+    }
+
+/**
+ * Deep iterate objects
+ *
+ * @param {Object} obj - Any object
+ * @return {string[][]} lists of key-lists
+ *
+ * @example
+ *
+ *     recursivelyAllAttributesOf({ a: { b: 1} })
+ *     >>> [
+ *         [ 'a', ],
+ *         [ 'a', 'b' ],
+ *     ]
+ */
+module.exports.recursivelyAllAttributesOf = (obj) => 
+    {
+        // if not an object then add no attributes
+        if (!(obj instanceof Object)) 
+            {
+                return []
+            }
+        // else check all keys for sub-attributes
+        var output = []
+        for (let eachKey of Object.keys(obj)) 
+            {
+                // add the key itself (alone)
+                output.push([eachKey])
+                // add all of its children
+                let newAttributes = module.exports.recursivelyAllAttributesOf(obj[eachKey])
+                // if nested
+                for (let eachNewAttributeList of newAttributes) 
+                    {
+                        // add the parent key
+                        eachNewAttributeList.unshift(eachKey)
+                        output.push(eachNewAttributeList)
+                    }
+            }
+        return output
+    }
+module.exports.unevalStringify = (obj) => JSON.stringify(obj, (key,value) => 
+    {
+        if (typeof value == 'string') 
+            {
+                return `'${value}'`
+            } 
+        else if (value instanceof Function || !(value instanceof Object)) 
+            {
+                return value.toString()
+            }
+        return value
+    })
+module.exports.evalParse = (obj) => JSON.parse(obj, (key, value) => 
+    {
+        if (typeof value === 'string') 
+            {
+                return eval(value)
+            } 
+        else 
+            {
+                return value
+            }
+    })
+// 
+// String manipulation
+// 
+module.exports.snakeToCamelCase = (baseName) => (baseName.toLowerCase().replace(/_/," ")).replace(/.\b\w/g, aChar=>aChar.toUpperCase()).replace(" ","")
+module.exports.varnameToTitle = (string) => (string.replace(/_/," ")).replace(/\b\w/g, chr=>chr.toUpperCase())
+module.exports.findAll     = function (regex_pattern, string_)
+    {
+        var output_list = [];
+        while (true) 
+            {
+                var a_match = regex_pattern.exec(string_);
+                if (a_match) 
+                    {
+                        // get rid of the string copy
+                        delete a_match.input;
+                        // store the match data
+                        output_list.push(a_match);
+                    }
+                else
+                    {
+                        break;
+                    }
+            } 
+        return output_list;
+    }
+module.exports.capitalize  = function (string)
+    {
+        return string.replace(/\b\w/g, chr=>chr.toUpperCase())
+    }
+module.exports.indent      = function (input,the_indent='    ')
+    {
+        try 
+            {
+                return the_indent + JSON.stringify(input).replace(/\n/g,"\n"+the_indent)
+            }
+        catch(e){}
+        return the_indent + `${input}`.replace(/\n/g,"\n"+the_indent)
+    }
+// 
+// network
+//
+module.exports.network = {
+        curl: async url=> new Promise(resolve => fetch(url).then(res=>res.text()).then(body=>resolve(body))),
+        get: async (url)=> new Promise((resolve, reject) =>
+                fetch(url).then(function(response) {
+                        return response.json();
+                    }).then(function(data) {
+                        resolve(data);
+                    }).catch(function() {
+                        reject()
+                    })
+                ),
+        post: ({data=null, to=null}) => new Promise(
+            function (resolve, reject) {
+                let the_request = new XMLHttpRequest()
+                the_request.onload = function () {
+                    if (this.status >= 200 && this.status < 300) {
+                        try { var output_ = JSON.parse(the_request.responseText) }
+                        catch (error) { var output_ = the_request.responseText }
+                        resolve(output_)
+                    }
+                    else {
+                        reject({
+                                status: this.status,
+                                statusText: the_request.statusText
+                            })
+                    }
+                }
+                the_request.onerror = function () {
+                    reject({
+                            status: this.status,
+                            statusText: the_request.statusText
+                        })
+                }
+                the_request.open("POST", to, true)
+                the_request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8')
+                the_request.send(JSON.stringify(data))
+            }
+            ) // end promise
+    }
+Object.defineProperty(module.exports, "baseUrl", {
+    get: function baseUrl() {
+        var pathArray = location.href.split( '/' );
+        var protocol = pathArray[0];
+        var host = pathArray[2];
+        var url = protocol + '//' + host;
+        return url
+    }
+});
+
+
+
+// 
+// global init
+//
+module.exports.global = _=> 
+    {
+        for (var each of Object.keys(module.exports)) 
+            {
+                window[each] = module.exports[each]
+            }
+        if (!window.baseUrl) {
+            Object.defineProperty(window, "baseUrl", {
+                get: function baseUrl() {
+                    var pathArray = location.href.split( '/' );
+                    var protocol = pathArray[0];
+                    var host = pathArray[2];
+                    var url = protocol + '//' + host;
+                    return url
+                }
+            });
+        }
+    }
+
 },{}],"src/iilvd-api.js":[function(require,module,exports) {
 let Vue = require("vue").default;
 
@@ -42609,7 +43594,11 @@ let {
   toSnakeCase,
   toScreamingtoKebabCase,
   toScreamingtoSnakeCase
-} = require("./string.js"); // const databaseUrl = "http://192.168.86.198:3000"
+} = require("./string.js");
+
+const {
+  dynamicSort
+} = require("good-js"); // const databaseUrl = "http://192.168.86.198:3000"
 // const databaseUrl = "http://localhost:3000"
 // const databaseUrl = "http://paradise.cs.tamu.edu:3000"
 // const databaseUrl = "http://192.168.192.57:3000"
@@ -42956,12 +43945,54 @@ const indexDb = {
    *     }
    */
   get iter() {
-    return Object.defineProperties({}, Object.fromEntries([...indexDb._tableNames].map(tableName => [tableName, {
+    const originalThing = Object.defineProperties({}, Object.fromEntries([...indexDb._tableNames].map(tableName => [tableName, {
       get() {
         return makeIterator(tableName)();
       }
 
     }])));
+    const proxySymbol = Symbol.for('Proxy');
+    const thisProxySymbol = Symbol('thisProxy'); // originalThing[Symbol.iterator]      // used by for..of loops and spread syntax.
+    // originalThing[Symbol.toPrimitive]
+
+    return new Proxy(originalThing, {
+      // Object.keys
+      ownKeys(target, ...args) {
+        return Reflect.ownKeys(target, ...args);
+      },
+
+      // new operator (original value needs to be a class)
+      construct(original, args, originalConstructor) {},
+
+      get(original, key, ...args) {
+        if (key == proxySymbol || key == thisProxySymbol) {
+          return true;
+        }
+
+        if (!Object.hasOwn(original, key)) {
+          return async function* () {}();
+        }
+
+        return Reflect.get(original, key, ...args);
+      },
+
+      set(original, key, ...args) {
+        if (key == proxySymbol || key == thisProxySymbol) {
+          return;
+        }
+
+        return Reflect.set(original, key, ...args);
+      },
+
+      has: Reflect.has,
+      deleteProperty: Reflect.deleteProperty,
+      isExtensible: Reflect.isExtensible,
+      preventExtensions: Reflect.preventExtensions,
+      setPrototypeOf: Reflect.setPrototypeOf,
+      defineProperty: Reflect.defineProperty,
+      getPrototypeOf: Reflect.getPrototypeOf,
+      getOwnPropertyDescriptor: Reflect.getOwnPropertyDescriptor
+    });
   },
 
   // all entries
@@ -43020,9 +44051,134 @@ const indexDb = {
   },
 
   async get(address) {
-    for await (const [address, each] of indexDb.get(address)) {
+    for await (const [_, each] of indexDb.gets([address])) {
       return each;
     }
+  },
+
+  async select({
+    from,
+    where = [],
+    returnObject = false
+  }) {
+    let output;
+
+    if (returnObject) {
+      output = {};
+    } else {
+      output = [];
+    }
+
+    if (where.length == 0) {
+      if (returnObject) {
+        for await (const [key, each] of indexDb.iter[from]) {
+          output[key] = each;
+        }
+      } else {
+        for await (const [key, each] of indexDb.iter[from]) {
+          output.push(each);
+        }
+      }
+    } else {
+      const equalityCheckers = where.filter(each => Object.keys(each).includes("is"));
+      const notEqualCheckers = where.filter(each => Object.keys(each).includes("isNot"));
+      const lessThanOrEqualToCheckers = where.filter(each => Object.keys(each).includes("isLessThanOrEqualTo"));
+      const greaterThanOrEqualToCheckers = where.filter(each => Object.keys(each).includes("isGreaterThanOrEqualTo"));
+      const lessThanCheckers = where.filter(each => Object.keys(each).includes("isLessThan"));
+      const greaterThanCheckers = where.filter(each => Object.keys(each).includes("isGreaterThan"));
+
+      const passesChecks = eachObject => {
+        for (const rule of equalityCheckers) {
+          const value = get({
+            keyList: rule.valueOf,
+            from: eachObject,
+            failValue: undefined
+          });
+
+          if (value !== rule.is) {
+            return false;
+          }
+        }
+
+        for (const rule of notEqualCheckers) {
+          const value = get({
+            keyList: rule.valueOf,
+            from: eachObject,
+            failValue: undefined
+          });
+
+          if (value === rule.isNot) {
+            return false;
+          }
+        }
+
+        for (const rule of lessThanOrEqualToCheckers) {
+          const value = get({
+            keyList: rule.valueOf,
+            from: eachObject,
+            failValue: NaN
+          });
+
+          if (value !== value || value > rule.isLessThanOrEqualTo) {
+            return false;
+          }
+        }
+
+        for (const rule of greaterThanOrEqualToCheckers) {
+          const value = get({
+            keyList: rule.valueOf,
+            from: eachObject,
+            failValue: NaN
+          });
+
+          if (value !== value || value < rule.isLessThanOrEqualTo) {
+            return false;
+          }
+        }
+
+        for (const rule of lessThanCheckers) {
+          const value = get({
+            keyList: rule.valueOf,
+            from: eachObject,
+            failValue: NaN
+          });
+
+          if (value !== value || value >= rule.isLessThan) {
+            return false;
+          }
+        }
+
+        for (const rule of greaterThanCheckers) {
+          const value = get({
+            keyList: rule.valueOf,
+            from: eachObject,
+            failValue: NaN
+          });
+
+          if (value !== value || value <= rule.isGreaterThan) {
+            return false;
+          }
+        }
+
+        return true;
+      };
+
+      if (returnObject) {
+        for await (const [key, each] of indexDb.iter[from]) {
+          if (passesChecks(each)) {
+            output[key] = each;
+          }
+        }
+      } else {
+        for await (const [key, each] of indexDb.iter[from]) {
+          if (passesChecks(each)) {
+            output.push(each);
+          }
+        }
+      }
+    }
+
+    return output;
   }
 
 }; // tables
@@ -43030,12 +44186,11 @@ const indexDb = {
 // observations
 // videos
 // observers
-// FIXME: find everywhere I use the `mongoInterface`
 
 const fakeBackend = {
   async addObservation(observationEntry) {
     if (!db) {
-      await await indexDb.loaded;
+      await indexDb.loaded;
     } // observationEntry = {
     //     "videoId": "FLK5-00l0r4",
     //     "type": "segment",
@@ -43092,17 +44247,14 @@ const fakeBackend = {
       labelCount: { ...observerInfo?.labelCount,
         [label]: ((observerInfo?.labelCount || {})[label] || 0) + 1
       },
-      videos: [...new Set(...(observerInfo?.videos || []).concat([observation.videoId]))]
+      videos: [...new Set(...(observerInfo?.videos || []).concat([observationEntry.videoId]))]
     }], // update labels
     [labelAddress, { ...labelInfo,
       count: (labelInfo?.count || 0) + 1,
-      videos: [...new Set(...(labelInfo?.videos || []).concat([observation.videoId]))]
+      videos: [...new Set(...(labelInfo?.videos || []).concat([observationEntry.videoId]))]
     }], // add observation
     [observationAddress, observationEntry]]);
-  },
-
-  addSegmentObservation(...args) {
-    return fakeBackend.addObservation(...args);
+    return observationKey;
   },
 
   changeDb() {// done (do nothing)
@@ -43118,26 +44270,258 @@ const fakeBackend = {
     await indexDb.loaded;
     let usernames = [];
 
-    for await (const [key, each] of await indexDb.iter.observers) {
-      usernames.push(key);
+    for await (const [key, each] of indexDb.iter.observations) {
+      usernames.push(each.observer);
     }
 
-    return usernames;
+    return [...new Set(usernames)];
+  },
+
+  async getVideoTitle(videoId) {
+    await indexDb.loaded;
+    return indexDb.get([videoId, "summary", "title"]);
+  },
+
+  async getObservations({
+    where = [],
+    returnObject = false
+  }) {
+    await indexDb.loaded;
+    return indexDb.select({
+      from: "observations",
+      where,
+      returnObject
+    });
+  },
+
+  async deleteObservation({
+    uuidOfSelectedSegment
+  }) {
+    await indexDb.loaded;
+    return indexDb.deletes([["observations", uuidOfSelectedSegment]]);
+  },
+
+  async setObservation({
+    uuidOfSelectedSegment,
+    observation
+  }) {
+    await indexDb.loaded;
+    return indexDb.puts([[["observations", uuidOfSelectedSegment], observation]]);
+  },
+
+  async getVideoIds() {
+    await indexDb.loaded;
+    let videoIds = [];
+
+    for await (const [key, each] of await indexDb.iter.videos) {
+      videoIds.push(key);
+    }
+
+    return videoIds;
   },
 
   summary: {
-    general(filterAndSort) {// filterAndSort = {
-      //     "minlabelConfidence":
-      //     "maxlabelConfidence":
-      //     "kindOfObserver":
-      //     "validation":
-      //     "observer":
-      //     labelName:
-      // }
-      // FIXME:
+    async general(filterAndSort) {
+      await indexDb.loaded;
+      let where = []; // 
+      // build the query
+      // 
+
+      if (filterAndSort.labelName) {
+        where.push({
+          valueOf: ['observation', 'label'],
+          is: filterAndSort.labelName
+        });
+      }
+
+      if (isNumber(filterAndSort.maxlabelConfidence)) {
+        where.push({
+          valueOf: ['observation', 'labelConfidence'],
+          isLessThanOrEqualTo: filterAndSort.maxlabelConfidence
+        });
+      }
+
+      if (isNumber(filterAndSort.minlabelConfidence)) {
+        where.push({
+          valueOf: ['observation', 'labelConfidence'],
+          isGreaterThanOrEqualTo: filterAndSort.minlabelConfidence
+        });
+      }
+
+      if (filterAndSort.observer) {
+        where.push({
+          valueOf: ['observer'],
+          is: filterAndSort.observer
+        });
+      }
+
+      if (filterAndSort.kindOfObserver == "Only Humans") {
+        where.push({
+          valueOf: ['isHuman'],
+          is: true
+        });
+      }
+
+      if (filterAndSort.kindOfObserver == "Only Robots") {
+        where.push({
+          valueOf: ['isHuman'],
+          is: false
+        });
+      }
+
+      if (!filterAndSort.validation.includes("Confirmed")) {
+        where.push({
+          valueOf: ['confirmedBySomeone'],
+          isNot: true
+        });
+      }
+
+      if (!filterAndSort.validation.includes("Rejected")) {
+        where.push({
+          valueOf: ['rejectedBySomeone'],
+          isNot: true
+        });
+      }
+
+      let results = {
+        finishedComputing: true,
+        uncheckedObservations: [],
+        rejected: [],
+        labels: {},
+        observers: {},
+        usernames: {},
+        videos: {},
+        counts: {
+          total: 0,
+          fromHuman: 0,
+          rejected: 0,
+          confirmed: 0,
+          disagreement: 0
+        }
+      }; // 
+      // this section should be rewritten to use the search^ instead of Javascript filters
+      // 
+
+      const hideUnchecked = !filterAndSort.validation.includes("Unchecked");
+      const hideDisagreement = !filterAndSort.validation.includes("Disagreement"); // this is so weird because of the dumb ways Javascript handles string->number
+      // it behaves like if ($root.filterAndSort.minlabelConfidence) then min = $root.filterAndSort.minlabelConfidence
+
+      let min = `${filterAndSort.minlabelConfidence}`;
+      min = min.length > 0 && isFinite(min - 0) ? min - 0 : -Infinity;
+      let max = `${filterAndSort.maxlabelConfidence}`;
+      max = max.length > 0 && isFinite(max - 0) ? max - 0 : Infinity;
+      const items = await indexDb.select({
+        from: 'observations',
+        where: [{
+          valueOf: ['type'],
+          is: 'segment'
+        }, ...where]
+      });
+
+      for (const each of items) {
+        // filters 
+        if (each.observation.labelConfidence < min || each.observation.labelConfidence > max) {
+          return;
+        }
+
+        if (hideUnchecked && !each.confirmedBySomeone && !each.rejectedBySomeone) {
+          return;
+        }
+
+        if (hideDisagreement && each.confirmedBySomeone && each.rejectedBySomeone) {
+          return;
+        } // 
+        // this section is actual logic
+        // 
+        // count observations for observers
+
+
+        if (!results.observers[each.observer]) {
+          results.observers[each.observer] = 0;
+        }
+
+        results.observers[each.observer] += 1; // count observations for labels
+
+        if (!results.labels[each.observation.label]) {
+          results.labels[each.observation.label] = 0;
+        }
+
+        results.labels[each.observation.label] += 1; // count observations for videos
+
+        if (!results.videos[each.videoId]) {
+          results.videos[each.videoId] = 0;
+        }
+
+        results.videos[each.videoId] += 1;
+        results.counts.total += 1;
+
+        if (each.isHuman) {
+          results.counts.fromHuman += 1;
+        } else {
+          if (each.confirmedBySomeone == true) {
+            results.counts.confirmed += 1;
+          }
+
+          if (each.rejectedBySomeone == true) {
+            results.counts.rejected += 1;
+            results.rejected.push(each);
+          }
+
+          if (each.rejectedBySomeone && each.confirmedBySomeone) {
+            results.counts.disagreement += 1;
+          }
+
+          if (each.rejectedBySomeone !== true && each.confirmedBySomeone !== true) {
+            results.uncheckedObservations.push(each);
+          }
+        }
+      } // save result for later
+
+
+      console.debug(`fresh summary is:`, results);
+      return results;
     },
 
-    labels() {// FIXME:
+    async labels() {
+      await indexDb.loaded; // start summarizing the data
+
+      let results = {};
+      let videosWithLabels = new Set();
+
+      for await (const [key, eachObservationEntry] of indexDb.iter.observations) {
+        videosWithLabels.add(eachObservationEntry.videoId);
+
+        if (eachObservationEntry.observation instanceof Object) {
+          // init
+          if (!Object.hasOwn(results, eachObservationEntry.observation.label)) {
+            results[eachObservationEntry.observation.label] = {};
+            results[eachObservationEntry.observation.label].videos = {
+              [eachObservationEntry.videoId]: 1
+            };
+            results[eachObservationEntry.observation.label].segmentCount = 1; // update
+          } else {
+            results[eachObservationEntry.observation.label].videos[eachObservationEntry.videoId] += 1;
+            results[eachObservationEntry.observation.label].segmentCount += 1;
+          }
+        }
+      } // generate videoCount
+
+
+      for (const [key, value] of Object.entries(results)) {
+        // record length
+        value.videoCount = Object.keys(value.videos).length; // sort by segment count (split into [keys, values], then sort by value (e.g. 1))
+
+        value.videos = Object.fromEntries(Object.entries(value.videos).sort(dynamicSort([1], true)));
+      } // 
+      // hard coded colors (probably should remove these)
+      // 
+
+
+      results["uncertain"] || (results["uncertain"] = {});
+      results["uncertain"].color = "gray"; // sort results by largest segmentCount
+
+      results = Object.fromEntries(Object.entries(results).sort(dynamicSort([1, "segmentCount"], true)));
+      return results;
     }
 
   }
@@ -43145,6 +44529,63 @@ const fakeBackend = {
 window.backend = ezRpc.buildInterfaceFor(ezRpcUrl);
 module.exports = {
   backend,
+  backendHelpers: {
+    async getVideoTitle(videoId) {
+      return (await backend).mongoInterface.get({
+        from: 'videos',
+        keyList: [videoId, "summary", "title"]
+      });
+    },
+
+    async getObservations({
+      where = [],
+      returnObject = false
+    }) {
+      return (await backend).mongoInterface.getAll({
+        from: 'observations',
+        where: [{
+          valueOf: ['type'],
+          is: 'segment'
+        }, ...where],
+        returnObject
+      });
+    },
+
+    async deleteObservation({
+      uuidOfSelectedSegment
+    }) {
+      return (await backend).mongoInterface.delete({
+        keyList: [uuidOfSelectedSegment],
+        from: "observations"
+      });
+    },
+
+    async setObservation({
+      uuidOfSelectedSegment,
+      observation
+    }) {
+      return await (await backend).mongoInterface.set({
+        keyList: [uuidOfSelectedSegment],
+        from: "observations",
+        to: observation
+      });
+    },
+
+    async getVideoIds() {
+      return await (await backend).mongoInterface.getAll({
+        from: "videos",
+        where: [{
+          hiddenValueOf: ["_id"],
+          matches: `^${value.trim()}`
+        }],
+        forEach: {
+          extractHidden: ['_id']
+        }
+      });
+    }
+
+  },
+  fakeBackend,
   mixin: {
     data: () => ({
       backend
@@ -43153,7 +44594,7 @@ module.exports = {
 }; // add the backend to all of the components
 
 Vue.mixin(module.exports.mixin);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","ez-rpc-frontend":"node_modules/ez-rpc-frontend/frontend.js","./utils.js":"src/utils.js","./object.js":"src/object.js","./string.js":"src/string.js"}],"src/pages/Api.vue":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","ez-rpc-frontend":"node_modules/ez-rpc-frontend/frontend.js","./utils.js":"src/utils.js","./object.js":"src/object.js","./string.js":"src/string.js","good-js":"node_modules/good-js/index.js"}],"src/pages/Api.vue":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -64577,10 +66018,12 @@ exports.default = void 0;
 //
 //
 //
+//
 const {
   deferredPromise
-} = require("../utils.js"); // TODO: fix the fullscreen mode
+} = require("../utils.js");
 
+window.resetPlayer = false; // TODO: fix the fullscreen mode
 
 var _default = {
   props: ["value", "videoId", "eventLine"],
@@ -64646,7 +66089,7 @@ var _default = {
     // init
 
     this.loadVideo();
-    this.intervalId = setInterval(this.focusWatcher, 500);
+    this.intervalId = setInterval(this.focusWatcher, 100);
   },
 
   // allow things to dynamically hook into the updated event
@@ -64677,15 +66120,10 @@ var _default = {
       // 
       // don't let focus stay on YouTube player
       // 
-      let iframe = get(this.player, ["elements", "wrapper", "children", 0], undefined); // we don't want to focus on the iframe ever
-
-      if (document.activeElement === iframe) {
-        // delayed recurse just as a check
-        setTimeout(this.focusWatcher, 0); // focusing on nothing to move the focus to the body
-
-        document.activeElement.blur(); // alternatively focus directly on the player itself
-        // this.player.elements.buttons.play[0].focus()
-        // this.player.elements.buttons.play[1].focus()
+      // we don't want to focus on the iframe ever
+      if (document.activeElement.tagName === "IFRAME" || document.activeElement.tagName === "VIDEO") {
+        // focusing on nothing to move the focus to the body
+        document.activeElement.blur();
       }
     },
 
@@ -64714,14 +66152,45 @@ var _default = {
         let checkForPlayer = (resolve, reject) => () => {
           console.log(`checking For Player`);
           safteyCheck(reject);
+          const vuePlyr = this.$refs.nativePlayer || this.$refs.vuePlyr2 && this.$refs.vuePlyr2.player;
 
-          if (get(this, ["$refs", "vuePlyr", "player", "duration"], 0) !== 0) {
-            this.player = this.$refs.vuePlyr.player;
-            window.player = this.player;
+          if (get(vuePlyr, ["duration"], 0) !== 0) {
+            window.resetPlayer = false;
+            this.player = vuePlyr;
+
+            let checkDuration = () => {
+              if (this.player.duration != undefined) {
+                this.$root.videoLoadedPromise.resolve(this.player);
+              } else {
+                setTimeout(checkDuration, 50);
+              }
+            };
+
+            setTimeout(checkDuration, 0); // hacky I know but the more obvious ways are not working (e.g. this.$refs.vuePlyr2.player)
+            // I'm also fighting interal-vue errors because vue2 is end-of-life and buggy
+
+            Object.defineProperty(window, "player", {
+              get: () => {
+                if (window.resetPlayer) {
+                  return {
+                    currentTime: 0
+                  };
+                }
+
+                let output;
+
+                if (this.$refs.nativePlayer) {
+                  output = this.$refs.nativePlayer;
+                } else {
+                  output = document.querySelector(".plyr").__vue__.player.media;
+                }
+
+                return output;
+              }
+            });
             console.debug(`this.player is:`, this.player);
             this.setupPlayer(this.player);
-            this.$emit("VideoPlayer-loaded", this.$refs.vuePlyr.player);
-            this.$root.videoLoadedPromise.resolve(this.player);
+            this.$emit("VideoPlayer-loaded", this.player);
             resolve(this.player);
           } else {
             // recursively wait because theres no callback API
@@ -64739,100 +66208,100 @@ var _default = {
       // 
       // add listeners to the player
       //
-      this.externalData.duration = this.player.duration;
-
-      let updateCurrentTime = (...args) => {
-        this.externalData.currentTime = get(this, ['player', 'media', 'currentTime'], null);
-        setTimeout(() => {
-          this.externalData.currentTime = get(this, ['player', 'media', 'currentTime'], null);
-        }, 50);
-      };
-
-      updateCurrentTime();
-      this.player.on("seeked", updateCurrentTime);
-      this.player.on("seeking", updateCurrentTime);
-      this.player.on("timeupdate", updateCurrentTime);
-      this.player.on("play", updateCurrentTime);
-      this.player.on("pause", updateCurrentTime); // 
+      this.externalData.duration = player.duration; // 
       // fix the scubber update issue
       // 
 
-      let that = this;
-      Object.defineProperty(Object.getPrototypeOf(this.player), "currentTime", {
-        set(input) {
-          // Bail if media duration isn't available yet
-          if (!this.duration) {
-            return;
-          } // Validate input
+      if (!this.isLocalVideo) {
+        let that = this;
+        Object.defineProperty(Object.getPrototypeOf(player), "currentTime", {
+          set(input) {
+            // Bail if media duration isn't available yet
+            if (!this.duration) {
+              return;
+            } // Validate input
 
 
-          input = input - 0;
+            input = input - 0;
 
-          if (input < 0) {
-            input = 0;
+            if (input < 0) {
+              input = 0;
+            }
+
+            const inputIsValid = input == input && input >= 0;
+
+            if (inputIsValid) {
+              // Set
+              this.media.currentTime = Math.min(input, this.duration);
+              that.externalData.currentTime = this.media.currentTime;
+            } // Logging
+
+
+            this.debug.log(`Seeking to ${this.currentTime} seconds`);
           }
 
-          const inputIsValid = input == input && input >= 0;
-
-          if (inputIsValid) {
-            // Set
-            this.media.currentTime = Math.min(input, this.duration);
-            that.externalData.currentTime = this.media.currentTime;
-          } // Logging
-
-
-          this.debug.log(`Seeking to ${this.currentTime} seconds`);
-        }
-
-      }); // 
+        });
+      } // 
       // add custom controls
       //
 
-      this.player.elements.container.addEventListener("keydown", this.keydownControls);
+
+      try {
+        // plyr
+        player.elements.container.addEventListener("keydown", this.keydownControls);
+      } catch (error) {
+        // native player
+        player.addEventListener("keydown", this.keydownControls);
+      }
     },
 
     keydownControls(eventObject) {
-      // only when focused on the nothing or this element
+      console.debug(`eventObject is:`, eventObject); // only when focused on the nothing or this element
       // (this is to exclude textboxes)
-      if (eventObject.target == document.body || get(eventObject, ["path"], []).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
+
+      if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get(eventObject, ["path"], []).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
         // 
         // key controls
         // 
         switch (eventObject.key) {
           case " ":
-            // yes, this 50ms delay is necessary otherwise it sometimes fights with the bulitin window listeners from plyr (and sometimes doesn't depending on what element is selected)
-            if (this.player.playing) {
+          case "k":
+            console.log(`toggling play/pause!`);
+            eventObject.preventDefault();
+            eventObject.stopPropagation(); // yes, this 50ms delay is necessary otherwise it sometimes fights with the bulitin window listeners from plyr (and sometimes doesn't depending on what element is selected)
+
+            if (!window.player.paused) {
               setTimeout(() => {
-                this.player.pause();
+                window.player.pause();
               }, 50);
             } else {
               setTimeout(() => {
-                this.player.play();
+                window.player.play();
               }, 50);
             }
 
-            eventObject.preventDefault();
-            eventObject.stopPropagation();
             break;
 
           case ".":
             eventObject.preventDefault();
-            this.player.forward(1 / 32);
+            window.player.currentTime += 1 / 32;
             break;
 
           case ",":
             eventObject.preventDefault();
-            this.player.rewind(1 / 32);
+            window.player.currentTime -= 1 / 32;
             break;
 
           case "ArrowRight":
             if (eventObject.shiftKey) {
-              console.log(`going forward`);
               eventObject.preventDefault();
-              this.player.forward(1 / 32);
+              window.player.currentTime += 1 / 32;
             } else if (eventObject.altKey) {
               eventObject.preventDefault();
-              this.player.forward(10);
+              window.player.currentTime += 10;
+            } else if (!eventObject.ctrlKey) {
+              eventObject.preventDefault();
+              window.player.currentTime += 5;
             }
 
             break;
@@ -64840,10 +66309,13 @@ var _default = {
           case "ArrowLeft":
             if (eventObject.shiftKey) {
               eventObject.preventDefault();
-              this.player.rewind(1 / 32);
+              window.player.currentTime -= 1 / 32;
             } else if (eventObject.altKey) {
               eventObject.preventDefault();
-              this.player.rewind(10);
+              window.player.currentTime -= 10;
+            } else if (!eventObject.ctrlKey) {
+              eventObject.preventDefault();
+              window.player.currentTime -= 5;
             }
 
             break;
@@ -64851,7 +66323,7 @@ var _default = {
           case "ArrowUp":
             if (eventObject.shiftKey) {
               eventObject.preventDefault();
-              this.player.speed += 0.5;
+              window.player.playbackRate *= 2;
             }
 
             break;
@@ -64859,7 +66331,7 @@ var _default = {
           case "ArrowDown":
             if (eventObject.shiftKey) {
               eventObject.preventDefault();
-              this.player.speed -= 0.5;
+              window.player.playbackRate *= 0.5;
             }
 
             break;
@@ -64875,7 +66347,7 @@ var _default = {
       await this.videoLoading; // if the video hasn't changed
 
       if (videoId == this.videoId) {
-        this.player.currentTime = startTime; // always focus on the video immediately after seeking
+        window.player.currentTime = startTime; // always focus on the video immediately after seeking
 
         document.activeElement.blur();
       }
@@ -64926,23 +66398,21 @@ exports.default = _default;
       ),
       _vm.isLocalVideo
         ? _c(
-            "vue-plyr",
+            "video",
             {
-              key: _vm.videoId,
-              ref: "vuePlyr",
-              style:
-                "transition: all ease 0.6s; opacity: " +
-                (_vm.videoId && _vm.player ? 1 : 0)
+              ref: "nativePlayer",
+              staticStyle: { width: "100%", "z-index": "7" },
+              attrs: { controls: "controls" }
             },
-            [_c("video", { attrs: { src: _vm.videoId } })]
+            [_c("source", { attrs: { src: _vm.videoId, type: "video/mp4" } })]
           )
         : _vm._e(),
       !_vm.isLocalVideo
         ? _c(
             "vue-plyr",
             {
-              key: _vm.videoId,
-              ref: "vuePlyr",
+              key: ("" + Math.random()).replace(".", ""),
+              ref: "vuePlyr2",
               style:
                 "transition: all ease 0.6s; opacity: " +
                 (_vm.videoId && _vm.player ? 1 : 0)
@@ -65025,24 +66495,16 @@ exports.default = void 0;
 var _default = {
   props: ["videoId", "labelName", "currentTime", "segmentUuid"],
   data: () => ({
-    displayTime: null,
-    throttledDisplayUpdater: () => 0
+    displayTime: null
   }),
 
   created() {
-    const updateEveryMiliseconds = 100;
-    this.throttledDisplayUpdater = throttle(() => this.displayTime = this.currentTime, updateEveryMiliseconds, // fire at the very end
-    {
-      trailing: true
-    });
+    setInterval(() => {
+      this.displayTime = window.player.currentTime;
+    }, 100);
   },
 
-  watch: {
-    currentTime() {
-      this.throttledDisplayUpdater();
-    }
-
-  }
+  watch: {}
 };
 exports.default = _default;
         var $354401 = exports.default || module.exports;
@@ -65345,6 +66807,10 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
+var _string = require("../string.js");
+
+//
+//
 //
 //
 //
@@ -65494,8 +66960,10 @@ exports.default = void 0;
 //
 //
 let {
-  backend
-} = require('../iilvd-api');
+  backend,
+  backendHelpers,
+  fakeBackend
+} = require('../iilvd-api.js');
 
 let {
   getColor,
@@ -65532,6 +67000,9 @@ var _default = {
   mounted() {
     window.Editor = this; // debugging
 
+    window.player = window.player || {
+      currentTime: 0
+    };
     this.resetData();
   },
 
@@ -65546,11 +67017,11 @@ var _default = {
       let observationData = this.observationData;
       return {
         startTime: observationData.startTime >= 0 && observationData.startTime < observationData.endTime,
-        endTime: observationData.endTime > 0 && observationData.startTime < observationData.endTime && observationData.endTime <= this.duration,
+        endTime: observationData.endTime > 0 && observationData.startTime < observationData.endTime && observationData.endTime <= window.player.duration,
         label: isValidName(get(observationData, ["label"])),
         observer: isValidName(get(observationData, ["observer"])),
         labelConfidence: labelConfidenceCheck(observationData.labelConfidence),
-        videoId: isString(observationData.videoId) && observationData.videoId.length == currentFixedSizeOfYouTubeVideoId
+        videoId: isString(observationData.videoId) && (observationData.videoId.length == currentFixedSizeOfYouTubeVideoId || observationData.videoId.startsWith("/videos/"))
       };
     }
 
@@ -65580,8 +67051,8 @@ var _default = {
             isHuman: selectedSegment.isHuman,
             confirmedBySomeone: selectedSegment.confirmedBySomeone,
             rejectedBySomeone: selectedSegment.rejectedBySomeone,
-            label: selectedSegment.observation.label,
-            labelConfidence: selectedSegment.observation.labelConfidence
+            label: (selectedSegment.observation || {}).label,
+            labelConfidence: (selectedSegment.observation || {}).labelConfidence
           };
         }
       },
@@ -65611,7 +67082,7 @@ var _default = {
       }
 
       if (eventObj.key == "m") {
-        this.observationData.endTime = this.currentTime.toFixed(3);
+        this.observationData.endTime = window.player.currentTime.toFixed(3);
       }
 
       if (eventObj.key == "s" && this.editing) {
@@ -65622,6 +67093,11 @@ var _default = {
 
   },
   methods: {
+    onLabelChange() {
+      // enforce naming convention
+      this.observationData.label = (0, _string.toKebabCase)(this.observationData.label.toLowerCase());
+    },
+
     preventBubbling(eventObject) {
       if (eventObject.ctrlKey && eventObject.key == "s") {
         this.onSaveEdit();
@@ -65639,25 +67115,23 @@ var _default = {
     },
 
     async onNewObservation() {
-      console.log(`here`);
-
       if (!this.editing) {
         this.dataCopy = {};
         this.resetData();
-        this.observationData.startTime = this.currentTime.toFixed(3);
-        this.observationData.endTime = (this.currentTime + 1).toFixed(3);
-        this.observationData.label = get(this.$root, ["routeData$", "labelName"], "") || "(change me)";
+        this.observationData.startTime = window.player.currentTime.toFixed(3);
+        this.observationData.endTime = (window.player.currentTime + 0.01).toFixed(3);
+        this.observationData.label = storageObject.recentLabel || get(this.$root, ["routeData$", "labelName"], "") || "example-label";
         this.uuidOfSelectedSegment = null; // start editing the newly created observation
 
         this.onEditObservation();
       }
-
-      console.log(`here  2`);
     },
 
     onEditObservation() {
       // save a copy encase they cancel
-      this.dataCopy = JSON.parse(JSON.stringify(this.observationData));
+      this.dataCopy = JSON.parse(JSON.stringify(this.observationData)); // instantly convert to kebab case if somehow it isn't already
+
+      this.observationData.label = (0, _string.toKebabCase)(`${this.observationData.label}`.toLowerCase());
       this.editing = true;
     },
 
@@ -65670,8 +67144,12 @@ var _default = {
     async onSaveEdit() {
       console.log(`onSaveEdit`);
 
-      if (this.observationData.observer) {
+      if (typeof this.observationData.observer == "string" && this.observationData.observer.length > 0) {
         storageObject.observer = this.observationData.observer;
+      }
+
+      if (typeof this.observationData.label == "string" && this.observationData.label.length > 0) {
+        storageObject.recentLabel = this.observationData.label;
       } // convert to numbers 
 
 
@@ -65701,6 +67179,7 @@ var _default = {
       // 
 
 
+      observation.observation.label = (0, _string.toKebabCase)(`${observation.observation.label}`.toLowerCase());
       this.$root.addLabel(observation.observation.label);
       const observationsForVideo = storageObject[this.observationData.videoId] || {};
       observationsForVideo[this.uuidOfSelectedSegment] = observation;
@@ -65709,19 +67188,39 @@ var _default = {
       try {
         // if saving an edit
         if (isNewObervation) {
-          // TODO: check the valid-ness of the segment first
+          const uuidOfSelectedSegment = this.uuidOfSelectedSegment; // TODO: check the valid-ness of the segment first
           // TODO: add hints for data validity
-          await (await this.backend).mongoInterface.set({
-            keyList: [this.uuidOfSelectedSegment],
-            from: "observations",
-            to: observation
+
+          await backendHelpers.setObservation({
+            uuidOfSelectedSegment,
+            observation
+          });
+          await fakeBackend.setObservation({
+            uuidOfSelectedSegment,
+            observation
           }); // if saving something new
         } else {
           this.uuidOfSelectedSegment = await (await this.backend).addSegmentObservation(observation);
+          let uuid = await fakeBackend.addObservation(observation);
+          console.debug(`fake backend uuid is:`, uuid);
         }
       } catch (error) {
         this.$toasted.show(`There was an error on the database`).goAway(5500);
-        this.$toasted.show(error.message.slice(0, 65)).goAway(5500);
+        console.error("# ");
+        console.error("# BACKEND ERROR");
+        console.error("# ");
+        console.error(error.stack);
+        console.error(error);
+        console.error("# ");
+        this.$toasted.show(error.message.slice(0, 65), {
+          closeOnSwipe: false,
+          action: {
+            text: 'Close',
+            onClick: (e, toastObject) => {
+              toastObject.goAway(0);
+            }
+          }
+        });
         this.$toasted.show(`(Full error log in the console)`).goAway(6500); // throw error
       }
 
@@ -65740,9 +67239,8 @@ var _default = {
       let index = this.$root.selectedSegment.$displayIndex;
 
       if (this.uuidOfSelectedSegment) {
-        (await this.backend).mongoInterface.delete({
-          keyList: [this.uuidOfSelectedSegment],
-          from: "observations"
+        backendHelpers.deleteObservation({
+          uuidOfSelectedSegment: this.uuidOfSelectedSegment
         });
         this.$root.selectedVideo.keySegments = [...this.$root.selectedVideo.keySegments].filter(each => each.$uuid != this.uuidOfSelectedSegment);
         this.resetData();
@@ -65759,8 +67257,8 @@ var _default = {
       this.$root.selectedSegment = null;
       this.observationData = {
         videoId: this.$root.selectedVideo && this.$root.selectedVideo.$id,
-        startTime: this.currentTime || 0,
-        endTime: this.currentTime || this.duration || 0,
+        startTime: window.player.currentTime || 0,
+        endTime: window.player.currentTime || window.player.duration || 0,
         observer: window.storageObject.observer || "",
         label: get(this, ["$root", "routeData$", "labelName"], ""),
         labelConfidence: 0.95,
@@ -65771,11 +67269,11 @@ var _default = {
     },
 
     setStartToCurrentTime() {
-      this.observationData.startTime = this.currentTime.toFixed(3);
+      this.observationData.startTime = window.player.currentTime.toFixed(3);
     },
 
     setEndToCurrentTime() {
-      this.observationData.endTime = this.currentTime.toFixed(3);
+      this.observationData.endTime = window.player.currentTime.toFixed(3);
     }
 
   }
@@ -66098,6 +67596,10 @@ exports.default = _default;
                               label: "Label",
                               invalid: !_vm.isValid.label
                             },
+                            on: {
+                              change: _vm.onLabelChange,
+                              input: _vm.onLabelChange
+                            },
                             model: {
                               value: _vm.observationData.label,
                               callback: function($$v) {
@@ -66263,997 +67765,15 @@ render._withStripped = true
       
       }
     })();
-},{"../iilvd-api":"src/iilvd-api.js","../utils":"src/utils.js","../atoms/UiSwitch":"src/atoms/UiSwitch.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"node_modules/good-js/index.js":[function(require,module,exports) {
-// if node/serverside
-if (typeof document == 'undefined')
-    {
-    }
-// if browswer/clientside
-else
-    {
-        var valueIsObject   = (aValue)=>aValue instanceof Object && !(aValue instanceof Function) && !(aValue instanceof Array)
-        var valueIsArray    = (aValue)=>aValue instanceof Array
-        var valueIsEmptyish = (aValue)=>
-            {
-                if ((aValue instanceof Array && aValue.length == 0) || aValue === "" || aValue == null) {
-                    return true
-                }
-                else if (aValue instanceof Object) {
-                    return Object.keys(aValue).length == 0
-                }
-                else {
-                    return false
-                }
-            }
-        // 
-        // Create a function for viewing any object
-        // 
-        var objectContainerStyle = {
-            boxShadow: "0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2)",
-            display: "grid",
-            gridTemplateColumns: "min-content min-content",
-            padding: "5px",
-            marginBottom: "10px",
-            borderRadius: "11px",
-            width: "min-intrinsic",
-        }
-        var normalKeyNameStyle = {
-            padding: "0px 10px",
-            justifySelf: "self-end",
-        }
-        var objectKeyNameStyle = {
-            padding: "0px 10px",
-            fontWeight: "bold",
-            justifySelf: "self-end",
-        }
-        var keyValueStyle = {
-            justifySelf: "flex-start",
-            paddingRight: "5px",
-        }
-        module.exports.objectAsHtml = (object) => 
-            {
-                var container = New("div")
-                container.classList.add("object-container")
-                Object.assign(container.style, objectContainerStyle);
-                if (valueIsObject( object) && !valueIsEmptyish(object)) 
-                    {
-                        var object_names = []
-                        for (var each of Object.keys(object))
-                            {
-                                // check if child is an object or not 
-                                if ((valueIsObject(object[each]) || valueIsArray(object[each])) && !valueIsEmptyish(object[each]))
-                                    {
-                                        object_names.push(each)
-                                    }
-                                // if not an object, go ahead and add it
-                                else
-                                    {
-                                        var key_name = New("div")
-                                        key_name.classList.add("normal-key-name")
-                                        Object.assign(key_name.style, normalKeyNameStyle);
-                                        key_name.innerText = `${each}: `
-                                        container.appendChild(key_name)
-                                        container.appendChild(objectAsHtml(object[each]))
-                                    }
-                            }
-                        // now add all the child-objects to the bottom
-                        for (var each of object_names)
-                            {
-                                var key_name = New("div")
-                                key_name.classList.add("object-key-name")
-                                Object.assign(key_name.style, objectKeyNameStyle);
-                                key_name.innerText = `${each}: `
-                                container.appendChild(key_name)
-                                container.appendChild(objectAsHtml(object[each]))
-                            }
-                        return container
-                    }
-                // if array
-                else if (valueIsArray( object) && !valueIsEmptyish(object))
-                    {
-                        for (var each of object)
-                            {
-                                var key_name = New("div")
-                                key_name.classList.add("normal-key-name")
-                                Object.assign(key_name.style, normalKeyNameStyle);
-                                key_name.innerText = `-`
-                                container.appendChild(key_name)
-                                container.appendChild(objectAsHtml(each))
-                            }
-                        return container
-                    }
-                // if not an object, or if empty
-                else
-                    {
-                        var key_value = New("div")
-                        key_value.classList.add("key-value")
-                        Object.assign(key_value.style, keyValueStyle);
-                        if (valueIsObject(object))
-                            {
-                                key_value.innerText = `{ }`
-                            }
-                        else if (valueIsArray(object))
-                            {
-                                key_value.innerText = `[ ]`
-                            }
-                        else
-                            {
-                                key_value.innerText = `${object}`
-                            }
-                        return key_value
-                    }
-            }
-
-    }
-
-// 
-// 
-// Changes to prototypes
-// 
-// 
-//  allow "for(let each of a)" when a is an object
-// Object.prototype[Symbol.iterator] = function* () 
-//     {
-//         for (let each of Object.keys(this))
-//             {
-//                 yield this[each]
-//             }
-//     }
-
-
-
-// 
-// 
-// Useful functions
-// 
-// 
-module.exports.log          = console.log
-/**
- * Checks type according to English
- *
- * @param {Object} args.value - any possible value 
- * @param {Object} args.is - a class or string-description Object, Array, null, "nullish", "number", Number, Boolean, Function
- * @return {Boolean} the legitmate/intuitive answer
- * 
- * @note
- *     Object means can-be-a JSON-object
- * 
- * @example
- *     checkIf({value: undefined , is: null     }) // false
- *     checkIf({value: undefined , is: 'nullish'}) // true
- *     checkIf({value: null      , is: 'nullish'}) // true
- *     checkIf({value: NaN       , is: 'nullish'}) // true
- *     checkIf({value: null      , is: Object   }) // false
- *     checkIf({value: NaN       , is: NaN      }) // true!
- *     checkIf({value: NaN       , is: Number   }) // false!
- *     checkIf({value: ("string"), is: Object   }) // false
- *     checkIf({value: {blah: 10}, is: Object   }) // true!
- *     checkIf({value: new Date(), is: Object   }) // false!
- *     checkIf({value: new CustomClass()         , is: Object}) // true!
- *     checkIf({value: ()=>{return "imma func"}  , is: Object}) // false
- *     checkIf({value: ["I", "am", "an", "array"], is: Object}) // false
- *     checkIf({value: new CustomClass()         , is: Date})   // false
- */
-module.exports.checkIf = ({ value, is }) => {
-    return module.exports.valueIs(is, value)
-}
-/**
- * Throws error if type requirement isn't met
- *
- * @param {Object} args.value - any possible value 
- * @param {Object} args.is - a class or string-description Object, Array, null, "nullish", "number", Number, Boolean, Function
- * @param {string} args.failMessage - a string to be added to the top of the error message
- * @return {undefined}
- * 
- * 
- * @example
- * // see checkIf() for more argument examples
- * requireThat({
- *     value: arg1.size,
- *     is: Number,
- *     failMessage: "The size of the first argument needs to be a number"
- * })
- */
-module.exports.requireThat = ({ value, is, failMessage }={}) => {
-    if (!module.exports.checkIf({ value, is})) {
-        let requiredType = (is instanceof Object) ? is.prototype.constructor.name : is
-        // 
-        // figure out the real type of the object
-        // 
-        let actualType
-        if (value instanceof Object) {
-            actualType = value.constructor.prototype.constructor.name
-        } else {
-            if (value !== value) {
-                actualType = "NaN"
-            } else if (value === null) {
-                actualType = "null"
-            } else {
-                actualType = typeof value
-            }
-        }
-        failMessage = failMessage ? `Error Message: ${failMessage}` : ""
-        throw Error(`Failed to pass a type check created by requireThat()\n    the value is considered to be: ${actualType}\n    which fails to meet the requirement of: ${requiredType}\n    the failing value is: ${value}\n\n${failMessage}`)
-    }
-}
-/**
- * Checks type properly
- *
- * @param {Object} typeOrClass - ex: Object, Array, null, "nullish", "number", Number, Boolean, Function
- * @return {Boolean} the legitmate/intuitive answer
- *
- * @example
- *     valueIs(Number, NaN)                        // false!
- *     valueIs('nullish', null)                    // true
- *     valueIs('nullish', NaN)                     // true
- *     valueIs('nullish', undefined)               // true
- *     valueIs(null, undefined)                    // false
- *     valueIs(Object, null)                       // false
- *     valueIs(Object, ()=>{return "imma func"})   // false
- *     valueIs(Object, ["I", "am", "an", "array"]) // false
- *     valueIs(Object, ("string"))                 // false
- *     valueIs(Object, {blah: 10})                 // true!
- *     valueIs(Object, new Date())                 // false!
- *     valueIs(Object, new CustomClass())          // true!
- *     valueIs(Date, new CustomClass())            // false
- */
-module.exports.valueIs      = (typeOrClass, aValue) => {
-        // 
-        // Check typeOrClass
-        // 
-        // see if typeOrClass is actually a class 
-        if (typeof typeOrClass == 'function') {
-            var aClass = typeOrClass
-            typeOrClass = aClass.name
-        }
-        // lowercase any string-names it
-        if (typeof typeOrClass == 'string') {
-            typeOrClass = typeOrClass.toLowerCase()
-        }
-
-        //
-        // Strict Values
-        //
-        // object (non-null, non-function, non-array)
-        if (typeOrClass === "object") {
-            if (!(aValue instanceof Object)) {
-                return false
-            } else if (aValue instanceof Array || aValue instanceof Function || aValue instanceof Date) {
-                return false
-            // check if its stringified+parsed form is also an object 
-            // (this is to remove things like BigInt and BigInt64Array and other built-in pseudo-primitives)
-            } else {
-                let stringified = JSON.stringify(aValue)
-                // note that this is not == '"undefined"'
-                if (stringified === 'undefined') {
-                    return false
-                } else if (JSON.parse(stringified) instanceof Object) {
-                    return true
-                } else {
-                    return false
-                }
-            }
-        }
-        // undefined
-        else if (typeof typeOrClass === 'undefined' || typeOrClass == 'undefined') {
-            return typeof aValue === 'undefined'
-        }
-        // null
-        else if (typeOrClass === null || typeOrClass == 'null') {
-            return aValue === null
-        }
-        // NaN
-        else if ((typeOrClass !== typeOrClass && typeof typeOrClass == 'number') || typeOrClass == 'nan') {
-            return aValue !== aValue && typeof aValue == 'number'
-        }
-        // false
-        else if (typeOrClass === false) {
-            return aValue === false
-        }
-        // true
-        else if (typeOrClass === true) {
-            return aValue === true
-        }
-        // bool
-        else if (typeOrClass === "bool" || typeOrClass === "boolean") {
-            return aValue === true || aValue === false
-        }
-        // empty string
-        else if (typeOrClass === "") {
-            return aValue === ""
-        }
-        // empty list
-        else if (typeOrClass === "[]" || Array.isArray(typeOrClass) && typeOrClass.length == 0) {
-            return aValue instanceof Array && aValue.length == 0
-        }
-        // function
-        else if (typeOrClass === "function") {
-            return typeof aValue == "function"
-        }
-        // number
-        else if (typeOrClass == "number" || typeOrClass == Number) {
-            if (aValue !== aValue) {
-                return false
-            }
-            else {
-                return typeof aValue == "number" || aValue instanceof Number
-            }
-        }
-        // string
-        else if (typeOrClass == "string") {
-            return typeof aValue == "string" || aValue instanceof String
-        }
-        // array
-        else if (typeOrClass == "array") {
-            return aValue instanceof Array
-        }
-        // symbol
-        else if (typeOrClass == "symbol") {
-            return typeof aValue == "symbol"
-        }
-
-        // 
-        // Unstrict values
-        // 
-        // nullish (null, undefined, NaN)
-        else if (typeOrClass === 'nullish') {
-            return aValue == null || aValue !== aValue
-        }
-        // emptyish ({},[],"",null,undefined)
-        else if (typeOrClass === 'emptyish') {
-            if ((aValue instanceof Array && aValue.length == 0) || aValue === "" || aValue == null) {
-                return true
-            }
-            else if (aValue instanceof Object) {
-                return Object.keys(aValue).length == 0
-            }
-            else {
-                return false
-            }
-        }
-        // falsey ("0",0,false,null,undefined,NaN)
-        else if (typeOrClass === 'falsey' || typeOrClass === 'falsy' || typeOrClass === 'falseish' || typeOrClass === 'falsish') {
-            return aValue == null || aValue === false || aValue !== aValue || aValue === 0 || aValue === "0"
-        }
-        // falsey-or-empty ({},[],"","0",0,false,null,undefined,NaN)
-        else if (typeOrClass === 'falsey-or-empty' || typeOrClass === 'falsy-or-empty' || typeOrClass === 'falseish-or-empty' || typeOrClass === 'falsish-or-empty') {
-            // empty array
-            if (aValue instanceof Array && aValue.length == 0) {
-                return true
-            }
-            // empty object
-            else if (aValue instanceof Object) {
-                return Object.keys(aValue).length == 0
-            }
-            else {
-                return (aValue ? true : false)
-            }
-        }
-        // numberish 
-        else if (typeOrClass == 'numberish') {
-            return (aValue != aValue) || !isNaN(aValue - 0)
-        }
-        // 
-        // class type
-        // 
-        else if (aClass) {
-            // if no constructor
-            if (aValue === null || aValue === undefined) {
-                return false
-            }
-            else {
-                // see if constructors match
-                if (aValue.constructor.name === typeOrClass) {
-                    return true
-                }
-                // check instanceof 
-                else {
-                    return aValue instanceof aClass
-                }
-            }
-        }
-        // 
-        // failed to recognize
-        // 
-        else {
-            console.error("when you call isValue(), I'm not recoginizing the type or class:", typeOrClass)
-        }
-    }
-
-//
-/**
- * Indent logging lines
- *
- * @param {string} args.name - name to be printed at the start/end of block
- * @param {Object} args.context - the context (e.g. this) to be given to the block
- * @return {Boolean} the output is a
- *
- * @example
- *     debugBlock({name: "call API"}, ()=>{
- *         api.call('thing')
- *     })
- */
-module.exports.logBlock   = ({name, context}, codeBlock,) => {
-    if (!name) {
-        console.group()
-    } else {
-        console.group(`[starting: ${name}]`)
-    }
-    let output
-    if (context) {
-        output = codeBlock.apply(context, [])
-    } else {
-        output = codeBlock()
-    }
-    if (output instanceof Promise) {
-        return new Promise(async (resolve, reject)=>{
-            let awaitedOutput = await output
-            console.groupEnd()
-            if (name) {
-                console.log(`[finished: ${name}]`)
-            }
-            resolve(awaitedOutput)
-        })
-    } else {
-        console.groupEnd()
-        if (name) {
-            console.log(`[finished: ${name}]`)
-        }
-        return output
-    }
-}
-/**
- * Print tons of info about a value
- *
- * @param {Object} value - any possible value
- *
- * @example
- *     info(anUnknownThing)
- */
-module.exports.info         = (value) => {
-        var valueIsFalsey = value ? true : false
-        var valueEquivFalse = value == false
-        var valueEquivNull = value == null
-        var valueInstanceObj = value instanceof Object
-        var valueMinus0 = value - 0
-        console.log(`info about:`, value)
-        if (!valueEquivNull) // valueOf
-        {
-            console.log(`    valueOf()`, value.valueOf())
-        }
-        console.log(`    type `, typeof value)
-        console.log(`    (value instanceof Object)?`, valueInstanceObj)
-        if (!valueEquivNull) // constructor.name
-        {
-            console.log(`    constructor.name`, value.constructor.name)
-        }
-        console.log(`    (value)?`, valueIsFalsey)
-        console.log(`    (value == false)?`, valueEquivFalse)
-        console.log(`    (value == null)?`, valueEquivNull)
-        console.log(`    (value - 0)`, value - 0)
-        if (valueInstanceObj) {
-            console.log(`    Object.keys:`)
-            for (var each of Object.keys(value)) {
-                console.log(`        `, each)
-            }
-            console.log(`     Object.getOwnPropertyNames`)
-            for (var each of Object.getOwnPropertyNames(value)) {
-                try {
-                    if (value != null && each != null) {
-                        var descriptor = Object.getOwnPropertyDescriptor(value, each)
-                        console.log(`        `, each, descriptor)
-                    }
-                }
-                catch (e) {
-
-                }
-
-            }
-            console.log(`     Object.getOwnPropertySymbols`)
-            for (var each of Object.getOwnPropertySymbols(value)) {
-                try {
-                    if (value != null && each != null) {
-                        var descriptor = Object.getOwnPropertyDescriptor(value, each)
-                        console.log(`        `, each, descriptor)
-                    }
-                }
-                catch (e) {
-
-                }
-
-            }
-        }
-    }
-/**
- * Safely get nested values
- *
- * @param {any} obj.from - what object/value you're extracting from
- * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
- * @param {any} obj.failValue - what to return in the event of an error
- * @return {any} either the failValue or the actual value
- *
- * @example
- *     let obj = { key1: {} }
- *     // equivlent to obj.key1.subKey.subSubKey
- *     get({
- *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
- *         from: obj,
- *     })
- *     get({
- *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
- *         from: null,
- *     })
- *     get({
- *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
- *         from: null,
- *         failValue: 0
- *     })
- */
-module.exports.get          = (obj, keyList=undefined, failValue=null) => {
-        // process args
-        let from
-        if (keyList == undefined) {
-            ({ from, keyList, failValue } = obj)
-            obj = from
-        }
-        // convert string values into lists
-        if (typeof keyList == 'string') {
-            if (keyList.length == 0) {
-                keyList = []
-            } else {
-                keyList = keyList.split('.')
-            }
-        }
-        // iterate over nested values
-        try {
-            for (var each of keyList) {
-                if (obj instanceof Object && (each in obj)) {
-                    obj = obj[each]
-                } else {
-                    return failValue
-                }
-            }
-        } catch (error) {
-            return failValue
-        }
-        return obj
-    }
-/**
- * Forcefully set nested values
- *
- * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
- * @param {any} obj.to - what the new value should be
- * @param {any} obj.on - what object/value you're modifying
- * @return {Object} - the object given (object is still mutated)
- * @error
- * only if the argument is not an object
- * 
- * @example
- *     let obj = { key1: {} }
- *     // equivlent to obj.key1.subKey.subSubKey
- *     set({
- *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
- *         to: 10,
- *         on: obj,
- *     })
- *     set({
- *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
- *         to: 10,
- *         on: obj,
- *     })
- */
-module.exports.set          = function (obj, keyList=undefined, value=undefined) {
-        // process args
-        let on
-        if (keyList == undefined) {
-            ({ on, keyList, to } = obj)
-            obj = on
-            value = to
-        }
-
-        // convert string values into lists
-        if (typeof keyList == 'string') {
-            if (keyList.length == 0) {
-                keyList = []
-            } else {
-                keyList = keyList.split('.')
-            }
-        }
-        
-        if (keyList instanceof Array) {
-            try {
-                var lastAttribute = keyList.pop()
-                for (var elem of keyList) {
-                    // create each parent if it doesnt exist
-                    if (!(obj[elem] instanceof Object)) {
-                        obj[elem] = {}
-                    }
-                    // change the object reference be the nested element
-                    obj = obj[elem]
-                }
-                obj[lastAttribute] = value
-            } catch (error) {
-                console.warn("the set function was unable to set the value for some reason, here is the original error message",error)
-                console.warn(`the set obj was:`,obj)
-                console.warn(`the set keyList was:`,keyList)
-                console.warn(`the set value was:`,value)
-            }
-        } else {
-            console.log(`obj is:`,obj)
-            console.log(`keyList is:`,keyList)
-            console.log(`value is:`,value)
-            console.error(`There is a 'set' function somewhere being called and its second argument isn't a string or a list (see values above)`);
-        }
-        return obj
-    }
-/**
- * Safely delete nested values
- *
- * @param {any} obj.from - what object/value you're extracting from
- * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
- * @return {undefined}
- *
- * @example
- *     let obj = { key1: {} }
- *     // equivlent to obj.key1.subKey.subSubKey
- *     delete({
- *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
- *         from: obj,
- *     })
- */
-module.exports.delete       = function ({ keyList, from }) {
-        // convert string values into lists
-        if (typeof keyList == 'string') {
-            if (keyList.length == 0) {
-                keyList = []
-            } else {
-                keyList = keyList.split('.')
-            }
-        }
-
-        if (keyList.length == 1) {
-            try {
-                delete from[keyList[0]]
-            } catch (error) {
-                return false
-            }
-        } else if (keyList.length > 1) {
-            keyList = [...keyList]
-            let last = keyList.pop()
-            let parentObj = module.exports.get({keyList, from})
-            return module.exports.delete({ keyList: [last], from: parentObj })
-        }
-    }
-/**
- * Function to sort alphabetically an array of objects by some specific key.
- * 
- * @param {String|Symbol|string[]} property Key of the object to sort.
- */
-module.exports.dynamicSort        = function (property, reverse=false) {
-    if (property instanceof Array) {
-        if (reverse) {
-            return (a,b) => {
-                let aValue = module.exports.get(a,property,-Infinity)
-                let bValue = module.exports.get(b,property,-Infinity)
-                let type = typeof bValue
-                if (type == 'number') {
-                    return bValue - aValue
-                } else if (type == 'string') {
-                    return bValue.localeCompare(aValue)
-                }
-            }
-        } else {
-            return (b,a) => {
-                let aValue = module.exports.get(a,property,-Infinity)
-                let bValue = module.exports.get(b,property,-Infinity)
-                let type = typeof bValue
-                if (type == 'number') {
-                    return bValue - aValue
-                } else if (type == 'string') {
-                    return bValue.localeCompare(aValue)
-                }
-            }
-        }
-    }
-    if (reverse) {
-        return (a,b) => {
-            let type = typeof a[property]
-            if (type == 'number') {
-                return b[property] - a[property]
-            } else if (type == 'string') {
-                return b[property].localeCompare(a[property])
-            }
-        }
-    } else {
-        return (b,a) => {
-            let type = typeof a[property]
-            if (type == 'number') {
-                return b[property] - a[property]
-            } else if (type == 'string') {
-                return b[property].localeCompare(a[property])
-            }
-        }
-    }
-}
-module.exports.merge        = (obj, overwritingObj) => {
-        // if its not an object, then it immediately overwrites the value
-        if (!(overwritingObj instanceof Object) || !(obj instanceof Object)) {
-            return overwritingObj
-        }
-        // default value for all keys is the original object
-        let output = {}
-        overwritingObj instanceof Array && (output = [])
-        Object.assign(output, obj)
-        for (const key in overwritingObj) {
-            // if no conflict, then assign as normal
-            if (!(key in output)) {
-                output[key] = overwritingObj[key]
-            // if there is a conflict, then be recursive
-            } else {
-                output[key] = module.exports.merge(obj[key], overwritingObj[key])
-            }
-        }
-        return output
-    }
-module.exports.copyFunc     = (someFunction,theContext=this) => (...args) => someFunction.apply(theContext,args)
-module.exports.currentTime  = function () { return new Date().getTime() }
-module.exports.sleepSyncly  = function (miliseconds)
-    {
-        var currentTime = new Date().getTime();
-        while (currentTime + miliseconds >= new Date().getTime()) {}
-    }
-module.exports.sleepAsyncly = function (miliseconds)
-    {
-        return new Promise(resolve => 
-            {
-                setTimeout(()=>{ resolve(null) }, miliseconds)
-            })
-    }
-module.exports.debounce = function (wait, immediate, func) // only calls the function after a period of inactivity
-    {
-        var timeout
-        return () => {
-            const context = this, args = arguments
-            const later = function() 
-                {
-                    timeout = null
-                    if (!immediate) 
-                        {
-                            func.apply(context, args)
-                        }
-                }
-            const callNow = immediate && !timeout
-            clearTimeout(timeout)
-            timeout = setTimeout(later, wait)
-            if (callNow) 
-                {
-                    func.apply(context, args)
-                }
-        }
-    }
-module.exports.rateLimit = function (coolDown, func) // call the returned func often as you like, it'll only run once per coolDown time
-    {
-        let mostRecentArgs
-        // an analogy
-        let triggerWasPulledButNotReleased = false
-        let barrelTooHot = false
-        let shoot
-        shoot = () => {
-            // run the function
-            func.apply(this, mostRecentArgs)
-            // meaning trigger was just released
-            triggerWasPulledButNotReleased = false
-            // barrel is now hot
-            barrelTooHot = true
-            // barrel will cool down though
-            setTimeout(() => {
-                // if trigger was pulled in the meantime
-                if (triggerWasPulledButNotReleased) {
-                    // then shoot again (which will cause a recursive settimeout)
-                    shoot()
-                // if the trigger wasn't pulled
-                } else {
-                    // the the barrel has successfully cooled off
-                    barrelTooHot = false
-                }
-            }, coolDown)
-        }
-        let pullTrigger = (...args) => {
-            mostRecentArgs = args
-            if (barrelTooHot) {
-                // tell the shooter to que a shot (function execution)
-                triggerWasPulledButNotReleased = true
-            // if its not too hot then just shoot immediately!
-            } else {
-                shoot()
-            }
-        }
-        return pullTrigger
-    }
-
-/**
- * Deep iterate objects
- *
- * @param {Object} obj - Any object
- * @return {string[][]} lists of key-lists
- *
- * @example
- *
- *     recursivelyAllAttributesOf({ a: { b: 1} })
- *     >>> [
- *         [ 'a', ],
- *         [ 'a', 'b' ],
- *     ]
- */
-module.exports.recursivelyAllAttributesOf = (obj) => 
-    {
-        // if not an object then add no attributes
-        if (!(obj instanceof Object)) 
-            {
-                return []
-            }
-        // else check all keys for sub-attributes
-        var output = []
-        for (let eachKey of Object.keys(obj)) 
-            {
-                // add the key itself (alone)
-                output.push([eachKey])
-                // add all of its children
-                let newAttributes = module.exports.recursivelyAllAttributesOf(obj[eachKey])
-                // if nested
-                for (let eachNewAttributeList of newAttributes) 
-                    {
-                        // add the parent key
-                        eachNewAttributeList.unshift(eachKey)
-                        output.push(eachNewAttributeList)
-                    }
-            }
-        return output
-    }
-module.exports.unevalStringify = (obj) => JSON.stringify(obj, (key,value) => 
-    {
-        if (typeof value == 'string') 
-            {
-                return `'${value}'`
-            } 
-        else if (value instanceof Function || !(value instanceof Object)) 
-            {
-                return value.toString()
-            }
-        return value
-    })
-module.exports.evalParse = (obj) => JSON.parse(obj, (key, value) => 
-    {
-        if (typeof value === 'string') 
-            {
-                return eval(value)
-            } 
-        else 
-            {
-                return value
-            }
-    })
-// 
-// String manipulation
-// 
-module.exports.snakeToCamelCase = (baseName) => (baseName.toLowerCase().replace(/_/," ")).replace(/.\b\w/g, aChar=>aChar.toUpperCase()).replace(" ","")
-module.exports.varnameToTitle = (string) => (string.replace(/_/," ")).replace(/\b\w/g, chr=>chr.toUpperCase())
-module.exports.findAll     = function (regex_pattern, string_)
-    {
-        var output_list = [];
-        while (true) 
-            {
-                var a_match = regex_pattern.exec(string_);
-                if (a_match) 
-                    {
-                        // get rid of the string copy
-                        delete a_match.input;
-                        // store the match data
-                        output_list.push(a_match);
-                    }
-                else
-                    {
-                        break;
-                    }
-            } 
-        return output_list;
-    }
-module.exports.capitalize  = function (string)
-    {
-        return string.replace(/\b\w/g, chr=>chr.toUpperCase())
-    }
-module.exports.indent      = function (input,the_indent='    ')
-    {
-        try 
-            {
-                return the_indent + JSON.stringify(input).replace(/\n/g,"\n"+the_indent)
-            }
-        catch(e){}
-        return the_indent + `${input}`.replace(/\n/g,"\n"+the_indent)
-    }
-// 
-// network
-//
-module.exports.network = {
-        curl: async url=> new Promise(resolve => fetch(url).then(res=>res.text()).then(body=>resolve(body))),
-        get: async (url)=> new Promise((resolve, reject) =>
-                fetch(url).then(function(response) {
-                        return response.json();
-                    }).then(function(data) {
-                        resolve(data);
-                    }).catch(function() {
-                        reject()
-                    })
-                ),
-        post: ({data=null, to=null}) => new Promise(
-            function (resolve, reject) {
-                let the_request = new XMLHttpRequest()
-                the_request.onload = function () {
-                    if (this.status >= 200 && this.status < 300) {
-                        try { var output_ = JSON.parse(the_request.responseText) }
-                        catch (error) { var output_ = the_request.responseText }
-                        resolve(output_)
-                    }
-                    else {
-                        reject({
-                                status: this.status,
-                                statusText: the_request.statusText
-                            })
-                    }
-                }
-                the_request.onerror = function () {
-                    reject({
-                            status: this.status,
-                            statusText: the_request.statusText
-                        })
-                }
-                the_request.open("POST", to, true)
-                the_request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8')
-                the_request.send(JSON.stringify(data))
-            }
-            ) // end promise
-    }
-Object.defineProperty(module.exports, "baseUrl", {
-    get: function baseUrl() {
-        var pathArray = location.href.split( '/' );
-        var protocol = pathArray[0];
-        var host = pathArray[2];
-        var url = protocol + '//' + host;
-        return url
-    }
-});
-
-
-
-// 
-// global init
-//
-module.exports.global = _=> 
-    {
-        for (var each of Object.keys(module.exports)) 
-            {
-                window[each] = module.exports[each]
-            }
-        if (!window.baseUrl) {
-            Object.defineProperty(window, "baseUrl", {
-                get: function baseUrl() {
-                    var pathArray = location.href.split( '/' );
-                    var protocol = pathArray[0];
-                    var host = pathArray[2];
-                    var url = protocol + '//' + host;
-                    return url
-                }
-            });
-        }
-    }
-
-},{}],"src/organisms/SegmentDisplay.vue":[function(require,module,exports) {
+},{"../string.js":"src/string.js","../iilvd-api.js":"src/iilvd-api.js","../utils":"src/utils.js","../atoms/UiSwitch":"src/atoms/UiSwitch.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/organisms/SegmentDisplay.vue":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+
+var _object = require("../object");
 
 //
 //
@@ -67329,6 +67849,11 @@ const {
   deferredPromise
 } = require("../utils.js");
 
+const {
+  backendHelpers,
+  fakeBackend
+} = require('../iilvd-api.js');
+
 const generalTimeoutFrequency = 50; // ms 
 
 let untracked = {
@@ -67350,15 +67875,10 @@ var _default = {
 
   mounted() {
     window.SegmentDisplay = this;
+    this.$root.whenVideoIsLoaded(this.updateSegments);
   },
 
-  watch: {
-    videoDuration() {
-      console.log(`[SegmentDisplay] videoDuration changed`);
-      this.updateSegments();
-    }
-
-  },
+  watch: {},
   rootHooks: {
     watch: {
       labels() {
@@ -67373,22 +67893,27 @@ var _default = {
           }
         }
 
-        this.updateSegments();
+        if (window.player.duration) {
+          console.log(`[SegmentDisplay] labels changed, updating segments`);
+          this.updateSegments();
+        }
       },
 
       selectedVideo() {
         this.$root.selectedSegment = null;
-        this.updateSegments();
       },
 
       "selectedVideo.keySegments": function () {
-        this.updateSegments();
+        if (window.player.duration) {
+          console.log(`[SegmentDisplay] keySegments changed, updating segments`);
+          this.updateSegments();
+        }
       }
     }
   },
   windowListeners: {
-    "SegmentDisplay-updateSegments": function () {
-      this.updateSegments();
+    "SegmentDisplay-updateSegments": function (...args) {
+      this.updateSegments(...args);
     }
   },
   methods: {
@@ -67401,40 +67926,43 @@ var _default = {
       } catch (err) {}
     },
 
-    async updateSegments() {
-      console.log(`updateSegments`);
+    async updateSegments(...args) {
       const originalVideoId = get(this.$root, ['routeData$', 'videoId'], null);
+      const duration = window.player.duration;
 
       if (originalVideoId) {
         let keySegments;
 
         try {
-          keySegments = await (await this.backend).mongoInterface.getAll({
-            from: 'observations',
+          keySegments = await backendHelpers.getObservations({
             where: [{
-              valueOf: ['type'],
-              is: "segment"
-            }, {
               valueOf: ['videoId'],
               is: originalVideoId
             }],
             returnObject: true
           });
+          const fakeKeySegments = await fakeBackend.getObservations({
+            where: [{
+              valueOf: ['videoId'],
+              is: originalVideoId
+            }],
+            returnObject: true
+          });
+          console.debug(`BACKEND: keySegments is:`, keySegments);
+          console.debug(`FAKE   : keySegments is:`, fakeKeySegments);
         } catch (error) {
           console.error("updateSegments error", error);
           return;
         } // add uuid to all of them
 
 
-        keySegments = Object.entries(keySegments).map(([eachKey, eachValue]) => (eachValue.$uuid = eachKey, eachValue)); // if theres no duration then the visual segments can't be generated
-        // (wait for duration to change)
+        keySegments = Object.entries(keySegments).map(([eachKey, eachValue]) => (eachValue.$uuid = eachKey, eachValue)); // if theres no duration then the visual segments can't be generated 
 
-        if (!this.videoDuration) {
-          console.debug(`SegmentDisplay: this.videoDuration wasn't available`);
+        if (!duration) {
+          console.log(`[SegmentDisplay] window.player.duration unavailable, cant update segments`);
           return;
-        }
+        } // check then assign
 
-        let duration = this.videoDuration; // check then assign
 
         if (originalVideoId == get(this.$root, ['routeData$', 'videoId'], null)) {
           this.$withoutWatchers("SegmentDisplay-retrieveFromBackend", () => {
@@ -67495,7 +68023,7 @@ var _default = {
       }; // only return segments that match the selected labels
 
       let namesOfSelectedLabels = this.$root.getNamesOfSelectedLabels();
-      let displaySegments = get(this.$root, ["selectedVideo", "keySegments"], []).filter(eachSegment => eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.observation.label)); // 2 percent of the width of the video
+      let displaySegments = get(this.$root, ["selectedVideo", "keySegments"], []).filter(eachSegment => eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.observation.label) || namesOfSelectedLabels.length == 0); // 2 percent of the width of the video
 
       let levels = [];
 
@@ -67591,6 +68119,8 @@ var _default = {
 
 
       const seekAction = player => {
+        player = window.player || player;
+
         try {
           const startTime = this.$root.selectedSegment.startTime;
           console.debug(`[seekToSegmentStart] seeking to ${startTime}`);
@@ -67978,7 +68508,7 @@ render._withStripped = true
       
       }
     })();
-},{"../utils":"src/utils.js","good-js":"node_modules/good-js/index.js","../utils.js":"src/utils.js","../atoms/SideButton":"src/atoms/SideButton.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/atoms/TopButton.vue":[function(require,module,exports) {
+},{"../object":"src/object.js","../utils":"src/utils.js","good-js":"node_modules/good-js/index.js","../utils.js":"src/utils.js","../iilvd-api.js":"src/iilvd-api.js","../atoms/SideButton":"src/atoms/SideButton.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/atoms/TopButton.vue":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -68599,6 +69129,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
+var _iilvdApi = require("../iilvd-api.js");
+
 //
 //
 //
@@ -68647,16 +69179,7 @@ var _default = {
         this.suggestions = storageObject.cachedVideoIds;
       } else {
         // add results from the database
-        let possibleVideoIds = await (await this.backend).mongoInterface.getAll({
-          from: "videos",
-          where: [{
-            hiddenValueOf: ["_id"],
-            matches: `^${value.trim()}`
-          }],
-          forEach: {
-            extractHidden: ['_id']
-          }
-        });
+        let possibleVideoIds = await _iilvdApi.backendHelpers.getVideoIds();
         this.suggestions = [...new Set(possibleVideoIds.concat(this.suggestions))];
       }
     }
@@ -68787,13 +69310,16 @@ render._withStripped = true
       
       }
     })();
-},{"../utils":"src/utils.js","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/molecules/SearchCard.vue":[function(require,module,exports) {
+},{"../iilvd-api.js":"src/iilvd-api.js","../utils":"src/utils.js","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/molecules/SearchCard.vue":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+
+var _object = require("../object");
+
 //
 //
 //
@@ -68814,6 +69340,11 @@ var _default = {
       let selectedVideoId = Object.keys(label.videos)[0]; // get it from the cache (auto-adds to cache if needed)
 
       this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500);
+      window.resetPlayer = true;
+      setTimeout(() => {
+        // TODO: i should do a proper fix for this
+        window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"));
+      }, 100);
       this.$root.push({
         labelName,
         videoId: selectedVideoId
@@ -68901,7 +69432,7 @@ render._withStripped = true
       
       }
     })();
-},{"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/organisms/LabelLister.vue":[function(require,module,exports) {
+},{"../object":"src/object.js","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/organisms/LabelLister.vue":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -69248,10 +69779,15 @@ exports.default = void 0;
 //
 //
 let {
+  backendHelpers,
+  fakeBackend
+} = require('../iilvd-api.js');
+
+let {
   colors,
   debounce,
   download
-} = require("../utils");
+} = require("../utils.js");
 
 let observationEntries;
 var _default = {
@@ -69302,6 +69838,9 @@ var _default = {
         } : {})
       };
       this.$root.searchResults = await backend.summary.general(filterAndSort);
+      const fakeSearchResults = await fakeBackend.summary.general(filterAndSort);
+      console.debug(`BACKEND searchResults`, this.$root.searchResults);
+      console.debug(`FAKE    searchResults`, fakeSearchResults);
       console.debug(`this.$root.searchResults is:`, JSON.stringify(this.$root.searchResults, 0, 4));
       let where = []; // 
       // build the backend query
@@ -69369,13 +69908,14 @@ var _default = {
 
 
       console.log(`querying the backend for observationEntries`);
-      observationEntries = await backend.mongoInterface.getAll({
-        from: 'observations',
-        where: [{
-          valueOf: ['type'],
-          is: 'segment'
-        }, ...where]
-      }); // show the time of the first load
+      observationEntries = await backendHelpers.getObservations({
+        where
+      });
+      let fakeObservationEntries = await fakeBackend.getObservations({
+        where
+      });
+      console.debug(`BACKEND: observationEntries is:`, observationEntries);
+      console.debug(`FAKE   : observationEntries is:`, fakeObservationEntries); // show the time of the first load
 
       if (this.$root.loadStart) {
         let loadDuration = (new Date().getTime() - this.$root.loadStart) / 1000;
@@ -69412,7 +69952,6 @@ var _default = {
       filterAndSort() {
         this.$root.searchResults.finishedComputing = false;
         this.debouncedSubmitSearch();
-        storageObject.observer = this.$root.filterAndSort.observer;
       }
 
     }
@@ -69774,7 +70313,7 @@ render._withStripped = true
       
       }
     })();
-},{"../utils":"src/utils.js","../atoms/UiSwitch":"src/atoms/UiSwitch.vue","../molecules/PieChart":"src/molecules/PieChart.vue","../molecules/VideoIdSearch":"src/molecules/VideoIdSearch.vue","../organisms/LabelLister":"src/organisms/LabelLister.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/organisms/WrappedTopSearch.vue":[function(require,module,exports) {
+},{"../iilvd-api.js":"src/iilvd-api.js","../utils.js":"src/utils.js","../atoms/UiSwitch":"src/atoms/UiSwitch.vue","../molecules/PieChart":"src/molecules/PieChart.vue","../molecules/VideoIdSearch":"src/molecules/VideoIdSearch.vue","../organisms/LabelLister":"src/organisms/LabelLister.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/organisms/WrappedTopSearch.vue":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -69899,6 +70438,13 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+
+var _iilvdApi = require("../iilvd-api.js");
+
+var _object = require("../object.js");
+
+//
+//
 //
 //
 //
@@ -69932,31 +70478,32 @@ var _default = {
       if (title != undefined) {
         return title;
       } else {
-        this.backend.then(backend => {
-          console.log(`requesting video title`);
-          backend.mongoInterface.get({
-            from: 'videos',
-            keyList: [videoId, "summary", "title"]
-          }).then(title => {
-            console.log(`received title ${title}`);
+        _iilvdApi.backendHelpers.getVideoTitle(videoId).then(async title => {
+          console.debug(`BACKEND: title is:`, title);
+          console.debug(`FAKE   : title is:`, await _iilvdApi.fakeBackend.getVideoTitle(videoId));
+          console.log(`received title ${title}`);
 
-            if (!(videoObject.summary instanceof Object)) {
-              videoObject.summary = {};
-            }
+          if (!(videoObject.summary instanceof Object)) {
+            videoObject.summary = {};
+          }
 
-            videoObject.summary.title = title || null;
-            this.$forceUpdate();
-          });
+          videoObject.summary.title = title || null;
+          this.$forceUpdate();
         });
+
         return "Loading...";
       }
     },
 
     selectVideo(eventObj, videoId) {
       console.log(`clicked video ${videoId}`);
+      window.resetPlayer = true;
       this.$root.push({
         videoId
       });
+      setTimeout(() => {
+        window.location.reload();
+      }, 50);
     }
 
   }
@@ -69996,18 +70543,47 @@ exports.default = _default;
             }
           },
           [
-            _c("row", {
-              staticClass: "thumbnail",
-              attrs: {
-                width: "100%",
-                height: "100%",
-                "background-image":
-                  "url(http://img.youtube.com/vi/" +
-                  eachVideoId +
-                  "/mqdefault.jpg)",
-                position: "relative"
-              }
-            })
+            _c(
+              "row",
+              {
+                staticClass: "thumbnail",
+                attrs: {
+                  width: "100%",
+                  height: "100%",
+                  "background-image": eachVideoId.startsWith("/videos/")
+                    ? "url(/icon.png)"
+                    : "url(http://img.youtube.com/vi/" +
+                      eachVideoId +
+                      "/mqdefault.jpg)",
+                  position: "relative",
+                  "border-radius": "0.5rem"
+                }
+              },
+              [
+                _c(
+                  "span",
+                  {
+                    staticStyle: {
+                      "background-color": "rgba(0,0,0,0.10)",
+                      position: "absolute",
+                      bottom: "0.1rem",
+                      left: "0.1rem",
+                      padding: "0.5rem",
+                      "border-radius": "0.5rem"
+                    }
+                  },
+                  [
+                    _vm._v(
+                      _vm._s(
+                        !eachVideoId.startsWith("/videos/")
+                          ? ""
+                          : "" + eachVideoId.slice("/videos/".length)
+                      )
+                    )
+                  ]
+                )
+              ]
+            )
           ],
           1
         )
@@ -70049,7 +70625,7 @@ render._withStripped = true
       
       }
     })();
-},{"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/organisms/CenterStage.vue":[function(require,module,exports) {
+},{"../iilvd-api.js":"src/iilvd-api.js","../object.js":"src/object.js","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/organisms/CenterStage.vue":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -70130,17 +70706,18 @@ var _default = {
   watch: {
     "videoData.duration": function () {
       console.debug(`[watch] this.videoData.duration is:`, this.videoData.duration);
-      window.SegmentDisplay.seekToSegmentStart();
+      window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"));
     },
     "videoData.currentTime": function (value, prevValue) {
-      let playing = get(this.$refs, ["vuePlyr", "player", "playing"], false);
+      const vuePlyr = this.$refs.vuePlyr1 || this.$refs.vuePlyr2 && this.$refs.vuePlyr2.player;
+      let playing = get(vuePlyr, ["playing"], false);
 
       if (playing) {
         let endTime = get(this.$root, ["selectedSegment", "endTime"], Infinity);
 
         if (value >= endTime && prevValue < endTime) {
           // pause video
-          this.$refs.vuePlyr.player.pause();
+          vuePlyr.player.pause();
           this.$toasted.show(`(End of Clip)`).goAway(2000);
         }
       }
@@ -70154,7 +70731,7 @@ var _default = {
   },
   windowListeners: {
     keydown(eventObject) {
-      if (eventObject.target == document.body || get(eventObject, ["path"], []).includes(this.$el)) {
+      if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get(eventObject, ["path"], []).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
         // 
         // key controls
         // 
@@ -70194,12 +70771,80 @@ var _default = {
 
   },
   methods: {
+    closestSegment({
+      time,
+      forward = true
+    }) {
+      if (window.SegmentDisplay.$data.segmentsInfo.organizedSegments.length == 0) {
+        return null;
+      } else {
+        let finalIndex = 0;
+
+        if (forward) {
+          let runningIndex = 0;
+
+          for (const each of window.SegmentDisplay.$data.segmentsInfo.organizedSegments) {
+            runningIndex += 1;
+
+            if (each.startTime > time) {
+              finalIndex = runningIndex;
+              break;
+            }
+          }
+        } else {
+          let finalIndex = 0;
+          let runningIndex = 0;
+          const segmentsBackwards = [...window.SegmentDisplay.$data.segmentsInfo.organizedSegments]; // first one is largest number of seconds
+
+          segmentsBackwards.sort((a, b) => b.endTime - a.endTime);
+
+          for (const each of segmentsBackwards) {
+            runningIndex += 1;
+
+            if (each.endTime < time) {
+              finalIndex = runningIndex;
+              break;
+            }
+          } // because reversed:
+          // 0 => last (length-1)
+          // 1 => second to last (length-2)
+
+
+          finalIndex = segmentsBackwards.length - (finalIndex + 1);
+        }
+
+        return window.SegmentDisplay.$data.segmentsInfo.organizedSegments[finalIndex];
+      }
+    },
+
     incrementIndex() {
-      this.jumpSegment(this.$root.selectedSegment.$displayIndex + 1);
+      let segment = this.$root.selectedSegment;
+
+      if (!segment) {
+        segment = this.closestSegment({
+          time: window.player.currentTime,
+          forward: true
+        });
+      }
+
+      if (segment) {
+        this.jumpSegment(segment.$displayIndex + 1);
+      }
     },
 
     decrementIndex() {
-      this.jumpSegment(this.$root.selectedSegment.$displayIndex - 1);
+      let segment = this.$root.selectedSegment;
+
+      if (!segment) {
+        segment = this.closestSegment({
+          time: window.player.currentTime,
+          forward: false
+        });
+      }
+
+      if (segment) {
+        this.jumpSegment(segment.$displayIndex - 1);
+      }
     },
 
     async jumpSegment(newIndex) {
@@ -71409,7 +72054,11 @@ exports.default = void 0;
 const {
   humandReadableTime,
   download
-} = require("../utils");
+} = require("../utils.js");
+
+const {
+  fakeBackend
+} = require("../iilvd-api.js");
 
 var _default = {
   components: {
@@ -71555,12 +72204,14 @@ var _default = {
           const fileNumberString = eventObject.length > 1 ? `File ${fileNumber} of ${eventObject.length}\n\n` : "";
           const timeRemainingString = timeRemaining ? " (~ " + humandReadableTime(timeRemaining) + " remaining)" : "";
           this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n`;
+          value.observation.label = toKebabCase(`${value.observation.label}`.toLowerCase());
 
           try {
             await (await this.backend).addObservation(value);
+            await fakeBackend.addObservation(value);
           } catch (error) {
             if (error.message.match(/Message: Failed to fetch/)) {
-              this.$toasted.show(`Server took too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(2500);
+              this.$toasted.show(`Server took too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(6500);
               continue;
             }
 
@@ -71882,7 +72533,7 @@ render._withStripped = true
       
       }
     })();
-},{"../utils":"src/utils.js","vue-json-tree":"node_modules/vue-json-tree/src/json-tree.vue","../molecules/DummyObservation":"src/molecules/DummyObservation.vue","../molecules/Card":"src/molecules/Card.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/pages/Home.vue":[function(require,module,exports) {
+},{"../utils.js":"src/utils.js","../iilvd-api.js":"src/iilvd-api.js","vue-json-tree":"node_modules/vue-json-tree/src/json-tree.vue","../molecules/DummyObservation":"src/molecules/DummyObservation.vue","../molecules/Card":"src/molecules/Card.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/pages/Home.vue":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -72053,7 +72704,8 @@ for (const [eachKey, eachValue] of Object.entries(require("lodash"))) {
 }
 
 let {
-  backend
+  backend,
+  fakeBackend
 } = require("./iilvd-api"); //
 // Routing Init
 //
@@ -72155,7 +72807,7 @@ var _default = RootComponent = {
       filterAndSort: {
         maxlabelConfidence: null,
         minlabelConfidence: null,
-        observer: _utils.storageObject.observer,
+        observer: "",
         kindOfObserver: 'Either',
         validation: ['Unchecked', 'Confirmed', 'Rejected', 'Disagreement']
       },
@@ -72191,6 +72843,9 @@ var _default = RootComponent = {
     this.backend.then(async backend => {
       this.$toasted.show(`Connected to backend, retrieving data`).goAway(6500);
       untrackedData.usernameList = untrackedData.usernameList.concat(await backend.getUsernames());
+      let fakeUsernames = await fakeBackend.getUsernames();
+      console.debug(`BACKEND: untrackedData.usernameList is:`, untrackedData.usernameList);
+      console.debug(`FAKE: untrackedData.usernameList is:`, fakeUsernames);
     });
   },
 
@@ -72426,6 +73081,9 @@ var _default = RootComponent = {
 
       try {
         newLabels = await (await this.backend).summary.labels();
+        const fakeNewLabels = await fakeBackend.summary.labels();
+        console.debug(`BACKEND: newLabels is:`, newLabels);
+        console.debug(`FAKE   : newLabels is`, fakeNewLabels);
       } catch (error) {
         this.$toasted.show(`Unable to get summary.labels() from backend`).goAway(3500);
         console.error(error.message);
@@ -72548,7 +73206,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60611" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50678" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

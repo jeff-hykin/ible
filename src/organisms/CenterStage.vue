@@ -67,7 +67,7 @@ export default {
     watch: {
         "videoData.duration": function() {
             console.debug(`[watch] this.videoData.duration is:`,this.videoData.duration)
-            window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments", { detail: { duration: window.player.duration } }))
+            window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
         },
         "videoData.currentTime": function(value, prevValue) {
             const vuePlyr = this.$refs.vuePlyr1||((this.$refs.vuePlyr2)&&this.$refs.vuePlyr2.player)
