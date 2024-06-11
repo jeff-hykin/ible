@@ -8542,113 +8542,7 @@ if (inBrowser) {
 
 var _default = Vue;
 exports.default = _default;
-},{}],"src/plugins/child.js":[function(require,module,exports) {
-// api
-//     $child(...args)
-let Vue = require("vue").default;
-
-Object.defineProperty(Vue.prototype, "$child", {
-  get() {
-    return (firstRef, ...args) => new Promise((resolve, reject) => {
-      let checker;
-
-      checker = () => {
-        let ref = this.$refs[firstRef]; // base case
-
-        if (ref && args.length === 0) {
-          resolve(ref); // recursive child case
-        } else if (ref) {
-          ref.$child(...args).then(resolve); // recursive wait case
-        } else {
-          this.$nextTick(() => {
-            setTimeout(checker, 500);
-          });
-        }
-      };
-
-      checker();
-    });
-  }
-
-});
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
-var bundleURL = null;
-
-function getBundleURLCached() {
-  if (!bundleURL) {
-    bundleURL = getBundleURL();
-  }
-
-  return bundleURL;
-}
-
-function getBundleURL() {
-  // Attempt to find the URL of the current script and use that as the base URL
-  try {
-    throw new Error();
-  } catch (err) {
-    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
-
-    if (matches) {
-      return getBaseURL(matches[0]);
-    }
-  }
-
-  return '/';
-}
-
-function getBaseURL(url) {
-  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)\/[^/]+$/, '$1') + '/';
-}
-
-exports.getBundleURL = getBundleURLCached;
-exports.getBaseURL = getBaseURL;
-},{}],"node_modules/parcel-bundler/src/builtins/css-loader.js":[function(require,module,exports) {
-var bundle = require('./bundle-url');
-
-function updateLink(link) {
-  var newLink = link.cloneNode();
-
-  newLink.onload = function () {
-    link.remove();
-  };
-
-  newLink.href = link.href.split('?')[0] + '?' + Date.now();
-  link.parentNode.insertBefore(newLink, link.nextSibling);
-}
-
-var cssTimeout = null;
-
-function reloadCSS() {
-  if (cssTimeout) {
-    return;
-  }
-
-  cssTimeout = setTimeout(function () {
-    var links = document.querySelectorAll('link[rel="stylesheet"]');
-
-    for (var i = 0; i < links.length; i++) {
-      if (bundle.getBaseURL(links[i].href) === bundle.getBundleURL()) {
-        updateLink(links[i]);
-      }
-    }
-
-    cssTimeout = null;
-  }, 50);
-}
-
-module.exports = reloadCSS;
-},{"./bundle-url":"node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"node_modules/css-baseline/css/3.css":[function(require,module,exports) {
-
-        var reloadCSS = require('_css_loader');
-        module.hot.dispose(reloadCSS);
-        module.hot.accept(reloadCSS);
-      
-},{"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js"}],"src/plugins/css-baseline-plugin.js":[function(require,module,exports) {
-"use strict";
-
-require("css-baseline/css/3.css");
-},{"css-baseline/css/3.css":"node_modules/css-baseline/css/3.css"}],"node_modules/good-vue/dist/index.js":[function(require,module,exports) {
+},{}],"node_modules/good-vue/dist/index.js":[function(require,module,exports) {
 /*!
  * good-vue v1.3.1
  * (c) 
@@ -9149,635 +9043,7 @@ var _goodVue = _interopRequireDefault(require("good-vue"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_goodVue.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","good-vue":"node_modules/good-vue/dist/index.js"}],"node_modules/portal-vue/dist/portal-vue.common.js":[function(require,module,exports) {
-
- /*! 
-  * portal-vue © Thorsten Lünborg, 2019 
-  * 
-  * Version: 2.1.7
-  * 
-  * LICENCE: MIT 
-  * 
-  * https://github.com/linusborg/portal-vue
-  * 
- */
-
-'use strict';
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
-
-var Vue = _interopDefault(require('vue'));
-
-function _typeof(obj) {
-  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
-    _typeof = function (obj) {
-      return typeof obj;
-    };
-  } else {
-    _typeof = function (obj) {
-      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-    };
-  }
-
-  return _typeof(obj);
-}
-
-function _toConsumableArray(arr) {
-  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
-}
-
-function _arrayWithoutHoles(arr) {
-  if (Array.isArray(arr)) {
-    for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
-
-    return arr2;
-  }
-}
-
-function _iterableToArray(iter) {
-  if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
-}
-
-function _nonIterableSpread() {
-  throw new TypeError("Invalid attempt to spread non-iterable instance");
-}
-
-var inBrowser = typeof window !== 'undefined';
-function freeze(item) {
-  if (Array.isArray(item) || _typeof(item) === 'object') {
-    return Object.freeze(item);
-  }
-
-  return item;
-}
-function combinePassengers(transports) {
-  var slotProps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  return transports.reduce(function (passengers, transport) {
-    var temp = transport.passengers[0];
-    var newPassengers = typeof temp === 'function' ? temp(slotProps) : transport.passengers;
-    return passengers.concat(newPassengers);
-  }, []);
-}
-function stableSort(array, compareFn) {
-  return array.map(function (v, idx) {
-    return [idx, v];
-  }).sort(function (a, b) {
-    return compareFn(a[1], b[1]) || a[0] - b[0];
-  }).map(function (c) {
-    return c[1];
-  });
-}
-function pick(obj, keys) {
-  return keys.reduce(function (acc, key) {
-    if (obj.hasOwnProperty(key)) {
-      acc[key] = obj[key];
-    }
-
-    return acc;
-  }, {});
-}
-
-var transports = {};
-var targets = {};
-var sources = {};
-var Wormhole = Vue.extend({
-  data: function data() {
-    return {
-      transports: transports,
-      targets: targets,
-      sources: sources,
-      trackInstances: inBrowser
-    };
-  },
-  methods: {
-    open: function open(transport) {
-      if (!inBrowser) return;
-      var to = transport.to,
-          from = transport.from,
-          passengers = transport.passengers,
-          _transport$order = transport.order,
-          order = _transport$order === void 0 ? Infinity : _transport$order;
-      if (!to || !from || !passengers) return;
-      var newTransport = {
-        to: to,
-        from: from,
-        passengers: freeze(passengers),
-        order: order
-      };
-      var keys = Object.keys(this.transports);
-
-      if (keys.indexOf(to) === -1) {
-        Vue.set(this.transports, to, []);
-      }
-
-      var currentIndex = this.$_getTransportIndex(newTransport); // Copying the array here so that the PortalTarget change event will actually contain two distinct arrays
-
-      var newTransports = this.transports[to].slice(0);
-
-      if (currentIndex === -1) {
-        newTransports.push(newTransport);
-      } else {
-        newTransports[currentIndex] = newTransport;
-      }
-
-      this.transports[to] = stableSort(newTransports, function (a, b) {
-        return a.order - b.order;
-      });
-    },
-    close: function close(transport) {
-      var force = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-      var to = transport.to,
-          from = transport.from;
-      if (!to || !from && force === false) return;
-
-      if (!this.transports[to]) {
-        return;
-      }
-
-      if (force) {
-        this.transports[to] = [];
-      } else {
-        var index = this.$_getTransportIndex(transport);
-
-        if (index >= 0) {
-          // Copying the array here so that the PortalTarget change event will actually contain two distinct arrays
-          var newTransports = this.transports[to].slice(0);
-          newTransports.splice(index, 1);
-          this.transports[to] = newTransports;
-        }
-      }
-    },
-    registerTarget: function registerTarget(target, vm, force) {
-      if (!inBrowser) return;
-
-      if (this.trackInstances && !force && this.targets[target]) {
-        console.warn("[portal-vue]: Target ".concat(target, " already exists"));
-      }
-
-      this.$set(this.targets, target, Object.freeze([vm]));
-    },
-    unregisterTarget: function unregisterTarget(target) {
-      this.$delete(this.targets, target);
-    },
-    registerSource: function registerSource(source, vm, force) {
-      if (!inBrowser) return;
-
-      if (this.trackInstances && !force && this.sources[source]) {
-        console.warn("[portal-vue]: source ".concat(source, " already exists"));
-      }
-
-      this.$set(this.sources, source, Object.freeze([vm]));
-    },
-    unregisterSource: function unregisterSource(source) {
-      this.$delete(this.sources, source);
-    },
-    hasTarget: function hasTarget(to) {
-      return !!(this.targets[to] && this.targets[to][0]);
-    },
-    hasSource: function hasSource(to) {
-      return !!(this.sources[to] && this.sources[to][0]);
-    },
-    hasContentFor: function hasContentFor(to) {
-      return !!this.transports[to] && !!this.transports[to].length;
-    },
-    // Internal
-    $_getTransportIndex: function $_getTransportIndex(_ref) {
-      var to = _ref.to,
-          from = _ref.from;
-
-      for (var i in this.transports[to]) {
-        if (this.transports[to][i].from === from) {
-          return +i;
-        }
-      }
-
-      return -1;
-    }
-  }
-});
-var wormhole = new Wormhole(transports);
-
-var _id = 1;
-var Portal = Vue.extend({
-  name: 'portal',
-  props: {
-    disabled: {
-      type: Boolean
-    },
-    name: {
-      type: String,
-      default: function _default() {
-        return String(_id++);
-      }
-    },
-    order: {
-      type: Number,
-      default: 0
-    },
-    slim: {
-      type: Boolean
-    },
-    slotProps: {
-      type: Object,
-      default: function _default() {
-        return {};
-      }
-    },
-    tag: {
-      type: String,
-      default: 'DIV'
-    },
-    to: {
-      type: String,
-      default: function _default() {
-        return String(Math.round(Math.random() * 10000000));
-      }
-    }
-  },
-  created: function created() {
-    var _this = this;
-
-    this.$nextTick(function () {
-      wormhole.registerSource(_this.name, _this);
-    });
-  },
-  mounted: function mounted() {
-    if (!this.disabled) {
-      this.sendUpdate();
-    }
-  },
-  updated: function updated() {
-    if (this.disabled) {
-      this.clear();
-    } else {
-      this.sendUpdate();
-    }
-  },
-  beforeDestroy: function beforeDestroy() {
-    wormhole.unregisterSource(this.name);
-    this.clear();
-  },
-  watch: {
-    to: function to(newValue, oldValue) {
-      oldValue && oldValue !== newValue && this.clear(oldValue);
-      this.sendUpdate();
-    }
-  },
-  methods: {
-    clear: function clear(target) {
-      var closer = {
-        from: this.name,
-        to: target || this.to
-      };
-      wormhole.close(closer);
-    },
-    normalizeSlots: function normalizeSlots() {
-      return this.$scopedSlots.default ? [this.$scopedSlots.default] : this.$slots.default;
-    },
-    normalizeOwnChildren: function normalizeOwnChildren(children) {
-      return typeof children === 'function' ? children(this.slotProps) : children;
-    },
-    sendUpdate: function sendUpdate() {
-      var slotContent = this.normalizeSlots();
-
-      if (slotContent) {
-        var transport = {
-          from: this.name,
-          to: this.to,
-          passengers: _toConsumableArray(slotContent),
-          order: this.order
-        };
-        wormhole.open(transport);
-      } else {
-        this.clear();
-      }
-    }
-  },
-  render: function render(h) {
-    var children = this.$slots.default || this.$scopedSlots.default || [];
-    var Tag = this.tag;
-
-    if (children && this.disabled) {
-      return children.length <= 1 && this.slim ? this.normalizeOwnChildren(children)[0] : h(Tag, [this.normalizeOwnChildren(children)]);
-    } else {
-      return this.slim ? h() : h(Tag, {
-        class: {
-          'v-portal': true
-        },
-        style: {
-          display: 'none'
-        },
-        key: 'v-portal-placeholder'
-      });
-    }
-  }
-});
-
-var PortalTarget = Vue.extend({
-  name: 'portalTarget',
-  props: {
-    multiple: {
-      type: Boolean,
-      default: false
-    },
-    name: {
-      type: String,
-      required: true
-    },
-    slim: {
-      type: Boolean,
-      default: false
-    },
-    slotProps: {
-      type: Object,
-      default: function _default() {
-        return {};
-      }
-    },
-    tag: {
-      type: String,
-      default: 'div'
-    },
-    transition: {
-      type: [String, Object, Function]
-    }
-  },
-  data: function data() {
-    return {
-      transports: wormhole.transports,
-      firstRender: true
-    };
-  },
-  created: function created() {
-    var _this = this;
-
-    this.$nextTick(function () {
-      wormhole.registerTarget(_this.name, _this);
-    });
-  },
-  watch: {
-    ownTransports: function ownTransports() {
-      this.$emit('change', this.children().length > 0);
-    },
-    name: function name(newVal, oldVal) {
-      /**
-       * TODO
-       * This should warn as well ...
-       */
-      wormhole.unregisterTarget(oldVal);
-      wormhole.registerTarget(newVal, this);
-    }
-  },
-  mounted: function mounted() {
-    var _this2 = this;
-
-    if (this.transition) {
-      this.$nextTick(function () {
-        // only when we have a transition, because it causes a re-render
-        _this2.firstRender = false;
-      });
-    }
-  },
-  beforeDestroy: function beforeDestroy() {
-    wormhole.unregisterTarget(this.name);
-  },
-  computed: {
-    ownTransports: function ownTransports() {
-      var transports = this.transports[this.name] || [];
-
-      if (this.multiple) {
-        return transports;
-      }
-
-      return transports.length === 0 ? [] : [transports[transports.length - 1]];
-    },
-    passengers: function passengers() {
-      return combinePassengers(this.ownTransports, this.slotProps);
-    }
-  },
-  methods: {
-    // can't be a computed prop because it has to "react" to $slot changes.
-    children: function children() {
-      return this.passengers.length !== 0 ? this.passengers : this.$scopedSlots.default ? this.$scopedSlots.default(this.slotProps) : this.$slots.default || [];
-    },
-    // can't be a computed prop because it has to "react" to this.children().
-    noWrapper: function noWrapper() {
-      var noWrapper = this.slim && !this.transition;
-
-      if (noWrapper && this.children().length > 1) {
-        console.warn('[portal-vue]: PortalTarget with `slim` option received more than one child element.');
-      }
-
-      return noWrapper;
-    }
-  },
-  render: function render(h) {
-    var noWrapper = this.noWrapper();
-    var children = this.children();
-    var Tag = this.transition || this.tag;
-    return noWrapper ? children[0] : this.slim && !Tag ? h() : h(Tag, {
-      props: {
-        // if we have a transition component, pass the tag if it exists
-        tag: this.transition && this.tag ? this.tag : undefined
-      },
-      class: {
-        'vue-portal-target': true
-      }
-    }, children);
-  }
-});
-
-var _id$1 = 0;
-var portalProps = ['disabled', 'name', 'order', 'slim', 'slotProps', 'tag', 'to'];
-var targetProps = ['multiple', 'transition'];
-var MountingPortal = Vue.extend({
-  name: 'MountingPortal',
-  inheritAttrs: false,
-  props: {
-    append: {
-      type: [Boolean, String]
-    },
-    bail: {
-      type: Boolean
-    },
-    mountTo: {
-      type: String,
-      required: true
-    },
-    // Portal
-    disabled: {
-      type: Boolean
-    },
-    // name for the portal
-    name: {
-      type: String,
-      default: function _default() {
-        return 'mounted_' + String(_id$1++);
-      }
-    },
-    order: {
-      type: Number,
-      default: 0
-    },
-    slim: {
-      type: Boolean
-    },
-    slotProps: {
-      type: Object,
-      default: function _default() {
-        return {};
-      }
-    },
-    tag: {
-      type: String,
-      default: 'DIV'
-    },
-    // name for the target
-    to: {
-      type: String,
-      default: function _default() {
-        return String(Math.round(Math.random() * 10000000));
-      }
-    },
-    // Target
-    multiple: {
-      type: Boolean,
-      default: false
-    },
-    targetSlim: {
-      type: Boolean
-    },
-    targetSlotProps: {
-      type: Object,
-      default: function _default() {
-        return {};
-      }
-    },
-    targetTag: {
-      type: String,
-      default: 'div'
-    },
-    transition: {
-      type: [String, Object, Function]
-    }
-  },
-  created: function created() {
-    if (typeof document === 'undefined') return;
-    var el = document.querySelector(this.mountTo);
-
-    if (!el) {
-      console.error("[portal-vue]: Mount Point '".concat(this.mountTo, "' not found in document"));
-      return;
-    }
-
-    var props = this.$props; // Target already exists
-
-    if (wormhole.targets[props.name]) {
-      if (props.bail) {
-        console.warn("[portal-vue]: Target ".concat(props.name, " is already mounted.\n        Aborting because 'bail: true' is set"));
-      } else {
-        this.portalTarget = wormhole.targets[props.name];
-      }
-
-      return;
-    }
-
-    var append = props.append;
-
-    if (append) {
-      var type = typeof append === 'string' ? append : 'DIV';
-      var mountEl = document.createElement(type);
-      el.appendChild(mountEl);
-      el = mountEl;
-    } // get props for target from $props
-    // we have to rename a few of them
-
-
-    var _props = pick(this.$props, targetProps);
-
-    _props.slim = this.targetSlim;
-    _props.tag = this.targetTag;
-    _props.slotProps = this.targetSlotProps;
-    _props.name = this.to;
-    this.portalTarget = new PortalTarget({
-      el: el,
-      parent: this.$parent || this,
-      propsData: _props
-    });
-  },
-  beforeDestroy: function beforeDestroy() {
-    var target = this.portalTarget;
-
-    if (this.append) {
-      var el = target.$el;
-      el.parentNode.removeChild(el);
-    }
-
-    target.$destroy();
-  },
-  render: function render(h) {
-    if (!this.portalTarget) {
-      console.warn("[portal-vue] Target wasn't mounted");
-      return h();
-    } // if there's no "manual" scoped slot, so we create a <Portal> ourselves
-
-
-    if (!this.$scopedSlots.manual) {
-      var props = pick(this.$props, portalProps);
-      return h(Portal, {
-        props: props,
-        attrs: this.$attrs,
-        on: this.$listeners,
-        scopedSlots: this.$scopedSlots
-      }, this.$slots.default);
-    } // else, we render the scoped slot
-
-
-    var content = this.$scopedSlots.manual({
-      to: this.to
-    }); // if user used <template> for the scoped slot
-    // content will be an array
-
-    if (Array.isArray(content)) {
-      content = content[0];
-    }
-
-    if (!content) return h();
-    return content;
-  }
-});
-
-function install(Vue$$1) {
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  Vue$$1.component(options.portalName || 'Portal', Portal);
-  Vue$$1.component(options.portalTargetName || 'PortalTarget', PortalTarget);
-  Vue$$1.component(options.MountingPortalName || 'MountingPortal', MountingPortal);
-}
-
-var index = {
-  install: install
-};
-
-exports.default = index;
-exports.Portal = Portal;
-exports.PortalTarget = PortalTarget;
-exports.MountingPortal = MountingPortal;
-exports.Wormhole = wormhole;
-//# sourceMappingURL=portal-vue.common.js.map
-
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/portal-plugin.js":[function(require,module,exports) {
-"use strict";
-
-var _portalVue = _interopRequireDefault(require("portal-vue"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-let Vue = require("vue").default;
-
-Vue.use(_portalVue.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","portal-vue":"node_modules/portal-vue/dist/portal-vue.common.js"}],"node_modules/keen-ui/dist/keen-ui.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","good-vue":"node_modules/good-vue/dist/index.js"}],"node_modules/keen-ui/dist/keen-ui.js":[function(require,module,exports) {
 var define;
 var global = arguments[3];
 /*!
@@ -26068,7 +25334,74 @@ if (typeof window !== 'undefined' && window.Vue) {
 /***/ })
 /******/ ]);
 });
-},{}],"node_modules/keen-ui/dist/keen-ui.css":[function(require,module,exports) {
+},{}],"node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
+var bundleURL = null;
+
+function getBundleURLCached() {
+  if (!bundleURL) {
+    bundleURL = getBundleURL();
+  }
+
+  return bundleURL;
+}
+
+function getBundleURL() {
+  // Attempt to find the URL of the current script and use that as the base URL
+  try {
+    throw new Error();
+  } catch (err) {
+    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
+
+    if (matches) {
+      return getBaseURL(matches[0]);
+    }
+  }
+
+  return '/';
+}
+
+function getBaseURL(url) {
+  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)\/[^/]+$/, '$1') + '/';
+}
+
+exports.getBundleURL = getBundleURLCached;
+exports.getBaseURL = getBaseURL;
+},{}],"node_modules/parcel-bundler/src/builtins/css-loader.js":[function(require,module,exports) {
+var bundle = require('./bundle-url');
+
+function updateLink(link) {
+  var newLink = link.cloneNode();
+
+  newLink.onload = function () {
+    link.remove();
+  };
+
+  newLink.href = link.href.split('?')[0] + '?' + Date.now();
+  link.parentNode.insertBefore(newLink, link.nextSibling);
+}
+
+var cssTimeout = null;
+
+function reloadCSS() {
+  if (cssTimeout) {
+    return;
+  }
+
+  cssTimeout = setTimeout(function () {
+    var links = document.querySelectorAll('link[rel="stylesheet"]');
+
+    for (var i = 0; i < links.length; i++) {
+      if (bundle.getBaseURL(links[i].href) === bundle.getBundleURL()) {
+        updateLink(links[i]);
+      }
+    }
+
+    cssTimeout = null;
+  }, 50);
+}
+
+module.exports = reloadCSS;
+},{"./bundle-url":"node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"node_modules/keen-ui/dist/keen-ui.css":[function(require,module,exports) {
 
         var reloadCSS = require('_css_loader');
         module.hot.dispose(reloadCSS);
@@ -26086,7 +25419,704 @@ require("keen-ui/dist/keen-ui.css");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_keenUi.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","keen-ui":"node_modules/keen-ui/dist/keen-ui.js","keen-ui/dist/keen-ui.css":"node_modules/keen-ui/dist/keen-ui.css"}],"src/plugins/resolvables-plugin.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","keen-ui":"node_modules/keen-ui/dist/keen-ui.js","keen-ui/dist/keen-ui.css":"node_modules/keen-ui/dist/keen-ui.css"}],"node_modules/portal-vue/dist/portal-vue.common.js":[function(require,module,exports) {
+
+ /*! 
+  * portal-vue © Thorsten Lünborg, 2019 
+  * 
+  * Version: 2.1.7
+  * 
+  * LICENCE: MIT 
+  * 
+  * https://github.com/linusborg/portal-vue
+  * 
+ */
+
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var Vue = _interopDefault(require('vue'));
+
+function _typeof(obj) {
+  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+    _typeof = function (obj) {
+      return typeof obj;
+    };
+  } else {
+    _typeof = function (obj) {
+      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+    };
+  }
+
+  return _typeof(obj);
+}
+
+function _toConsumableArray(arr) {
+  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
+}
+
+function _arrayWithoutHoles(arr) {
+  if (Array.isArray(arr)) {
+    for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+    return arr2;
+  }
+}
+
+function _iterableToArray(iter) {
+  if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
+}
+
+function _nonIterableSpread() {
+  throw new TypeError("Invalid attempt to spread non-iterable instance");
+}
+
+var inBrowser = typeof window !== 'undefined';
+function freeze(item) {
+  if (Array.isArray(item) || _typeof(item) === 'object') {
+    return Object.freeze(item);
+  }
+
+  return item;
+}
+function combinePassengers(transports) {
+  var slotProps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  return transports.reduce(function (passengers, transport) {
+    var temp = transport.passengers[0];
+    var newPassengers = typeof temp === 'function' ? temp(slotProps) : transport.passengers;
+    return passengers.concat(newPassengers);
+  }, []);
+}
+function stableSort(array, compareFn) {
+  return array.map(function (v, idx) {
+    return [idx, v];
+  }).sort(function (a, b) {
+    return compareFn(a[1], b[1]) || a[0] - b[0];
+  }).map(function (c) {
+    return c[1];
+  });
+}
+function pick(obj, keys) {
+  return keys.reduce(function (acc, key) {
+    if (obj.hasOwnProperty(key)) {
+      acc[key] = obj[key];
+    }
+
+    return acc;
+  }, {});
+}
+
+var transports = {};
+var targets = {};
+var sources = {};
+var Wormhole = Vue.extend({
+  data: function data() {
+    return {
+      transports: transports,
+      targets: targets,
+      sources: sources,
+      trackInstances: inBrowser
+    };
+  },
+  methods: {
+    open: function open(transport) {
+      if (!inBrowser) return;
+      var to = transport.to,
+          from = transport.from,
+          passengers = transport.passengers,
+          _transport$order = transport.order,
+          order = _transport$order === void 0 ? Infinity : _transport$order;
+      if (!to || !from || !passengers) return;
+      var newTransport = {
+        to: to,
+        from: from,
+        passengers: freeze(passengers),
+        order: order
+      };
+      var keys = Object.keys(this.transports);
+
+      if (keys.indexOf(to) === -1) {
+        Vue.set(this.transports, to, []);
+      }
+
+      var currentIndex = this.$_getTransportIndex(newTransport); // Copying the array here so that the PortalTarget change event will actually contain two distinct arrays
+
+      var newTransports = this.transports[to].slice(0);
+
+      if (currentIndex === -1) {
+        newTransports.push(newTransport);
+      } else {
+        newTransports[currentIndex] = newTransport;
+      }
+
+      this.transports[to] = stableSort(newTransports, function (a, b) {
+        return a.order - b.order;
+      });
+    },
+    close: function close(transport) {
+      var force = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      var to = transport.to,
+          from = transport.from;
+      if (!to || !from && force === false) return;
+
+      if (!this.transports[to]) {
+        return;
+      }
+
+      if (force) {
+        this.transports[to] = [];
+      } else {
+        var index = this.$_getTransportIndex(transport);
+
+        if (index >= 0) {
+          // Copying the array here so that the PortalTarget change event will actually contain two distinct arrays
+          var newTransports = this.transports[to].slice(0);
+          newTransports.splice(index, 1);
+          this.transports[to] = newTransports;
+        }
+      }
+    },
+    registerTarget: function registerTarget(target, vm, force) {
+      if (!inBrowser) return;
+
+      if (this.trackInstances && !force && this.targets[target]) {
+        console.warn("[portal-vue]: Target ".concat(target, " already exists"));
+      }
+
+      this.$set(this.targets, target, Object.freeze([vm]));
+    },
+    unregisterTarget: function unregisterTarget(target) {
+      this.$delete(this.targets, target);
+    },
+    registerSource: function registerSource(source, vm, force) {
+      if (!inBrowser) return;
+
+      if (this.trackInstances && !force && this.sources[source]) {
+        console.warn("[portal-vue]: source ".concat(source, " already exists"));
+      }
+
+      this.$set(this.sources, source, Object.freeze([vm]));
+    },
+    unregisterSource: function unregisterSource(source) {
+      this.$delete(this.sources, source);
+    },
+    hasTarget: function hasTarget(to) {
+      return !!(this.targets[to] && this.targets[to][0]);
+    },
+    hasSource: function hasSource(to) {
+      return !!(this.sources[to] && this.sources[to][0]);
+    },
+    hasContentFor: function hasContentFor(to) {
+      return !!this.transports[to] && !!this.transports[to].length;
+    },
+    // Internal
+    $_getTransportIndex: function $_getTransportIndex(_ref) {
+      var to = _ref.to,
+          from = _ref.from;
+
+      for (var i in this.transports[to]) {
+        if (this.transports[to][i].from === from) {
+          return +i;
+        }
+      }
+
+      return -1;
+    }
+  }
+});
+var wormhole = new Wormhole(transports);
+
+var _id = 1;
+var Portal = Vue.extend({
+  name: 'portal',
+  props: {
+    disabled: {
+      type: Boolean
+    },
+    name: {
+      type: String,
+      default: function _default() {
+        return String(_id++);
+      }
+    },
+    order: {
+      type: Number,
+      default: 0
+    },
+    slim: {
+      type: Boolean
+    },
+    slotProps: {
+      type: Object,
+      default: function _default() {
+        return {};
+      }
+    },
+    tag: {
+      type: String,
+      default: 'DIV'
+    },
+    to: {
+      type: String,
+      default: function _default() {
+        return String(Math.round(Math.random() * 10000000));
+      }
+    }
+  },
+  created: function created() {
+    var _this = this;
+
+    this.$nextTick(function () {
+      wormhole.registerSource(_this.name, _this);
+    });
+  },
+  mounted: function mounted() {
+    if (!this.disabled) {
+      this.sendUpdate();
+    }
+  },
+  updated: function updated() {
+    if (this.disabled) {
+      this.clear();
+    } else {
+      this.sendUpdate();
+    }
+  },
+  beforeDestroy: function beforeDestroy() {
+    wormhole.unregisterSource(this.name);
+    this.clear();
+  },
+  watch: {
+    to: function to(newValue, oldValue) {
+      oldValue && oldValue !== newValue && this.clear(oldValue);
+      this.sendUpdate();
+    }
+  },
+  methods: {
+    clear: function clear(target) {
+      var closer = {
+        from: this.name,
+        to: target || this.to
+      };
+      wormhole.close(closer);
+    },
+    normalizeSlots: function normalizeSlots() {
+      return this.$scopedSlots.default ? [this.$scopedSlots.default] : this.$slots.default;
+    },
+    normalizeOwnChildren: function normalizeOwnChildren(children) {
+      return typeof children === 'function' ? children(this.slotProps) : children;
+    },
+    sendUpdate: function sendUpdate() {
+      var slotContent = this.normalizeSlots();
+
+      if (slotContent) {
+        var transport = {
+          from: this.name,
+          to: this.to,
+          passengers: _toConsumableArray(slotContent),
+          order: this.order
+        };
+        wormhole.open(transport);
+      } else {
+        this.clear();
+      }
+    }
+  },
+  render: function render(h) {
+    var children = this.$slots.default || this.$scopedSlots.default || [];
+    var Tag = this.tag;
+
+    if (children && this.disabled) {
+      return children.length <= 1 && this.slim ? this.normalizeOwnChildren(children)[0] : h(Tag, [this.normalizeOwnChildren(children)]);
+    } else {
+      return this.slim ? h() : h(Tag, {
+        class: {
+          'v-portal': true
+        },
+        style: {
+          display: 'none'
+        },
+        key: 'v-portal-placeholder'
+      });
+    }
+  }
+});
+
+var PortalTarget = Vue.extend({
+  name: 'portalTarget',
+  props: {
+    multiple: {
+      type: Boolean,
+      default: false
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    slim: {
+      type: Boolean,
+      default: false
+    },
+    slotProps: {
+      type: Object,
+      default: function _default() {
+        return {};
+      }
+    },
+    tag: {
+      type: String,
+      default: 'div'
+    },
+    transition: {
+      type: [String, Object, Function]
+    }
+  },
+  data: function data() {
+    return {
+      transports: wormhole.transports,
+      firstRender: true
+    };
+  },
+  created: function created() {
+    var _this = this;
+
+    this.$nextTick(function () {
+      wormhole.registerTarget(_this.name, _this);
+    });
+  },
+  watch: {
+    ownTransports: function ownTransports() {
+      this.$emit('change', this.children().length > 0);
+    },
+    name: function name(newVal, oldVal) {
+      /**
+       * TODO
+       * This should warn as well ...
+       */
+      wormhole.unregisterTarget(oldVal);
+      wormhole.registerTarget(newVal, this);
+    }
+  },
+  mounted: function mounted() {
+    var _this2 = this;
+
+    if (this.transition) {
+      this.$nextTick(function () {
+        // only when we have a transition, because it causes a re-render
+        _this2.firstRender = false;
+      });
+    }
+  },
+  beforeDestroy: function beforeDestroy() {
+    wormhole.unregisterTarget(this.name);
+  },
+  computed: {
+    ownTransports: function ownTransports() {
+      var transports = this.transports[this.name] || [];
+
+      if (this.multiple) {
+        return transports;
+      }
+
+      return transports.length === 0 ? [] : [transports[transports.length - 1]];
+    },
+    passengers: function passengers() {
+      return combinePassengers(this.ownTransports, this.slotProps);
+    }
+  },
+  methods: {
+    // can't be a computed prop because it has to "react" to $slot changes.
+    children: function children() {
+      return this.passengers.length !== 0 ? this.passengers : this.$scopedSlots.default ? this.$scopedSlots.default(this.slotProps) : this.$slots.default || [];
+    },
+    // can't be a computed prop because it has to "react" to this.children().
+    noWrapper: function noWrapper() {
+      var noWrapper = this.slim && !this.transition;
+
+      if (noWrapper && this.children().length > 1) {
+        console.warn('[portal-vue]: PortalTarget with `slim` option received more than one child element.');
+      }
+
+      return noWrapper;
+    }
+  },
+  render: function render(h) {
+    var noWrapper = this.noWrapper();
+    var children = this.children();
+    var Tag = this.transition || this.tag;
+    return noWrapper ? children[0] : this.slim && !Tag ? h() : h(Tag, {
+      props: {
+        // if we have a transition component, pass the tag if it exists
+        tag: this.transition && this.tag ? this.tag : undefined
+      },
+      class: {
+        'vue-portal-target': true
+      }
+    }, children);
+  }
+});
+
+var _id$1 = 0;
+var portalProps = ['disabled', 'name', 'order', 'slim', 'slotProps', 'tag', 'to'];
+var targetProps = ['multiple', 'transition'];
+var MountingPortal = Vue.extend({
+  name: 'MountingPortal',
+  inheritAttrs: false,
+  props: {
+    append: {
+      type: [Boolean, String]
+    },
+    bail: {
+      type: Boolean
+    },
+    mountTo: {
+      type: String,
+      required: true
+    },
+    // Portal
+    disabled: {
+      type: Boolean
+    },
+    // name for the portal
+    name: {
+      type: String,
+      default: function _default() {
+        return 'mounted_' + String(_id$1++);
+      }
+    },
+    order: {
+      type: Number,
+      default: 0
+    },
+    slim: {
+      type: Boolean
+    },
+    slotProps: {
+      type: Object,
+      default: function _default() {
+        return {};
+      }
+    },
+    tag: {
+      type: String,
+      default: 'DIV'
+    },
+    // name for the target
+    to: {
+      type: String,
+      default: function _default() {
+        return String(Math.round(Math.random() * 10000000));
+      }
+    },
+    // Target
+    multiple: {
+      type: Boolean,
+      default: false
+    },
+    targetSlim: {
+      type: Boolean
+    },
+    targetSlotProps: {
+      type: Object,
+      default: function _default() {
+        return {};
+      }
+    },
+    targetTag: {
+      type: String,
+      default: 'div'
+    },
+    transition: {
+      type: [String, Object, Function]
+    }
+  },
+  created: function created() {
+    if (typeof document === 'undefined') return;
+    var el = document.querySelector(this.mountTo);
+
+    if (!el) {
+      console.error("[portal-vue]: Mount Point '".concat(this.mountTo, "' not found in document"));
+      return;
+    }
+
+    var props = this.$props; // Target already exists
+
+    if (wormhole.targets[props.name]) {
+      if (props.bail) {
+        console.warn("[portal-vue]: Target ".concat(props.name, " is already mounted.\n        Aborting because 'bail: true' is set"));
+      } else {
+        this.portalTarget = wormhole.targets[props.name];
+      }
+
+      return;
+    }
+
+    var append = props.append;
+
+    if (append) {
+      var type = typeof append === 'string' ? append : 'DIV';
+      var mountEl = document.createElement(type);
+      el.appendChild(mountEl);
+      el = mountEl;
+    } // get props for target from $props
+    // we have to rename a few of them
+
+
+    var _props = pick(this.$props, targetProps);
+
+    _props.slim = this.targetSlim;
+    _props.tag = this.targetTag;
+    _props.slotProps = this.targetSlotProps;
+    _props.name = this.to;
+    this.portalTarget = new PortalTarget({
+      el: el,
+      parent: this.$parent || this,
+      propsData: _props
+    });
+  },
+  beforeDestroy: function beforeDestroy() {
+    var target = this.portalTarget;
+
+    if (this.append) {
+      var el = target.$el;
+      el.parentNode.removeChild(el);
+    }
+
+    target.$destroy();
+  },
+  render: function render(h) {
+    if (!this.portalTarget) {
+      console.warn("[portal-vue] Target wasn't mounted");
+      return h();
+    } // if there's no "manual" scoped slot, so we create a <Portal> ourselves
+
+
+    if (!this.$scopedSlots.manual) {
+      var props = pick(this.$props, portalProps);
+      return h(Portal, {
+        props: props,
+        attrs: this.$attrs,
+        on: this.$listeners,
+        scopedSlots: this.$scopedSlots
+      }, this.$slots.default);
+    } // else, we render the scoped slot
+
+
+    var content = this.$scopedSlots.manual({
+      to: this.to
+    }); // if user used <template> for the scoped slot
+    // content will be an array
+
+    if (Array.isArray(content)) {
+      content = content[0];
+    }
+
+    if (!content) return h();
+    return content;
+  }
+});
+
+function install(Vue$$1) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  Vue$$1.component(options.portalName || 'Portal', Portal);
+  Vue$$1.component(options.portalTargetName || 'PortalTarget', PortalTarget);
+  Vue$$1.component(options.MountingPortalName || 'MountingPortal', MountingPortal);
+}
+
+var index = {
+  install: install
+};
+
+exports.default = index;
+exports.Portal = Portal;
+exports.PortalTarget = PortalTarget;
+exports.MountingPortal = MountingPortal;
+exports.Wormhole = wormhole;
+//# sourceMappingURL=portal-vue.common.js.map
+
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/portal-plugin.js":[function(require,module,exports) {
+"use strict";
+
+var _portalVue = _interopRequireDefault(require("portal-vue"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+let Vue = require("vue").default;
+
+Vue.use(_portalVue.default);
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","portal-vue":"node_modules/portal-vue/dist/portal-vue.common.js"}],"src/plugins/root-hooks-plugin.js":[function(require,module,exports) {
+// TODO: fix potential issue of the "this" somehow not refering to the active component (maybe hotreload/debugging issue)
+// api
+//     rootHooks
+let Vue = require("vue").default;
+
+let rootHooksSymbol = Symbol("$rootHooks");
+Object.defineProperty(Vue.prototype, "$rootHooks", {
+  get() {
+    if (this[rootHooksSymbol] == undefined) {
+      this[rootHooksSymbol] = {};
+    }
+
+    return this[rootHooksSymbol];
+  },
+
+  set(value) {
+    this[rootHooksSymbol] = value;
+  }
+
+});
+const unwatcherSymbol = Symbol("unwatchers");
+Vue.mixin(module.exports = {
+  beforeCreate() {
+    const newOption = this.$options.rootHooks;
+
+    if (!newOption) {
+      return;
+    }
+
+    const vueStaticDestination = this.$rootHooks || this;
+
+    if (vueStaticDestination instanceof Object) {
+      if (newOption instanceof Function) {
+        Object.assign(vueStaticDestination, newOption.apply(this));
+      } else if (typeof newOption === 'object') {
+        Object.assign(vueStaticDestination, newOption);
+      }
+    }
+
+    this[unwatcherSymbol] = []; // 
+    // watchers
+    // 
+
+    const thisComponent = this;
+
+    if (this.$rootHooks.watch instanceof Object) {
+      for (let [eachKey, eachValue] of Object.entries(this.$rootHooks.watch)) {
+        if (eachValue.bind instanceof Function) {
+          eachValue = this.$rootHooks.watch[eachKey] = eachValue.bind(thisComponent);
+        }
+
+        this[unwatcherSymbol].push(this.$root.$watch(eachKey, eachValue, {
+          deep: true
+        }));
+      }
+    }
+  },
+
+  beforeDestroy() {
+    // call all of the unwatchers
+    if (this[unwatcherSymbol] instanceof Array) {
+      for (let each of this[unwatcherSymbol]) {
+        each();
+      }
+    }
+  }
+
+});
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/resolvables-plugin.js":[function(require,module,exports) {
 // api
 // resolvables:
 //     [resolvable].promise
@@ -26281,75 +26311,6 @@ Vue.mixin(module.exports = {
           }
 
         });
-      }
-    }
-  }
-
-});
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/root-hooks-plugin.js":[function(require,module,exports) {
-// TODO: fix potential issue of the "this" somehow not refering to the active component (maybe hotreload/debugging issue)
-// api
-//     rootHooks
-let Vue = require("vue").default;
-
-let rootHooksSymbol = Symbol("$rootHooks");
-Object.defineProperty(Vue.prototype, "$rootHooks", {
-  get() {
-    if (this[rootHooksSymbol] == undefined) {
-      this[rootHooksSymbol] = {};
-    }
-
-    return this[rootHooksSymbol];
-  },
-
-  set(value) {
-    this[rootHooksSymbol] = value;
-  }
-
-});
-const unwatcherSymbol = Symbol("unwatchers");
-Vue.mixin(module.exports = {
-  beforeCreate() {
-    const newOption = this.$options.rootHooks;
-
-    if (!newOption) {
-      return;
-    }
-
-    const vueStaticDestination = this.$rootHooks || this;
-
-    if (vueStaticDestination instanceof Object) {
-      if (newOption instanceof Function) {
-        Object.assign(vueStaticDestination, newOption.apply(this));
-      } else if (typeof newOption === 'object') {
-        Object.assign(vueStaticDestination, newOption);
-      }
-    }
-
-    this[unwatcherSymbol] = []; // 
-    // watchers
-    // 
-
-    const thisComponent = this;
-
-    if (this.$rootHooks.watch instanceof Object) {
-      for (let [eachKey, eachValue] of Object.entries(this.$rootHooks.watch)) {
-        if (eachValue.bind instanceof Function) {
-          eachValue = this.$rootHooks.watch[eachKey] = eachValue.bind(thisComponent);
-        }
-
-        this[unwatcherSymbol].push(this.$root.$watch(eachKey, eachValue, {
-          deep: true
-        }));
-      }
-    }
-  },
-
-  beforeDestroy() {
-    // call all of the unwatchers
-    if (this[unwatcherSymbol] instanceof Array) {
-      for (let each of this[unwatcherSymbol]) {
-        each();
       }
     }
   }
@@ -29348,7 +29309,36 @@ var _vueToasted = _interopRequireDefault(require("vue-toasted"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_vueToasted.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-toasted":"node_modules/vue-toasted/dist/vue-toasted.min.js"}],"src/plugins/window-listeners-plugin.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-toasted":"node_modules/vue-toasted/dist/vue-toasted.min.js"}],"src/plugins/child.js":[function(require,module,exports) {
+// api
+//     $child(...args)
+let Vue = require("vue").default;
+
+Object.defineProperty(Vue.prototype, "$child", {
+  get() {
+    return (firstRef, ...args) => new Promise((resolve, reject) => {
+      let checker;
+
+      checker = () => {
+        let ref = this.$refs[firstRef]; // base case
+
+        if (ref && args.length === 0) {
+          resolve(ref); // recursive child case
+        } else if (ref) {
+          ref.$child(...args).then(resolve); // recursive wait case
+        } else {
+          this.$nextTick(() => {
+            setTimeout(checker, 500);
+          });
+        }
+      };
+
+      checker();
+    });
+  }
+
+});
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/window-listeners-plugin.js":[function(require,module,exports) {
 // api
 //     windowListeners:{}
 let Vue = require("vue").default;
@@ -29448,78 +29438,6 @@ Vue.mixin(module.exports = {
     }
 
   }
-});
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/workers-plugin.js":[function(require,module,exports) {
-// api
-//     workers
-// summary
-//     workers are aynsc functions that can only have
-//     one active instance
-//     calling a worker function again before the first one is finished    
-//     will simply wait for the first one to finish and return that output
-let Vue = require("vue").default;
-
-let workersSymbol = Symbol("$workers");
-Object.defineProperty(Vue.prototype, "$workers", {
-  get() {
-    if (this[workersSymbol] == undefined) {
-      this[workersSymbol] = {};
-    }
-
-    return this[workersSymbol];
-  },
-
-  set(value) {
-    this[workersSymbol] = value;
-  }
-
-});
-Vue.mixin(module.exports = {
-  beforeCreate() {
-    const newOption = this.$options.workers;
-
-    if (!newOption) {
-      return;
-    }
-
-    const vueStaticDestination = this.$workers || this;
-
-    if (vueStaticDestination instanceof Object) {
-      if (newOption instanceof Function) {
-        Object.assign(vueStaticDestination, newOption.apply(this));
-      } else if (typeof newOption === 'object') {
-        Object.assign(vueStaticDestination, newOption);
-      }
-    } // 
-    // watchers
-    // 
-
-
-    const thisComponent = this;
-
-    if (this.$workers instanceof Object) {
-      for (let [eachKey, eachValue] of Object.entries(this.$workers)) {
-        // if its a function that can be bound
-        if (eachValue instanceof Function) {
-          const functionAttachedToInstance = eachValue.bind(thisComponent);
-          let functionIsRunning = false;
-          let promiseToRunningFunction = null; // wrap the function in a checker
-
-          this.$methods[eachKey] = this.$workers[eachKey] = async (...args) => {
-            if (!functionIsRunning) {
-              functionIsRunning = true;
-              promiseToRunningFunction = functionAttachedToInstance(...args);
-            }
-
-            let result = await promiseToRunningFunction;
-            functionIsRunning = false;
-            return result;
-          };
-        }
-      }
-    }
-  }
-
 });
 },{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"node_modules/vue-plyr/dist/vue-plyr.esm.js":[function(require,module,exports) {
 var global = arguments[3];
@@ -37527,23 +37445,105 @@ _vue.default.use(_vuePlyr.default, {
     invertTime: false
   }
 });
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-plyr":"node_modules/vue-plyr/dist/vue-plyr.esm.js","vue-plyr/dist/vue-plyr.css":"node_modules/vue-plyr/dist/vue-plyr.css"}],"src/plugins/*.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-plyr":"node_modules/vue-plyr/dist/vue-plyr.esm.js","vue-plyr/dist/vue-plyr.css":"node_modules/vue-plyr/dist/vue-plyr.css"}],"node_modules/css-baseline/css/3.css":[function(require,module,exports) {
+
+        var reloadCSS = require('_css_loader');
+        module.hot.dispose(reloadCSS);
+        module.hot.accept(reloadCSS);
+      
+},{"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js"}],"src/plugins/css-baseline-plugin.js":[function(require,module,exports) {
+"use strict";
+
+require("css-baseline/css/3.css");
+},{"css-baseline/css/3.css":"node_modules/css-baseline/css/3.css"}],"src/plugins/workers-plugin.js":[function(require,module,exports) {
+// api
+//     workers
+// summary
+//     workers are aynsc functions that can only have
+//     one active instance
+//     calling a worker function again before the first one is finished    
+//     will simply wait for the first one to finish and return that output
+let Vue = require("vue").default;
+
+let workersSymbol = Symbol("$workers");
+Object.defineProperty(Vue.prototype, "$workers", {
+  get() {
+    if (this[workersSymbol] == undefined) {
+      this[workersSymbol] = {};
+    }
+
+    return this[workersSymbol];
+  },
+
+  set(value) {
+    this[workersSymbol] = value;
+  }
+
+});
+Vue.mixin(module.exports = {
+  beforeCreate() {
+    const newOption = this.$options.workers;
+
+    if (!newOption) {
+      return;
+    }
+
+    const vueStaticDestination = this.$workers || this;
+
+    if (vueStaticDestination instanceof Object) {
+      if (newOption instanceof Function) {
+        Object.assign(vueStaticDestination, newOption.apply(this));
+      } else if (typeof newOption === 'object') {
+        Object.assign(vueStaticDestination, newOption);
+      }
+    } // 
+    // watchers
+    // 
+
+
+    const thisComponent = this;
+
+    if (this.$workers instanceof Object) {
+      for (let [eachKey, eachValue] of Object.entries(this.$workers)) {
+        // if its a function that can be bound
+        if (eachValue instanceof Function) {
+          const functionAttachedToInstance = eachValue.bind(thisComponent);
+          let functionIsRunning = false;
+          let promiseToRunningFunction = null; // wrap the function in a checker
+
+          this.$methods[eachKey] = this.$workers[eachKey] = async (...args) => {
+            if (!functionIsRunning) {
+              functionIsRunning = true;
+              promiseToRunningFunction = functionAttachedToInstance(...args);
+            }
+
+            let result = await promiseToRunningFunction;
+            functionIsRunning = false;
+            return result;
+          };
+        }
+      }
+    }
+  }
+
+});
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/*.js":[function(require,module,exports) {
 module.exports = {
-  "child": require("./child.js"),
-  "css-baseline-plugin": require("./css-baseline-plugin.js"),
   "good-vue-plugin": require("./good-vue-plugin.js"),
-  "portal-plugin": require("./portal-plugin.js"),
   "keen-ui-plugin": require("./keen-ui-plugin.js"),
-  "resolvables-plugin": require("./resolvables-plugin.js"),
+  "portal-plugin": require("./portal-plugin.js"),
   "root-hooks-plugin": require("./root-hooks-plugin.js"),
+  "resolvables-plugin": require("./resolvables-plugin.js"),
   "router-plugin": require("./router-plugin.js"),
   "vue-toasted-plugin": require("./vue-toasted-plugin.js"),
+  "child": require("./child.js"),
   "window-listeners-plugin": require("./window-listeners-plugin.js"),
   "without-watchers": require("./without-watchers.js"),
-  "workers-plugin": require("./workers-plugin.js"),
-  "youtube-player-plugin": require("./youtube-player-plugin.js")
+  "youtube-player-plugin": require("./youtube-player-plugin.js"),
+  "css-baseline-plugin": require("./css-baseline-plugin.js"),
+  "workers-plugin": require("./workers-plugin.js")
 };
-},{"./child.js":"src/plugins/child.js","./css-baseline-plugin.js":"src/plugins/css-baseline-plugin.js","./good-vue-plugin.js":"src/plugins/good-vue-plugin.js","./portal-plugin.js":"src/plugins/portal-plugin.js","./keen-ui-plugin.js":"src/plugins/keen-ui-plugin.js","./resolvables-plugin.js":"src/plugins/resolvables-plugin.js","./root-hooks-plugin.js":"src/plugins/root-hooks-plugin.js","./router-plugin.js":"src/plugins/router-plugin.js","./vue-toasted-plugin.js":"src/plugins/vue-toasted-plugin.js","./window-listeners-plugin.js":"src/plugins/window-listeners-plugin.js","./without-watchers.js":"src/plugins/without-watchers.js","./workers-plugin.js":"src/plugins/workers-plugin.js","./youtube-player-plugin.js":"src/plugins/youtube-player-plugin.js"}],"node_modules/file-saver/dist/FileSaver.min.js":[function(require,module,exports) {
+},{"./good-vue-plugin.js":"src/plugins/good-vue-plugin.js","./keen-ui-plugin.js":"src/plugins/keen-ui-plugin.js","./portal-plugin.js":"src/plugins/portal-plugin.js","./root-hooks-plugin.js":"src/plugins/root-hooks-plugin.js","./resolvables-plugin.js":"src/plugins/resolvables-plugin.js","./router-plugin.js":"src/plugins/router-plugin.js","./vue-toasted-plugin.js":"src/plugins/vue-toasted-plugin.js","./child.js":"src/plugins/child.js","./window-listeners-plugin.js":"src/plugins/window-listeners-plugin.js","./without-watchers.js":"src/plugins/without-watchers.js","./youtube-player-plugin.js":"src/plugins/youtube-player-plugin.js","./css-baseline-plugin.js":"src/plugins/css-baseline-plugin.js","./workers-plugin.js":"src/plugins/workers-plugin.js"}],"node_modules/file-saver/dist/FileSaver.min.js":[function(require,module,exports) {
 var define;
 var global = arguments[3];
 (function(a,b){if("function"==typeof define&&define.amd)define([],b);else if("undefined"!=typeof exports)b();else{b(),a.FileSaver={exports:{}}.exports}})(this,function(){"use strict";function b(a,b){return"undefined"==typeof b?b={autoBom:!1}:"object"!=typeof b&&(console.warn("Deprecated: Expected third argument to be a object"),b={autoBom:!b}),b.autoBom&&/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(a.type)?new Blob(["\uFEFF",a],{type:a.type}):a}function c(a,b,c){var d=new XMLHttpRequest;d.open("GET",a),d.responseType="blob",d.onload=function(){g(d.response,b,c)},d.onerror=function(){console.error("could not download file")},d.send()}function d(a){var b=new XMLHttpRequest;b.open("HEAD",a,!1);try{b.send()}catch(a){}return 200<=b.status&&299>=b.status}function e(a){try{a.dispatchEvent(new MouseEvent("click"))}catch(c){var b=document.createEvent("MouseEvents");b.initMouseEvent("click",!0,!0,window,0,0,0,80,20,!1,!1,!1,!1,0,null),a.dispatchEvent(b)}}var f="object"==typeof window&&window.window===window?window:"object"==typeof self&&self.self===self?self:"object"==typeof global&&global.global===global?global:void 0,a=f.navigator&&/Macintosh/.test(navigator.userAgent)&&/AppleWebKit/.test(navigator.userAgent)&&!/Safari/.test(navigator.userAgent),g=f.saveAs||("object"!=typeof window||window!==f?function(){}:"download"in HTMLAnchorElement.prototype&&!a?function(b,g,h){var i=f.URL||f.webkitURL,j=document.createElement("a");g=g||b.name||"download",j.download=g,j.rel="noopener","string"==typeof b?(j.href=b,j.origin===location.origin?e(j):d(j.href)?c(b,g,h):e(j,j.target="_blank")):(j.href=i.createObjectURL(b),setTimeout(function(){i.revokeObjectURL(j.href)},4E4),setTimeout(function(){e(j)},0))}:"msSaveOrOpenBlob"in navigator?function(f,g,h){if(g=g||f.name||"download","string"!=typeof f)navigator.msSaveOrOpenBlob(b(f,h),g);else if(d(f))c(f,g,h);else{var i=document.createElement("a");i.href=f,i.target="_blank",setTimeout(function(){e(i)})}}:function(b,d,e,g){if(g=g||open("","_blank"),g&&(g.document.title=g.document.body.innerText="downloading..."),"string"==typeof b)return c(b,d,e);var h="application/octet-stream"===b.type,i=/constructor/i.test(f.HTMLElement)||f.safari,j=/CriOS\/[\d]+/.test(navigator.userAgent);if((j||h&&i||a)&&"undefined"!=typeof FileReader){var k=new FileReader;k.onloadend=function(){var a=k.result;a=j?a:a.replace(/^data:[^;]*;/,"data:attachment/file;"),g?g.location.href=a:location=a,g=null},k.readAsDataURL(b)}else{var l=f.URL||f.webkitURL,m=l.createObjectURL(b);g?g.location=m:location.href=m,g=null,setTimeout(function(){l.revokeObjectURL(m)},4E4)}});f.saveAs=g.saveAs=g,"undefined"!=typeof module&&(module.exports=g)});
@@ -71430,10 +71430,16 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.coerceLabel = coerceLabel;
 exports.coerceObserver = coerceObserver;
+exports.coerceCreatedAt = coerceCreatedAt;
+exports.createdAtIsValid = createdAtIsValid;
+exports.videoIdIsValid = videoIdIsValid;
+exports.labelConfidenceIsValid = labelConfidenceIsValid;
+exports.observerIsValid = observerIsValid;
+exports.labelIsValid = labelIsValid;
 exports.quickLocalValidationCheck = quickLocalValidationCheck;
 exports.coerceObservation = coerceObservation;
 exports.validateObservations = validateObservations;
-exports.InvalidFormatError = exports.minSizeOfLocalVideoId = exports.minSizeOfYouTubeVideoId = exports.minSizeOfUnixTimestamp = exports.createUuid = exports.getLocalVideoName = exports.isLocalVideo = void 0;
+exports.createDefaultObservationEntry = exports.InvalidFormatError = exports.minSizeOfLocalVideoId = exports.minSizeOfYouTubeVideoId = exports.minSizeOfUnixTimestamp = exports.createUuid = exports.getLocalVideoName = exports.isLocalVideo = void 0;
 
 var _string = require("./string.js");
 
@@ -71482,12 +71488,32 @@ class InvalidFormatError extends Error {
     return yaml.stringify(this.messages);
   }
 
-} // 
+}
+
+exports.InvalidFormatError = InvalidFormatError;
+
+const createDefaultObservationEntry = () => ({
+  createdAt: createUuid(),
+  type: "segment",
+  videoId: null,
+  startTime: (window.player?.currentTime || 0).toFixed(3) - 0,
+  endTime: ((window.player?.currentTime || 0) + 0.01).toFixed(3) - 0,
+  observer: storageObject.observer || "",
+  isHuman: true,
+  confirmedBySomeone: false,
+  rejectedBySomeone: false,
+  observation: {
+    label: storageObject.recentLabel || "example-label",
+    labelConfidence: 0.95,
+    spacialInfo: {}
+  },
+  customInfo: {}
+}); // 
 // indvidual coercsion
 // 
 
 
-exports.InvalidFormatError = InvalidFormatError;
+exports.createDefaultObservationEntry = createDefaultObservationEntry;
 
 function coerceLabel(label) {
   return toKebabCase(label.toLowerCase());
@@ -71495,6 +71521,20 @@ function coerceLabel(label) {
 
 function coerceObserver(observer) {
   return toKebabCase(observer.toLowerCase());
+}
+
+function coerceCreatedAt(createdAt) {
+  if (typeof createdAt != 'string') {
+    const asString = (0, _string.toString)(createdAt);
+
+    if (createdAtIsValid(asString)) {
+      createdAt = asString;
+    } else {
+      createdAt = createUuid();
+    }
+  }
+
+  return createdAt;
 } // 
 // indvidual checks
 // 
@@ -71526,6 +71566,22 @@ function labelConfidenceIsValid(labelConfidence) {
   }
 
   return false;
+}
+
+function observerIsValid(observer) {
+  if (typeof observer != "string" || !isValidName(observer)) {
+    return false;
+  }
+
+  return true;
+}
+
+function labelIsValid(label) {
+  if (typeof label != "string" || !isValidName(label)) {
+    return false;
+  }
+
+  return true;
 } // 
 // aggregated checks
 // 
@@ -71558,21 +71614,12 @@ function coerceObservation(observationEntry) {
   // enforce unix timestamp (e.g. id)
   // 
 
-  if (typeof observationEntry.createdAt != 'string') {
-    const asString = (0, _string.toString)(observationEntry.createdAt);
-
-    if (createdAtIsValid(asString)) {
-      observationEntry.createdAt = asString;
-    } else {
-      observationEntry.createdAt = createUuid();
-    }
-  } // 
+  observationEntry.createdAt = coerceCreatedAt(observationEntry.createdAt); // 
   // enforce simplfied names
   // 
 
-
   observationEntry.observation.label = coerceLabel(observationEntry.observation.label);
-  observationEntry.observer = coerceObservation(observationEntry.observer); // 
+  observationEntry.observer = coerceObserver(observationEntry.observer); // 
   // enforce numeric start/endTimes 
   // 
 
@@ -71604,7 +71651,7 @@ function validateObservations(observations) {
       // 
 
 
-      if (videoIdIsValid(observationEntry.videoId)) {
+      if (!videoIdIsValid(observationEntry.videoId)) {
         errorMessages.push(`(observationEntry.videoId: ${(0, _string.toRepresentation)(observationEntry.videoId)})\n\nAn observationEntry must have a "videoId" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to either start with "/videos/" for local videos or be exactly 11 characters long for YouTube video ids`);
       } // 
       // startTime/endTime
@@ -71631,7 +71678,7 @@ function validateObservations(observations) {
       // 
 
 
-      if (typeof observationEntry.observer != "string" || !isValidName(observationEntry.observer)) {
+      if (!observerIsValid(observationEntry.observer)) {
         errorMessages.push(`(observationEntry.observer: ${(0, _string.toRepresentation)(observationEntry.observer)})\n\nAn observationEntry must have a "observer" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`);
       } // 
       // observation
@@ -71645,7 +71692,7 @@ function validateObservations(observations) {
       // 
 
 
-      if (typeof observationEntry?.observation?.label != "string" || !isValidName(observationEntry.observation.label)) {
+      if (!labelIsValid(observationEntry?.observation?.label)) {
         errorMessages.push(`(observationEntry.observation.label: ${(0, _string.toRepresentation)(observationEntry.observation.label)})\n\nAn observationEntry must have a "observation": { "label":  }\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`);
       } // 
       // confidence
@@ -71659,15 +71706,15 @@ function validateObservations(observations) {
       //
 
 
-      if (observationEntry.isHuman === true || observationEntry.isHuman === false) {
-        errorMessages.push(`(observationEntry.isHuman: ${(0, _string.toRepresentation)(observationEntry.isHuman)})\n\nAn observationEntry must have a "isHuman" property\n- it needs to be a boolean`);
+      if (observationEntry.isHuman !== true && observationEntry.isHuman !== false) {
+        errorMessages.push(`(observationEntry.isHuman: ${(0, _string.toRepresentation)(observationEntry.isHuman)})\n\nAn observationEntry must have a "isHuman" property\n- it needs to be a boolean\n${JSON.stringify(observationEntry)}`);
       }
 
-      if (observationEntry.confirmedBySomeone == null || observationEntry.confirmedBySomeone === true || observationEntry.confirmedBySomeone === false) {
-        errorMessages.push(`(observationEntry.confirmedBySomeone: ${(0, _string.toRepresentation)(observationEntry.confirmedBySomeone)})\n\nAn observationEntry must have a "confirmedBySomeone" property\n- it needs to be a boolean or null`);
+      if (observationEntry.confirmedBySomeone != null && observationEntry.confirmedBySomeone !== true && observationEntry.confirmedBySomeone !== false) {
+        errorMessages.push(`(observationEntry.confirmedBySomeone: ${(0, _string.toRepresentation)(observationEntry.confirmedBySomeone)})\n\nThe "confirmedBySomeone" property\n- needs to be a boolean or null`);
       }
 
-      if (observationEntry.rejectedBySomeone == null || observationEntry.rejectedBySomeone === true || observationEntry.rejectedBySomeone === false) {
+      if (observationEntry.rejectedBySomeone != null && observationEntry.rejectedBySomeone !== true && observationEntry.rejectedBySomeone !== false) {
         errorMessages.push(`(observationEntry.rejectedBySomeone: ${(0, _string.toRepresentation)(observationEntry.rejectedBySomeone)})\n\nAn observationEntry must have a "rejectedBySomeone" property\n- it needs to be a boolean or null`);
       }
     }
@@ -72433,7 +72480,7 @@ const managers = {
         value.videos = [...value.videos];
       }
 
-      return labels;
+      return observers;
     },
 
     async whenEditObservations({
@@ -72508,7 +72555,7 @@ const managers = {
         addEntry(observationEntry);
       }
 
-      return labels;
+      return videos;
     },
 
     async whenEditObservations({
@@ -72533,27 +72580,25 @@ const fakeBackend = {
   async setObservations(observationEntries, {
     withCoersion = false
   } = {}) {
+    // observationEntries[0] = {
+    //     "createdAt": "1623456789.308420294042",
+    //     "type": "segment",
+    //     "videoId": "FLK5-00l0r4",
+    //     "startTime": 125.659,
+    //     "endTime": 127.661,
+    //     "observer": "CSCE636-Spring2021-WuAiSeDUdl-1",
+    //     "isHuman": true,
+    //     "observation": {
+    //         "label": "happy",
+    //         "labelConfidence": -0.99
+    //     },
+    //     "customInfo": {},
+    // }
     // 
     // synchonous changes before bulk set
     // 
     if (withCoersion) {
-      for (const observationEntry of observationEntries) {
-        // observationEntry = {
-        //     "createdAt": "1623456789.308420294042",
-        //     "type": "segment",
-        //     "videoId": "FLK5-00l0r4",
-        //     "startTime": 125.659,
-        //     "endTime": 127.661,
-        //     "observer": "CSCE636-Spring2021-WuAiSeDUdl-1",
-        //     "isHuman": true,
-        //     "observation": {
-        //         "label": "happy",
-        //         "labelConfidence": -0.99
-        //     },
-        //     "customInfo": {},
-        // }
-        observationEntry = observationTooling.coerceObservation(observationEntry);
-      }
+      observationEntries = observationEntries.map(observationTooling.coerceObservation);
     } // 
     // validate
     // 
@@ -72589,7 +72634,7 @@ const fakeBackend = {
   setObservation(observationEntry, {
     withCoersion = false
   } = {}) {
-    return fakeBackend.setObservations([observationEntries], {
+    return fakeBackend.setObservations([observationEntry], {
       withCoersion
     });
   },
@@ -72890,15 +72935,272 @@ module.exports = {
     async getObservations({
       where = [],
       returnObject = false
-    }) {
-      return (await backend).mongoInterface.getAll({
+    } = {}) {
+      let results = await (await backend).mongoInterface.getAll({
         from: 'observations',
         where: [{
           valueOf: ['type'],
           is: 'segment'
         }, ...where],
-        returnObject
+        returnObject: true
       });
+      console.log("reset meee"); // {
+      //     "0.3307717043956069": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 0.813,
+      //         "endTime": 1.813,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.5615513748064442": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 0.476,
+      //         "endTime": 1.186,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.11446907486080893": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 1.204,
+      //         "endTime": 1.911,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy-version2",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.4031582846023173": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 0.336,
+      //         "endTime": 1.336,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy-testing",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.018973744483224753": {
+      //         "type": "segment",
+      //         "observer": "p2",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 0.785,
+      //         "endTime": 1.707,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "new-label",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.1465596891418881": {
+      //         "type": "segment",
+      //         "observer": "p2",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 0.731,
+      //         "endTime": 0.741,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "ta-da",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.9602843337489538": {
+      //         "type": "segment",
+      //         "observer": "p2",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 1.779,
+      //         "endTime": 2.039,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "ta-da",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.9810197852822777": {
+      //         "type": "segment",
+      //         "observer": "p3",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 1.618,
+      //         "endTime": 2.383,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "label-3",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.9915320235602465": {
+      //         "type": "segment",
+      //         "observer": "p3",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 1.431,
+      //         "endTime": 2.02,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "null": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 0,
+      //         "endTime": 0.663,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "another-label",
+      //             "labelConfidence": 0.95,
+      //             "spacialInfo": {}
+      //         },
+      //         "createdAt": "1718136271227.6968301759719835",
+      //         "customInfo": {}
+      //     }
+      // }
+      // console.log("JSON.stringify", JSON.stringify(results) == JSON.stringify({
+      //     "0.9238981860608155": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "e2HzKY5imTE",
+      //         "startTime": 162.093,
+      //         "endTime": 165.928,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.3307717043956069": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 0.813,
+      //         "endTime": 1.813,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.5615513748064442": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 0.476,
+      //         "endTime": 1.186,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.0204040255937199": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "e2HzKY5imTE",
+      //         "startTime": 1592.748,
+      //         "endTime": 1600.468,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.41703294157747894": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "e2HzKY5imTE",
+      //         "startTime": 1062.545,
+      //         "endTime": 1068.471,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.6245011281678999": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "e2HzKY5imTE",
+      //         "startTime": 390.828,
+      //         "endTime": 405.079,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.9915320235602465": {
+      //         "type": "segment",
+      //         "observer": "p3",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 1.431,
+      //         "endTime": 2.02,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     }
+      // }))
+      // let count = 10
+      // for (const [key, value] of Object.entries(results)) {
+      //     if (value.startTime == 1.431 || count>0&&value.videoId == "/videos/demo.mp4") {
+      //         count--
+      //         console.debug(`value is:`,value)
+      //         delete results[key]
+      //     }
+      // }
+      // console.debug(`count is:`,count)
+      // return returnObject ? {} : []
+
+      return returnObject ? results : Object.values(results);
     },
 
     async deleteObservation({
@@ -75316,6 +75618,7 @@ var _default = {
             // I'm also fighting interal-vue errors because vue2 is end-of-life and buggy
 
             Object.defineProperty(window, "player", {
+              configurable: true,
               get: () => {
                 if (window.resetPlayer) {
                   return {
@@ -75328,13 +75631,12 @@ var _default = {
                 if (this.$refs.nativePlayer) {
                   output = this.$refs.nativePlayer;
                 } else {
-                  output = document.querySelector(".plyr").__vue__.player.media;
+                  output = document.querySelector(".plyr")?.__vue__?.player?.media;
                 }
 
                 return output;
               }
             });
-            console.debug(`this.player is:`, this.player);
             this.setupPlayer(this.player);
             this.$emit("VideoPlayer-loaded", this.player);
             resolve(this.player);
@@ -75405,7 +75707,7 @@ var _default = {
       console.debug(`eventObject is:`, eventObject); // only when focused on the nothing or this element
       // (this is to exclude textboxes)
 
-      if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || (0, _object.get)({
+      if (window.player instanceof Object && ["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || (0, _object.get)({
         keyList: ["path"],
         from: eventObject,
         failValue: []
@@ -75650,7 +75952,7 @@ var _default = {
 
   created() {
     setInterval(() => {
-      this.displayTime = window.player.currentTime;
+      this.displayTime = window.player?.currentTime;
     }, 100);
   },
 
@@ -76128,6 +76430,9 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 //
 //
 //
+//
+//
+//
 let {
   backend,
   backendHelpers,
@@ -76141,32 +76446,22 @@ let {
   storageObject
 } = require("../utils");
 
+window.backendHelpers = backendHelpers;
 var _default = {
   props: ["currentTime", "duration", "jumpSegment"],
   components: {
     UiSwitch: require("../atoms/UiSwitch").default
   },
-  data: () => ({
-    observationData: {
-      createdAt: observationTooling.createUuid(),
-      videoId: null,
-      startTime: 0,
-      endTime: 0,
-      observer: "",
-      label: "",
-      labelConfidence: 0.99,
-      isHuman: true,
-      confirmedBySomeone: false,
-      rejectedBySomeone: false,
-      customInfo: {},
-      spacialInfo: {}
-    },
-    uuidOfSelectedSegment: null,
-    dataCopy: null,
-    editing: false,
-    dontShow: true
-  }),
-  computed: {},
+
+  data() {
+    const defaultObservationData = this.observationEntryToData(observationTooling.createDefaultObservationEntry());
+    return {
+      observationData: defaultObservationData,
+      dataCopy: null,
+      editing: false,
+      dontShow: true
+    };
+  },
 
   mounted() {
     window.Editor = this; // debugging
@@ -76175,14 +76470,25 @@ var _default = {
   },
 
   computed: {
+    uuidOfSelectedSegment: {
+      get() {
+        return this.$root.selectedSegment?.$uuid || this.observationData.createdAt;
+      },
+
+      set(value) {
+        this.observationData.createdAt = value;
+      }
+
+    },
+
     humanTime() {
-      return new Date(this.observationData.createdAt).toString();
+      return new Date(this.observationData.createdAt - 0).toString();
     },
 
     // TODO: check this before submitting to backend
     allValid() {
       // not("some of them are invalid")
-      return !Object.values(this.valid).some(value => !value);
+      return !Object.values(this.isValid).some(value => !value);
     },
 
     isValid() {
@@ -76197,8 +76503,6 @@ var _default = {
     watch: {
       "routeData$.videoId": function () {
         if (this.editing) {
-          this.dataCopy = {};
-          this.editing = false;
           this.resetData();
         }
       },
@@ -76209,21 +76513,7 @@ var _default = {
         console.debug(`selectedSegment is:`, selectedSegment);
 
         if (selectedSegment instanceof Object) {
-          this.uuidOfSelectedSegment = selectedSegment.$uuid;
-          this.observationData = {
-            createdAt: selectedSegment.createdAt,
-            videoId: selectedSegment.videoId,
-            startTime: selectedSegment.startTime,
-            endTime: selectedSegment.endTime,
-            observer: selectedSegment.observer,
-            isHuman: selectedSegment.isHuman,
-            confirmedBySomeone: selectedSegment.confirmedBySomeone,
-            rejectedBySomeone: selectedSegment.rejectedBySomeone,
-            label: (selectedSegment.observation || {}).label,
-            labelConfidence: (selectedSegment.observation || {}).labelConfidence,
-            customInfo: selectedSegment.customInfo,
-            spacialInfo: (selectedSegment.observation || {}).spacialInfo || {}
-          };
+          this.observationData = this.observationEntryToData(selectedSegment); // this.uuidOfSelectedSegment = selectedSegment.$uuid||this.uuidOfSelectedSegment
         }
       },
 
@@ -76289,12 +76579,7 @@ var _default = {
 
     async onNewObservation() {
       if (!this.editing) {
-        this.dataCopy = {};
         this.resetData();
-        this.observationData.startTime = (window.player?.currentTime || 0).toFixed(3);
-        this.observationData.endTime = ((window.player?.currentTime || 0) + 0.01).toFixed(3);
-        this.observationData.label = storageObject.recentLabel || this.$root?.routeData$?.labelName || "example-label";
-        this.uuidOfSelectedSegment = observationTooling.createUuid();
         this.onEditObservation();
       }
     },
@@ -76316,55 +76601,50 @@ var _default = {
     async onSaveEdit() {
       console.log(`onSaveEdit`);
 
-      if (typeof this.observationData.observer == "string" && this.observationData.observer.length > 0) {
+      if (observationTooling.observerIsValid(this.observationData.observer)) {
         storageObject.observer = this.observationData.observer;
       }
 
-      if (typeof this.observationData.label == "string" && this.observationData.label.length > 0) {
+      if (observationTooling.labelIsValid(this.observationData.label)) {
         storageObject.recentLabel = this.observationData.label;
       }
 
       if (!this.allValid) {
-        this.$toasted.show(`Some fields are invalid (should be marked red)`).goAway(2500);
-      } // convert to numbers 
+        this.$toasted.show(`Some fields are invalid`).goAway(2500);
+        return;
+      }
 
+      const observationEntry = observationTooling.coerceObservation(this.observationDataToEntry(this.observationData)); // round trip to adopt any coersions
 
-      this.observationData.startTime -= 0;
-      this.observationData.endTime -= 0;
-      let observationEntry = {
-        createdAt: this.observationData.createdAt,
-        type: "segment",
-        videoId: this.observationData.videoId,
-        startTime: this.observationData.startTime,
-        endTime: this.observationData.endTime,
-        observer: this.observationData.observer,
-        isHuman: this.observationData.isHuman,
-        confirmedBySomeone: this.observationData.confirmedBySomeone,
-        rejectedBySomeone: this.observationData.rejectedBySomeone,
-        observation: {
-          label: this.observationData.label,
-          labelConfidence: this.observationData.labelConfidence,
-          spacialInfo: this.observationData.spacialInfo
-        },
-        customInfo: this.observationData.customInfo
-      }; // 
-      // save on storageObject
+      this.observationData = this.observationEntryToData(observationEntry); // 
+      // update external things
       // 
 
-      this.$root.addLabel(observationEntry.observation.label);
+      this.$root.addLabel(observationEntry.observation.label, observationEntry.videoId);
       const observationsForVideo = storageObject[this.observationData.videoId] || {};
       observationsForVideo[this.uuidOfSelectedSegment] = observationEntry;
-      storageObject[this.observationData.videoId] = observationsForVideo;
+      storageObject[this.observationData.videoId] = observationsForVideo; // 
+      // send to backend
+      // 
+
+      let thereWasAnError = false;
 
       try {
         await backendHelpers.setObservation({
-          uuidOfSelectedSegment,
+          uuidOfSelectedSegment: this.uuidOfSelectedSegment,
           observation: observationEntry
         });
-        await fakeBackend.setObservation(observationEntry, {
-          withCoersion: true
-        });
+
+        try {
+          await fakeBackend.setObservation(observationEntry, {
+            withCoersion: true
+          });
+        } catch (error) {
+          this.$toasted.show(`There was an error, look at console`).goAway(5500);
+          console.error(error.toString());
+        }
       } catch (error) {
+        thereWasAnError = true;
         this.$toasted.show(`There was an error on the database`).goAway(5500);
         console.error("# ");
         console.error("# BACKEND ERROR");
@@ -76382,24 +76662,31 @@ var _default = {
           }
         });
         this.$toasted.show(`(Full error log in the console)`).goAway(6500); // throw error
+      } // 
+      // on success
+      // 
+
+
+      if (!thereWasAnError) {
+        this.editing = false;
+        this.$toasted.show(`Changes saved`).goAway(2500);
+        this.$root.selectedSegment = observationEntry;
+        this.$root.retrieveLabels();
+        window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"));
       }
-
-      this.editing = false;
-      this.$toasted.show(`Changes saved`).goAway(2500); // create label if it doesn't exist
-
-      this.$root.addLabel(this.observationData.label, observationEntry.videoId);
-      this.$root.selectedSegment = observationEntry; // tell segments they need to get the data from the backend again
-
-      window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"));
-      this.$root.retrieveLabels();
     },
 
     async onDelete() {
+      console.log(`onDelete called`);
       this.editing = false;
       let index = this.$root.selectedSegment.$displayIndex;
+      console.debug(`this.uuidOfSelectedSegment is:`, this.uuidOfSelectedSegment);
 
       if (this.uuidOfSelectedSegment) {
-        backendHelpers.deleteObservation({
+        await backendHelpers.deleteObservation({
+          uuidOfSelectedSegment: this.uuidOfSelectedSegment
+        });
+        await fakeBackend.deleteObservation({
           uuidOfSelectedSegment: this.uuidOfSelectedSegment
         });
         this.$root.selectedVideo.keySegments = [...this.$root.selectedVideo.keySegments].filter(each => each.$uuid != this.uuidOfSelectedSegment);
@@ -76414,19 +76701,10 @@ var _default = {
     },
 
     resetData() {
-      this.$root.selectedSegment = null;
-      this.observationData = {
-        createdAt: observationTooling.createUuid(),
-        videoId: this.$root.selectedVideo && this.$root.selectedVideo.$id,
-        startTime: window.player?.currentTime || 0 || 0,
-        endTime: window.player?.currentTime || 0 || window.player.duration || 0,
-        observer: window.storageObject.observer || "",
-        label: this.$root?.routeData$?.labelName || "",
-        labelConfidence: 0.95,
-        confirmedBySomeone: false,
-        rejectedBySomeone: false,
-        isHuman: true
-      };
+      this.editing = false;
+      this.dataCopy = {};
+      this.observationData = this.observationEntryToData(observationTooling.createDefaultObservationEntry());
+      this.observationData.videoId = this.$root.selectedVideo?.$id;
     },
 
     setStartToCurrentTime() {
@@ -76435,6 +76713,44 @@ var _default = {
 
     setEndToCurrentTime() {
       this.observationData.endTime = (window.player?.currentTime || 0).toFixed(3);
+    },
+
+    observationDataToEntry(observationData) {
+      return observationTooling.coerceObservation({
+        createdAt: observationData.createdAt,
+        type: "segment",
+        videoId: observationData.videoId,
+        startTime: observationData.startTime,
+        endTime: observationData.endTime,
+        observer: observationData.observer,
+        isHuman: observationData.isHuman,
+        confirmedBySomeone: observationData.confirmedBySomeone,
+        rejectedBySomeone: observationData.rejectedBySomeone,
+        observation: {
+          label: observationData.label,
+          labelConfidence: observationData.labelConfidence,
+          spacialInfo: observationData.spacialInfo
+        },
+        customInfo: observationData.customInfo
+      });
+    },
+
+    observationEntryToData(observationEntry) {
+      observationEntry = observationTooling.coerceObservation(observationEntry);
+      return {
+        createdAt: observationEntry.createdAt,
+        videoId: observationEntry.videoId,
+        startTime: observationEntry.startTime,
+        endTime: observationEntry.endTime,
+        observer: observationEntry.observer,
+        isHuman: observationEntry.isHuman,
+        confirmedBySomeone: observationEntry.confirmedBySomeone,
+        rejectedBySomeone: observationEntry.rejectedBySomeone,
+        customInfo: observationEntry.customInfo,
+        label: observationEntry.observation?.label,
+        labelConfidence: observationEntry.observation?.labelConfidence,
+        spacialInfo: observationEntry.observation?.spacialInfo || {}
+      };
     }
 
   }
@@ -76876,6 +77192,7 @@ exports.default = _default;
                                 [_vm._v("Rejected By ≥1 Human")]
                               )
                             : _vm._e(),
+                          _c("div", { staticStyle: { "margin-top": "2rem" } }),
                           _c("ui-textbox", {
                             attrs: {
                               disabled: true,
@@ -76891,6 +77208,7 @@ exports.default = _default;
                             }
                           }),
                           _c("ui-textbox", {
+                            staticStyle: { "margin-top": "-1rem" },
                             attrs: {
                               disabled: true,
                               "floating-label": "floating-label",
@@ -77077,7 +77395,7 @@ var _default = {
           }
         }
 
-        if (window.player.duration) {
+        if (window.player?.duration) {
           console.log(`[SegmentDisplay] labels changed, updating segments`);
           this.updateSegments();
         }
@@ -77088,7 +77406,7 @@ var _default = {
       },
 
       "selectedVideo.keySegments": function () {
-        if (window.player.duration) {
+        if (window.player?.duration) {
           console.log(`[SegmentDisplay] keySegments changed, updating segments`);
           this.updateSegments();
         }
@@ -77112,7 +77430,7 @@ var _default = {
 
     async updateSegments(...args) {
       const originalVideoId = this.$root?.routeData$?.videoId;
-      const duration = window.player.duration;
+      const duration = window.player?.duration;
 
       if (originalVideoId) {
         let keySegments;
@@ -80018,7 +80336,7 @@ var _default = {
 
       if (!segment) {
         segment = this.closestSegment({
-          time: window.player.currentTime,
+          time: window.player?.currentTime,
           forward: true
         });
       }
@@ -80033,7 +80351,7 @@ var _default = {
 
       if (!segment) {
         segment = this.closestSegment({
-          time: window.player.currentTime,
+          time: window.player?.currentTime,
           forward: false
         });
       }
@@ -82058,7 +82376,7 @@ var _default = RootComponent = {
 
   mounted() {
     this.backend.then(async backend => {
-      this.$toasted.show(`Connected to backend, retrieving data`).goAway(6500);
+      this.$toasted.show(`Connected to backend`).goAway(3500);
       untrackedData.usernameList = untrackedData.usernameList.concat(await backend.getUsernames());
       let fakeUsernames = await fakeBackend.getUsernames();
       console.debug(`BACKEND: untrackedData.usernameList is:`, untrackedData.usernameList);
@@ -82443,7 +82761,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55423" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61212" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

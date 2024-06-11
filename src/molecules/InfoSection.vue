@@ -23,7 +23,7 @@ export default {
     }),
     created() {
         setInterval(() => {
-            this.displayTime = window.player.currentTime
+            this.displayTime = window.player?.currentTime
         }, 100)
     },
     watch: {

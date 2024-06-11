@@ -100,7 +100,7 @@ export default {
                         this.$root.selectedSegment = null
                     }
                 }
-                if (window.player.duration) {
+                if (window.player?.duration) {
                     console.log(`[SegmentDisplay] labels changed, updating segments`)
                     this.updateSegments()
                 }
@@ -109,7 +109,7 @@ export default {
                 this.$root.selectedSegment = null
             },
             "selectedVideo.keySegments": function() {
-                if (window.player.duration) {
+                if (window.player?.duration) {
                     console.log(`[SegmentDisplay] keySegments changed, updating segments`)
                     this.updateSegments()
                 }
@@ -132,7 +132,7 @@ export default {
         },
         async updateSegments(...args) {
             const originalVideoId = this.$root?.routeData$?.videoId
-            const duration = window.player.duration
+            const duration = window.player?.duration
             if (originalVideoId) {
                 let keySegments
                 try {

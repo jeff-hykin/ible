@@ -18,7 +18,7 @@
 import Vue from "vue"
 import plugins from "./plugins/*.js"
 import pages from "./pages/*.vue"
-import {getColor, storageObject, deferredPromise} from "./utils.js"
+import {getColor, deferredPromise} from "./utils.js"
 import { get, set } from "./object.js"
 
 // make lodash global because I like to live dangerously
@@ -160,7 +160,7 @@ export default RootComponent = {
     },
     mounted() {
         this.backend.then(async (backend)=>{
-            this.$toasted.show(`Connected to backend, retrieving data`).goAway(6500)
+            this.$toasted.show(`Connected to backend`).goAway(3500)
             untrackedData.usernameList = untrackedData.usernameList.concat(await backend.getUsernames())
             
             let fakeUsernames = await fakeBackend.getUsernames()

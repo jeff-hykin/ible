@@ -26,6 +26,23 @@ export class InvalidFormatError extends Error {
         return yaml.stringify(this.messages)
     }
 }
+export const createDefaultObservationEntry = ()=>({
+    createdAt: createUuid(),
+    type: "segment",
+    videoId:            null,
+    startTime:          (window.player?.currentTime||0).toFixed(3)-0,
+    endTime:            ((window.player?.currentTime||0)+0.01).toFixed(3)-0,
+    observer:           storageObject.observer||"",
+    isHuman:            true,
+    confirmedBySomeone: false,
+    rejectedBySomeone:  false,
+    observation: {
+        label:           storageObject.recentLabel || "example-label",
+        labelConfidence: 0.95,
+        spacialInfo:     {},
+    },
+    customInfo: {},
+})
 
 // 
 // indvidual coercsion
@@ -36,17 +53,28 @@ export class InvalidFormatError extends Error {
     export function coerceObserver(observer) {
         return toKebabCase(observer.toLowerCase())
     }
+    export function coerceCreatedAt(createdAt) {
+        if (typeof createdAt != 'string') {
+            const asString = toString(createdAt)
+            if (createdAtIsValid(asString)) {
+                createdAt = asString
+            } else {
+                createdAt = createUuid()
+            }
+        }
+        return createdAt
+    }
 
 // 
 // indvidual checks
 // 
-    function createdAtIsValid(createdAt) {
+    export function createdAtIsValid(createdAt) {
         if (typeof createdAt != "string" || createdAt.length < minSizeOfUnixTimestamp || !createdAt.match(/^\d+\.\d+$/)) {
             return false
         }
         return true
     }
-    function videoIdIsValid(videoId) {
+    export function videoIdIsValid(videoId) {
         if (typeof videoId == "string") {
             if (isLocalVideo(videoId) || videoId.length == currentFixedSizeOfYouTubeVideoId) {
                 return true
@@ -54,13 +82,25 @@ export class InvalidFormatError extends Error {
         }
         return false
     }
-    function labelConfidenceIsValid(labelConfidence) {
+    export function labelConfidenceIsValid(labelConfidence) {
         if (Number.isFinite(labelConfidence)) {
             if (labelConfidence <= 1 || labelConfidence >= -1) {
                 return true
             }
         }
         return false
+    }
+    export function observerIsValid(observer) {
+        if (typeof observer != "string" || !isValidName(observer)) {
+            return false
+        }
+        return true
+    }
+    export function labelIsValid(label) {
+        if (typeof label != "string" || !isValidName(label)) {
+            return false
+        }
+        return true
     }
 
 
@@ -89,20 +129,13 @@ export class InvalidFormatError extends Error {
         // 
         // enforce unix timestamp (e.g. id)
         // 
-        if (typeof observationEntry.createdAt != 'string') {
-            const asString = toString(observationEntry.createdAt)
-            if (createdAtIsValid(asString)) {
-                observationEntry.createdAt = asString
-            } else {
-                observationEntry.createdAt = createUuid()
-            }
-        }
+        observationEntry.createdAt = coerceCreatedAt(observationEntry.createdAt)
         
         // 
         // enforce simplfied names
         // 
         observationEntry.observation.label = coerceLabel(observationEntry.observation.label)
-        observationEntry.observer = coerceObservation(observationEntry.observer)
+        observationEntry.observer = coerceObserver(observationEntry.observer)
 
         // 
         // enforce numeric start/endTimes 
@@ -136,7 +169,7 @@ export class InvalidFormatError extends Error {
                 // 
                 // videoId
                 // 
-                if (videoIdIsValid(observationEntry.videoId)) {
+                if (!videoIdIsValid(observationEntry.videoId)) {
                     errorMessages.push(`(observationEntry.videoId: ${toRepresentation(observationEntry.videoId)})\n\nAn observationEntry must have a "videoId" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to either start with "/videos/" for local videos or be exactly 11 characters long for YouTube video ids`)
                 }
 
@@ -160,7 +193,7 @@ export class InvalidFormatError extends Error {
                 // 
                 // observer
                 // 
-                if (typeof observationEntry.observer != "string" || !isValidName(observationEntry.observer)) {
+                if (!observerIsValid(observationEntry.observer)) {
                     errorMessages.push(`(observationEntry.observer: ${toRepresentation(observationEntry.observer)})\n\nAn observationEntry must have a "observer" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`)
                 }
 
@@ -174,7 +207,7 @@ export class InvalidFormatError extends Error {
                 // 
                 // label
                 // 
-                if (typeof observationEntry?.observation?.label != "string" || !isValidName(observationEntry.observation.label)) {
+                if (!labelIsValid(observationEntry?.observation?.label)) {
                     errorMessages.push(`(observationEntry.observation.label: ${toRepresentation(observationEntry.observation.label)})\n\nAn observationEntry must have a "observation": { "label":  }\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`)
                 }
                 
@@ -188,13 +221,13 @@ export class InvalidFormatError extends Error {
                 // 
                 // boolean fields
                 //
-                if (observationEntry.isHuman === true || observationEntry.isHuman === false) {
-                    errorMessages.push(`(observationEntry.isHuman: ${toRepresentation(observationEntry.isHuman)})\n\nAn observationEntry must have a "isHuman" property\n- it needs to be a boolean`)
+                if (observationEntry.isHuman !== true && observationEntry.isHuman !== false) {
+                    errorMessages.push(`(observationEntry.isHuman: ${toRepresentation(observationEntry.isHuman)})\n\nAn observationEntry must have a "isHuman" property\n- it needs to be a boolean\n${JSON.stringify(observationEntry)}`)
                 }
-                if (observationEntry.confirmedBySomeone == null ||observationEntry.confirmedBySomeone === true || observationEntry.confirmedBySomeone === false) {
-                    errorMessages.push(`(observationEntry.confirmedBySomeone: ${toRepresentation(observationEntry.confirmedBySomeone)})\n\nAn observationEntry must have a "confirmedBySomeone" property\n- it needs to be a boolean or null`)
+                if (observationEntry.confirmedBySomeone != null && observationEntry.confirmedBySomeone !== true && observationEntry.confirmedBySomeone !== false) {
+                    errorMessages.push(`(observationEntry.confirmedBySomeone: ${toRepresentation(observationEntry.confirmedBySomeone)})\n\nThe "confirmedBySomeone" property\n- needs to be a boolean or null`)
                 }
-                if (observationEntry.rejectedBySomeone == null || observationEntry.rejectedBySomeone === true || observationEntry.rejectedBySomeone === false) {
+                if (observationEntry.rejectedBySomeone != null && observationEntry.rejectedBySomeone !== true && observationEntry.rejectedBySomeone !== false) {
                     errorMessages.push(`(observationEntry.rejectedBySomeone: ${toRepresentation(observationEntry.rejectedBySomeone)})\n\nAn observationEntry must have a "rejectedBySomeone" property\n- it needs to be a boolean or null`)
                 }
             }

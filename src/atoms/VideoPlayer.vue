@@ -153,6 +153,7 @@ export default {
                         // hacky I know but the more obvious ways are not working (e.g. this.$refs.vuePlyr2.player)
                         // I'm also fighting interal-vue errors because vue2 is end-of-life and buggy
                         Object.defineProperty(window, "player", {
+                            configurable: true,
                             get:() => {
                                 if (window.resetPlayer) {
                                     return { currentTime: 0 }
@@ -161,12 +162,11 @@ export default {
                                 if (this.$refs.nativePlayer) {
                                     output = this.$refs.nativePlayer
                                 } else {
-                                    output = document.querySelector(".plyr").__vue__.player.media
+                                    output = document.querySelector(".plyr")?.__vue__?.player?.media
                                 }
                                 return output
                             }
                         })
-                        console.debug(`this.player is:`,this.player)
                         this.setupPlayer(this.player)
                         this.$emit("VideoPlayer-loaded", this.player)
                         resolve(this.player)
@@ -227,7 +227,7 @@ export default {
             console.debug(`eventObject is:`,eventObject)
             // only when focused on the nothing or this element
             // (this is to exclude textboxes)
-            if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get({ keyList: ["path"], from: eventObject, failValue: [] }).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
+            if (window.player instanceof Object && ["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get({ keyList: ["path"], from: eventObject, failValue: [] }).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
                 // 
                 // key controls
                 // 

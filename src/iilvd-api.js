@@ -601,7 +601,7 @@ const managers = {
             for (const [key, value] of Object.entries(observers)) {
                 value.videos = [...value.videos]
             }
-            return labels
+            return observers
         },
         async whenEditObservations({oldObservationEntries, newObservationEntries, existingValues}) {
             // NOTE: this isn't very efficient.
@@ -660,7 +660,7 @@ const managers = {
                 }
                 addEntry(observationEntry)
             }
-            return labels
+            return videos
         },
         async whenEditObservations({oldObservationEntries, newObservationEntries, existingValues}) {
             // NOTE: this isn't very efficient.
@@ -681,27 +681,26 @@ const managers = {
 
 const fakeBackend = {
     async setObservations(observationEntries, {withCoersion=false}={}) {
+        // observationEntries[0] = {
+        //     "createdAt": "1623456789.308420294042",
+        //     "type": "segment",
+        //     "videoId": "FLK5-00l0r4",
+        //     "startTime": 125.659,
+        //     "endTime": 127.661,
+        //     "observer": "CSCE636-Spring2021-WuAiSeDUdl-1",
+        //     "isHuman": true,
+        //     "observation": {
+        //         "label": "happy",
+        //         "labelConfidence": -0.99
+        //     },
+        //     "customInfo": {},
+        // }
+
         // 
         // synchonous changes before bulk set
         // 
         if (withCoersion) {
-            for (const observationEntry of observationEntries) {
-                // observationEntry = {
-                //     "createdAt": "1623456789.308420294042",
-                //     "type": "segment",
-                //     "videoId": "FLK5-00l0r4",
-                //     "startTime": 125.659,
-                //     "endTime": 127.661,
-                //     "observer": "CSCE636-Spring2021-WuAiSeDUdl-1",
-                //     "isHuman": true,
-                //     "observation": {
-                //         "label": "happy",
-                //         "labelConfidence": -0.99
-                //     },
-                //     "customInfo": {},
-                // }
-                observationEntry = observationTooling.coerceObservation(observationEntry)
-            }
+            observationEntries = observationEntries.map(observationTooling.coerceObservation)
         }
         // 
         // validate
@@ -730,7 +729,7 @@ const fakeBackend = {
         ])
     },
     setObservation(observationEntry, {withCoersion=false}={}) {
-        return fakeBackend.setObservations([observationEntries],{withCoersion})
+        return fakeBackend.setObservations([observationEntry],{withCoersion})
     },
     changeDb() {
         // done (do nothing)
@@ -957,15 +956,274 @@ module.exports = {
                 keyList: [videoId, "summary", "title"],
             })
         },
-        async getObservations({where=[], returnObject=false}) {
-            return (await backend).mongoInterface.getAll({
+        async getObservations({where=[], returnObject=false}={}) {
+            let results = await (await backend).mongoInterface.getAll({
                 from: 'observations',
                 where: [
                     { valueOf: ['type'], is:'segment' },
                     ...where,
                 ],
-                returnObject,
+                returnObject: true,
             })
+            console.log("reset meee")
+            // {
+            //     "0.3307717043956069": {
+            //         "type": "segment",
+            //         "observer": "p1",
+            //         "videoId": "/videos/demo.mp4",
+            //         "startTime": 0.813,
+            //         "endTime": 1.813,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "howdy",
+            //             "labelConfidence": 0.95
+            //         }
+            //     },
+            //     "0.5615513748064442": {
+            //         "type": "segment",
+            //         "observer": "p1",
+            //         "videoId": "/videos/demo.mp4",
+            //         "startTime": 0.476,
+            //         "endTime": 1.186,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "howdy",
+            //             "labelConfidence": 0.95
+            //         }
+            //     },
+            //     "0.11446907486080893": {
+            //         "type": "segment",
+            //         "observer": "p1",
+            //         "videoId": "/videos/demo.mp4",
+            //         "startTime": 1.204,
+            //         "endTime": 1.911,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "howdy-version2",
+            //             "labelConfidence": 0.95
+            //         }
+            //     },
+            //     "0.4031582846023173": {
+            //         "type": "segment",
+            //         "observer": "p1",
+            //         "videoId": "/videos/demo.mp4",
+            //         "startTime": 0.336,
+            //         "endTime": 1.336,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "howdy-testing",
+            //             "labelConfidence": 0.95
+            //         }
+            //     },
+            //     "0.018973744483224753": {
+            //         "type": "segment",
+            //         "observer": "p2",
+            //         "videoId": "/videos/demo.mp4",
+            //         "startTime": 0.785,
+            //         "endTime": 1.707,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "new-label",
+            //             "labelConfidence": 0.95
+            //         }
+            //     },
+            //     "0.1465596891418881": {
+            //         "type": "segment",
+            //         "observer": "p2",
+            //         "videoId": "/videos/demo.mp4",
+            //         "startTime": 0.731,
+            //         "endTime": 0.741,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "ta-da",
+            //             "labelConfidence": 0.95
+            //         }
+            //     },
+            //     "0.9602843337489538": {
+            //         "type": "segment",
+            //         "observer": "p2",
+            //         "videoId": "/videos/demo.mp4",
+            //         "startTime": 1.779,
+            //         "endTime": 2.039,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "ta-da",
+            //             "labelConfidence": 0.95
+            //         }
+            //     },
+            //     "0.9810197852822777": {
+            //         "type": "segment",
+            //         "observer": "p3",
+            //         "videoId": "/videos/demo.mp4",
+            //         "startTime": 1.618,
+            //         "endTime": 2.383,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "label-3",
+            //             "labelConfidence": 0.95
+            //         }
+            //     },
+            //     "0.9915320235602465": {
+            //         "type": "segment",
+            //         "observer": "p3",
+            //         "videoId": "/videos/demo.mp4",
+            //         "startTime": 1.431,
+            //         "endTime": 2.02,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "howdy",
+            //             "labelConfidence": 0.95
+            //         }
+            //     },
+            //     "null": {
+            //         "type": "segment",
+            //         "observer": "p1",
+            //         "videoId": "/videos/demo.mp4",
+            //         "startTime": 0,
+            //         "endTime": 0.663,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "another-label",
+            //             "labelConfidence": 0.95,
+            //             "spacialInfo": {}
+            //         },
+            //         "createdAt": "1718136271227.6968301759719835",
+            //         "customInfo": {}
+            //     }
+            // }
+            // console.log("JSON.stringify", JSON.stringify(results) == JSON.stringify({
+            //     "0.9238981860608155": {
+            //         "type": "segment",
+            //         "observer": "p1",
+            //         "videoId": "e2HzKY5imTE",
+            //         "startTime": 162.093,
+            //         "endTime": 165.928,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "howdy",
+            //             "labelConfidence": 0.95
+            //         }
+            //     },
+            //     "0.3307717043956069": {
+            //         "type": "segment",
+            //         "observer": "p1",
+            //         "videoId": "/videos/demo.mp4",
+            //         "startTime": 0.813,
+            //         "endTime": 1.813,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "howdy",
+            //             "labelConfidence": 0.95
+            //         }
+            //     },
+            //     "0.5615513748064442": {
+            //         "type": "segment",
+            //         "observer": "p1",
+            //         "videoId": "/videos/demo.mp4",
+            //         "startTime": 0.476,
+            //         "endTime": 1.186,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "howdy",
+            //             "labelConfidence": 0.95
+            //         }
+            //     },
+            //     "0.0204040255937199": {
+            //         "type": "segment",
+            //         "observer": "p1",
+            //         "videoId": "e2HzKY5imTE",
+            //         "startTime": 1592.748,
+            //         "endTime": 1600.468,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "howdy",
+            //             "labelConfidence": 0.95
+            //         }
+            //     },
+            //     "0.41703294157747894": {
+            //         "type": "segment",
+            //         "observer": "p1",
+            //         "videoId": "e2HzKY5imTE",
+            //         "startTime": 1062.545,
+            //         "endTime": 1068.471,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "howdy",
+            //             "labelConfidence": 0.95
+            //         }
+            //     },
+            //     "0.6245011281678999": {
+            //         "type": "segment",
+            //         "observer": "p1",
+            //         "videoId": "e2HzKY5imTE",
+            //         "startTime": 390.828,
+            //         "endTime": 405.079,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "howdy",
+            //             "labelConfidence": 0.95
+            //         }
+            //     },
+            //     "0.9915320235602465": {
+            //         "type": "segment",
+            //         "observer": "p3",
+            //         "videoId": "/videos/demo.mp4",
+            //         "startTime": 1.431,
+            //         "endTime": 2.02,
+            //         "isHuman": true,
+            //         "confirmedBySomeone": false,
+            //         "rejectedBySomeone": false,
+            //         "observation": {
+            //             "label": "howdy",
+            //             "labelConfidence": 0.95
+            //         }
+            //     }
+            // }))
+            
+            // let count = 10
+            // for (const [key, value] of Object.entries(results)) {
+            //     if (value.startTime == 1.431 || count>0&&value.videoId == "/videos/demo.mp4") {
+            //         count--
+            //         console.debug(`value is:`,value)
+            //         delete results[key]
+            //     }
+            // }
+            // console.debug(`count is:`,count)
+            
+            // return returnObject ? {} : []
+            return returnObject ? results : Object.values(results)
         },
         async deleteObservation({uuidOfSelectedSegment}) {
             return (await backend).mongoInterface.delete({

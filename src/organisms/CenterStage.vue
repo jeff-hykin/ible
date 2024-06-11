@@ -165,7 +165,7 @@ export default {
         incrementIndex() {
             let segment = this.$root.selectedSegment
             if (!segment) {
-                segment = this.closestSegment({time: window.player.currentTime, forward: true})
+                segment = this.closestSegment({time: window.player?.currentTime, forward: true})
             }
             if (segment) {
                 this.jumpSegment(segment.$displayIndex+1)
@@ -174,7 +174,7 @@ export default {
         decrementIndex() {
             let segment = this.$root.selectedSegment
             if (!segment) {
-                segment = this.closestSegment({time: window.player.currentTime, forward: false})
+                segment = this.closestSegment({time: window.player?.currentTime, forward: false})
             }
             if (segment) {
                 this.jumpSegment(segment.$displayIndex-1)

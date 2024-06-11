@@ -146,6 +146,8 @@
                             | Confirmed By ≥1 Human
                         UiSwitch(:disabled="!editing" v-model="observationData.rejectedBySomeone" v-if="!observationData.isHuman")
                             | Rejected By ≥1 Human
+                            
+                        div(style="margin-top: 2rem")
                         ui-textbox(
                             :disabled="true"
                             floating-label
@@ -153,6 +155,7 @@
                             v-model="humanTime"
                         )
                         ui-textbox(
+                            style="margin-top: -1rem"
                             :disabled="true"
                             floating-label
                             label="Id"
@@ -162,10 +165,12 @@
 </template>
 
 <script>
-import { toKebabCase } from '../string.js'
+import { toKebabCase, toRepresentation } from '../string.js'
 import * as observationTooling from '../observation_tooling.js'
 let { backend, backendHelpers, fakeBackend } = require('../iilvd-api.js')
 let { getColor, currentFixedSizeOfYouTubeVideoId, isValidName, storageObject } = require("../utils")
+
+window.backendHelpers =backendHelpers
 
 export default {
     props: [
@@ -176,41 +181,37 @@ export default {
     components: {
         UiSwitch: require("../atoms/UiSwitch").default,
     },
-    data: ()=>({
-        observationData: {
-            createdAt: observationTooling.createUuid(),
-            videoId: null,
-            startTime: 0,
-            endTime: 0,
-            observer: "",
-            label: "",
-            labelConfidence: 0.99,
-            isHuman: true,
-            confirmedBySomeone: false,
-            rejectedBySomeone: false,
-            customInfo: {},
-            spacialInfo: {},
-        },
-        uuidOfSelectedSegment: null,
-        dataCopy: null,
-        editing: false,
-        dontShow: true,
-    }),
-    computed: {
-        
+    data() {
+        const defaultObservationData = this.observationEntryToData(
+            observationTooling.createDefaultObservationEntry()
+        )
+        return {
+            observationData: defaultObservationData,
+            dataCopy: null,
+            editing: false,
+            dontShow: true,
+        }
     },
     mounted() {
         window.Editor = this // debugging
         this.resetData()
     },
     computed: {
+        uuidOfSelectedSegment: {
+            get() {
+                return this.$root.selectedSegment?.$uuid||this.observationData.createdAt
+            },
+            set(value) {
+                this.observationData.createdAt = value
+            }
+        },
         humanTime() {
-            return (new Date(this.observationData.createdAt)).toString()
+            return (new Date(this.observationData.createdAt-0)).toString()
         },
         // TODO: check this before submitting to backend
         allValid() {
             // not("some of them are invalid")
-            return !Object.values(this.valid).some(value=>!value)
+            return !Object.values(this.isValid).some(value=>!value)
         },
         isValid() {
             return observationTooling.quickLocalValidationCheck({
@@ -223,8 +224,6 @@ export default {
         watch: {
             "routeData$.videoId": function() {
                 if (this.editing) {
-                    this.dataCopy = {}
-                    this.editing = false
                     this.resetData()
                 }
             },
@@ -233,21 +232,8 @@ export default {
                 let selectedSegment = this.$root.selectedSegment
                 console.debug(`selectedSegment is:`,selectedSegment)
                 if (selectedSegment instanceof Object) {
-                    this.uuidOfSelectedSegment = selectedSegment.$uuid
-                    this.observationData = {
-                        createdAt: selectedSegment.createdAt,
-                        videoId:   selectedSegment.videoId,
-                        startTime: selectedSegment.startTime,
-                        endTime:   selectedSegment.endTime,
-                        observer:  selectedSegment.observer,
-                        isHuman:   selectedSegment.isHuman,
-                        confirmedBySomeone: selectedSegment.confirmedBySomeone,
-                        rejectedBySomeone: selectedSegment.rejectedBySomeone,
-                        label:           (selectedSegment.observation||{}).label,
-                        labelConfidence: (selectedSegment.observation||{}).labelConfidence,
-                        customInfo:      selectedSegment.customInfo,
-                        spacialInfo: (selectedSegment.observation||{}).spacialInfo||{},
-                    }
+                    this.observationData = this.observationEntryToData(selectedSegment)
+                    // this.uuidOfSelectedSegment = selectedSegment.$uuid||this.uuidOfSelectedSegment
                 }
             },
             selectedVideo() {
@@ -301,12 +287,7 @@ export default {
         },
         async onNewObservation() {
             if (!this.editing) {
-                this.dataCopy = {}
                 this.resetData()
-                this.observationData.startTime = (window.player?.currentTime||0).toFixed(3)
-                this.observationData.endTime = ((window.player?.currentTime||0)+0.01).toFixed(3)
-                this.observationData.label = storageObject.recentLabel || this.$root?.routeData$?.labelName || "example-label"
-                this.uuidOfSelectedSegment = observationTooling.createUuid()
                 this.onEditObservation()
             }
         },
@@ -324,49 +305,43 @@ export default {
         },
         async onSaveEdit() {
             console.log(`onSaveEdit`)
-            if (typeof this.observationData.observer == "string" && this.observationData.observer.length > 0) {
-                storageObject.observer = this.observationData.observer
-            }
-            if (typeof this.observationData.label == "string" && this.observationData.label.length > 0) {
-                storageObject.recentLabel = this.observationData.label
-            }
+            
+            if (observationTooling.observerIsValid(this.observationData.observer)) {    storageObject.observer    = this.observationData.observer }
+            if (observationTooling.labelIsValid(this.observationData.label)      ) {    storageObject.recentLabel = this.observationData.label    }
+            
             if (!this.allValid) {
-                this.$toasted.show(`Some fields are invalid (should be marked red)`).goAway(2500)
+                this.$toasted.show(`Some fields are invalid`).goAway(2500)
+                return
             }
             
-            // convert to numbers 
-            this.observationData.startTime -= 0
-            this.observationData.endTime -= 0
+            const observationEntry = observationTooling.coerceObservation(
+                this.observationDataToEntry(this.observationData)
+            )
+            // round trip to adopt any coersions
+            this.observationData = this.observationEntryToData(observationEntry)
             
-            let observationEntry = {
-                createdAt: this.observationData.createdAt,
-                type: "segment",
-                videoId:            this.observationData.videoId,
-                startTime:          this.observationData.startTime,
-                endTime:            this.observationData.endTime,
-                observer:           this.observationData.observer,
-                isHuman:            this.observationData.isHuman,
-                confirmedBySomeone: this.observationData.confirmedBySomeone,
-                rejectedBySomeone:  this.observationData.rejectedBySomeone,
-                observation: {
-                    label:           this.observationData.label,
-                    labelConfidence: this.observationData.labelConfidence,
-                    spacialInfo:     this.observationData.spacialInfo,
-                },
-                customInfo: this.observationData.customInfo,
-            }
             // 
-            // save on storageObject
+            // update external things
             // 
-            this.$root.addLabel(observationEntry.observation.label)
+            this.$root.addLabel(observationEntry.observation.label, observationEntry.videoId)
             const observationsForVideo = storageObject[this.observationData.videoId]||{}
             observationsForVideo[this.uuidOfSelectedSegment] = observationEntry
             storageObject[this.observationData.videoId] = observationsForVideo
             
+            // 
+            // send to backend
+            // 
+            let thereWasAnError = false
             try {
-                await backendHelpers.setObservation({uuidOfSelectedSegment, observation: observationEntry})
-                await fakeBackend.setObservation(observationEntry, {withCoersion:true})
+                await backendHelpers.setObservation({uuidOfSelectedSegment: this.uuidOfSelectedSegment, observation: observationEntry})
+                try {
+                    await fakeBackend.setObservation(observationEntry, {withCoersion:true})
+                } catch (error) {
+                    this.$toasted.show(`There was an error, look at console`).goAway(5500)
+                    console.error(error.toString())
+                }
             } catch (error) {
+                thereWasAnError = true
                 this.$toasted.show(`There was an error on the database`).goAway(5500)
                 console.error("# ")
                 console.error("# BACKEND ERROR")
@@ -381,22 +356,27 @@ export default {
                 this.$toasted.show(`(Full error log in the console)`).goAway(6500)
                 // throw error
             }
-            this.editing = false
-            this.$toasted.show(`Changes saved`).goAway(2500)
-            // create label if it doesn't exist
-            this.$root.addLabel(this.observationData.label, observationEntry.videoId)
-            this.$root.selectedSegment = observationEntry
             
-            // tell segments they need to get the data from the backend again
-            window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
-            
-            this.$root.retrieveLabels()
+            // 
+            // on success
+            // 
+            if (!thereWasAnError) {
+                this.editing = false
+                this.$toasted.show(`Changes saved`).goAway(2500)
+                this.$root.selectedSegment = observationEntry
+                this.$root.retrieveLabels()
+                
+                window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
+            }
         },
         async onDelete() {
+            console.log(`onDelete called`)
             this.editing = false
             let index = this.$root.selectedSegment.$displayIndex
+            console.debug(`this.uuidOfSelectedSegment is:`,this.uuidOfSelectedSegment)
             if (this.uuidOfSelectedSegment) {
-                backendHelpers.deleteObservation({uuidOfSelectedSegment: this.uuidOfSelectedSegment})
+                await backendHelpers.deleteObservation({uuidOfSelectedSegment: this.uuidOfSelectedSegment})
+                await fakeBackend.deleteObservation({uuidOfSelectedSegment: this.uuidOfSelectedSegment})
                 this.$root.selectedVideo.keySegments = [...this.$root.selectedVideo.keySegments].filter(each=>each.$uuid != this.uuidOfSelectedSegment)
                 this.resetData()
                 window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
@@ -407,19 +387,12 @@ export default {
             this.jumpSegment(index+1)
         },
         resetData() {
-            this.$root.selectedSegment = null
-            this.observationData = {
-                createdAt: observationTooling.createUuid(),
-                videoId: (this.$root.selectedVideo)&&this.$root.selectedVideo.$id,
-                startTime: (window.player?.currentTime||0) || 0,
-                endTime: (window.player?.currentTime||0) || window.player.duration || 0,
-                observer: window.storageObject.observer || "",
-                label: this.$root?.routeData$?.labelName||"",
-                labelConfidence: 0.95,
-                confirmedBySomeone: false,
-                rejectedBySomeone:  false,
-                isHuman: true,
-            }
+            this.editing = false
+            this.dataCopy = {}
+            this.observationData = this.observationEntryToData(
+                observationTooling.createDefaultObservationEntry()
+            )
+            this.observationData.videoId = this.$root.selectedVideo?.$id
         },
         setStartToCurrentTime() {
             this.observationData.startTime = (window.player?.currentTime||0).toFixed(3)
@@ -427,6 +400,42 @@ export default {
         setEndToCurrentTime() {
             this.observationData.endTime = (window.player?.currentTime||0).toFixed(3)
         },
+        observationDataToEntry(observationData) {
+            return observationTooling.coerceObservation({
+                createdAt: observationData.createdAt,
+                type: "segment",
+                videoId:            observationData.videoId,
+                startTime:          observationData.startTime,
+                endTime:            observationData.endTime,
+                observer:           observationData.observer,
+                isHuman:            observationData.isHuman,
+                confirmedBySomeone: observationData.confirmedBySomeone,
+                rejectedBySomeone:  observationData.rejectedBySomeone,
+                observation: {
+                    label:           observationData.label,
+                    labelConfidence: observationData.labelConfidence,
+                    spacialInfo:     observationData.spacialInfo,
+                },
+                customInfo: observationData.customInfo,
+            })
+        },
+        observationEntryToData(observationEntry) {
+            observationEntry = observationTooling.coerceObservation(observationEntry)
+            return {
+                createdAt:          observationEntry.createdAt,
+                videoId:            observationEntry.videoId,
+                startTime:          observationEntry.startTime,
+                endTime:            observationEntry.endTime,
+                observer:           observationEntry.observer,
+                isHuman:            observationEntry.isHuman,
+                confirmedBySomeone: observationEntry.confirmedBySomeone,
+                rejectedBySomeone:  observationEntry.rejectedBySomeone,
+                customInfo:         observationEntry.customInfo,
+                label:                  observationEntry.observation?.label,
+                labelConfidence:        observationEntry.observation?.labelConfidence,
+                spacialInfo:            observationEntry.observation?.spacialInfo||{},
+            }
+        }
     },
 }
 </script>
