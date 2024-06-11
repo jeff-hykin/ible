@@ -219,6 +219,14 @@ async function asyncIteratorToList(asyncIterator) {
     return results
 }
 
+const quickHash = (str)=>{
+    let hash = 0, i = 0, len = str.length;
+    while ( i < len ) {
+        hash  = ((hash << 5) - hash + str.charCodeAt(i++)) << 0
+    }
+    return hash
+}
+
 const checkIf = ({ value, is }) => {
     let typeOrClass = is 
     // 
@@ -398,6 +406,7 @@ module.exports = {
     deferredPromise,
     asyncIteratorToList,
     checkIf,
+    quickHash,
     wrapIndex(val, list) {
         if (val < 0) {
             val = list.length + val
