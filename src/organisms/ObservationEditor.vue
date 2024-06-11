@@ -199,7 +199,7 @@ export default {
     computed: {
         uuidOfSelectedSegment: {
             get() {
-                return this.$root.selectedSegment?.$uuid||this.observationData.createdAt
+                return this.observationData.createdAt
             },
             set(value) {
                 this.observationData.createdAt = value
@@ -233,7 +233,6 @@ export default {
                 console.debug(`selectedSegment is:`,selectedSegment)
                 if (selectedSegment instanceof Object) {
                     this.observationData = this.observationEntryToData(selectedSegment)
-                    // this.uuidOfSelectedSegment = selectedSegment.$uuid||this.uuidOfSelectedSegment
                 }
             },
             selectedVideo() {
