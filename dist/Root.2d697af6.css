@@ -55,6 +55,7 @@
     --blue: #60a5de;
     --red: #e57373;
     --break-tag-height: 18px;
+    --gray: #a8a8a8;
 }
 #vue-root {
     overflow: hidden;
@@ -5426,6 +5427,13 @@ div[data-fjio3y598t3hi2] .add-container .add-button {
   transition: all ease 0.3s;
 }
 div[data-fjio3y598t3hi2] .observation-widget {
+  padding: 1.7rem 2.4rem;
+  padding-top: 0.5rem;
+  position: relative;
+  background: white;
+  width: 20rem;
+  border-radius: 1rem;
+  box-shadow: var(--shadow-1);
   transition: all ease 0.3s;
   --button-color: darkgray;
 }
@@ -5473,14 +5481,6 @@ div[data-fjio3y598t3hi2] .observation-widget .delete-button {
   --button-color: var(--red);
   flex-basis: 45%;
 }
-div[data-fjio3y598t3hi2] .observation-widget {
-  padding: 1.7rem 2.4rem;
-  position: relative;
-  background: white;
-  width: 20rem;
-  border-radius: 1rem;
-  box-shadow: var(--shadow-1);
-}
 div[data-fjio3y598t3hi2] .observation-widget .start-time-wrapper, div[data-fjio3y598t3hi2] .observation-widget .end-time-wrapper {
   width: 100%;
   position: relative;
@@ -5516,6 +5516,20 @@ div[data-fjio3y598t3hi2] .add-observation-area:hover .upload-observations-button
 }
 div[data-fjio3y598t3hi2] .add-observation-area .new-observation-button, div[data-fjio3y598t3hi2] .add-observation-area .upload-observations-button {
   margin-right: 1rem;
+}
+div[data-fjio3y598t3hi2] .quick-fade-enter-active, div[data-fjio3y598t3hi2] .quick-fade-leave-active {
+  transition: all 0.7s;
+}
+div[data-fjio3y598t3hi2] .quick-fade-enter, div[data-fjio3y598t3hi2] .quick-fade-leave-to {
+  opacity: 0;
+}
+
+.json-tree {
+  min-width: 100%;
+  max-width: 100%;
+}
+.json-tree .json-tree-sign {
+  visibility: hidden;
 }.segments {
   width: 100%;
   align-items: flex-start;

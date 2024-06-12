@@ -8542,36 +8542,7 @@ if (inBrowser) {
 
 var _default = Vue;
 exports.default = _default;
-},{}],"src/plugins/child.js":[function(require,module,exports) {
-// api
-//     $child(...args)
-let Vue = require("vue").default;
-
-Object.defineProperty(Vue.prototype, "$child", {
-  get() {
-    return (firstRef, ...args) => new Promise((resolve, reject) => {
-      let checker;
-
-      checker = () => {
-        let ref = this.$refs[firstRef]; // base case
-
-        if (ref && args.length === 0) {
-          resolve(ref); // recursive child case
-        } else if (ref) {
-          ref.$child(...args).then(resolve); // recursive wait case
-        } else {
-          this.$nextTick(() => {
-            setTimeout(checker, 500);
-          });
-        }
-      };
-
-      checker();
-    });
-  }
-
-});
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
+},{}],"node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
 var bundleURL = null;
 
 function getBundleURLCached() {
@@ -8648,508 +8619,7 @@ module.exports = reloadCSS;
 "use strict";
 
 require("css-baseline/css/3.css");
-},{"css-baseline/css/3.css":"node_modules/css-baseline/css/3.css"}],"node_modules/good-vue/dist/index.js":[function(require,module,exports) {
-/*!
- * good-vue v1.3.1
- * (c) 
- * Released under the ISC License.
- */
-'use strict';
-
-const component = {
-  props: {
-    'wrap': {
-      type: [String, Boolean],
-      validator: value => [true, false, 'reverse'].includes(value)
-    },
-    'shadow': {
-      type: [Number, String]
-    }
-  },
-  computed: {
-    flexWrapStyle() {
-      let wrap = this.$props.wrap || this.$attrs["flex-wrap"];
-      let value = wrap;
-
-      if (wrap == true) {
-        value = 'wrap';
-      } else if (wrap == 'reverse') {
-        value = 'wrap-reverse';
-      } else if (wrap == false) {
-        value = 'nowrap';
-      }
-
-      return value != null && {
-        'flex-wrap': value
-      };
-    },
-
-    shadowStyle() {
-      let shadow = this.$props.shadow || this.$attrs["box-shadow"];
-      let value = shadow;
-
-      if (shadow == 0) {
-        value = 'none';
-      } else if (shadow == 1) {
-        value = '0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2)';
-      } else if (shadow == 2) {
-        value = '0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3)';
-      } else if (shadow == 3) {
-        value = '0 8px 17px 2px rgba(0,0,0,0.14), 0 3px 14px 2px rgba(0,0,0,0.12), 0 5px 5px -3px rgba(0,0,0,0.2)';
-      } else if (shadow == 4) {
-        value = '0 16px 24px 2px rgba(0,0,0,0.14), 0 6px 30px 5px rgba(0,0,0,0.12), 0 8px 10px -7px rgba(0,0,0,0.2)';
-      } else if (shadow == 5) {
-        value = '0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.2)';
-      }
-
-      return shadow && {
-        'box-shadow': value,
-        '-webkit-box-shadow': value
-      };
-    }
-
-  }
-};
-
-//
-var script = {
-  props: { ...component.props,
-    'align-h': {
-      type: String,
-      validator: value => ['left', 'right', 'center', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
-    },
-    'align-v': {
-      type: String,
-      validator: value => ['top', 'bottom', 'center', 'space-around', 'space-between', 'space-evenly', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
-    }
-  },
-  computed: { ...component.computed,
-
-    justifyContentStyle() {
-      let arrangement = this.$props.alignV || this.$attrs["justify-content"];
-      let value = arrangement;
-
-      if (arrangement == 'top') {
-        value = 'flex-start';
-      } else if (arrangement == 'bottom') {
-        value = 'flex-end';
-      }
-
-      return value != null && {
-        'justify-content': value
-      };
-    },
-
-    alignItemsStyle() {
-      let alignment = this.$props.alignH || this.$attrs["align-items"];
-      let value = alignment;
-      let additionalValues = {};
-
-      if (alignment == 'left') {
-        value = 'flex-start';
-        additionalValues = {
-          'text-align': 'left'
-        };
-      } else if (alignment == 'right') {
-        value = 'flex-end';
-        additionalValues = {
-          'text-align': 'right'
-        };
-      }
-
-      return value != null && {
-        'align-items': value,
-        ...additionalValues
-      };
-    }
-
-  }
-};
-
-function normalizeComponent(template, style, script, scopeId, isFunctionalTemplate, moduleIdentifier
-/* server only */
-, shadowMode, createInjector, createInjectorSSR, createInjectorShadow) {
-  if (typeof shadowMode !== 'boolean') {
-    createInjectorSSR = createInjector;
-    createInjector = shadowMode;
-    shadowMode = false;
-  } // Vue.extend constructor export interop.
-
-
-  var options = typeof script === 'function' ? script.options : script; // render functions
-
-  if (template && template.render) {
-    options.render = template.render;
-    options.staticRenderFns = template.staticRenderFns;
-    options._compiled = true; // functional template
-
-    if (isFunctionalTemplate) {
-      options.functional = true;
-    }
-  } // scopedId
-
-
-  if (scopeId) {
-    options._scopeId = scopeId;
-  }
-
-  var hook;
-
-  if (moduleIdentifier) {
-    // server build
-    hook = function hook(context) {
-      // 2.3 injection
-      context = context || // cached call
-      this.$vnode && this.$vnode.ssrContext || // stateful
-      this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext; // functional
-      // 2.2 with runInNewContext: true
-
-      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
-        context = __VUE_SSR_CONTEXT__;
-      } // inject component styles
-
-
-      if (style) {
-        style.call(this, createInjectorSSR(context));
-      } // register component module identifier for async chunk inference
-
-
-      if (context && context._registeredComponents) {
-        context._registeredComponents.add(moduleIdentifier);
-      }
-    }; // used by ssr in case component is cached and beforeCreate
-    // never gets called
-
-
-    options._ssrRegister = hook;
-  } else if (style) {
-    hook = shadowMode ? function () {
-      style.call(this, createInjectorShadow(this.$root.$options.shadowRoot));
-    } : function (context) {
-      style.call(this, createInjector(context));
-    };
-  }
-
-  if (hook) {
-    if (options.functional) {
-      // register for functional component in vue file
-      var originalRender = options.render;
-
-      options.render = function renderWithStyleInjection(h, context) {
-        hook.call(context);
-        return originalRender(h, context);
-      };
-    } else {
-      // inject component registration as beforeCreate hook
-      var existing = options.beforeCreate;
-      options.beforeCreate = existing ? [].concat(existing, hook) : [hook];
-    }
-  }
-
-  return script;
-}
-
-var normalizeComponent_1 = normalizeComponent;
-
-var isOldIE = typeof navigator !== 'undefined' && /msie [6-9]\\b/.test(navigator.userAgent.toLowerCase());
-function createInjector(context) {
-  return function (id, style) {
-    return addStyle(id, style);
-  };
-}
-var HEAD;
-var styles = {};
-
-function addStyle(id, css) {
-  var group = isOldIE ? css.media || 'default' : id;
-  var style = styles[group] || (styles[group] = {
-    ids: new Set(),
-    styles: []
-  });
-
-  if (!style.ids.has(id)) {
-    style.ids.add(id);
-    var code = css.source;
-
-    if (css.map) {
-      // https://developer.chrome.com/devtools/docs/javascript-debugging
-      // this makes source maps inside style tags work properly in Chrome
-      code += '\n/*# sourceURL=' + css.map.sources[0] + ' */'; // http://stackoverflow.com/a/26603875
-
-      code += '\n/*# sourceMappingURL=data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(css.map)))) + ' */';
-    }
-
-    if (!style.element) {
-      style.element = document.createElement('style');
-      style.element.type = 'text/css';
-      if (css.media) style.element.setAttribute('media', css.media);
-
-      if (HEAD === undefined) {
-        HEAD = document.head || document.getElementsByTagName('head')[0];
-      }
-
-      HEAD.appendChild(style.element);
-    }
-
-    if ('styleSheet' in style.element) {
-      style.styles.push(code);
-      style.element.styleSheet.cssText = style.styles.filter(Boolean).join('\n');
-    } else {
-      var index = style.ids.size - 1;
-      var textNode = document.createTextNode(code);
-      var nodes = style.element.childNodes;
-      if (nodes[index]) style.element.removeChild(nodes[index]);
-      if (nodes.length) style.element.insertBefore(textNode, nodes[index]);else style.element.appendChild(textNode);
-    }
-  }
-}
-
-var browser = createInjector;
-
-/* script */
-const __vue_script__ = script;
-/* template */
-
-var __vue_render__ = function () {
-  var _vm = this;
-
-  var _h = _vm.$createElement;
-
-  var _c = _vm._self._c || _h;
-
-  return _c('div', _vm._g({
-    staticClass: "good-column",
-    style: Object.assign({}, _vm.$attrs, _vm.justifyContentStyle, _vm.alignItemsStyle, _vm.flexWrapStyle, _vm.shadowStyle),
-    attrs: {
-      "unique-add1e7fe": ""
-    }
-  }, this.$listeners), [_vm._t("default")], 2);
-};
-
-var __vue_staticRenderFns__ = [];
-/* style */
-
-const __vue_inject_styles__ = function (inject) {
-  if (!inject) return;
-  inject("data-v-46e06dd6_0", {
-    source: ".good-column[unique-add1e7fe]{flex-direction:column}[unique-add1e7fe]{display:flex;flex-direction:column;align-items:center;justify-content:center;flex-wrap:nowrap;margin:0}",
-    map: undefined,
-    media: undefined
-  });
-};
-/* scoped */
-
-
-const __vue_scope_id__ = undefined;
-/* module identifier */
-
-const __vue_module_identifier__ = undefined;
-/* functional template */
-
-const __vue_is_functional_template__ = false;
-/* style inject SSR */
-
-var Column = normalizeComponent_1({
-  render: __vue_render__,
-  staticRenderFns: __vue_staticRenderFns__
-}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, browser, undefined);
-
-//
-var script$1 = {
-  props: { ...component.props,
-    'align-v': {
-      type: String,
-      validator: value => ['top', 'bottom', 'center', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
-    },
-    'align-h': {
-      type: String,
-      validator: value => ['left', 'right', 'center', 'space-around', 'space-between', 'space-evenly', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
-    }
-  },
-  computed: { ...component.computed,
-
-    justifyContentStyle() {
-      let arrangement = this.$props.alignH || this.$attrs["justify-content"];
-      let value = arrangement;
-      let additionalValues = {};
-
-      if (arrangement == 'left') {
-        value = 'flex-start';
-        additionalValues = {
-          'text-align': 'left'
-        };
-      } else if (arrangement == 'right') {
-        value = 'flex-end';
-        additionalValues = {
-          'text-align': 'right'
-        };
-      }
-
-      return value != null && {
-        'justify-content': value,
-        ...additionalValues
-      };
-    },
-
-    alignItemsStyle() {
-      let alignment = this.$props.alignV || this.$attrs["align-items"];
-      let value = alignment;
-
-      if (alignment == 'top') {
-        value = 'flex-start';
-      } else if (alignment == 'bottom') {
-        value = 'flex-end';
-      }
-
-      return value != null && {
-        'align-items': value
-      };
-    }
-
-  }
-};
-
-/* script */
-const __vue_script__$1 = script$1;
-/* template */
-
-var __vue_render__$1 = function () {
-  var _vm = this;
-
-  var _h = _vm.$createElement;
-
-  var _c = _vm._self._c || _h;
-
-  return _c('div', _vm._g({
-    staticClass: "good-row",
-    style: Object.assign({}, _vm.$attrs, _vm.justifyContentStyle, _vm.alignItemsStyle, _vm.flexWrapStyle, _vm.shadowStyle),
-    attrs: {
-      "unique-add1e7fa": ""
-    }
-  }, this.$listeners), [_vm._t("default")], 2);
-};
-
-var __vue_staticRenderFns__$1 = [];
-/* style */
-
-const __vue_inject_styles__$1 = function (inject) {
-  if (!inject) return;
-  inject("data-v-7148b7bc_0", {
-    source: ".good-row[unique-add1e7fa]{flex-direction:row}[unique-add1e7fa]{display:flex;flex-direction:row;justify-content:center;align-items:center;flex-wrap:nowrap;margin:0}",
-    map: undefined,
-    media: undefined
-  });
-};
-/* scoped */
-
-
-const __vue_scope_id__$1 = undefined;
-/* module identifier */
-
-const __vue_module_identifier__$1 = undefined;
-/* functional template */
-
-const __vue_is_functional_template__$1 = false;
-/* style inject SSR */
-
-var Row = normalizeComponent_1({
-  render: __vue_render__$1,
-  staticRenderFns: __vue_staticRenderFns__$1
-}, __vue_inject_styles__$1, __vue_script__$1, __vue_scope_id__$1, __vue_is_functional_template__$1, __vue_module_identifier__$1, browser, undefined);
-
-//
-var script$2 = {
-  props: { ...component.props
-  },
-  computed: { ...component.computed
-  }
-};
-
-/* script */
-const __vue_script__$2 = script$2;
-/* template */
-
-var __vue_render__$2 = function () {
-  var _vm = this;
-
-  var _h = _vm.$createElement;
-
-  var _c = _vm._self._c || _h;
-
-  return _c('div', _vm._g({
-    staticClass: "good-container",
-    style: Object.assign({}, _vm.shadowStyle, _vm.$attrs),
-    attrs: {
-      "unique-a23421e7a": ""
-    }
-  }, this.$listeners), [_vm._t("default")], 2);
-};
-
-var __vue_staticRenderFns__$2 = [];
-/* style */
-
-const __vue_inject_styles__$2 = function (inject) {
-  if (!inject) return;
-  inject("data-v-1d9d60fa_0", {
-    source: ".good-container[unique-a23421e7a]{flex-direction:column}[unique-a23421e7a]{display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;flex-wrap:nowrap;margin:0}",
-    map: undefined,
-    media: undefined
-  });
-};
-/* scoped */
-
-
-const __vue_scope_id__$2 = undefined;
-/* module identifier */
-
-const __vue_module_identifier__$2 = undefined;
-/* functional template */
-
-const __vue_is_functional_template__$2 = false;
-/* style inject SSR */
-
-var Container = normalizeComponent_1({
-  render: __vue_render__$2,
-  staticRenderFns: __vue_staticRenderFns__$2
-}, __vue_inject_styles__$2, __vue_script__$2, __vue_scope_id__$2, __vue_is_functional_template__$2, __vue_module_identifier__$2, browser, undefined);
-
-let globalData;
-let setupGlobalData = (Vue, data) => {
-  globalData = data; // connect the data to every child component
-
-  Vue.mixin({
-    data: () => ({
-      $global: globalData
-    })
-  });
-};
-
-var index = {
-  setupGlobalData,
-
-  install(Vue, options) {
-    // Let's register our component globally
-    // https://vuejs.org/v2/guide/components-registration.html
-    Vue.component("column", Column);
-    Vue.component("row", Row);
-    Vue.component("container", Container);
-  }
-
-};
-
-module.exports = index;
-
-},{}],"src/plugins/good-vue-plugin.js":[function(require,module,exports) {
-"use strict";
-
-var _vue = _interopRequireDefault(require("vue"));
-
-var _goodVue = _interopRequireDefault(require("good-vue"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-_vue.default.use(_goodVue.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","good-vue":"node_modules/good-vue/dist/index.js"}],"node_modules/keen-ui/dist/keen-ui.js":[function(require,module,exports) {
+},{"css-baseline/css/3.css":"node_modules/css-baseline/css/3.css"}],"node_modules/keen-ui/dist/keen-ui.js":[function(require,module,exports) {
 var define;
 var global = arguments[3];
 /*!
@@ -29348,7 +28818,49 @@ var _vueToasted = _interopRequireDefault(require("vue-toasted"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_vueToasted.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-toasted":"node_modules/vue-toasted/dist/vue-toasted.min.js"}],"src/plugins/window-listeners-plugin.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-toasted":"node_modules/vue-toasted/dist/vue-toasted.min.js"}],"src/plugins/without-watchers.js":[function(require,module,exports) {
+// api
+//     this.withoutWatchers(source, callback)
+let Vue = require("vue").default; // TODO: potenial issue if a second source calls this before the first one ends (async)
+// TODO: issues with dynamically added watchers
+
+
+Vue.mixin(module.exports = {
+  methods: {
+    $withoutWatchers(source, callback) {
+      const watchers = this._watchers.map(watcher => ({
+        cb: watcher.cb,
+        sync: watcher.sync
+      })); // disable
+
+
+      for (let index in this._watchers) {
+        this._watchers[index] = Object.assign(this._watchers[index], {
+          cb: () => null,
+          sync: true
+        });
+      }
+
+      if (this.$withoutWatchers.showSource) {
+        console.group(`[${source}] suspended all watch functions`);
+      }
+
+      callback();
+
+      if (this.$withoutWatchers.showSource) {
+        console.groupEnd();
+        console.log(`[${source}] resumed all watch functions`);
+      } // enable
+
+
+      for (let index in this._watchers) {
+        this._watchers[index] = Object.assign(this._watchers[index], watchers[index]);
+      }
+    }
+
+  }
+});
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/window-listeners-plugin.js":[function(require,module,exports) {
 // api
 //     windowListeners:{}
 let Vue = require("vue").default;
@@ -29406,48 +28918,6 @@ Vue.mixin(module.exports = {
     }
   }
 
-});
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/without-watchers.js":[function(require,module,exports) {
-// api
-//     this.withoutWatchers(source, callback)
-let Vue = require("vue").default; // TODO: potenial issue if a second source calls this before the first one ends (async)
-// TODO: issues with dynamically added watchers
-
-
-Vue.mixin(module.exports = {
-  methods: {
-    $withoutWatchers(source, callback) {
-      const watchers = this._watchers.map(watcher => ({
-        cb: watcher.cb,
-        sync: watcher.sync
-      })); // disable
-
-
-      for (let index in this._watchers) {
-        this._watchers[index] = Object.assign(this._watchers[index], {
-          cb: () => null,
-          sync: true
-        });
-      }
-
-      if (this.$withoutWatchers.showSource) {
-        console.group(`[${source}] suspended all watch functions`);
-      }
-
-      callback();
-
-      if (this.$withoutWatchers.showSource) {
-        console.groupEnd();
-        console.log(`[${source}] resumed all watch functions`);
-      } // enable
-
-
-      for (let index in this._watchers) {
-        this._watchers[index] = Object.assign(this._watchers[index], watchers[index]);
-      }
-    }
-
-  }
 });
 },{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/workers-plugin.js":[function(require,module,exports) {
 // api
@@ -37527,23 +36997,553 @@ _vue.default.use(_vuePlyr.default, {
     invertTime: false
   }
 });
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-plyr":"node_modules/vue-plyr/dist/vue-plyr.esm.js","vue-plyr/dist/vue-plyr.css":"node_modules/vue-plyr/dist/vue-plyr.css"}],"src/plugins/*.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-plyr":"node_modules/vue-plyr/dist/vue-plyr.esm.js","vue-plyr/dist/vue-plyr.css":"node_modules/vue-plyr/dist/vue-plyr.css"}],"src/plugins/child.js":[function(require,module,exports) {
+// api
+//     $child(...args)
+let Vue = require("vue").default;
+
+Object.defineProperty(Vue.prototype, "$child", {
+  get() {
+    return (firstRef, ...args) => new Promise((resolve, reject) => {
+      let checker;
+
+      checker = () => {
+        let ref = this.$refs[firstRef]; // base case
+
+        if (ref && args.length === 0) {
+          resolve(ref); // recursive child case
+        } else if (ref) {
+          ref.$child(...args).then(resolve); // recursive wait case
+        } else {
+          this.$nextTick(() => {
+            setTimeout(checker, 500);
+          });
+        }
+      };
+
+      checker();
+    });
+  }
+
+});
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"node_modules/good-vue/dist/index.js":[function(require,module,exports) {
+/*!
+ * good-vue v1.3.1
+ * (c) 
+ * Released under the ISC License.
+ */
+'use strict';
+
+const component = {
+  props: {
+    'wrap': {
+      type: [String, Boolean],
+      validator: value => [true, false, 'reverse'].includes(value)
+    },
+    'shadow': {
+      type: [Number, String]
+    }
+  },
+  computed: {
+    flexWrapStyle() {
+      let wrap = this.$props.wrap || this.$attrs["flex-wrap"];
+      let value = wrap;
+
+      if (wrap == true) {
+        value = 'wrap';
+      } else if (wrap == 'reverse') {
+        value = 'wrap-reverse';
+      } else if (wrap == false) {
+        value = 'nowrap';
+      }
+
+      return value != null && {
+        'flex-wrap': value
+      };
+    },
+
+    shadowStyle() {
+      let shadow = this.$props.shadow || this.$attrs["box-shadow"];
+      let value = shadow;
+
+      if (shadow == 0) {
+        value = 'none';
+      } else if (shadow == 1) {
+        value = '0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2)';
+      } else if (shadow == 2) {
+        value = '0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3)';
+      } else if (shadow == 3) {
+        value = '0 8px 17px 2px rgba(0,0,0,0.14), 0 3px 14px 2px rgba(0,0,0,0.12), 0 5px 5px -3px rgba(0,0,0,0.2)';
+      } else if (shadow == 4) {
+        value = '0 16px 24px 2px rgba(0,0,0,0.14), 0 6px 30px 5px rgba(0,0,0,0.12), 0 8px 10px -7px rgba(0,0,0,0.2)';
+      } else if (shadow == 5) {
+        value = '0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.2)';
+      }
+
+      return shadow && {
+        'box-shadow': value,
+        '-webkit-box-shadow': value
+      };
+    }
+
+  }
+};
+
+//
+var script = {
+  props: { ...component.props,
+    'align-h': {
+      type: String,
+      validator: value => ['left', 'right', 'center', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
+    },
+    'align-v': {
+      type: String,
+      validator: value => ['top', 'bottom', 'center', 'space-around', 'space-between', 'space-evenly', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
+    }
+  },
+  computed: { ...component.computed,
+
+    justifyContentStyle() {
+      let arrangement = this.$props.alignV || this.$attrs["justify-content"];
+      let value = arrangement;
+
+      if (arrangement == 'top') {
+        value = 'flex-start';
+      } else if (arrangement == 'bottom') {
+        value = 'flex-end';
+      }
+
+      return value != null && {
+        'justify-content': value
+      };
+    },
+
+    alignItemsStyle() {
+      let alignment = this.$props.alignH || this.$attrs["align-items"];
+      let value = alignment;
+      let additionalValues = {};
+
+      if (alignment == 'left') {
+        value = 'flex-start';
+        additionalValues = {
+          'text-align': 'left'
+        };
+      } else if (alignment == 'right') {
+        value = 'flex-end';
+        additionalValues = {
+          'text-align': 'right'
+        };
+      }
+
+      return value != null && {
+        'align-items': value,
+        ...additionalValues
+      };
+    }
+
+  }
+};
+
+function normalizeComponent(template, style, script, scopeId, isFunctionalTemplate, moduleIdentifier
+/* server only */
+, shadowMode, createInjector, createInjectorSSR, createInjectorShadow) {
+  if (typeof shadowMode !== 'boolean') {
+    createInjectorSSR = createInjector;
+    createInjector = shadowMode;
+    shadowMode = false;
+  } // Vue.extend constructor export interop.
+
+
+  var options = typeof script === 'function' ? script.options : script; // render functions
+
+  if (template && template.render) {
+    options.render = template.render;
+    options.staticRenderFns = template.staticRenderFns;
+    options._compiled = true; // functional template
+
+    if (isFunctionalTemplate) {
+      options.functional = true;
+    }
+  } // scopedId
+
+
+  if (scopeId) {
+    options._scopeId = scopeId;
+  }
+
+  var hook;
+
+  if (moduleIdentifier) {
+    // server build
+    hook = function hook(context) {
+      // 2.3 injection
+      context = context || // cached call
+      this.$vnode && this.$vnode.ssrContext || // stateful
+      this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext; // functional
+      // 2.2 with runInNewContext: true
+
+      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
+        context = __VUE_SSR_CONTEXT__;
+      } // inject component styles
+
+
+      if (style) {
+        style.call(this, createInjectorSSR(context));
+      } // register component module identifier for async chunk inference
+
+
+      if (context && context._registeredComponents) {
+        context._registeredComponents.add(moduleIdentifier);
+      }
+    }; // used by ssr in case component is cached and beforeCreate
+    // never gets called
+
+
+    options._ssrRegister = hook;
+  } else if (style) {
+    hook = shadowMode ? function () {
+      style.call(this, createInjectorShadow(this.$root.$options.shadowRoot));
+    } : function (context) {
+      style.call(this, createInjector(context));
+    };
+  }
+
+  if (hook) {
+    if (options.functional) {
+      // register for functional component in vue file
+      var originalRender = options.render;
+
+      options.render = function renderWithStyleInjection(h, context) {
+        hook.call(context);
+        return originalRender(h, context);
+      };
+    } else {
+      // inject component registration as beforeCreate hook
+      var existing = options.beforeCreate;
+      options.beforeCreate = existing ? [].concat(existing, hook) : [hook];
+    }
+  }
+
+  return script;
+}
+
+var normalizeComponent_1 = normalizeComponent;
+
+var isOldIE = typeof navigator !== 'undefined' && /msie [6-9]\\b/.test(navigator.userAgent.toLowerCase());
+function createInjector(context) {
+  return function (id, style) {
+    return addStyle(id, style);
+  };
+}
+var HEAD;
+var styles = {};
+
+function addStyle(id, css) {
+  var group = isOldIE ? css.media || 'default' : id;
+  var style = styles[group] || (styles[group] = {
+    ids: new Set(),
+    styles: []
+  });
+
+  if (!style.ids.has(id)) {
+    style.ids.add(id);
+    var code = css.source;
+
+    if (css.map) {
+      // https://developer.chrome.com/devtools/docs/javascript-debugging
+      // this makes source maps inside style tags work properly in Chrome
+      code += '\n/*# sourceURL=' + css.map.sources[0] + ' */'; // http://stackoverflow.com/a/26603875
+
+      code += '\n/*# sourceMappingURL=data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(css.map)))) + ' */';
+    }
+
+    if (!style.element) {
+      style.element = document.createElement('style');
+      style.element.type = 'text/css';
+      if (css.media) style.element.setAttribute('media', css.media);
+
+      if (HEAD === undefined) {
+        HEAD = document.head || document.getElementsByTagName('head')[0];
+      }
+
+      HEAD.appendChild(style.element);
+    }
+
+    if ('styleSheet' in style.element) {
+      style.styles.push(code);
+      style.element.styleSheet.cssText = style.styles.filter(Boolean).join('\n');
+    } else {
+      var index = style.ids.size - 1;
+      var textNode = document.createTextNode(code);
+      var nodes = style.element.childNodes;
+      if (nodes[index]) style.element.removeChild(nodes[index]);
+      if (nodes.length) style.element.insertBefore(textNode, nodes[index]);else style.element.appendChild(textNode);
+    }
+  }
+}
+
+var browser = createInjector;
+
+/* script */
+const __vue_script__ = script;
+/* template */
+
+var __vue_render__ = function () {
+  var _vm = this;
+
+  var _h = _vm.$createElement;
+
+  var _c = _vm._self._c || _h;
+
+  return _c('div', _vm._g({
+    staticClass: "good-column",
+    style: Object.assign({}, _vm.$attrs, _vm.justifyContentStyle, _vm.alignItemsStyle, _vm.flexWrapStyle, _vm.shadowStyle),
+    attrs: {
+      "unique-add1e7fe": ""
+    }
+  }, this.$listeners), [_vm._t("default")], 2);
+};
+
+var __vue_staticRenderFns__ = [];
+/* style */
+
+const __vue_inject_styles__ = function (inject) {
+  if (!inject) return;
+  inject("data-v-46e06dd6_0", {
+    source: ".good-column[unique-add1e7fe]{flex-direction:column}[unique-add1e7fe]{display:flex;flex-direction:column;align-items:center;justify-content:center;flex-wrap:nowrap;margin:0}",
+    map: undefined,
+    media: undefined
+  });
+};
+/* scoped */
+
+
+const __vue_scope_id__ = undefined;
+/* module identifier */
+
+const __vue_module_identifier__ = undefined;
+/* functional template */
+
+const __vue_is_functional_template__ = false;
+/* style inject SSR */
+
+var Column = normalizeComponent_1({
+  render: __vue_render__,
+  staticRenderFns: __vue_staticRenderFns__
+}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, browser, undefined);
+
+//
+var script$1 = {
+  props: { ...component.props,
+    'align-v': {
+      type: String,
+      validator: value => ['top', 'bottom', 'center', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
+    },
+    'align-h': {
+      type: String,
+      validator: value => ['left', 'right', 'center', 'space-around', 'space-between', 'space-evenly', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
+    }
+  },
+  computed: { ...component.computed,
+
+    justifyContentStyle() {
+      let arrangement = this.$props.alignH || this.$attrs["justify-content"];
+      let value = arrangement;
+      let additionalValues = {};
+
+      if (arrangement == 'left') {
+        value = 'flex-start';
+        additionalValues = {
+          'text-align': 'left'
+        };
+      } else if (arrangement == 'right') {
+        value = 'flex-end';
+        additionalValues = {
+          'text-align': 'right'
+        };
+      }
+
+      return value != null && {
+        'justify-content': value,
+        ...additionalValues
+      };
+    },
+
+    alignItemsStyle() {
+      let alignment = this.$props.alignV || this.$attrs["align-items"];
+      let value = alignment;
+
+      if (alignment == 'top') {
+        value = 'flex-start';
+      } else if (alignment == 'bottom') {
+        value = 'flex-end';
+      }
+
+      return value != null && {
+        'align-items': value
+      };
+    }
+
+  }
+};
+
+/* script */
+const __vue_script__$1 = script$1;
+/* template */
+
+var __vue_render__$1 = function () {
+  var _vm = this;
+
+  var _h = _vm.$createElement;
+
+  var _c = _vm._self._c || _h;
+
+  return _c('div', _vm._g({
+    staticClass: "good-row",
+    style: Object.assign({}, _vm.$attrs, _vm.justifyContentStyle, _vm.alignItemsStyle, _vm.flexWrapStyle, _vm.shadowStyle),
+    attrs: {
+      "unique-add1e7fa": ""
+    }
+  }, this.$listeners), [_vm._t("default")], 2);
+};
+
+var __vue_staticRenderFns__$1 = [];
+/* style */
+
+const __vue_inject_styles__$1 = function (inject) {
+  if (!inject) return;
+  inject("data-v-7148b7bc_0", {
+    source: ".good-row[unique-add1e7fa]{flex-direction:row}[unique-add1e7fa]{display:flex;flex-direction:row;justify-content:center;align-items:center;flex-wrap:nowrap;margin:0}",
+    map: undefined,
+    media: undefined
+  });
+};
+/* scoped */
+
+
+const __vue_scope_id__$1 = undefined;
+/* module identifier */
+
+const __vue_module_identifier__$1 = undefined;
+/* functional template */
+
+const __vue_is_functional_template__$1 = false;
+/* style inject SSR */
+
+var Row = normalizeComponent_1({
+  render: __vue_render__$1,
+  staticRenderFns: __vue_staticRenderFns__$1
+}, __vue_inject_styles__$1, __vue_script__$1, __vue_scope_id__$1, __vue_is_functional_template__$1, __vue_module_identifier__$1, browser, undefined);
+
+//
+var script$2 = {
+  props: { ...component.props
+  },
+  computed: { ...component.computed
+  }
+};
+
+/* script */
+const __vue_script__$2 = script$2;
+/* template */
+
+var __vue_render__$2 = function () {
+  var _vm = this;
+
+  var _h = _vm.$createElement;
+
+  var _c = _vm._self._c || _h;
+
+  return _c('div', _vm._g({
+    staticClass: "good-container",
+    style: Object.assign({}, _vm.shadowStyle, _vm.$attrs),
+    attrs: {
+      "unique-a23421e7a": ""
+    }
+  }, this.$listeners), [_vm._t("default")], 2);
+};
+
+var __vue_staticRenderFns__$2 = [];
+/* style */
+
+const __vue_inject_styles__$2 = function (inject) {
+  if (!inject) return;
+  inject("data-v-1d9d60fa_0", {
+    source: ".good-container[unique-a23421e7a]{flex-direction:column}[unique-a23421e7a]{display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;flex-wrap:nowrap;margin:0}",
+    map: undefined,
+    media: undefined
+  });
+};
+/* scoped */
+
+
+const __vue_scope_id__$2 = undefined;
+/* module identifier */
+
+const __vue_module_identifier__$2 = undefined;
+/* functional template */
+
+const __vue_is_functional_template__$2 = false;
+/* style inject SSR */
+
+var Container = normalizeComponent_1({
+  render: __vue_render__$2,
+  staticRenderFns: __vue_staticRenderFns__$2
+}, __vue_inject_styles__$2, __vue_script__$2, __vue_scope_id__$2, __vue_is_functional_template__$2, __vue_module_identifier__$2, browser, undefined);
+
+let globalData;
+let setupGlobalData = (Vue, data) => {
+  globalData = data; // connect the data to every child component
+
+  Vue.mixin({
+    data: () => ({
+      $global: globalData
+    })
+  });
+};
+
+var index = {
+  setupGlobalData,
+
+  install(Vue, options) {
+    // Let's register our component globally
+    // https://vuejs.org/v2/guide/components-registration.html
+    Vue.component("column", Column);
+    Vue.component("row", Row);
+    Vue.component("container", Container);
+  }
+
+};
+
+module.exports = index;
+
+},{}],"src/plugins/good-vue-plugin.js":[function(require,module,exports) {
+"use strict";
+
+var _vue = _interopRequireDefault(require("vue"));
+
+var _goodVue = _interopRequireDefault(require("good-vue"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+_vue.default.use(_goodVue.default);
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","good-vue":"node_modules/good-vue/dist/index.js"}],"src/plugins/*.js":[function(require,module,exports) {
 module.exports = {
-  "child": require("./child.js"),
   "css-baseline-plugin": require("./css-baseline-plugin.js"),
-  "good-vue-plugin": require("./good-vue-plugin.js"),
   "keen-ui-plugin": require("./keen-ui-plugin.js"),
   "portal-plugin": require("./portal-plugin.js"),
   "resolvables-plugin": require("./resolvables-plugin.js"),
   "root-hooks-plugin": require("./root-hooks-plugin.js"),
   "router-plugin": require("./router-plugin.js"),
   "vue-toasted-plugin": require("./vue-toasted-plugin.js"),
-  "window-listeners-plugin": require("./window-listeners-plugin.js"),
   "without-watchers": require("./without-watchers.js"),
+  "window-listeners-plugin": require("./window-listeners-plugin.js"),
   "workers-plugin": require("./workers-plugin.js"),
-  "youtube-player-plugin": require("./youtube-player-plugin.js")
+  "youtube-player-plugin": require("./youtube-player-plugin.js"),
+  "child": require("./child.js"),
+  "good-vue-plugin": require("./good-vue-plugin.js")
 };
-},{"./child.js":"src/plugins/child.js","./css-baseline-plugin.js":"src/plugins/css-baseline-plugin.js","./good-vue-plugin.js":"src/plugins/good-vue-plugin.js","./keen-ui-plugin.js":"src/plugins/keen-ui-plugin.js","./portal-plugin.js":"src/plugins/portal-plugin.js","./resolvables-plugin.js":"src/plugins/resolvables-plugin.js","./root-hooks-plugin.js":"src/plugins/root-hooks-plugin.js","./router-plugin.js":"src/plugins/router-plugin.js","./vue-toasted-plugin.js":"src/plugins/vue-toasted-plugin.js","./window-listeners-plugin.js":"src/plugins/window-listeners-plugin.js","./without-watchers.js":"src/plugins/without-watchers.js","./workers-plugin.js":"src/plugins/workers-plugin.js","./youtube-player-plugin.js":"src/plugins/youtube-player-plugin.js"}],"node_modules/file-saver/dist/FileSaver.min.js":[function(require,module,exports) {
+},{"./css-baseline-plugin.js":"src/plugins/css-baseline-plugin.js","./keen-ui-plugin.js":"src/plugins/keen-ui-plugin.js","./portal-plugin.js":"src/plugins/portal-plugin.js","./resolvables-plugin.js":"src/plugins/resolvables-plugin.js","./root-hooks-plugin.js":"src/plugins/root-hooks-plugin.js","./router-plugin.js":"src/plugins/router-plugin.js","./vue-toasted-plugin.js":"src/plugins/vue-toasted-plugin.js","./without-watchers.js":"src/plugins/without-watchers.js","./window-listeners-plugin.js":"src/plugins/window-listeners-plugin.js","./workers-plugin.js":"src/plugins/workers-plugin.js","./youtube-player-plugin.js":"src/plugins/youtube-player-plugin.js","./child.js":"src/plugins/child.js","./good-vue-plugin.js":"src/plugins/good-vue-plugin.js"}],"node_modules/file-saver/dist/FileSaver.min.js":[function(require,module,exports) {
 var define;
 var global = arguments[3];
 (function(a,b){if("function"==typeof define&&define.amd)define([],b);else if("undefined"!=typeof exports)b();else{b(),a.FileSaver={exports:{}}.exports}})(this,function(){"use strict";function b(a,b){return"undefined"==typeof b?b={autoBom:!1}:"object"!=typeof b&&(console.warn("Deprecated: Expected third argument to be a object"),b={autoBom:!b}),b.autoBom&&/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(a.type)?new Blob(["\uFEFF",a],{type:a.type}):a}function c(a,b,c){var d=new XMLHttpRequest;d.open("GET",a),d.responseType="blob",d.onload=function(){g(d.response,b,c)},d.onerror=function(){console.error("could not download file")},d.send()}function d(a){var b=new XMLHttpRequest;b.open("HEAD",a,!1);try{b.send()}catch(a){}return 200<=b.status&&299>=b.status}function e(a){try{a.dispatchEvent(new MouseEvent("click"))}catch(c){var b=document.createEvent("MouseEvents");b.initMouseEvent("click",!0,!0,window,0,0,0,80,20,!1,!1,!1,!1,0,null),a.dispatchEvent(b)}}var f="object"==typeof window&&window.window===window?window:"object"==typeof self&&self.self===self?self:"object"==typeof global&&global.global===global?global:void 0,a=f.navigator&&/Macintosh/.test(navigator.userAgent)&&/AppleWebKit/.test(navigator.userAgent)&&!/Safari/.test(navigator.userAgent),g=f.saveAs||("object"!=typeof window||window!==f?function(){}:"download"in HTMLAnchorElement.prototype&&!a?function(b,g,h){var i=f.URL||f.webkitURL,j=document.createElement("a");g=g||b.name||"download",j.download=g,j.rel="noopener","string"==typeof b?(j.href=b,j.origin===location.origin?e(j):d(j.href)?c(b,g,h):e(j,j.target="_blank")):(j.href=i.createObjectURL(b),setTimeout(function(){i.revokeObjectURL(j.href)},4E4),setTimeout(function(){e(j)},0))}:"msSaveOrOpenBlob"in navigator?function(f,g,h){if(g=g||f.name||"download","string"!=typeof f)navigator.msSaveOrOpenBlob(b(f,h),g);else if(d(f))c(f,g,h);else{var i=document.createElement("a");i.href=f,i.target="_blank",setTimeout(function(){e(i)})}}:function(b,d,e,g){if(g=g||open("","_blank"),g&&(g.document.title=g.document.body.innerText="downloading..."),"string"==typeof b)return c(b,d,e);var h="application/octet-stream"===b.type,i=/constructor/i.test(f.HTMLElement)||f.safari,j=/CriOS\/[\d]+/.test(navigator.userAgent);if((j||h&&i||a)&&"undefined"!=typeof FileReader){var k=new FileReader;k.onloadend=function(){var a=k.result;a=j?a:a.replace(/^data:[^;]*;/,"data:attachment/file;"),g?g.location.href=a:location=a,g=null},k.readAsDataURL(b)}else{var l=f.URL||f.webkitURL,m=l.createObjectURL(b);g?g.location=m:location.href=m,g=null,setTimeout(function(){l.revokeObjectURL(m)},4E4)}});f.saveAs=g.saveAs=g,"undefined"!=typeof module&&(module.exports=g)});
@@ -39394,588 +39394,7 @@ module.exports = {
   }
 
 };
-},{}],"node_modules/ez-rpc-frontend/node_modules/good-js/source/object.js":[function(require,module,exports) {
-module.exports = {
-    /**
-     * Safely get nested values
-     *
-     * @param {any} obj.from - what object/value you're extracting from
-     * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
-     * @param {any} obj.failValue - what to return in the event of an error
-     * @return {any} either the failValue or the actual value
-     *
-     * @example
-     *     let obj = { key1: {} }
-     *     // equivlent to obj.key1.subKey.subSubKey
-     *     get({
-     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
-     *         from: obj,
-     *     })
-     *     get({
-     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
-     *         from: null,
-     *     })
-     *     get({
-     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
-     *         from: null,
-     *         failValue: 0
-     *     })
-     */
-    get({ from, keyList, failValue }) {
-        // iterate over nested values
-        try {
-            for (var each of keyList) {
-                if (from instanceof Object && each in from) {
-                    from = from[each]
-                } else {
-                    return failValue
-                }
-            }
-        } catch (error) {
-            return failValue
-        }
-        return from
-    },
-    /**
-     * Forcefully set nested values
-     *
-     * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
-     * @param {any} obj.to - what the new value should be
-     * @param {any} obj.on - what object/value you're modifying
-     * @return {Object} - the object given (object is still mutated)
-     * @error
-     * only if the argument is not an object
-     *
-     * @example
-     *     let obj = { key1: {} }
-     *     // equivlent to obj.key1.subKey.subSubKey
-     *     set({
-     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
-     *         to: 10,
-     *         on: obj,
-     *     })
-     *     set({
-     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
-     *         to: 10,
-     *         on: obj,
-     *     })
-     */
-    set({ keyList, on, to }) {
-        let originalKeyList = keyList
-        try {
-            keyList = [...keyList]
-            let lastAttribute = keyList.pop()
-            for (var key of keyList) {
-                // create each parent if it doesnt exist
-                if (!(on[key] instanceof Object)) {
-                    on[key] = {}
-                }
-                // change the object reference be the nested element
-                on = on[key]
-            }
-            on[lastAttribute] = to
-        } catch (error) {
-            throw new Error(`\nthe set function was unable to set the value for some reason\n    the set obj was: ${JSON.stringify(on)}\n    the keyList was: ${JSON.stringify(originalKeyList)}\n    the value was: ${JSON.stringify(to)}\nthe original error message was:\n\n`, error)
-        }
-        return on
-    },
-    /**
-     * Safely delete nested values
-     *
-     * @param {any} obj.from - what object/value you're extracting from
-     * @param {string[]} obj.keyList - anObject.key1.key2 -> [ "key1", "key2" ]
-     * @return {undefined}
-     *
-     * @example
-     *     let obj = { key1: {} }
-     *     // equivlent to obj.key1.subKey.subSubKey
-     *     delete({
-     *         keyList: [ 'key1', 'subKey', 'subSubKey' ],
-     *         from: obj,
-     *     })
-     */
-    delete({ keyList, from }) {
-        if (keyList.length == 1) {
-            try {
-                delete from[keyList[0]]
-            } catch (error) {
-                return false
-            }
-        } else if (keyList.length > 1) {
-            keyList = [...keyList]
-            let last = keyList.pop()
-            let parentObj = module.exports.get({ keyList, from })
-            return module.exports.delete({ keyList: [last], from: parentObj })
-        }
-    },
-    merge({ oldData, newData }) {
-        // if its not an object, then it immediately overwrites the value
-        if (!(newData instanceof Object) || !(oldData instanceof Object)) {
-            return newData
-        }
-        // default value for all keys is the original object
-        let output = {}
-        newData instanceof Array && (output = [])
-        Object.assign(output, oldData)
-        for (const key in newData) {
-            // if no conflict, then assign as normal
-            if (!(key in output)) {
-                output[key] = newData[key]
-                // if there is a conflict, then be recursive
-            } else {
-                output[key] = module.exports.merge(oldData[key], newData[key])
-            }
-        }
-        return output
-    },
-    /**
-     * Function to sort alphabetically an array of objects by some specific key.
-     *
-     * @param {string[]} obj.keyList list of keys of which property to sort by
-     * @param {string[]} [obj.largestFirst=false] decending order
-     * @example
-     * let listOfObjects = [ { a:1 }, { a:3 }, { a:2 }, ]
-     * listOfObjects.sort(
-     *     compareProperty({keyList:['a']})
-     * )
-     * //  [ { a: 1 }, { a: 2 }, { a: 3 } ]
-     *
-     * listOfObjects.sort(
-     *   compareProperty({
-     *     keyList:['a'],
-     *     largestFirst:true
-     *   })
-     * )
-     * //  [ { a: 3 }, { a: 2 }, { a: 1 } ]
-     */
-    compareProperty({ keyList, largestFirst = false }) {
-        let comparison = (a, b) => {
-            let aValue = module.exports.get({ keyList, from: a, failValue: -Infinity })
-            let bValue = module.exports.get({ keyList, from: b, failValue: -Infinity })
-            if (typeof aValue == "number") {
-                return aValue - bValue
-            } else {
-                return aValue.localeCompare(bValue)
-            }
-        }
-        if (largestFirst) {
-            oldComparison = comparison
-            comparison = (b, a) => oldComparison(a, b)
-        }
-        return comparison
-    },
-    /**
-     * Deep iterate objects
-     *
-     * @param {Object} obj - Any object
-     * @return {string[][]} lists of key-lists
-     *
-     * @example
-     *
-     *     recursivelyAllAttributesOf({ a: { b: 1} })
-     *     >>> [
-     *         [ 'a', ],
-     *         [ 'a', 'b' ],
-     *     ]
-     */
-    recursivelyAllAttributesOf(obj) {
-        // if not an object then add no attributes
-        if (!(obj instanceof Object)) {
-            return []
-        }
-        // else check all keys for sub-attributes
-        let output = []
-        for (let eachKey of Object.keys(obj)) {
-            // add the key itself (alone)
-            output.push([eachKey])
-            // add all of its children
-            let newAttributes = module.exports.recursivelyAllAttributesOf(obj[eachKey])
-            // if nested
-            for (let eachNewAttributeList of newAttributes) {
-                // add the parent key
-                eachNewAttributeList.unshift(eachKey)
-                output.push(eachNewAttributeList)
-            }
-        }
-        return output
-    },
-}
-
-},{}],"node_modules/node-fetch/browser.js":[function(require,module,exports) {
-
-"use strict"; // ref: https://github.com/tc39/proposal-global
-
-var getGlobal = function () {
-  // the only reliable means to get the global object is
-  // `Function('return this')()`
-  // However, this causes CSP violations in Chrome apps.
-  if (typeof self !== 'undefined') {
-    return self;
-  }
-
-  if (typeof window !== 'undefined') {
-    return window;
-  }
-
-  if (typeof global !== 'undefined') {
-    return global;
-  }
-
-  throw new Error('unable to locate global object');
-};
-
-var global = getGlobal();
-module.exports = exports = global.fetch; // Needed for TypeScript and Webpack.
-
-if (global.fetch) {
-  exports.default = global.fetch.bind(global);
-}
-
-exports.Headers = global.Headers;
-exports.Request = global.Request;
-exports.Response = global.Response;
-},{}],"node_modules/ez-rpc-frontend/node_modules/good-js/source/network.js":[function(require,module,exports) {
-// use libs since node doesn't have fetch
-if (typeof document == 'undefined') {
-    fetch = require("node-fetch")
-}
-
-module.exports = {
-    curl(url) {
-        return new Promise((resolve) =>
-            fetch(url)
-                .then((res) => res.text())
-                .then((body) => resolve(body))
-        )
-    },
-    getJson(url) {
-        return new Promise((resolve, reject) =>
-            fetch(url)
-                .then(function (response) {
-                    return response.json()
-                })
-                .then(function (data) {
-                    resolve(data)
-                })
-                .catch(function () {
-                    reject()
-                })
-        )
-    },
-    async postJson({ data = null, to = null }) {
-        return (await fetch(to, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })).json()
-    },
-}
-
-},{"node-fetch":"node_modules/node-fetch/browser.js"}],"node_modules/ez-rpc-frontend/node_modules/good-js/source/string.js":[function(require,module,exports) {
-module.exports = {
-    capitalize: (string) => string.replace(/\b\w/g, chr=>chr.toUpperCase()),
-    indent: ({string, by="    "}) => by + string.replace(/\n/g,"\n"+by),
-    snakeToCamelCase: (baseName) => (baseName.toLowerCase().replace(/_/," ")).replace(/.\b\w/g, aChar=>aChar.toUpperCase()).replace(" ",""),
-    varnameToTitle: (string) => string.replace(/_/," ").replace(/\b\w/g, chr=>chr.toUpperCase()),
-    findAll(regexPattern, sourceString) {
-        let output = []
-        let match
-        // make sure the pattern has the global flag
-        let regexPatternWithGlobal = RegExp(regexPattern, [...new Set("g"+regexPattern.flags)].join(""))
-        while (match = regexPatternWithGlobal.exec(sourceString)) {
-            // get rid of the string copy
-            delete match.input
-            // store the match data
-            output.push(match)
-        } 
-        return output
-    },
-}
-},{}],"node_modules/ez-rpc-frontend/node_modules/good-js/source/tests.js":[function(require,module,exports) {
-module.exports = {
-    /**
-     * Checks type according to English
-     *
-     * @param {Object} args.value - any possible value 
-     * @param {Object} args.is - a class or string-description Object, Array, null, "nullish", "number", Number, Boolean, Function
-     * @return {Boolean} the legitmate/intuitive answer
-     * 
-     * @note
-     *     Object means can-be-a JSON-object
-     * 
-     * @example
-     *     checkIf({value: undefined , is: null     }) // false
-     *     checkIf({value: undefined , is: String   }) // false
-     *     checkIf({value: undefined , is: 'nullish'}) // true
-     *     checkIf({value: null      , is: 'nullish'}) // true
-     *     checkIf({value: NaN       , is: 'nullish'}) // true
-     *     checkIf({value: null      , is: Object   }) // false
-     *     checkIf({value: NaN       , is: NaN      }) // true!
-     *     checkIf({value: NaN       , is: Number   }) // false!
-     *     checkIf({value: ("string"), is: Object   }) // false
-     *     checkIf({value: {blah: 10}, is: Object   }) // true!
-     *     checkIf({value: new Date(), is: Object   }) // false!
-     *     checkIf({value: new CustomClass()         , is: Object}) // true!
-     *     checkIf({value: ()=>{return "imma func"}  , is: Object}) // false
-     *     checkIf({value: ["I", "am", "an", "array"], is: Object}) // false
-     *     checkIf({value: new CustomClass()         , is: Date})   // false
-     */
-    checkIf({ value, is }) {
-        let typeOrClass = is 
-        // 
-        // Check typeOrClass
-        // 
-        // see if typeOrClass is actually a class 
-        if (typeof typeOrClass == 'function') {
-            typeOrClass = typeOrClass.name
-        }
-        // lowercase any string-names
-        if (typeof typeOrClass == 'string') {
-            typeOrClass = typeOrClass.toLowerCase()
-        }
-
-        //
-        // Strict Values
-        //
-        // object (non-null, non-function, non-array)
-        if (typeOrClass === "object") {
-            if (!(value instanceof Object)) {
-                return false
-            } else if (value instanceof Array || value instanceof Function || value instanceof Date) {
-                return false
-            // check if its stringified+parsed form is also an object 
-            // (this is to remove things like BigInt and BigInt64Array and other built-in pseudo-primitives)
-            } else {
-                let stringified = JSON.stringify(value)
-                // note that this is not == '"undefined"'
-                if (stringified === 'undefined') {
-                    return false
-                } else if (JSON.parse(stringified) instanceof Object) {
-                    return true
-                } else {
-                    return false
-                }
-            }
-        }
-        // undefined
-        else if (typeof typeOrClass === 'undefined' || typeOrClass == 'undefined') {
-            return typeof value === 'undefined'
-        }
-        // null
-        else if (typeOrClass === null || typeOrClass == 'null') {
-            return value === null
-        }
-        // NaN
-        else if ((typeOrClass !== typeOrClass && typeof typeOrClass == 'number') || typeOrClass == 'nan') {
-            return value !== value && typeof value == 'number'
-        }
-        // false
-        else if (typeOrClass === false) {
-            return value === false
-        }
-        // true
-        else if (typeOrClass === true) {
-            return value === true
-        }
-        // bool
-        else if (typeOrClass === "bool" || typeOrClass === "boolean") {
-            return value === true || value === false
-        }
-        // empty string
-        else if (typeOrClass === "") {
-            return value === ""
-        }
-        // empty list
-        else if (typeOrClass === "[]" || Array.isArray(typeOrClass) && typeOrClass.length == 0) {
-            return value instanceof Array && value.length == 0
-        }
-        // function
-        else if (typeOrClass === "function") {
-            return typeof value == "function"
-        }
-        // number
-        else if (typeOrClass == "number" || typeOrClass == Number) {
-            if (value !== value) {
-                return false
-            }
-            else {
-                return typeof value == "number" || value instanceof Number
-            }
-        }
-        // string
-        else if (typeOrClass == "string") {
-            return typeof value == "string" || value instanceof String
-        }
-        // array
-        else if (typeOrClass == "array") {
-            return value instanceof Array
-        }
-        // symbol
-        else if (typeOrClass == "symbol") {
-            return typeof value == "symbol"
-        }
-
-        // 
-        // Unstrict values
-        // 
-        // nullish (null, undefined, NaN)
-        else if (typeOrClass === 'nullish') {
-            return value == null || value !== value
-        }
-        // emptyish ({},[],"",null,undefined)
-        else if (typeOrClass === 'emptyish') {
-            if ((value instanceof Array && value.length == 0) || value === "" || value == null) {
-                return true
-            }
-            else if (value instanceof Object) {
-                return Object.keys(value).length == 0
-            }
-            else {
-                return false
-            }
-        }
-        // falsey ("0",0,false,null,undefined,NaN)
-        else if (typeOrClass === 'falsey' || typeOrClass === 'falsy' || typeOrClass === 'falseish' || typeOrClass === 'falsish') {
-            return value == null || value === false || value !== value || value === 0 || value === "0"
-        }
-        // falsey-or-empty ({},[],"","0",0,false,null,undefined,NaN)
-        else if (typeOrClass === 'falsey-or-empty' || typeOrClass === 'falsy-or-empty' || typeOrClass === 'falseish-or-empty' || typeOrClass === 'falsish-or-empty') {
-            // empty array
-            if (value instanceof Array && value.length == 0) {
-                return true
-            }
-            // empty object
-            else if (value instanceof Object) {
-                return Object.keys(value).length == 0
-            }
-            else {
-                return (value ? true : false)
-            }
-        }
-        // numberish 
-        else if (typeOrClass == 'numberish') {
-            return (value != value) || !isNaN(value - 0)
-        }
-        // 
-        // class type
-        // 
-        else if (aClass) {
-            // if no constructor
-            if (value === null || value === undefined) {
-                return false
-            }
-            else {
-                // see if constructors match
-                if (value.constructor.name === typeOrClass) {
-                    return true
-                }
-                // check instanceof 
-                else {
-                    return value instanceof aClass
-                }
-            }
-        }
-        // 
-        // failed to recognize
-        // 
-        else {
-            throw new Error(`when you call checkIf(), I'm not recoginizing the type or class: ${typeOrClass}`)
-        }
-    },
-    /**
-     * Throws error if type requirement isn't met
-     *
-     * @param {Object} args.value - any possible value 
-     * @param {Object} args.is - a class or string-description Object, Array, null, "nullish", "number", Number, Boolean, Function
-     * @param {string} args.failMessage - a string to be added to the top of the error message
-     * @return {undefined}
-     * 
-     * 
-     * @example
-     * // see checkIf() for more argument examples
-     * requireThat({
-     *     value: arg1.size,
-     *     is: Number,
-     *     failMessage: "The size of the first argument needs to be a number"
-     * })
-     */
-    requireThat({ value, is, failMessage }){
-        if (!module.exports.checkIf({ value, is})) {
-            let requiredType = (is instanceof Object) ? is.prototype.constructor.name : is
-            // 
-            // figure out the real type of the object
-            // 
-            let actualType
-            if (value instanceof Object) {
-                actualType = value.constructor.prototype.constructor.name
-            } else {
-                if (value !== value) {
-                    actualType = "NaN"
-                } else if (value === null) {
-                    actualType = "null"
-                } else {
-                    actualType = typeof value
-                }
-            }
-            failMessage = failMessage ? `Error Message: ${failMessage}` : ""
-            throw Error(`Failed to pass a type check created by requireThat()\n    the value is considered to be: ${actualType}\n    which fails to meet the requirement of: ${requiredType}\n    the failing value is: ${value}\n\n${failMessage}`)
-        }
-    }
-}
-},{}],"node_modules/ez-rpc-frontend/node_modules/good-js/index.js":[function(require,module,exports) {
-module.exports = {
-    object: require("./source/object"),
-    network: require("./source/network"),
-    string: require("./source/string"),
-    tests: require("./source/tests"),
-}
-},{"./source/object":"node_modules/ez-rpc-frontend/node_modules/good-js/source/object.js","./source/network":"node_modules/ez-rpc-frontend/node_modules/good-js/source/network.js","./source/string":"node_modules/ez-rpc-frontend/node_modules/good-js/source/string.js","./source/tests":"node_modules/ez-rpc-frontend/node_modules/good-js/source/tests.js"}],"node_modules/ez-rpc-frontend/frontend.js":[function(require,module,exports) {
-let { network, object } = require("good-js")
-
-let apiCall = async (url, args=[], metaData)=> {
-    let response = await network.postJson({
-        data: [args, metaData],
-        to: url
-    })
-    if (response.error instanceof Object) {
-        throw response.error
-    }
-    return response.value
-} 
-
-module.exports = {
-    metaKey: Symbol.for("EzRpcMetadata"),
-    buildInterfaceFor(url) {
-        let actualEndpoints = {
-            [module.exports.metaKey]: {}
-        }
-        
-        return new Promise(async (resolve, reject)=>{
-            let result
-            try {
-                result = await network.postJson({ data: [], to: `${url}/interface`})
-            } catch (error) {
-                return reject(error)
-            }
-            
-            // create all the endpoints
-            for (let eachKeyList of result.interface) {
-                const endpointUrl = `${url}/call/${eachKeyList.join("/")}`
-                object.set({
-                    keyList: eachKeyList,
-                    on: actualEndpoints,
-                    to: (...args)=>apiCall(endpointUrl, args, actualEndpoints[module.exports.metaKey])
-                })
-            }
-            
-            resolve(actualEndpoints)
-        })
-    }
-}
-},{"good-js":"node_modules/ez-rpc-frontend/node_modules/good-js/index.js"}],"src/value.js":[function(require,module,exports) {
+},{}],"src/value.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42086,9 +41505,18 @@ const toRepresentation = item => {
 
 exports.toRepresentation = toRepresentation;
 
-const wordList = str => {
+const wordList = (str, {
+  keepTrailingSeparators = false,
+  allowLongSplits = false
+} = {}) => {
   const addedSeperator = str.replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/[^a-zA-Z0-9 _.-]/, "_").toLowerCase();
-  const words = addedSeperator.split(/[ _.-]+/g).filter(each => each);
+
+  if (allowLongSplits) {
+    console.debug(`addedSeperator.split(/[ _.-]/g) is:`, addedSeperator.split(/[ _.-]/g));
+    return addedSeperator.split(/[ _.-]/g).filter(each => keepTrailingSeparators || each);
+  }
+
+  const words = addedSeperator.split(/[ _.-]+/g).filter(each => keepTrailingSeparators || each);
   return words;
 };
 
@@ -42112,8 +41540,14 @@ const toPascalCase = str => {
 
 exports.toPascalCase = toPascalCase;
 
-const toKebabCase = str => {
-  const words = wordList(str);
+const toKebabCase = (str, {
+  keepTrailingSeparators = false,
+  allowLongSplits = false
+} = {}) => {
+  const words = wordList(str, {
+    keepTrailingSeparators,
+    allowLongSplits
+  });
   return words.map(each => each.toLowerCase()).join('-');
 };
 
@@ -71512,12 +70946,17 @@ const createDefaultObservationEntry = () => ({
 
 exports.createDefaultObservationEntry = createDefaultObservationEntry;
 
+const nameCoerce = name => toKebabCase(name.toLowerCase().replace(/[^a-zA-Z0-9-.]/g, "-"), {
+  keepTrailingSeparators: true,
+  allowLongSplits: true
+});
+
 function coerceLabel(label) {
-  return toKebabCase(label.toLowerCase());
+  return nameCoerce(label);
 }
 
 function coerceObserver(observer) {
-  return toKebabCase(observer.toLowerCase());
+  return nameCoerce(observer);
 }
 
 function coerceCreatedAt(createdAt) {
@@ -71557,7 +70996,7 @@ function videoIdIsValid(videoId) {
 
 function labelConfidenceIsValid(labelConfidence) {
   if (Number.isFinite(labelConfidence)) {
-    if (labelConfidence <= 1 || labelConfidence >= -1) {
+    if (labelConfidence <= 1 && labelConfidence >= -1) {
       return true;
     }
   }
@@ -71591,9 +71030,12 @@ function quickLocalValidationCheck({
   observationData,
   videoDuration
 }) {
+  observationData.startTime -= 0;
+  observationData.endTime -= 0;
+  observationData.labelConfidence -= 0;
   return {
     startTime: observationData.startTime >= 0 && observationData.startTime < observationData.endTime,
-    endTime: observationData.endTime > 0 && observationData.startTime < observationData.endTime && observationData.endTime <= videoDuration,
+    endTime: observationData.endTime > 0 && observationData.startTime < observationData.endTime && (videoDuration ? observationData.endTime <= videoDuration : true),
     label: isValidName(observationData?.label),
     observer: isValidName(observationData?.observer),
     labelConfidence: labelConfidenceIsValid(observationData.labelConfidence),
@@ -71615,13 +71057,19 @@ function coerceObservation(observationEntry) {
   // enforce simplfied names
   // 
 
-  observationEntry.observation.label = coerceLabel(observationEntry.observation.label);
-  observationEntry.observer = coerceObserver(observationEntry.observer); // 
+  observationEntry.observer = coerceObserver(observationEntry.observer);
+
+  if (!(observationEntry.observation instanceof Object)) {
+    observationEntry.observation = {};
+  }
+
+  observationEntry.observation.label = coerceLabel(observationEntry.observation.label); // 
   // enforce numeric start/endTimes 
   // 
 
   observationEntry.startTime -= 0;
-  observationEntry.endTime -= 0; // help customInfo show up
+  observationEntry.endTime -= 0;
+  observationEntry.observation.labelConfidence -= 0; // help customInfo show up
 
   observationEntry.customInfo = observationEntry.customInfo || {};
   return observationEntry;
@@ -71724,8 +71172,6 @@ function validateObservations(observations) {
 },{"./string.js":"src/string.js","yaml":"node_modules/yaml/browser/index.js"}],"src/iilvd-api.js":[function(require,module,exports) {
 let Vue = require("vue").default;
 
-let ezRpc = require("ez-rpc-frontend");
-
 let {
   deferredPromise,
   asyncIteratorToList,
@@ -71751,19 +71197,10 @@ const {
   add
 } = require("lodash");
 
-const observationTooling = require("./observation_tooling.js"); // const databaseUrl = "http://192.168.86.198:3000"
-// const databaseUrl = "http://localhost:3000"
-// const databaseUrl = "http://paradise.cs.tamu.edu:3000"
-// const databaseUrl = "http://192.168.192.57:3000"
-// const ezRpcUrl = "http://192.168.86.222:6283" // my desktop db 
-// const ezRpcUrl = "http://128.194.4.15:3000" // csce-jiang1.engr.tamu.edu:3000
-// const ezRpcUrl = "http://128.194.4.15:6283" // csce-jiang1.engr.tamu.edu:6283
-
-
-const ezRpcUrl = "http://127.0.0.1:6283";
-const key = "4a75cfe3cdc1164b67aae6b413c9714280d2f102"; // 
+const observationTooling = require("./observation_tooling.js"); // 
 // indexDB solution
 // 
+
 
 let db;
 const dbPromise = deferredPromise();
@@ -71993,7 +71430,7 @@ const indexDb = {
       const next = () => {
         const address = addresses.shift();
 
-        if (address.length < 2 || addresses.some(each => typeof each != 'string')) {
+        if (address.length < 2 || address.some(each => typeof each != 'string')) {
           console.warn(`bad address:`, address);
           return null;
         }
@@ -72029,59 +71466,59 @@ const indexDb = {
     }
 
     addresses = [...addresses];
-    const next = await dbPromise.then(() => new Promise((resolve, reject) => {
-      const transaction = db.transaction([storeName], 'readwrite');
-      const objectStore = transaction.objectStore(storeName);
-      transaction.onerror = reject;
-      Promise.all(addresses.map(address => {
-        if (address.length < 2 || addresses.some(each => typeof each != 'string')) {
-          console.warn(`bad address:`, address);
-          return null;
-        }
+    const transaction = db.transaction([storeName], 'readwrite');
+    const objectStore = transaction.objectStore(storeName);
+    transaction.onerror = reject;
+    return Promise.all(addresses.map(address => {
+      if (address.length < 2 || address.some(each => typeof each != 'string')) {
+        console.debug(`outaddress.length < 2 is:`, address.length < 2);
+        console.debug(`address.some(each=>typeof each != 'string') is:`, address.some(each => typeof each != 'string'));
+        console.warn(`bad address:`, address);
+        return null;
+      }
 
-        const [tableName, key, ...subAddress] = address;
-        const id = JSON.stringify([tableName, key]); // 
-        // delete whole object
+      const [tableName, key, ...subAddress] = address;
+      const id = JSON.stringify([tableName, key]); // 
+      // delete whole object
+      // 
+
+      if (subAddress.length == 0) {
+        const request = objectStore.delete(id);
+        const requestPromise = deferredPromise();
+        Object.assign(request, {
+          onsuccess: () => requestPromise.resolve(),
+          onerror: err => requestPromise.reject(err)
+        });
+        return requestPromise; // 
+        // delete part of object
         // 
-
-        if (subAddress.length == 0) {
-          const request = objectStore.delete(id);
+      } else {
+        return new Promise((resolve, reject) => {
+          const request = objectStore.get(id);
           const requestPromise = deferredPromise();
           Object.assign(request, {
-            onsuccess: () => requestPromise.resolve(),
+            onsuccess: () => requestPromise.resolve(request.result?.v),
             onerror: err => requestPromise.reject(err)
           });
-          return requestPromise; // 
-          // delete part of object
-          // 
-        } else {
-          return new Promise((resolve, reject) => {
-            const request = objectStore.get(id);
-            const requestPromise = deferredPromise();
-            Object.assign(request, {
-              onsuccess: () => requestPromise.resolve(request.result?.v),
-              onerror: err => requestPromise.reject(err)
-            });
-            return requestPromise.then(existingValue => {
-              if (existingValue instanceof Object) {
-                remove({
-                  keyList: subAddress,
-                  from: existingValue
-                });
-                return new Promise((resolve, reject) => Object.assign(objectStore.put({
-                  id: id,
-                  k: key,
-                  t: tableName,
-                  v: existingValue
-                }), {
-                  onsuccess: resolve,
-                  onerror: reject
-                }));
-              }
-            }).catch(reject);
-          });
-        }
-      })).then(resolve).catch(reject);
+          return requestPromise.then(existingValue => {
+            if (existingValue instanceof Object) {
+              remove({
+                keyList: subAddress,
+                from: existingValue
+              });
+              return new Promise((resolve, reject) => Object.assign(objectStore.put({
+                id: id,
+                k: key,
+                t: tableName,
+                v: existingValue
+              }), {
+                onsuccess: resolve,
+                onerror: reject
+              }));
+            }
+          }).catch(reject);
+        });
+      }
     }));
   },
 
@@ -72672,44 +72109,17 @@ const fakeBackend = {
   async deleteObservation({
     uuidOfSelectedSegment
   }) {
-    const observationEntry = await indexDb.get(["observations", uuidOfSelectedSegment]);
-
-    if (observationEntry == undefined) {
-      return;
-    }
-
-    const labelAddress = ["labels", observationEntry.label];
-    const observerAddress = ["observers", observationEntry.observer];
-    const videoAddress = ["videos", observationEntry.videoId];
-    const [labelInfo, observerInfo, videoInfo] = await Promise.all([indexDb.get(labelAddress).then(value => value || {}), indexDb.get(observerAddress).then(value => value || {}), indexDb.get(videoAddress).then(value => value || {})]);
-    return Promise.all([indexDb.deletes([["observations", uuidOfSelectedSegment]]), indexDb.puts([// add video
-    [videoAddress, { ...videoInfo,
-      observationCount: (videoInfo?.count || 1) - 1,
-      labelCount: { ...videoInfo?.labelCount,
-        [label]: ((videoInfo?.labelCount || {})[label] || 1) - 1
-      }
-    }], // add observer
-    [observerAddress, { ...observerInfo,
-      observationCount: (observerInfo?.count || 1) - 1,
-      labelCount: { ...observerInfo?.labelCount,
-        [label]: ((observerInfo?.labelCount || {})[label] || 1) - 1
-      },
-      videos: [...new Set(...(observerInfo?.videos || []).concat([observationEntry.videoId]))]
-    }], // update labels
-    [labelAddress, { ...labelInfo,
-      count: (labelInfo?.count || 1) - 1,
-      videos: [...new Set(...(labelInfo?.videos || []).concat([observationEntry.videoId]))]
-    }]])]);
+    return indexDb.deletes([["observations", uuidOfSelectedSegment]]);
   },
 
   async getVideoIds() {
-    let videoIds = [];
+    const videoIds = new Set();
 
-    for await (const [key, each] of await indexDb.iter.videos) {
-      videoIds.push(key);
+    for await (const [key, each] of indexDb.iter.observations) {
+      videoIds.add(each.videoId);
     }
 
-    return videoIds;
+    return [...videoIds];
   },
 
   summary: {
@@ -72813,15 +72223,15 @@ const fakeBackend = {
       for (const each of items) {
         // filters 
         if (each.observation.labelConfidence < min || each.observation.labelConfidence > max) {
-          return;
+          continue;
         }
 
         if (hideUnchecked && !each.confirmedBySomeone && !each.rejectedBySomeone) {
-          return;
+          continue;
         }
 
         if (hideDisagreement && each.confirmedBySomeone && each.rejectedBySomeone) {
-          return;
+          continue;
         } // 
         // this section is actual logic
         // 
@@ -72918,332 +72328,17 @@ const fakeBackend = {
 
   }
 };
-window.backend = ezRpc.buildInterfaceFor(ezRpcUrl);
+window.fakeBackend = fakeBackend;
 module.exports = {
-  backend,
-  backendHelpers: {
-    async getVideoTitle(videoId) {
-      return (await backend).mongoInterface.get({
-        from: 'videos',
-        keyList: [videoId, "summary", "title"]
-      });
-    },
-
-    async getObservations({
-      where = [],
-      returnObject = false
-    } = {}) {
-      let results = await (await backend).mongoInterface.getAll({
-        from: 'observations',
-        where: [{
-          valueOf: ['type'],
-          is: 'segment'
-        }, ...where],
-        returnObject: true
-      });
-      console.log("reset meee"); // {
-      //     "0.3307717043956069": {
-      //         "type": "segment",
-      //         "observer": "p1",
-      //         "videoId": "/videos/demo.mp4",
-      //         "startTime": 0.813,
-      //         "endTime": 1.813,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "howdy",
-      //             "labelConfidence": 0.95
-      //         }
-      //     },
-      //     "0.5615513748064442": {
-      //         "type": "segment",
-      //         "observer": "p1",
-      //         "videoId": "/videos/demo.mp4",
-      //         "startTime": 0.476,
-      //         "endTime": 1.186,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "howdy",
-      //             "labelConfidence": 0.95
-      //         }
-      //     },
-      //     "0.11446907486080893": {
-      //         "type": "segment",
-      //         "observer": "p1",
-      //         "videoId": "/videos/demo.mp4",
-      //         "startTime": 1.204,
-      //         "endTime": 1.911,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "howdy-version2",
-      //             "labelConfidence": 0.95
-      //         }
-      //     },
-      //     "0.4031582846023173": {
-      //         "type": "segment",
-      //         "observer": "p1",
-      //         "videoId": "/videos/demo.mp4",
-      //         "startTime": 0.336,
-      //         "endTime": 1.336,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "howdy-testing",
-      //             "labelConfidence": 0.95
-      //         }
-      //     },
-      //     "0.018973744483224753": {
-      //         "type": "segment",
-      //         "observer": "p2",
-      //         "videoId": "/videos/demo.mp4",
-      //         "startTime": 0.785,
-      //         "endTime": 1.707,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "new-label",
-      //             "labelConfidence": 0.95
-      //         }
-      //     },
-      //     "0.1465596891418881": {
-      //         "type": "segment",
-      //         "observer": "p2",
-      //         "videoId": "/videos/demo.mp4",
-      //         "startTime": 0.731,
-      //         "endTime": 0.741,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "ta-da",
-      //             "labelConfidence": 0.95
-      //         }
-      //     },
-      //     "0.9602843337489538": {
-      //         "type": "segment",
-      //         "observer": "p2",
-      //         "videoId": "/videos/demo.mp4",
-      //         "startTime": 1.779,
-      //         "endTime": 2.039,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "ta-da",
-      //             "labelConfidence": 0.95
-      //         }
-      //     },
-      //     "0.9810197852822777": {
-      //         "type": "segment",
-      //         "observer": "p3",
-      //         "videoId": "/videos/demo.mp4",
-      //         "startTime": 1.618,
-      //         "endTime": 2.383,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "label-3",
-      //             "labelConfidence": 0.95
-      //         }
-      //     },
-      //     "0.9915320235602465": {
-      //         "type": "segment",
-      //         "observer": "p3",
-      //         "videoId": "/videos/demo.mp4",
-      //         "startTime": 1.431,
-      //         "endTime": 2.02,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "howdy",
-      //             "labelConfidence": 0.95
-      //         }
-      //     },
-      //     "null": {
-      //         "type": "segment",
-      //         "observer": "p1",
-      //         "videoId": "/videos/demo.mp4",
-      //         "startTime": 0,
-      //         "endTime": 0.663,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "another-label",
-      //             "labelConfidence": 0.95,
-      //             "spacialInfo": {}
-      //         },
-      //         "createdAt": "1718136271227.6968301759719835",
-      //         "customInfo": {}
-      //     }
-      // }
-      // console.log("JSON.stringify", JSON.stringify(results) == JSON.stringify({
-      //     "0.9238981860608155": {
-      //         "type": "segment",
-      //         "observer": "p1",
-      //         "videoId": "e2HzKY5imTE",
-      //         "startTime": 162.093,
-      //         "endTime": 165.928,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "howdy",
-      //             "labelConfidence": 0.95
-      //         }
-      //     },
-      //     "0.3307717043956069": {
-      //         "type": "segment",
-      //         "observer": "p1",
-      //         "videoId": "/videos/demo.mp4",
-      //         "startTime": 0.813,
-      //         "endTime": 1.813,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "howdy",
-      //             "labelConfidence": 0.95
-      //         }
-      //     },
-      //     "0.5615513748064442": {
-      //         "type": "segment",
-      //         "observer": "p1",
-      //         "videoId": "/videos/demo.mp4",
-      //         "startTime": 0.476,
-      //         "endTime": 1.186,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "howdy",
-      //             "labelConfidence": 0.95
-      //         }
-      //     },
-      //     "0.0204040255937199": {
-      //         "type": "segment",
-      //         "observer": "p1",
-      //         "videoId": "e2HzKY5imTE",
-      //         "startTime": 1592.748,
-      //         "endTime": 1600.468,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "howdy",
-      //             "labelConfidence": 0.95
-      //         }
-      //     },
-      //     "0.41703294157747894": {
-      //         "type": "segment",
-      //         "observer": "p1",
-      //         "videoId": "e2HzKY5imTE",
-      //         "startTime": 1062.545,
-      //         "endTime": 1068.471,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "howdy",
-      //             "labelConfidence": 0.95
-      //         }
-      //     },
-      //     "0.6245011281678999": {
-      //         "type": "segment",
-      //         "observer": "p1",
-      //         "videoId": "e2HzKY5imTE",
-      //         "startTime": 390.828,
-      //         "endTime": 405.079,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "howdy",
-      //             "labelConfidence": 0.95
-      //         }
-      //     },
-      //     "0.9915320235602465": {
-      //         "type": "segment",
-      //         "observer": "p3",
-      //         "videoId": "/videos/demo.mp4",
-      //         "startTime": 1.431,
-      //         "endTime": 2.02,
-      //         "isHuman": true,
-      //         "confirmedBySomeone": false,
-      //         "rejectedBySomeone": false,
-      //         "observation": {
-      //             "label": "howdy",
-      //             "labelConfidence": 0.95
-      //         }
-      //     }
-      // }))
-      // let count = 10
-      // for (const [key, value] of Object.entries(results)) {
-      //     if (value.startTime == 1.431 || count>0&&value.videoId == "/videos/demo.mp4") {
-      //         count--
-      //         console.debug(`value is:`,value)
-      //         delete results[key]
-      //     }
-      // }
-      // console.debug(`count is:`,count)
-      // return returnObject ? {} : []
-
-      return returnObject ? results : Object.values(results);
-    },
-
-    async deleteObservation({
-      uuidOfSelectedSegment
-    }) {
-      return (await backend).mongoInterface.delete({
-        keyList: [uuidOfSelectedSegment],
-        from: "observations"
-      });
-    },
-
-    async setObservation({
-      uuidOfSelectedSegment,
-      observation
-    }) {
-      return await (await backend).mongoInterface.set({
-        keyList: [uuidOfSelectedSegment],
-        from: "observations",
-        to: observation
-      });
-    },
-
-    async getVideoIds() {
-      return await (await backend).mongoInterface.getAll({
-        from: "videos",
-        where: [{
-          hiddenValueOf: ["_id"],
-          matches: `^${value.trim()}`
-        }],
-        forEach: {
-          extractHidden: ['_id']
-        }
-      });
-    }
-
-  },
   fakeBackend,
   mixin: {
-    data: () => ({
-      backend
-    })
+    data: () => ({})
   }
-}; // add the backend to all of the components
+};
+window.backendHelpers = module.exports.backendHelpers; // add the backend to all of the components
 
 Vue.mixin(module.exports.mixin);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","ez-rpc-frontend":"node_modules/ez-rpc-frontend/frontend.js","./utils.js":"src/utils.js","./object.js":"src/object.js","./string.js":"src/string.js","lodash":"node_modules/lodash/lodash.js","./observation_tooling.js":"src/observation_tooling.js"}],"src/pages/Api.vue":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","./utils.js":"src/utils.js","./object.js":"src/object.js","./string.js":"src/string.js","lodash":"node_modules/lodash/lodash.js","./observation_tooling.js":"src/observation_tooling.js"}],"src/pages/Api.vue":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -76430,9 +75525,53 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 let {
   backend,
-  backendHelpers,
   fakeBackend
 } = require('../iilvd-api.js');
 
@@ -76442,10 +75581,10 @@ let {
   storageObject
 } = require("../utils");
 
-window.backendHelpers = backendHelpers;
 var _default = {
   props: ["currentTime", "duration", "jumpSegment"],
   components: {
+    JsonTree: require('vue-json-tree').default,
     UiSwitch: require("../atoms/UiSwitch").default
   },
 
@@ -76455,7 +75594,8 @@ var _default = {
       observationData: defaultObservationData,
       dataCopy: null,
       editing: false,
-      dontShow: true
+      dontShow: true,
+      showOtherData: false
     };
   },
 
@@ -76549,12 +75689,24 @@ var _default = {
 
   },
   methods: {
+    doShowOtherData() {
+      this.showOtherData = true;
+    },
+
+    hideOtherData() {
+      this.showOtherData = false;
+    },
+
     onLabelChange() {
-      this.observationData.label = observationTooling.coerceLabel(this.observationData.label);
+      this.observationData.label = observationTooling.coerceLabel(this.observationData.label); // the component is a bit buggy, so we have to do this
+
+      this.$refs.labelElement.$el.querySelector("input").value = this.observationData.label;
     },
 
     onObserverChange() {
-      this.observationData.observer = observationTooling.coerceObserver(this.observationData.observer);
+      this.observationData.observer = observationTooling.coerceObserver(this.observationData.observer); // the component is a bit buggy, so we have to do this
+
+      this.$refs.observerElement.$el.querySelector("input").value = this.observationData.observer;
     },
 
     preventBubbling(eventObject) {
@@ -76626,19 +75778,9 @@ var _default = {
       let thereWasAnError = false;
 
       try {
-        await backendHelpers.setObservation({
-          uuidOfSelectedSegment: this.uuidOfSelectedSegment,
-          observation: observationEntry
+        await fakeBackend.setObservation(observationEntry, {
+          withCoersion: true
         });
-
-        try {
-          await fakeBackend.setObservation(observationEntry, {
-            withCoersion: true
-          });
-        } catch (error) {
-          this.$toasted.show(`There was an error, look at console`).goAway(5500);
-          console.error(error.toString());
-        }
       } catch (error) {
         thereWasAnError = true;
         this.$toasted.show(`There was an error on the database`).goAway(5500);
@@ -76679,9 +75821,6 @@ var _default = {
       console.debug(`this.uuidOfSelectedSegment is:`, this.uuidOfSelectedSegment);
 
       if (this.uuidOfSelectedSegment) {
-        await backendHelpers.deleteObservation({
-          uuidOfSelectedSegment: this.uuidOfSelectedSegment
-        });
         await fakeBackend.deleteObservation({
           uuidOfSelectedSegment: this.uuidOfSelectedSegment
         });
@@ -76780,15 +75919,13 @@ exports.default = _default;
     [
       _c(
         "column",
-        {
-          staticClass: "add-container",
-          attrs: { opacity: _vm.editing ? 0 : 1 }
-        },
+        { staticClass: "add-container" },
         [
           _c(
             "ui-button",
             {
               staticClass: "add-button",
+              style: "opacity: " + (_vm.editing ? 0 : 1),
               attrs: {
                 icon: "add",
                 color: "primary",
@@ -76812,7 +75949,11 @@ exports.default = _default;
             "column",
             {
               staticClass: "observation-widget",
-              attrs: { "min-height": "38rem", position: "relative" }
+              attrs: {
+                "min-height": "37rem",
+                position: "relative",
+                "align-v": "top"
+              }
             },
             [
               !_vm.noSegment() && !_vm.editing
@@ -76856,6 +75997,65 @@ exports.default = _default;
                     [_vm._v("No Observation Selected")]
                   )
                 : _vm._e(),
+              !_vm.noSegment()
+                ? _c(
+                    "column",
+                    { attrs: { "align-h": "center", width: "100%" } },
+                    [
+                      _c(
+                        "transition",
+                        { attrs: { name: "fade" } },
+                        [
+                          !_vm.noSegment() || _vm.editing
+                            ? _c(
+                                "row",
+                                {
+                                  staticClass: "button-row",
+                                  attrs: {
+                                    "align-h": "space-evenly",
+                                    width: "100%",
+                                    "margin-bottom": "0.7rem",
+                                    "margin-top": "0.5rem"
+                                  }
+                                },
+                                [
+                                  _c(
+                                    "ui-button",
+                                    {
+                                      staticClass: "save-button",
+                                      style:
+                                        "opacity: " + (_vm.editing ? 1 : 0),
+                                      attrs: { icon: "save", color: "primary" },
+                                      on: { click: _vm.onSaveEdit }
+                                    },
+                                    [_vm._v("Save")]
+                                  ),
+                                  _c("container", {
+                                    attrs: { "flex-basis": "10%", width: "10%" }
+                                  }),
+                                  _c(
+                                    "ui-button",
+                                    {
+                                      staticClass: "delete-button",
+                                      style:
+                                        "opacity: " + (_vm.editing ? 1 : 0),
+                                      attrs: { icon: "delete", color: "red" },
+                                      on: { click: _vm.onDelete }
+                                    },
+                                    [_vm._v("Delete")]
+                                  )
+                                ],
+                                1
+                              )
+                            : _vm._e()
+                        ],
+                        1
+                      )
+                    ],
+                    1
+                  )
+                : _vm._e(),
+              _c("container", { attrs: { height: "10px" } }),
               _c(
                 "transition",
                 { attrs: { name: "fade" } },
@@ -76867,89 +76067,60 @@ exports.default = _default;
                           attrs: { "align-h": "space-between", width: "100%" }
                         },
                         [
-                          _c("h5", [_vm._v("Observation")]),
-                          !_vm.editing && _vm.$root.selectedSegment
-                            ? _c(
+                          _c(
+                            "h5",
+                            { staticStyle: { "font-size": "1.35rem" } },
+                            [_vm._v("Observation")]
+                          ),
+                          _c(
+                            "container",
+                            { attrs: { position: "relative" } },
+                            [
+                              _c(
                                 "ui-button",
                                 {
                                   staticClass: "edit-button",
+                                  style:
+                                    "opacity: " +
+                                    (!_vm.editing && _vm.$root.selectedSegment
+                                      ? 1
+                                      : 0) +
+                                    "; width: 7rem;",
                                   attrs: { icon: "edit", color: "primary" },
                                   on: { click: _vm.onEditObservation }
                                 },
                                 [_vm._v("Edit")]
+                              ),
+                              _c(
+                                "transition",
+                                { attrs: { name: "fade" } },
+                                [
+                                  _c(
+                                    "ui-button",
+                                    {
+                                      staticClass: "cancel-button",
+                                      style:
+                                        "position: absolute; opacity: " +
+                                        (_vm.editing ? 1 : 0) +
+                                        "; pointer-events: " +
+                                        (_vm.editing ? "all" : "none") +
+                                        ";",
+                                      attrs: {
+                                        icon: "cancel",
+                                        color: "accent"
+                                      },
+                                      on: { click: _vm.onCancelEdit }
+                                    },
+                                    [_vm._v("Cancel")]
+                                  )
+                                ],
+                                1
                               )
-                            : _vm._e()
+                            ],
+                            1
+                          )
                         ],
                         1
-                      )
-                    : _vm._e()
-                ],
-                1
-              ),
-              _c(
-                "transition",
-                { attrs: { name: "fade" } },
-                [
-                  !_vm.noSegment() || _vm.editing
-                    ? _c(
-                        "row",
-                        {
-                          staticClass: "button-row",
-                          attrs: {
-                            "align-h": "space-evenly",
-                            width: "100%",
-                            "margin-bottom": "0.7rem",
-                            "margin-top": "0.5rem"
-                          }
-                        },
-                        [
-                          _vm.editing
-                            ? _c(
-                                "ui-button",
-                                {
-                                  staticClass: "save-button",
-                                  attrs: { icon: "save", color: "primary" },
-                                  on: { click: _vm.onSaveEdit }
-                                },
-                                [_vm._v("Save")]
-                              )
-                            : _vm._e(),
-                          _vm.editing
-                            ? _c("container", {
-                                attrs: { "flex-basis": "10%", width: "10%" }
-                              })
-                            : _vm._e(),
-                          _vm.editing
-                            ? _c(
-                                "ui-button",
-                                {
-                                  staticClass: "delete-button",
-                                  attrs: { icon: "delete", color: "red" },
-                                  on: { click: _vm.onDelete }
-                                },
-                                [_vm._v("Delete")]
-                              )
-                            : _vm._e()
-                        ],
-                        1
-                      )
-                    : _vm._e()
-                ],
-                1
-              ),
-              _c(
-                "transition",
-                { attrs: { name: "fade" } },
-                [
-                  _vm.editing
-                    ? _c(
-                        "ui-button",
-                        {
-                          staticClass: "cancel-button",
-                          attrs: { icon: "cancel", color: "accent" },
-                          on: { click: _vm.onCancelEdit }
-                        },
-                        [_vm._v("Cancel")]
                       )
                     : _vm._e()
                 ],
@@ -76974,6 +76145,7 @@ exports.default = _default;
                             [
                               _c("ui-textbox", {
                                 attrs: {
+                                  tabindex: "1",
                                   disabled: !_vm.editing,
                                   label: "Start Time (seconds)",
                                   placeholder:
@@ -77020,7 +76192,9 @@ exports.default = _default;
                             { staticClass: "end-time-wrapper" },
                             [
                               _c("ui-textbox", {
+                                ref: "endTimeElement",
                                 attrs: {
+                                  tabindex: "2",
                                   disabled: !_vm.editing,
                                   label: "End Time (seconds)",
                                   placeholder: "" + _vm.observationData.endTime,
@@ -77057,83 +76231,163 @@ exports.default = _default;
                                     [_c("ui-icon", [_vm._v("skip_next")])],
                                     1
                                   )
+                                : _vm._e(),
+                              _vm.editing
+                                ? _c(
+                                    "ui-tooltip",
+                                    {
+                                      attrs: {
+                                        position: "left",
+                                        animation: "fade",
+                                        trigger: _vm.$refs.endTimeElement
+                                      }
+                                    },
+                                    [_vm._v(_vm._s("> start, ≤ duration"))]
+                                  )
                                 : _vm._e()
                             ],
                             1
                           ),
-                          _c("ui-textbox", {
-                            ref: "labelElement",
-                            attrs: {
-                              disabled: !_vm.editing,
-                              "floating-label": "floating-label",
-                              label: "Label",
-                              invalid: !_vm.isValid.label
-                            },
-                            on: {
-                              change: _vm.onLabelChange,
-                              input: _vm.onLabelChange
-                            },
-                            model: {
-                              value: _vm.observationData.label,
-                              callback: function($$v) {
-                                _vm.$set(_vm.observationData, "label", $$v)
-                              },
-                              expression: "observationData.label"
-                            }
-                          }),
-                          _c("ui-textbox", {
-                            attrs: {
-                              disabled: !_vm.editing,
-                              "floating-label": "floating-label",
-                              label: "Label Confidence",
-                              invalid: !_vm.isValid.labelConfidence
-                            },
-                            model: {
-                              value: _vm.observationData.labelConfidence,
-                              callback: function($$v) {
-                                _vm.$set(
-                                  _vm.observationData,
-                                  "labelConfidence",
-                                  $$v
-                                )
-                              },
-                              expression: "observationData.labelConfidence"
-                            }
-                          }),
-                          _c("ui-textbox", {
-                            attrs: {
-                              disabled: !_vm.editing,
-                              "floating-label": "floating-label",
-                              label: "Observer (username)",
-                              invalid: !_vm.isValid.observer
-                            },
-                            model: {
-                              value: _vm.observationData.observer,
-                              callback: function($$v) {
-                                _vm.$set(_vm.observationData, "observer", $$v)
-                              },
-                              expression: "observationData.observer"
-                            }
-                          }),
-                          _c("ui-textbox", {
-                            attrs: {
-                              disabled: !_vm.editing,
-                              "floating-label": "floating-label",
-                              label: "Video Id",
-                              invalid: !_vm.isValid.videoId
-                            },
-                            model: {
-                              value: _vm.observationData.videoId,
-                              callback: function($$v) {
-                                _vm.$set(_vm.observationData, "videoId", $$v)
-                              },
-                              expression: "observationData.videoId"
-                            }
-                          }),
+                          _c(
+                            "div",
+                            { attrs: { tabindex: "-1" } },
+                            [
+                              _vm.editing
+                                ? _c(
+                                    "ui-tooltip",
+                                    {
+                                      attrs: {
+                                        position: "left",
+                                        animation: "fade",
+                                        trigger: _vm.$refs.labelElement
+                                      }
+                                    },
+                                    [
+                                      _vm._v(
+                                        "all lowercase letters, numbers, dashes and periods"
+                                      )
+                                    ]
+                                  )
+                                : _vm._e(),
+                              _c("ui-textbox", {
+                                ref: "labelElement",
+                                attrs: {
+                                  tabindex: "3",
+                                  disabled: !_vm.editing,
+                                  "floating-label": "floating-label",
+                                  label: "Label",
+                                  invalid: !_vm.isValid.label
+                                },
+                                on: {
+                                  change: _vm.onLabelChange,
+                                  input: _vm.onLabelChange
+                                },
+                                model: {
+                                  value: _vm.observationData.label,
+                                  callback: function($$v) {
+                                    _vm.$set(_vm.observationData, "label", $$v)
+                                  },
+                                  expression: "observationData.label"
+                                }
+                              })
+                            ],
+                            1
+                          ),
+                          _c(
+                            "div",
+                            { attrs: { tabindex: "-1" } },
+                            [
+                              _vm.editing
+                                ? _c(
+                                    "ui-tooltip",
+                                    {
+                                      attrs: {
+                                        position: "left",
+                                        animation: "fade",
+                                        trigger:
+                                          _vm.$refs.labelConfidenceElement
+                                      }
+                                    },
+                                    [_vm._v("a value between -1 and 1")]
+                                  )
+                                : _vm._e(),
+                              _c("ui-textbox", {
+                                ref: "labelConfidenceElement",
+                                attrs: {
+                                  tabindex: "4",
+                                  disabled: !_vm.editing,
+                                  "floating-label": "floating-label",
+                                  label: "Label Confidence",
+                                  invalid: !_vm.isValid.labelConfidence
+                                },
+                                model: {
+                                  value: _vm.observationData.labelConfidence,
+                                  callback: function($$v) {
+                                    _vm.$set(
+                                      _vm.observationData,
+                                      "labelConfidence",
+                                      $$v
+                                    )
+                                  },
+                                  expression: "observationData.labelConfidence"
+                                }
+                              })
+                            ],
+                            1
+                          ),
+                          _c(
+                            "div",
+                            { attrs: { tabindex: "-1" } },
+                            [
+                              _vm.editing
+                                ? _c(
+                                    "ui-tooltip",
+                                    {
+                                      attrs: {
+                                        position: "left",
+                                        animation: "fade",
+                                        trigger: _vm.$refs.observerElement
+                                      }
+                                    },
+                                    [
+                                      _vm._v(
+                                        "all lowercase letters, numbers, dashes and periods"
+                                      )
+                                    ]
+                                  )
+                                : _vm._e(),
+                              _c("ui-textbox", {
+                                ref: "observerElement",
+                                attrs: {
+                                  tabindex: "5",
+                                  disabled: !_vm.editing,
+                                  "floating-label": "floating-label",
+                                  label: "Observer (username)",
+                                  invalid: !_vm.isValid.observer
+                                },
+                                on: {
+                                  change: _vm.onObserverChange,
+                                  input: _vm.onObserverChange
+                                },
+                                model: {
+                                  value: _vm.observationData.observer,
+                                  callback: function($$v) {
+                                    _vm.$set(
+                                      _vm.observationData,
+                                      "observer",
+                                      $$v
+                                    )
+                                  },
+                                  expression: "observationData.observer"
+                                }
+                              })
+                            ],
+                            1
+                          ),
                           _c(
                             "UiSwitch",
                             {
-                              attrs: { disabled: !_vm.editing },
+                              attrs: { disabled: !_vm.editing, tabindex: "6" },
                               model: {
                                 value: _vm.observationData.isHuman,
                                 callback: function($$v) {
@@ -77148,7 +76402,10 @@ exports.default = _default;
                             ? _c(
                                 "UiSwitch",
                                 {
-                                  attrs: { disabled: !_vm.editing },
+                                  attrs: {
+                                    disabled: !_vm.editing,
+                                    tabindex: "7"
+                                  },
                                   model: {
                                     value:
                                       _vm.observationData.confirmedBySomeone,
@@ -77170,7 +76427,10 @@ exports.default = _default;
                             ? _c(
                                 "UiSwitch",
                                 {
-                                  attrs: { disabled: !_vm.editing },
+                                  attrs: {
+                                    disabled: !_vm.editing,
+                                    tabindex: "8"
+                                  },
                                   model: {
                                     value:
                                       _vm.observationData.rejectedBySomeone,
@@ -77188,37 +76448,161 @@ exports.default = _default;
                                 [_vm._v("Rejected By ≥1 Human")]
                               )
                             : _vm._e(),
-                          _c("div", { staticStyle: { "margin-top": "2rem" } }),
-                          _c("ui-textbox", {
-                            attrs: {
-                              disabled: true,
-                              "floating-label": "floating-label",
-                              label: "Created At"
-                            },
-                            model: {
-                              value: _vm.humanTime,
-                              callback: function($$v) {
-                                _vm.humanTime = $$v
-                              },
-                              expression: "humanTime"
-                            }
-                          }),
-                          _c("ui-textbox", {
-                            staticStyle: { "margin-top": "-1rem" },
-                            attrs: {
-                              disabled: true,
-                              "floating-label": "floating-label",
-                              label: "Id",
-                              tooltip: "This is based on 'Created At'"
-                            },
-                            model: {
-                              value: _vm.observationData.createdAt,
-                              callback: function($$v) {
-                                _vm.$set(_vm.observationData, "createdAt", $$v)
-                              },
-                              expression: "observationData.createdAt"
-                            }
-                          })
+                          _c("div", { staticStyle: { "min-height": "4rem" } }),
+                          !_vm.noSegment()
+                            ? _c(
+                                "column",
+                                {
+                                  attrs: {
+                                    "align-h": "center",
+                                    width: "90%",
+                                    background: "whitesmoke",
+                                    "border-radius": "1rem",
+                                    padding: "1rem",
+                                    overflow: _vm.showOtherData
+                                      ? "auto"
+                                      : "hidden",
+                                    position: "absolute",
+                                    bottom: "1rem",
+                                    left: "5%"
+                                  },
+                                  on: {
+                                    mouseenter: _vm.doShowOtherData,
+                                    mouseleave: _vm.hideOtherData
+                                  }
+                                },
+                                [
+                                  _c(
+                                    "span",
+                                    {
+                                      staticStyle: {
+                                        width: "12rem",
+                                        "text-align": "center",
+                                        color: "var(--gray)",
+                                        padding: "0.5rem",
+                                        "border-radius": "1rem"
+                                      }
+                                    },
+                                    [_vm._v("other data")]
+                                  ),
+                                  _c(
+                                    "transition",
+                                    { attrs: { name: "quick-fade" } },
+                                    [
+                                      _c(
+                                        "column",
+                                        {
+                                          style:
+                                            "transition: all ease 0.3s; opacity: " +
+                                            (_vm.showOtherData ? 1 : 0) +
+                                            "; max-height: " +
+                                            (_vm.showOtherData ? "40rem" : 0) +
+                                            "; height: fit-content; max-width: 100%; min-width: 100%;",
+                                          attrs: { "align-h": "left" }
+                                        },
+                                        [
+                                          _c("div", {
+                                            staticStyle: {
+                                              "margin-top": "0.5rem"
+                                            }
+                                          }),
+                                          _c("ui-textbox", {
+                                            attrs: {
+                                              disabled: true,
+                                              "floating-label":
+                                                "floating-label",
+                                              label: "Video Id",
+                                              invalid: !_vm.isValid.videoId
+                                            },
+                                            model: {
+                                              value:
+                                                _vm.observationData.videoId,
+                                              callback: function($$v) {
+                                                _vm.$set(
+                                                  _vm.observationData,
+                                                  "videoId",
+                                                  $$v
+                                                )
+                                              },
+                                              expression:
+                                                "observationData.videoId"
+                                            }
+                                          }),
+                                          _c("ui-textbox", {
+                                            attrs: {
+                                              disabled: true,
+                                              "floating-label":
+                                                "floating-label",
+                                              label: "Created At"
+                                            },
+                                            model: {
+                                              value: _vm.humanTime,
+                                              callback: function($$v) {
+                                                _vm.humanTime = $$v
+                                              },
+                                              expression: "humanTime"
+                                            }
+                                          }),
+                                          _c("ui-textbox", {
+                                            staticStyle: {
+                                              "margin-top": "-0.4rem"
+                                            },
+                                            attrs: {
+                                              disabled: true,
+                                              "floating-label":
+                                                "floating-label",
+                                              label: "Id",
+                                              tooltip:
+                                                "This is based on 'Created At'"
+                                            },
+                                            model: {
+                                              value:
+                                                _vm.observationData.createdAt,
+                                              callback: function($$v) {
+                                                _vm.$set(
+                                                  _vm.observationData,
+                                                  "createdAt",
+                                                  $$v
+                                                )
+                                              },
+                                              expression:
+                                                "observationData.createdAt"
+                                            }
+                                          }),
+                                          _c(
+                                            "column",
+                                            {
+                                              attrs: {
+                                                "align-h": "left",
+                                                color: "gray",
+                                                width: "100%",
+                                                "max-width": "100%",
+                                                overflow: "auto"
+                                              }
+                                            },
+                                            [
+                                              _vm._v("customInfo"),
+                                              _c("JsonTree", {
+                                                staticClass: "json-tree",
+                                                attrs: {
+                                                  data:
+                                                    _vm.observationData
+                                                      .customInfo || {}
+                                                }
+                                              })
+                                            ],
+                                            1
+                                          )
+                                        ],
+                                        1
+                                      )
+                                    ],
+                                    1
+                                  )
+                                ],
+                                1
+                              )
+                            : _vm._e()
                         ],
                         1
                       )
@@ -77269,7 +76653,7 @@ render._withStripped = true
       
       }
     })();
-},{"../string.js":"src/string.js","../observation_tooling.js":"src/observation_tooling.js","../iilvd-api.js":"src/iilvd-api.js","../utils":"src/utils.js","../atoms/UiSwitch":"src/atoms/UiSwitch.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/organisms/SegmentDisplay.vue":[function(require,module,exports) {
+},{"../string.js":"src/string.js","../observation_tooling.js":"src/observation_tooling.js","../iilvd-api.js":"src/iilvd-api.js","../utils":"src/utils.js","vue-json-tree":"node_modules/vue-json-tree/src/json-tree.vue","../atoms/UiSwitch":"src/atoms/UiSwitch.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/organisms/SegmentDisplay.vue":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -77348,7 +76732,6 @@ const {
 } = require("../utils.js");
 
 const {
-  backendHelpers,
   fakeBackend
 } = require('../iilvd-api.js');
 
@@ -77416,6 +76799,10 @@ var _default = {
     }
   },
   methods: {
+    theColor(eachSegment) {
+      return this.$root.labels[eachSegment?.observation?.label]?.color;
+    },
+
     attemptSegmentSelection() {
       // select the first segment if no segment is selcted
       try {
@@ -77433,22 +76820,14 @@ var _default = {
         let keySegments;
 
         try {
-          keySegments = await backendHelpers.getObservations({
+          keySegments = await fakeBackend.getObservations({
             where: [{
               valueOf: ['videoId'],
               is: originalVideoId
             }],
             returnObject: true
           });
-          const fakeKeySegments = await fakeBackend.getObservations({
-            where: [{
-              valueOf: ['videoId'],
-              is: originalVideoId
-            }],
-            returnObject: true
-          });
-          console.debug(`BACKEND: keySegments is:`, keySegments);
-          console.debug(`FAKE   : keySegments is:`, fakeKeySegments);
+          console.debug(`BACKEND: keySegments is:`, keySegments); // console.debug(`FAKE   : keySegments is:`,fakeKeySegments)
         } catch (error) {
           console.error("updateSegments error", error);
           return;
@@ -77811,9 +77190,7 @@ exports.default = _default;
                       {
                         key: eachSegment.createdAt || eachSegment.$uuid,
                         staticClass: "segment",
-                        style:
-                          "--color: " +
-                          _vm.$root.labels[eachSegment.observation.label].color,
+                        style: "--color: " + _vm.theColor(eachSegment),
                         attrs: {
                           left: eachSegment.$renderData.leftPercent,
                           width: eachSegment.$renderData.widthPercent,
@@ -77825,12 +77202,8 @@ exports.default = _default;
                             eachSegment.$uuid ==
                             (_vm.$root.selectedSegment &&
                               _vm.$root.selectedSegment.$uuid),
-                          "background-color":
-                            _vm.$root.labels[eachSegment.observation.label]
-                              .color,
-                          "border-color":
-                            _vm.$root.labels[eachSegment.observation.label]
-                              .color
+                          "background-color": _vm.theColor(eachSegment),
+                          "border-color": _vm.theColor(eachSegment)
                         },
                         on: {
                           click: function($event) {
@@ -77944,7 +77317,10 @@ exports.default = _default;
                   _c(
                     "ui-checkbox",
                     {
-                      staticStyle: { "align-items": "flex-start" },
+                      staticStyle: {
+                        "align-items": "flex-start",
+                        "white-space": "nowrap"
+                      },
                       on: {
                         change: function($event) {
                           return _vm.toggleLabel(eachLabelName)
@@ -78680,7 +78056,7 @@ var _default = {
         this.suggestions = storageObject.cachedVideoIds;
       } else {
         // add results from the database
-        let possibleVideoIds = await _iilvdApi.backendHelpers.getVideoIds();
+        let possibleVideoIds = await _iilvdApi.fakeBackend.getVideoIds();
         this.suggestions = [...new Set(possibleVideoIds.concat(this.suggestions))];
       }
     }
@@ -78957,6 +78333,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
+//
 //
 //
 //
@@ -79299,7 +78676,6 @@ exports.default = void 0;
 //
 //
 let {
-  backendHelpers,
   fakeBackend
 } = require('../iilvd-api.js');
 
@@ -79339,12 +78715,8 @@ var _default = {
     async download() {
       console.log(`download clicked`);
 
-      if (observationEntries.length == 0) {
-        const allEntries = await backendHelpers.getObservations({
-          where,
-          returnObject: false
-        });
-        const allEntriesFake = await fakeBackend.getObservations({
+      if (observationEntries?.length == 0) {
+        const allEntries = await fakeBackend.getObservations({
           where,
           returnObject: false
         });
@@ -79357,42 +78729,39 @@ var _default = {
     async showDeletePrompt() {
       let entries = observationEntries;
 
-      if (entries.length == 0) {
-        const allEntries = await backendHelpers.getObservations({
-          where,
-          returnObject: true
-        });
-        const allEntriesFake = await fakeBackend.getObservations({
-          where,
-          returnObject: false
-        });
-        entries = allEntries;
+      if (entries?.length == 0) {
+        for await (const [key, value] of fakeBackend.iter.observations) {
+          entries.push({
+            createdAt: key
+          });
+          entries.push({
+            createdAt: value.createdAt
+          });
+        }
       }
 
       if (confirm(`Are you sure?\n\n    Ok = Delete ${entries.length} observations\n    Cancel = Keep Data`)) {
         const toastObject = this.$toasted.show(`Deleting...`, {
-          closeOnSwipe: false,
-          action: {
-            text: 'Close',
-            onClick: (e, _) => {
-              toastObject.goAway(0);
-            }
-          }
+          closeOnSwipe: true
         });
         const toastElement = toastObject.el;
+
+        toastElement.onclick = () => {
+          toastObject.goAway(0);
+        };
+
         toastElement.innerHTML = `<div><br>${toastElement.innerHTML}<br><p>0 of ${entries.length}\n</p></div>`;
         let count = 0;
 
         for (const each of entries) {
-          await backendHelpers.deleteObservation({
-            uuidOfSelectedSegment: each.createdAt
-          });
           await fakeBackend.deleteObservation({
             uuidOfSelectedSegment: each.createdAt
           });
           count++;
           toastElement.innerHTML = toastElement.innerHTML.replace(/<p>.+/, `<p>${count} of ${entries.length}`);
         }
+
+        toastElement.innerHTML = toastElement.innerHTML.replace(/Deleting\.\.\./, `Deleted (Click to close)`);
 
         if (this.$root.routeData$.labelName) {
           this.$root.selectAllLabels();
@@ -79422,10 +78791,8 @@ var _default = {
           labelName: this.$root.routeData$.labelName
         } : {})
       };
-      this.$root.searchResults = await backend.summary.general(filterAndSort);
-      const fakeSearchResults = await fakeBackend.summary.general(filterAndSort);
-      console.debug(`BACKEND searchResults`, this.$root.searchResults);
-      console.debug(`FAKE    searchResults`, fakeSearchResults);
+      this.$root.searchResults = await fakeBackend.summary.general(filterAndSort);
+      console.debug(`BACKEND: searchResults`, this.$root.searchResults);
       console.debug(`this.$root.searchResults is:`, JSON.stringify(this.$root.searchResults, 0, 4));
       let where = []; // 
       // build the backend query
@@ -79493,20 +78860,15 @@ var _default = {
 
 
       console.log(`querying the backend for observationEntries`);
-      observationEntries = await backendHelpers.getObservations({
+      observationEntries = await fakeBackend.getObservations({
         where,
         returnObject: true
       });
-      let fakeObservationEntries = await fakeBackend.getObservations({
-        where,
-        returnObject: true
-      });
-      console.debug(`BACKEND: observationEntries is:`, observationEntries);
-      console.debug(`FAKE   : observationEntries is:`, fakeObservationEntries); // ensure the createdAt is the ID
+      console.debug(`BACKEND: observationEntries is:`, observationEntries); // console.debug(`FAKE   : observationEntries is:`,fakeObservationEntries)
+      // ensure the createdAt is the ID
 
       for (const [key, value] of Object.entries(observationEntries)) {
         value.createdAt = key;
-        console.debug(`value is:`, value);
       }
 
       observationEntries = Object.values(observationEntries);
@@ -80097,9 +79459,8 @@ var _default = {
       if (title != undefined) {
         return title;
       } else {
-        _iilvdApi.backendHelpers.getVideoTitle(videoId).then(async title => {
+        _iilvdApi.fakeBackend.getVideoTitle(videoId).then(title => {
           console.debug(`BACKEND: title is:`, title);
-          console.debug(`FAKE   : title is:`, await _iilvdApi.fakeBackend.getVideoTitle(videoId));
           console.log(`received title ${title}`);
 
           if (!(videoObject.summary instanceof Object)) {
@@ -81089,6 +80450,7 @@ exports.default = void 0;
 //
 //
 //
+//
 const {
   checkIf
 } = require("../utils.js");
@@ -81594,6 +80956,14 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
+var observationTooling = _interopRequireWildcard(require("../observation_tooling.js"));
+
+var yaml = _interopRequireWildcard(require("yaml"));
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
 //
 //
 //
@@ -81702,7 +81072,7 @@ var _default = {
     uploadMessage: null,
     uploadCanceled: false,
     errorPreview: "",
-    latestUploadErrors: "",
+    latestUploadErrorsObject: {},
     dummyData1: {
       "createdAt": new Date().getTime() + `${Math.random()}`.slice(1),
       "type": "segment",
@@ -81736,6 +81106,16 @@ var _default = {
       "customInfo": {}
     }
   }),
+  computed: {
+    latestUploadErrors() {
+      return yaml.stringify(this.latestUploadErrorsObject);
+    },
+
+    numberOfErrors() {
+      return Object.values(this.latestUploadErrorsObject).flat(2).length;
+    }
+
+  },
   watch: {
     dummyData1: {
       deep: true,
@@ -81786,24 +81166,24 @@ var _default = {
       // 
 
       for (const [key, eachFile] of Object.entries(eventObject)) {
-        const fileNumber = key - 0 + 1;
+        const fileIndex = key - 0;
         const fileText = await eachFile.text();
 
         try {
           // save the uploadTime to help with removing bad data
           let index = -1;
 
-          for (let each of JSON.parse(fileText)) {
+          for (let each of yaml.parse(fileText)) {
             each.uploadTime = `${new Date()}`;
             newObservations.push(each);
             observationMapping[newObservations.length - 1] = {
-              fileNumber,
+              fileIndex,
               fileName: eachFile.name,
               observationIndex: ++index
             };
           }
         } catch (error) {
-          this.$toasted.show(`File Upload #${fileNumber} Error\nAre you sure the file is valid JSON?`, {
+          this.$toasted.show(`File Upload #${fileIndex} Error\nAre you sure the file is valid JSON?`, {
             closeOnSwipe: false,
             action: {
               text: 'Close',
@@ -81825,7 +81205,7 @@ var _default = {
         this.$toasted.show(`each file at least seems to be valid JSON 👍 `).goAway(6500);
         this.uploadCanceled = false;
         this.uploadMessage = "starting upload";
-        this.latestUploadErrors = "";
+        this.latestUploadErrorsObject = {};
         this.errorPreview = "";
         const size = newObservations.length;
         const startTime = new Date().getTime();
@@ -81835,18 +81215,23 @@ var _default = {
         for (const [key, value] of Object.entries(newObservations)) {
           const observationNumber = key - 0 + 1;
           const {
-            fileNumber,
+            fileIndex,
             fileName,
             observationIndex
           } = observationMapping[key];
-          const fileNumberString = eventObject.length > 1 ? `File ${fileNumber} of ${eventObject.length}\n\n` : "";
+          const fileIndexString = eventObject.length > 1 ? `File ${fileIndex} of ${eventObject.length}\n\n` : "";
           const timeRemainingString = timeRemaining ? " (~ " + humandReadableTime(timeRemaining) + " remaining)" : "";
-          this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n`;
+          this.uploadMessage = `${fileIndexString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n`;
           value.observation.label = toKebabCase(`${value.observation.label}`.toLowerCase());
 
           try {
-            await (await this.backend).addObservation(value);
-            await fakeBackend.addObservation(value);
+            const frontendErrorMessages = observationTooling.validateObservations([value])[0];
+
+            if (frontendErrorMessages.length > 0) {
+              throw Error(yaml.stringify(frontendErrorMessages));
+            }
+
+            await fakeBackend.setObservation(value);
           } catch (error) {
             if (error.message.match(/Message: Failed to fetch/)) {
               this.$toasted.show(`Server took too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(6500);
@@ -81854,8 +81239,33 @@ var _default = {
             }
 
             errorCount++;
-            this.errorPreview = `There were some (${errorCount}) errors:`;
-            this.latestUploadErrors += `\n- problem with file #${fileNumber} "${fileName}", observation #${observationIndex}:\n      ` + error.message.split("\n").join("\n      ") + "\n";
+            this.errorPreview = `There were some (${this.numberOfErrors}) errors:`;
+            const alreadyShown = this.numberOfErrors > 0;
+            const whichFile = `file ${fileIndex}: ${JSON.stringify(fileName)}`;
+            const whichObservation = `observation ${observationIndex}`;
+            this.latestUploadErrorsObject[whichFile] = this.latestUploadErrorsObject[whichFile] || {};
+            let messages;
+
+            try {
+              messages = yaml.parse(error.message);
+            } catch (error) {}
+
+            if (!(messages instanceof Array)) {
+              messages = [error.message];
+            }
+
+            const isFirstErrorForObservation = !(this.latestUploadErrorsObject[whichFile][whichObservation] instanceof Array);
+            const hasACreatedAtValue = !!whichObservation.createdAt;
+
+            if (isFirstErrorForObservation && hasACreatedAtValue) {
+              messages = [`"createdAt": ${JSON.stringify(whichObservation.createdAt)}`, ...messages];
+            }
+
+            this.latestUploadErrorsObject[whichFile][whichObservation] = [...(this.latestUploadErrorsObject[whichFile][whichObservation] || []), ...messages];
+
+            if (this.numberOfErrors > 0 && !alreadyShown) {
+              this.$refs.errorModal.open();
+            }
           }
 
           const changeInTime = new Date().getTime() - startTime;
@@ -81871,7 +81281,8 @@ var _default = {
           }
         }
 
-        this.$toasted.show(`Upload Finished! Refresh to see changes`, {
+        window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"));
+        this.$toasted.show(`Upload Finished`, {
           closeOnSwipe: false,
           action: {
             text: 'Close',
@@ -81938,83 +81349,6 @@ exports.default = _default;
             attrs: { name: "file", type: "secondary", multiple: true },
             on: { change: _vm.onUploadObservation }
           })
-        ],
-        1
-      ),
-      _c(
-        "transition",
-        { attrs: { name: "fade" } },
-        [
-          (_vm.uploadMessage && !_vm.uploadCanceled) ||
-          _vm.latestUploadErrors.length > 0
-            ? _c(
-                "Card",
-                {
-                  attrs: {
-                    position: "fixed",
-                    bottom: "2rem",
-                    right: "2rem",
-                    "z-index": "999",
-                    width: "30rem",
-                    shadow: "3",
-                    background: "whitesmoke",
-                    "align-h": "left"
-                  }
-                },
-                [
-                  _vm._v(_vm._s(_vm.uploadMessage)),
-                  _vm.errorPreview ? _c("br") : _vm._e(),
-                  _vm._v(_vm._s(_vm.errorPreview)),
-                  _c(
-                    "row",
-                    {
-                      attrs: {
-                        width: "100%",
-                        "max-width": "100%",
-                        "max-height": "6rem",
-                        overflow: "auto",
-                        "white-space": "pre",
-                        "align-h": "left",
-                        "align-v": "top"
-                      }
-                    },
-                    [_vm._v(_vm._s(_vm.latestUploadErrors))]
-                  ),
-                  _c("br"),
-                  _c(
-                    "row",
-                    { attrs: { width: "100%", "align-h": "space-between" } },
-                    [
-                      _c(
-                        "ui-button",
-                        {
-                          staticClass: "cancel-button",
-                          style:
-                            "opacity: " +
-                            (_vm.uploadMessage && !_vm.uploadCanceled ? 1 : 0),
-                          attrs: { icon: "cancel" },
-                          on: { click: _vm.quitUpload }
-                        },
-                        [_vm._v("Cancel")]
-                      ),
-                      _vm.latestUploadErrors.length > 0
-                        ? _c(
-                            "ui-button",
-                            {
-                              staticClass: "error-button",
-                              attrs: { icon: "sms_failed" },
-                              on: { click: _vm.downloadErrorLog }
-                            },
-                            [_vm._v("Download Error Log")]
-                          )
-                        : _vm._e()
-                    ],
-                    1
-                  )
-                ],
-                1
-              )
-            : _vm._e()
         ],
         1
       ),
@@ -82133,6 +81467,73 @@ exports.default = _default;
           )
         ],
         1
+      ),
+      _c(
+        "portal",
+        { attrs: { to: "modal-popups" } },
+        [
+          _c(
+            "ui-modal",
+            {
+              ref: "errorModal",
+              staticClass: "modal",
+              attrs: {
+                fj20485gh93oi53g: "fj20485gh93oi53g",
+                title: _vm.errorPreview,
+                transition: "scale-up"
+              }
+            },
+            [
+              _c(
+                "row",
+                { attrs: { width: "100%", "align-h": "space-between" } },
+                [
+                  _c(
+                    "ui-button",
+                    {
+                      staticClass: "cancel-button",
+                      style:
+                        "opacity: " +
+                        (_vm.uploadMessage && !_vm.uploadCanceled ? 1 : 0),
+                      attrs: { icon: "cancel" },
+                      on: { click: _vm.quitUpload }
+                    },
+                    [_vm._v("Cancel Upload")]
+                  ),
+                  _vm.latestUploadErrors.length > 0
+                    ? _c(
+                        "ui-button",
+                        {
+                          staticClass: "error-button",
+                          attrs: { color: "blue", icon: "sms_failed" },
+                          on: { click: _vm.downloadErrorLog }
+                        },
+                        [_vm._v("Download Error Log")]
+                      )
+                    : _vm._e()
+                ],
+                1
+              ),
+              _c("br"),
+              _vm._v("Note: #0 means first element (AKA 0 indexed)"),
+              _c("br"),
+              _c(
+                "code",
+                {
+                  staticStyle: {
+                    "max-width": "80vw",
+                    overflow: "auto",
+                    "white-space": "preserve",
+                    display: "flex"
+                  }
+                },
+                [_vm._v(_vm._s(_vm.latestUploadErrors))]
+              )
+            ],
+            1
+          )
+        ],
+        1
       )
     ],
     1
@@ -82171,7 +81572,7 @@ render._withStripped = true
       
       }
     })();
-},{"../utils.js":"src/utils.js","../iilvd-api.js":"src/iilvd-api.js","vue-json-tree":"node_modules/vue-json-tree/src/json-tree.vue","../molecules/DummyObservation":"src/molecules/DummyObservation.vue","../molecules/Card":"src/molecules/Card.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/pages/Home.vue":[function(require,module,exports) {
+},{"../utils.js":"src/utils.js","../iilvd-api.js":"src/iilvd-api.js","../observation_tooling.js":"src/observation_tooling.js","yaml":"node_modules/yaml/browser/index.js","vue-json-tree":"node_modules/vue-json-tree/src/json-tree.vue","../molecules/DummyObservation":"src/molecules/DummyObservation.vue","../molecules/Card":"src/molecules/Card.vue","_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js","vue-hot-reload-api":"node_modules/vue-hot-reload-api/dist/index.js","vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/pages/Home.vue":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -82484,12 +81885,8 @@ var _default = RootComponent = {
   },
 
   mounted() {
-    this.backend.then(async backend => {
-      this.$toasted.show(`Connected to backend`).goAway(3500);
-      untrackedData.usernameList = untrackedData.usernameList.concat(await backend.getUsernames());
-      let fakeUsernames = await fakeBackend.getUsernames();
-      console.debug(`BACKEND: untrackedData.usernameList is:`, untrackedData.usernameList);
-      console.debug(`FAKE: untrackedData.usernameList is:`, fakeUsernames);
+    fakeBackend.getUsernames().then(usernames => {
+      untrackedData.usernameList = untrackedData.usernameList.concat(usernames);
     });
   },
 
@@ -82740,10 +82137,10 @@ var _default = RootComponent = {
       let newLabels;
 
       try {
-        newLabels = await (await this.backend).summary.labels();
-        const fakeNewLabels = await fakeBackend.summary.labels();
-        console.debug(`BACKEND: newLabels is:`, newLabels);
-        console.debug(`FAKE   : newLabels is`, fakeNewLabels);
+        // newLabels = await (await this.backend).summary.labels()
+        // const fakeNewLabels = await fakeBackend.summary.labels()
+        newLabels = await fakeBackend.summary.labels();
+        console.debug(`BACKEND: newLabels is:`, newLabels); // console.debug(`FAKE   : newLabels is` , fakeNewLabels)
       } catch (error) {
         this.$toasted.show(`Unable to get summary.labels() from backend`).goAway(3500);
         console.error(error.message);
@@ -82767,20 +82164,21 @@ var _default = RootComponent = {
     },
 
     addLabel(labelName, videoId) {
-      // if the label doesnt exist
       if (!this.$root.labels[labelName]) {
-        this.$toasted.show(`New label added`).goAway(3500);
-        const noneAreSelected = Object.values(this.$root.labels).every(each => !each.selected); // then add it
-
-        this.$root.labels[labelName] = {
-          color: (0, _utils.getColor)(labelName),
-          segmentCount: 1,
-          videoCount: 1,
-          videos: [videoId],
-          selected: !noneAreSelected // if nothing is selected, keep it that way
-
-        };
+        // if the label doesnt exist
+        this.$toasted.show(`Note: Thats a new label name`).goAway(3500);
       }
+
+      const noneAreSelected = Object.values(this.$root.labels).every(each => !each.selected); // then add it
+
+      this.$root.labels[labelName] = {
+        color: (0, _utils.getColor)(labelName),
+        segmentCount: 1,
+        videoCount: 1,
+        videos: [videoId],
+        selected: !noneAreSelected // if nothing is selected, keep it that way
+
+      };
     },
 
     selectAllLabels() {
@@ -82884,7 +82282,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51002" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59637" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
