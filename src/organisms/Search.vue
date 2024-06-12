@@ -232,7 +232,6 @@ export default {
             // ensure the createdAt is the ID
             for (const [key, value] of Object.entries(observationEntries)) {
                 value.createdAt = key
-                console.debug(`value is:`,value)
             }
             observationEntries = Object.values(observationEntries)
             this.numberOfSearchResults = observationEntries.length
