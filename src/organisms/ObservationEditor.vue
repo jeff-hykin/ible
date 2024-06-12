@@ -28,7 +28,7 @@
                         | De-Select this segment
                 row(v-if="noSegment()" style="position: absolute; width: 100%; height: 100%; font-size: 1.476rem; color: gray;")
                     | No Observation Selected
-                column(v-if="!noSegment()" align-h="space-between" width="100%")
+                column(v-if="!noSegment()" align-h="center" width="100%")
                     transition(name="fade")        
                         row.button-row(v-if="!noSegment() || editing" align-h="space-evenly" width="100%" margin-bottom="0.7rem" margin-top="0.5rem")
                             ui-button.save-button(
@@ -93,6 +93,7 @@
                         row.end-time-wrapper
                             ui-textbox(
                                 :disabled="!editing"
+                                ref="endTimeElement"
                                 label="End Time (seconds)"
                                 :placeholder="`${observationData.endTime}`"
                                 v-model.number="observationData.endTime"
@@ -110,8 +111,12 @@
                             )
                                 ui-icon
                                     | skip_next
+                            ui-tooltip(v-if="editing" position="left" animation="fade" :trigger="$refs.endTimeElement")
+                                | {{"&gt start, ≤ duration"}}
                         
                         div(tabindex="-1")
+                            ui-tooltip(v-if="editing" position="left" animation="fade" :trigger="$refs.labelElement")
+                                | all lowercase letters, numbers, dashes and periods
                             ui-textbox(
                                 ref="labelElement"
                                 :disabled="!editing"
@@ -122,19 +127,20 @@
                                 @change="onLabelChange"
                                 @input="onLabelChange"
                             )
-                            ui-tooltip(v-if="editing" position="left" animation="fade")
-                                | all lowercase letters, numbers, dashes and periods
                         div(tabindex="-1")
+                            ui-tooltip(v-if="editing" position="left" animation="fade" :trigger="$refs.labelConfidenceElement")
+                                | a value between -1 and 1
                             ui-textbox(
+                                ref="labelConfidenceElement"
                                 :disabled="!editing"
                                 floating-label
                                 label="Label Confidence"
                                 :invalid="!isValid.labelConfidence"
                                 v-model="observationData.labelConfidence"
                             )
-                            ui-tooltip(v-if="editing" position="left" animation="fade")
-                                | a value between -1 and 1
                         div(tabindex="-1")
+                            ui-tooltip(v-if="editing" position="left" animation="fade" :trigger="$refs.observerElement")
+                                | all lowercase letters, numbers, dashes and periods
                             ui-textbox(
                                 :disabled="!editing"
                                 ref="observerElement"
@@ -145,8 +151,6 @@
                                 @change="onObserverChange"
                                 @input="onObserverChange"
                             )
-                            ui-tooltip(v-if="editing" position="left" animation="fade")
-                                | all lowercase letters, numbers, dashes and periods
                         UiSwitch(:disabled="!editing" v-model="observationData.isHuman")
                             | Observer Is Human
                         UiSwitch(:disabled="!editing" v-model="observationData.confirmedBySomeone" v-if="!observationData.isHuman")
@@ -205,8 +209,6 @@ import { toKebabCase, toRepresentation } from '../string.js'
 import * as observationTooling from '../observation_tooling.js'
 let { backend, backendHelpers, fakeBackend } = require('../iilvd-api.js')
 let { getColor, isValidName, storageObject } = require("../utils")
-
-window.backendHelpers =backendHelpers
 
 export default {
     props: [
