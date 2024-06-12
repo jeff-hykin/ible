@@ -140,20 +140,26 @@ export default {
             if (originalVideoId) {
                 let keySegments
                 try {
-                    keySegments = await backendHelpers.getObservations({
-                        where:[
-                            { valueOf: ['videoId'], is: originalVideoId },
-                        ],
-                        returnObject: true,
-                    })
-                    const fakeKeySegments = await fakeBackend.getObservations({
+                    // keySegments = await backendHelpers.getObservations({
+                    //     where:[
+                    //         { valueOf: ['videoId'], is: originalVideoId },
+                    //     ],
+                    //     returnObject: true,
+                    // })
+                    // const fakeKeySegments = await fakeBackend.getObservations({
+                    //     where:[
+                    //         { valueOf: ['videoId'], is: originalVideoId },
+                    //     ],
+                    //     returnObject: true,
+                    // })
+                    keySegments = await fakeBackend.getObservations({
                         where:[
                             { valueOf: ['videoId'], is: originalVideoId },
                         ],
                         returnObject: true,
                     })
                     console.debug(`BACKEND: keySegments is:`,keySegments)
-                    console.debug(`FAKE   : keySegments is:`,fakeKeySegments)
+                    // console.debug(`FAKE   : keySegments is:`,fakeKeySegments)
                 } catch (error) {
                     console.error("updateSegments error", error)
                     return

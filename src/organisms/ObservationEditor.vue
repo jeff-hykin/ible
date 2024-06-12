@@ -72,6 +72,7 @@
                     container.input-area(v-if="!noSegment()" margin-top="2rem" @keydown="preventBubbling")
                         row.start-time-wrapper
                             ui-textbox(
+                                tabindex="1"
                                 :disabled="!editing"
                                 label="Start Time (seconds)"
                                 :placeholder="`${observationData.startTime}`"
@@ -92,6 +93,7 @@
                                     | skip_next
                         row.end-time-wrapper
                             ui-textbox(
+                                tabindex="2"
                                 :disabled="!editing"
                                 ref="endTimeElement"
                                 label="End Time (seconds)"
@@ -118,6 +120,7 @@
                             ui-tooltip(v-if="editing" position="left" animation="fade" :trigger="$refs.labelElement")
                                 | all lowercase letters, numbers, dashes and periods
                             ui-textbox(
+                                tabindex="3"
                                 ref="labelElement"
                                 :disabled="!editing"
                                 floating-label
@@ -131,6 +134,7 @@
                             ui-tooltip(v-if="editing" position="left" animation="fade" :trigger="$refs.labelConfidenceElement")
                                 | a value between -1 and 1
                             ui-textbox(
+                                tabindex="4"
                                 ref="labelConfidenceElement"
                                 :disabled="!editing"
                                 floating-label
@@ -142,6 +146,7 @@
                             ui-tooltip(v-if="editing" position="left" animation="fade" :trigger="$refs.observerElement")
                                 | all lowercase letters, numbers, dashes and periods
                             ui-textbox(
+                                tabindex="5"
                                 :disabled="!editing"
                                 ref="observerElement"
                                 floating-label
@@ -151,11 +156,11 @@
                                 @change="onObserverChange"
                                 @input="onObserverChange"
                             )
-                        UiSwitch(:disabled="!editing" v-model="observationData.isHuman")
+                        UiSwitch(:disabled="!editing" v-model="observationData.isHuman" tabindex="6")
                             | Observer Is Human
-                        UiSwitch(:disabled="!editing" v-model="observationData.confirmedBySomeone" v-if="!observationData.isHuman")
+                        UiSwitch(:disabled="!editing" v-model="observationData.confirmedBySomeone" v-if="!observationData.isHuman" tabindex="7")
                             | Confirmed By ≥1 Human
-                        UiSwitch(:disabled="!editing" v-model="observationData.rejectedBySomeone" v-if="!observationData.isHuman")
+                        UiSwitch(:disabled="!editing" v-model="observationData.rejectedBySomeone" v-if="!observationData.isHuman" tabindex="8")
                             | Rejected By ≥1 Human
                             
                         div(style="min-height: 4rem")
@@ -497,7 +502,7 @@ div[data-fjio3y598t3hi2]
     h5
         color: gray
         border-bottom: 1px darkgray solid
-        
+    
     .add-container
         position: relative
         padding-top: 1rem

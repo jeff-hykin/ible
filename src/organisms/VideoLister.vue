@@ -37,9 +37,8 @@ export default {
             if (title != undefined) {
                 return title
             } else {
-                backendHelpers.getVideoTitle(videoId).then(async (title)=>{
+                fakeBackend.getVideoTitle(videoId).then((title)=>{
                     console.debug(`BACKEND: title is:`,title)
-                    console.debug(`FAKE   : title is:`,await fakeBackend.getVideoTitle(videoId))
                     console.log(`received title ${title}`)
                     if (!(videoObject.summary instanceof Object)) {
                         videoObject.summary = {}
@@ -47,6 +46,14 @@ export default {
                     videoObject.summary.title = title || null
                     this.$forceUpdate()
                 })
+                // backendHelpers.getVideoTitle(videoId).then(async (title)=>{
+                //     console.debug(`FAKE   : title is:`,await fakeBackend.getVideoTitle(videoId))
+                //     if (!(videoObject.summary instanceof Object)) {
+                //         videoObject.summary = {}
+                //     }
+                //     videoObject.summary.title = title || null
+                //     this.$forceUpdate()
+                // })
                 return "Loading..."
             }
         },

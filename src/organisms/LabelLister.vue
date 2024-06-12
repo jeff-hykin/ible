@@ -1,4 +1,5 @@
 <template lang="pug">
+    //- NOTE: this one is in the search area
     column.label-search(align-v='top' width='100%' min-width="100%" align-self="top")
         //- top bar search area
         column.top-bar-container(width="100%")

@@ -161,11 +161,12 @@ export default RootComponent = {
     mounted() {
         this.backend.then(async (backend)=>{
             this.$toasted.show(`Connected to backend`).goAway(3500)
-            untrackedData.usernameList = untrackedData.usernameList.concat(await backend.getUsernames())
+            // untrackedData.usernameList = untrackedData.usernameList.concat(await backend.getUsernames())
             
             let fakeUsernames = await fakeBackend.getUsernames()
+            untrackedData.usernameList = untrackedData.usernameList.concat(fakeUsernames)
             console.debug(`BACKEND: untrackedData.usernameList is:` ,untrackedData.usernameList)
-            console.debug(`FAKE: untrackedData.usernameList is:` , fakeUsernames)
+            // console.debug(`FAKE: untrackedData.usernameList is:` , fakeUsernames)
         })
     },
     watch: {
@@ -350,10 +351,11 @@ export default RootComponent = {
             let prevLabels = get({ keyList: ["labels"], from: this, failValue: {} })
             let newLabels
             try {
-                newLabels = await (await this.backend).summary.labels()
-                const fakeNewLabels = await fakeBackend.summary.labels()
+                // newLabels = await (await this.backend).summary.labels()
+                // const fakeNewLabels = await fakeBackend.summary.labels()
+                newLabels = await fakeBackend.summary.labels()
                 console.debug(`BACKEND: newLabels is:`, newLabels)
-                console.debug(`FAKE   : newLabels is` , fakeNewLabels)
+                // console.debug(`FAKE   : newLabels is` , fakeNewLabels)
             } catch (error) {
                 this.$toasted.show(`Unable to get summary.labels() from backend`).goAway(3500)
                 console.error(error.message)
@@ -373,18 +375,18 @@ export default RootComponent = {
             this.labels = newLabels
         },
         addLabel(labelName, videoId) {
-            // if the label doesnt exist
             if (!this.$root.labels[labelName]) {
-                this.$toasted.show(`New label added`).goAway(3500)
-                const noneAreSelected = Object.values(this.$root.labels).every(each=>!each.selected)
-                // then add it
-                this.$root.labels[labelName] = {
-                    color: getColor(labelName),
-                    segmentCount: 1,
-                    videoCount: 1,
-                    videos: [ videoId ],
-                    selected: !noneAreSelected, // if nothing is selected, keep it that way
-                }
+                // if the label doesnt exist
+                this.$toasted.show(`Note: Thats a new label name`).goAway(3500)
+            }
+            const noneAreSelected = Object.values(this.$root.labels).every(each=>!each.selected)
+            // then add it
+            this.$root.labels[labelName] = {
+                color: getColor(labelName),
+                segmentCount: 1,
+                videoCount: 1,
+                videos: [ videoId ],
+                selected: !noneAreSelected, // if nothing is selected, keep it that way
             }
         },
         selectAllLabels() {
@@ -407,7 +409,7 @@ export default RootComponent = {
         --blue: #60a5de;
         --red: #e57373;
         --break-tag-height: 18px;
-        --gray: lightgray;
+        --gray: #a8a8a8;
     }
     #vue-root {
         overflow: hidden;

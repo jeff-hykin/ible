@@ -899,6 +899,7 @@ const fakeBackend = {
     },
 }
 window.backend = ezRpc.buildInterfaceFor(ezRpcUrl) // debugging only
+window.fakeBackend = fakeBackend
 
 module.exports = {
     backend,
@@ -1213,6 +1214,7 @@ module.exports = {
         }),
     },
 }
+window.backendHelpers = module.exports.backendHelpers
 
 // add the backend to all of the components
 Vue.mixin(module.exports.mixin)

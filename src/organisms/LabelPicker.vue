@@ -1,4 +1,5 @@
 <template lang="pug">
+    //- NOTE: this one is in the side panel
     container(align-self="top" @mouseover="onHover").nub
         | Labels
         portal(to="left-panel" v-if="useLeftPanel")
