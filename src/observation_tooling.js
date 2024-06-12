@@ -172,14 +172,14 @@ export const createDefaultObservationEntry = ()=>({
                 // createdAt
                 // 
                 if (typeof observationEntry.createdAt != "string" || observationEntry.createdAt.length < minSizeOfUnixTimestamp || !observationEntry.createdAt.match(/^\d+\.\d+$/)) {
-                    errorMessages.push(`(observationEntry.createdAt: ${toRepresentation(observationEntry.createdAt)})\nAn observationEntry must have a "createdAt" property\n- it needs to be a string\n- the string needs to contain digits of a decimal number\n- the base digits need of a unix timestamp (milliseconds)\n- and the a decimal needs to be a random number`)
+                    errorMessages.push(`observationEntry.createdAt: ${toRepresentation(observationEntry.createdAt)}\nAn observationEntry must have a "createdAt" property\n- it needs to be a string\n- the string needs to contain digits of a decimal number\n- the base digits need of a unix timestamp (milliseconds)\n- and the a decimal needs to be a random number`)
                 }
 
                 // 
                 // videoId
                 // 
                 if (!videoIdIsValid(observationEntry.videoId)) {
-                    errorMessages.push(`(observationEntry.videoId: ${toRepresentation(observationEntry.videoId)})\nAn observationEntry must have a "videoId" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to either start with "/videos/" for local videos or be exactly 11 characters long for YouTube video ids`)
+                    errorMessages.push(`observationEntry.videoId: ${toRepresentation(observationEntry.videoId)}\nAn observationEntry must have a "videoId" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to either start with "/videos/" for local videos or be exactly 11 characters long for YouTube video ids`)
                 }
 
                 // 
@@ -188,10 +188,10 @@ export const createDefaultObservationEntry = ()=>({
                 const startTimeIsNumeric = Number.isFinite(observationEntry.startTime) && observationEntry.startTime >= 0
                 const endTimeIsNumeric   = Number.isFinite(observationEntry.endTime)   && observationEntry.endTime >= 0
                 if (!startTimeIsNumeric) {
-                    errorMessages.push(`(observationEntry.startTime: ${toRepresentation(observationEntry.startTime)})\nAn observationEntry must have a "startTime" property\n- it needs to be a positive number`)
+                    errorMessages.push(`observationEntry.startTime: ${toRepresentation(observationEntry.startTime)}\nAn observationEntry must have a "startTime" property\n- it needs to be a positive number`)
                 }
                 if (!endTimeIsNumeric) {
-                    errorMessages.push(`(observationEntry.endTime: ${toRepresentation(observationEntry.endTime)})\nAn observationEntry must have a "endTime" property\n- it needs to be a positive number`)
+                    errorMessages.push(`observationEntry.endTime: ${toRepresentation(observationEntry.endTime)}\nAn observationEntry must have a "endTime" property\n- it needs to be a positive number`)
                 }
                 if (startTimeIsNumeric && endTimeIsNumeric) {
                     if (observationEntry.startTime >= observationEntry.endTime) {
@@ -203,41 +203,41 @@ export const createDefaultObservationEntry = ()=>({
                 // observer
                 // 
                 if (!observerIsValid(observationEntry.observer)) {
-                    errorMessages.push(`(observationEntry.observer: ${toRepresentation(observationEntry.observer)})\nAn observationEntry must have a "observer" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`)
+                    errorMessages.push(`observationEntry.observer: ${toRepresentation(observationEntry.observer)}\nAn observationEntry must have a "observer" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`)
                 }
 
                 // 
                 // observation
                 // 
                 if (!(observationEntry.observation instanceof Object) ) {
-                    errorMessages.push(`(observationEntry.observation: ${toRepresentation(observationEntry.observation)})\nAn observationEntry must have a "observation" property\n- it needs to be an object`)
+                    errorMessages.push(`observationEntry.observation: ${toRepresentation(observationEntry.observation)}\nAn observationEntry must have a "observation" property\n- it needs to be an object`)
                 }
 
                 // 
                 // label
                 // 
                 if (!labelIsValid(observationEntry?.observation?.label)) {
-                    errorMessages.push(`(observationEntry.observation.label: ${toRepresentation(observationEntry.observation.label)})\nAn observationEntry must have a "observation": { "label":  }\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`)
+                    errorMessages.push(`observationEntry.observation.label: ${toRepresentation(observationEntry.observation.label)}\nAn observationEntry must have a "observation": { "label":  }\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`)
                 }
                 
                 // 
                 // confidence
                 // 
                 if (!labelConfidenceIsValid(observationEntry?.observation?.labelConfidence)) {
-                    errorMessages.push(`(observationEntry.observation.labelConfidence: ${toRepresentation(observationEntry.observation.label)})\nAn observationEntry must have a "observation": { "labelConfidence": }\n- it needs to be a number\n- it needs to be between 1 and -1 (inclusive)`)
+                    errorMessages.push(`observationEntry.observation.labelConfidence: ${toRepresentation(observationEntry.observation.label)}\nAn observationEntry must have a "observation": { "labelConfidence": }\n- it needs to be a number\n- it needs to be between 1 and -1 (inclusive)`)
                 }
                 
                 // 
                 // boolean fields
                 //
                 if (observationEntry.isHuman !== true && observationEntry.isHuman !== false) {
-                    errorMessages.push(`(observationEntry.isHuman: ${toRepresentation(observationEntry.isHuman)})\nAn observationEntry must have a "isHuman" property\n- it needs to be a boolean\n${JSON.stringify(observationEntry)}`)
+                    errorMessages.push(`observationEntry.isHuman: ${toRepresentation(observationEntry.isHuman)}\nAn observationEntry must have a "isHuman" property\n- it needs to be a boolean\n${JSON.stringify(observationEntry)}`)
                 }
                 if (observationEntry.confirmedBySomeone != null && observationEntry.confirmedBySomeone !== true && observationEntry.confirmedBySomeone !== false) {
-                    errorMessages.push(`(observationEntry.confirmedBySomeone: ${toRepresentation(observationEntry.confirmedBySomeone)})\n\nThe "confirmedBySomeone" property\n- needs to be a boolean or null`)
+                    errorMessages.push(`observationEntry.confirmedBySomeone: ${toRepresentation(observationEntry.confirmedBySomeone)}\nThe "confirmedBySomeone" property\n- needs to be a boolean or null`)
                 }
                 if (observationEntry.rejectedBySomeone != null && observationEntry.rejectedBySomeone !== true && observationEntry.rejectedBySomeone !== false) {
-                    errorMessages.push(`(observationEntry.rejectedBySomeone: ${toRepresentation(observationEntry.rejectedBySomeone)})\nAn observationEntry must have a "rejectedBySomeone" property\n- it needs to be a boolean or null`)
+                    errorMessages.push(`observationEntry.rejectedBySomeone: ${toRepresentation(observationEntry.rejectedBySomeone)}\nAn observationEntry needs to be a boolean or null`)
                 }
             }
             errorMessagesPerObservation.push(errorMessages)
