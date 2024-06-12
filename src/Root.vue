@@ -376,16 +376,24 @@ export default RootComponent = {
             // if the label doesnt exist
             if (!this.$root.labels[labelName]) {
                 this.$toasted.show(`New label added`).goAway(3500)
+                const noneAreSelected = Object.values(this.$root.labels).every(each=>!each.selected)
                 // then add it
                 this.$root.labels[labelName] = {
                     color: getColor(labelName),
                     segmentCount: 1,
                     videoCount: 1,
                     videos: [ videoId ],
-                    selected: true,
+                    selected: !noneAreSelected, // if nothing is selected, keep it that way
                 }
             }
-        }
+        },
+        selectAllLabels() {
+            const newLabelValues = {}
+            for (const [key, value] of Object.entries(this.$root.labels)) {
+                newLabelValues[key] = {...value, selected: true}
+            }
+            this.$root.labels = newLabelValues
+        },
     }
 }
 </script>
