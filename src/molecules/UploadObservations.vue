@@ -103,7 +103,7 @@ export default {
         uploadMessage: null,
         uploadCanceled: false,
         errorPreview: "",
-        latestUploadErrorsObject: "",
+        latestUploadErrorsObject: {},
         dummyData1: {
             "createdAt": new Date().getTime() + `${Math.random()}`.slice(1),
             "type": "segment",
@@ -260,7 +260,7 @@ export default {
                             messages = [ `"createdAt": ${JSON.stringify(whichObservation.createdAt)}`, ...messages ]
                         }
                         this.latestUploadErrorsObject[whichFile][whichObservation] = [
-                            ...this.latestUploadErrorsObject[whichFile][whichObservation],
+                            ...(this.latestUploadErrorsObject[whichFile][whichObservation]||[]),
                             ...messages,
                         ]
                         if (this.numberOfErrors>0 && !alreadyShown) {
@@ -280,7 +280,8 @@ export default {
                     }
                 }
                 
-                this.$toasted.show(`Upload Finished. Refresh to see changes`, {
+                window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
+                this.$toasted.show(`Upload Finished`, {
                     closeOnSwipe: false,
                     action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
                 })

@@ -140,7 +140,7 @@ export default {
         },
         async download() {
             console.log(`download clicked`)
-            if (observationEntries.length==0) {
+            if (observationEntries?.length==0) {
                 const allEntries = await backendHelpers.getObservations({where, returnObject: false})
                 const allEntriesFake = await fakeBackend.getObservations({where, returnObject: false})
                 download("data.json", JSON.stringify(allEntries,0,4))
@@ -150,22 +150,19 @@ export default {
         },
         async showDeletePrompt() {
             let entries = observationEntries
-            if (entries.length == 0) {
-                const allEntries = await backendHelpers.getObservations({where, returnObject: true})
+            if (entries?.length == 0) {
+                const allEntries = await backendHelpers.getObservations({where, returnObject: false})
                 const allEntriesFake = await fakeBackend.getObservations({where, returnObject: false})
                 entries = allEntries
             }
             if (confirm(`Are you sure?\n\n    Ok = Delete ${entries.length} observations\n    Cancel = Keep Data`)) {
                 const toastObject = this.$toasted.show(`Deleting...`, {
-                    closeOnSwipe: false,
-                    action: {
-                        text:'Close',
-                        onClick: (e, _)=>{
-                            toastObject.goAway(0)
-                        }
-                    },
+                    closeOnSwipe: true,
                 })
                 const toastElement = toastObject.el
+                toastElement.onclick = ()=>{
+                    toastObject.goAway(0)
+                }
                 toastElement.innerHTML = `<div><br>${toastElement.innerHTML}<br><p>0 of ${entries.length}\n</p></div>`
                 let count = 0
                 for (const each of entries) {
@@ -174,6 +171,7 @@ export default {
                     count++
                     toastElement.innerHTML = toastElement.innerHTML.replace(/<p>.+/,`<p>${count} of ${entries.length}`)
                 }
+                toastElement.innerHTML = toastElement.innerHTML.replace(/Deleting\.\.\./,`Deleted (Click to close)`)
                 if (this.$root.routeData$.labelName) {
                     this.$root.selectAllLabels()
                     this.$root.push({...this.$root.routeData$, labelName: null})
