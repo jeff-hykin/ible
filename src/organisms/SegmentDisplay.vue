@@ -26,10 +26,10 @@
                     :confirmedBySomeone="eachSegment.confirmedBySomeone"
                     :rejectedBySomeone="eachSegment.rejectedBySomeone"
                     :selected="eachSegment.$uuid == ($root.selectedSegment&&$root.selectedSegment.$uuid)"
-                    :background-color="$root.labels[eachSegment.observation.label].color"
-                    :border-color="$root.labels[eachSegment.observation.label].color"
+                    :background-color="theColor(eachSegment)"
+                    :border-color="theColor(eachSegment)"
                     :key="eachSegment.createdAt||eachSegment.$uuid"
-                    :style="`--color: ${$root.labels[eachSegment.observation.label].color}`"
+                    :style="`--color: ${theColor(eachSegment)}`"
                     @click="jumpSegment(eachSegment.$displayIndex)"
                 )
                     | {{computeSymbol(eachSegment.confirmedBySomeone, eachSegment.rejectedBySomeone)}}
