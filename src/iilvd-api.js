@@ -945,7 +945,7 @@ const fakeBackend = {
         }
     },
 }
-window.backend = ezRpc.buildInterfaceFor(ezRpcUrl)
+window.backend = ezRpc.buildInterfaceFor(ezRpcUrl) // debugging only
 
 module.exports = {
     backend,
