@@ -74,17 +74,14 @@
                         )
                             | Cancel Upload
                         ui-button.error-button(
-                            v-if="latestUploadErrors.length > 0"
+                            v-if="latestUploadErrors().length > 0"
                             @click="downloadErrorLog"
-                            color="blue"
                             icon="sms_failed"
                         )
                             | Download Error Log
                     br
-                    | Note: #0 means first element (AKA 0 indexed)
-                    br
                     code(style="max-width: 80vw; overflow: auto; white-space: preserve; display: flex;")
-                        | {{latestUploadErrors}}
+                        | {{latestUploadErrors()}}
     
 </template>
 <script>
@@ -138,12 +135,6 @@ export default {
         },
     }),
     computed: {
-        latestUploadErrors() {
-            return yaml.stringify(this.latestUploadErrorsObject)
-        },
-        numberOfErrors() {
-            return Object.values(this.latestUploadErrorsObject).flat(2).length
-        },
     },
     watch: {
         dummyData1: {
@@ -156,15 +147,22 @@ export default {
         },
     },
     methods: {
+        latestUploadErrors() {
+            return yaml.stringify(this.latestUploadErrorsObject)
+        },
+        numberOfErrors() {
+            console.debug(`Object.values(this.latestUploadErrorsObject) is:`,Object.values(this.latestUploadErrorsObject))
+            return Object.values(this.latestUploadErrorsObject).flat(2).length
+        },
         quitUpload() {
             console.log(`canceling upload`)
             this.uploadMessage = null
             this.uploadCanceled = true
         },
         downloadErrorLog() {
-            const errorLogText = this.latestUploadErrors
+            const errorLogText = this.latestUploadErrors()
             download("upload_error_log.txt", errorLogText)
-            this.latestUploadErrors = ""
+            this.latestUploadErrorsObject = {}
         },
         dummyDataChange(dummyData) {
             if (dummyData.isHuman) {
@@ -231,6 +229,8 @@ export default {
                     value.observation.label = toKebabCase(`${value.observation.label}`.toLowerCase())
                     try {
                         const frontendErrorMessages = observationTooling.validateObservations([value])[0]
+                        console.debug(`value is:`,value)
+                        console.debug(`frontendErrorMessages is:`,frontendErrorMessages)
                         if (frontendErrorMessages.length > 0) {
                             throw Error(yaml.stringify(frontendErrorMessages))
                         }
@@ -241,9 +241,9 @@ export default {
                             continue
                         }
                         errorCount++
-                        this.errorPreview = `There were some (${this.numberOfErrors}) errors:`
-                        const alreadyShown = this.numberOfErrors > 0
-                        const whichFile = `file ${fileIndex}: ${JSON.stringify(fileName)}`
+                        this.errorPreview = `There were some (${this.numberOfErrors()}) errors:`
+                        const alreadyShown = this.numberOfErrors() > 0
+                        const whichFile = `file ${fileIndex} ${JSON.stringify(fileName).slice(1,-1)}`
                         const whichObservation = `observation ${observationIndex}`
                         this.latestUploadErrorsObject[whichFile] = this.latestUploadErrorsObject[whichFile]||{}
                         let messages
@@ -252,15 +252,21 @@ export default {
                             messages = [error.message]
                         }
                         const isFirstErrorForObservation = !(this.latestUploadErrorsObject[whichFile][whichObservation] instanceof Array)
-                        const hasACreatedAtValue = !!whichObservation.createdAt
+                        const hasACreatedAtValue = !!value.createdAt
                         if (isFirstErrorForObservation && hasACreatedAtValue) {
-                            messages = [ `"createdAt": ${JSON.stringify(whichObservation.createdAt)}`, ...messages ]
+                            messages = [ `"createdAt": ${JSON.stringify(value.createdAt)}\n`, ...messages ]
                         }
                         this.latestUploadErrorsObject[whichFile][whichObservation] = [
                             ...(this.latestUploadErrorsObject[whichFile][whichObservation]||[]),
-                            ...messages,
+                            ...messages.map(each=>`\n${each}`),
                         ]
-                        if (this.numberOfErrors>0 && !alreadyShown) {
+                        console.debug(`this.latestUploadErrorsObject is:`,this.latestUploadErrorsObject)
+                        console.debug(`Object.values(this.latestUploadErrorsObject) is:`,Object.values(this.latestUploadErrorsObject))
+                        // otherwise Vue doesn't seem to know its been modified
+                        this.latestUploadErrorsObject = this.latestUploadErrorsObject
+                        console.debug(`messages is:`,messages)
+                        console.debug(`this.numberOfErrors is:`,this.numberOfErrors())
+                        if (this.numberOfErrors()>0 && !alreadyShown) {
                             this.$refs.errorModal.open()
                         }
                     }
@@ -352,7 +358,11 @@ export default {
         max-height: var(--size)
         min-height: var(--size)
     
-    .cancel-button.ui-button
+    &:hover
+        .help-button
+            opacity: 1
+
+.cancel-button.ui-button
         --button-color: darkgray
         --text-color: white
         background-color: var(--button-color) 
@@ -367,23 +377,18 @@ export default {
             color: white
             box-shadow: var(--shadow-3) 
         
-    .error-button.ui-button
-        --button-color: var(--red)
-        --text-color: white
-        background-color: var(--button-color) 
-        color: var(--text-color) !important
-        transition: all ease 0.3s
-        
-        ::v-deep .ui-button__icon
-            color: var(--text-color)
-                
-        &:hover
-            background-color: var(--button-color) !important
-            color: white
-            box-shadow: var(--shadow-3) 
-        
+.error-button.ui-button
+    --button-color: var(--red)
+    --text-color: white
+    background-color: var(--button-color) 
+    color: var(--text-color) !important
+    transition: all ease 0.3s
+    
+    ::v-deep .ui-button__icon
+        color: var(--text-color)
+            
     &:hover
-        .help-button
-            opacity: 1
-
+        background-color: var(--button-color) !important
+        color: white
+        box-shadow: var(--shadow-3) 
 </style>

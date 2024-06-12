@@ -136,7 +136,6 @@ export default {
                 console.log(`waiting for video to load`)
                 // a seperate function is needed so that recursion is possible
                 let checkForPlayer = (resolve, reject) => () => {
-                    console.log(`checking For Player`)
                     safteyCheck(reject)
                     const vuePlyr = this.$refs.nativePlayer || (this.$refs.vuePlyr2)&&this.$refs.vuePlyr2.player
                     if (vuePlyr?.duration) {
