@@ -54,7 +54,7 @@
                 v-for="(eachLevel, eachLabelName) in $root.labels"
                 :style="`--label-color: ${$root.labels[eachLabelName].selected ? $root.labels[eachLabelName].color : 'gray'};`"
             )
-                ui-checkbox(v-model="$root.labels[eachLabelName].selected" @change="toggleLabel(eachLabelName)" style="align-items: flex-start;")
+                ui-checkbox(v-model="$root.labels[eachLabelName].selected" @change="toggleLabel(eachLabelName)" style="align-items: flex-start;white-space: nowrap;")
                     | {{eachLabelName}}
 
 </template>
