@@ -1,18 +1,21 @@
 <template lang="pug">
     column.search(align-v="top" width="100%")
         row.video-wrapper(style="min-width: 100%; margin-top: 1rem;")
-            //- ui-button.delete-button(
-            //-     icon="download"
-            //-     color="red"
-            //- )
-            //-     | Delete
+            ui-button.delete-button(
+                @click="showDeletePrompt"
+                icon="delete"
+                color="black"
+                tooltipPosition="top"
+                :tooltip="`Delete all ${numberOfSearchResults||$root.searchResults.counts.total} search results`"
+            )
+                | Delete All
             VideoIdSearch(@goToVideo='goToVideo')
             ui-button.download-button(
                 @click="download"
                 icon="download"
                 color="primary"
                 tooltipPosition="top"
-                :tooltip="`Download all ${$root.searchResults.counts.total} results as JSON`"
+                :tooltip="`Download all ${numberOfSearchResults||$root.searchResults.counts.total} results as JSON`"
             )
                 | Download
         row.search-summary(
@@ -122,6 +125,7 @@ export default {
         debouncedSubmitSearch:()=>{},
         colors,
         observer: $root.filterAndSort.observer,
+        numberOfSearchResults: 0,
     }),
     mounted() {
         // wait half a sec before updating the content
@@ -134,9 +138,48 @@ export default {
             console.log(`goToVideo event`)
             this.$emit("goToVideo", data)
         },
-        download() {
+        async download() {
             console.log(`download clicked`)
-            download("data.json", JSON.stringify(observationEntries,0,4))
+            if (observationEntries.length==0) {
+                const allEntries = await backendHelpers.getObservations({where, returnObject: false})
+                const allEntriesFake = await fakeBackend.getObservations({where, returnObject: false})
+                download("data.json", JSON.stringify(allEntries,0,4))
+            } else {
+                download("data.json", JSON.stringify(observationEntries,0,4))
+            }
+        },
+        async showDeletePrompt() {
+            let entries = observationEntries
+            if (entries.length == 0) {
+                const allEntries = await backendHelpers.getObservations({where, returnObject: true})
+                const allEntriesFake = await fakeBackend.getObservations({where, returnObject: false})
+                entries = allEntries
+            }
+            if (confirm(`Are you sure?\n\n    Ok = Delete ${entries.length} observations\n    Cancel = Keep Data`)) {
+                const toastObject = this.$toasted.show(`Deleting...`, {
+                    closeOnSwipe: false,
+                    action: {
+                        text:'Close',
+                        onClick: (e, _)=>{
+                            toastObject.goAway(0)
+                        }
+                    },
+                })
+                const toastElement = toastObject.el
+                toastElement.innerHTML = `<div><br>${toastElement.innerHTML}<br><p>0 of ${entries.length}\n</p></div>`
+                let count = 0
+                for (const each of entries) {
+                    await backendHelpers.deleteObservation({ uuidOfSelectedSegment: each.createdAt })
+                    await fakeBackend.deleteObservation({ uuidOfSelectedSegment: each.createdAt })
+                    count++
+                    toastElement.innerHTML = toastElement.innerHTML.replace(/<p>.+/,`<p>${count} of ${entries.length}`)
+                }
+                if (this.$root.routeData$.labelName) {
+                    this.$root.selectAllLabels()
+                    this.$root.push({...this.$root.routeData$, labelName: null})
+                }
+                window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
+            }
         },
         falsePositiveRatio() {
             try {
@@ -181,10 +224,18 @@ export default {
             // if (!this.$root.filterAndSort.validation.includes("Disagreement") ) { where.push({ valueOf: ['rejectedBySomeone'                ], isNot:                  true                          , }) 
             //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
             console.log(`querying the backend for observationEntries`)
-            observationEntries = await backendHelpers.getObservations({where})
-            let fakeObservationEntries = await fakeBackend.getObservations({where})
+            observationEntries = await backendHelpers.getObservations({where, returnObject: true})
+            let fakeObservationEntries = await fakeBackend.getObservations({where, returnObject: true})
             console.debug(`BACKEND: observationEntries is:`,observationEntries)
             console.debug(`FAKE   : observationEntries is:`,fakeObservationEntries)
+            
+            // ensure the createdAt is the ID
+            for (const [key, value] of Object.entries(observationEntries)) {
+                value.createdAt = key
+                console.debug(`value is:`,value)
+            }
+            observationEntries = Object.values(observationEntries)
+            this.numberOfSearchResults = observationEntries.length
             
             // show the time of the first load
             if (this.$root.loadStart) {
@@ -223,9 +274,6 @@ export default {
 </script>
 <style lang="sass" scoped>
 .search
-    .delete-button
-        opacity: 0
-    
     .download-button
         transition: all 0.3s ease
         box-shadow: var(--shadow-1)
@@ -236,6 +284,20 @@ export default {
             --text-color: whitesmoke
         &:hover
             --text-color: white
+    
+    .delete-button
+        text-align: center
+        transition: all 0.3s ease
+        box-shadow: var(--shadow-1)
+        border-radius: 1rem
+        border: var(--text-color) 2px solid
+        color: var(--text-color)
+        &:not(:hover)
+            --text-color: whitesmoke
+            background: gray
+        &:hover
+            --text-color: white
+            background: red
         
     .text-grid
         h5

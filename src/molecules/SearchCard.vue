@@ -35,7 +35,7 @@ export default {
                 }
             }
             this.$root.labels = newLabelValues
-        }
+        },
     }
 }
 </script>
