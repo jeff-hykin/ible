@@ -8,8 +8,9 @@
         min-width="20rem"
         min-height="44vh"
     )
-        column.add-container(:opacity="editing?0:1")
+        column.add-container
             ui-button.add-button(
+                :style="`opacity: ${editing?0:1}`"
                 @click="onNewObservation"
                 icon="add"
                 color="primary"
@@ -20,52 +21,53 @@
                 | New Observation
         container(height="20px")
         transition(name="fade")
-            column.observation-widget(min-height="38rem" position="relative")
+            column.observation-widget(min-height="37rem" position="relative" align-v="top")
                 row(v-if="!noSegment() && !editing" style="position: absolute; font-size: 1rem; color: gray; right: 0.9rem; top: 0.7rem; cursor: pointer; opacity: 0.5;" @click="deSelectSegment")
                     | X
                     ui-tooltip(position="top" animation="fade")
                         | De-Select this segment
                 row(v-if="noSegment()" style="position: absolute; width: 100%; height: 100%; font-size: 1.476rem; color: gray;")
                     | No Observation Selected
-                
+                column(v-if="!noSegment()" align-h="space-between" width="100%")
+                    transition(name="fade")        
+                        row.button-row(v-if="!noSegment() || editing" align-h="space-evenly" width="100%" margin-bottom="0.7rem" margin-top="0.5rem")
+                            ui-button.save-button(
+                                :style="`opacity: ${editing?1:0}`"
+                                @click="onSaveEdit"
+                                icon="save"
+                                color="primary"
+                            )
+                                | Save
+                            //- spacer
+                            container(flex-basis="10%" width="10%")
+                            ui-button.delete-button(
+                                :style="`opacity: ${editing?1:0}`"
+                                @click="onDelete"
+                                icon="delete"
+                                color="red"
+                            )
+                                | Delete
+                container(height="10px")
                 transition(name="fade")
                     row(v-if="!noSegment()" align-h="space-between" width="100%")
-                        h5
+                        h5(style="font-size: 1.35rem;")
                             | Observation
-                        ui-button.edit-button(
-                            v-if="(!editing) && $root.selectedSegment"
-                            @click="onEditObservation"
-                            icon="edit"
-                            color="primary"
-                        )
-                            | Edit
-                transition(name="fade")        
-                    row.button-row(v-if="!noSegment() || editing" align-h="space-evenly" width="100%" margin-bottom="0.7rem" margin-top="0.5rem")
-                        ui-button.save-button(
-                            v-if="editing"
-                            @click="onSaveEdit"
-                            icon="save"
-                            color="primary"
-                        )
-                            | Save
-                        //- spacer
-                        container(flex-basis="10%" width="10%" v-if="editing")
-                        ui-button.delete-button(
-                            v-if="editing"
-                            @click="onDelete"
-                            icon="delete"
-                            color="red"
-                        )
-                            | Delete
-                transition(name="fade")
-                    ui-button.cancel-button(
-                        v-if="editing" 
-                        @click="onCancelEdit"
-                        icon="cancel"
-                        color="accent"
-                    )
-                        | Cancel
-                
+                        container(position="relative")
+                            ui-button.edit-button(
+                                :style="`opacity: ${(!editing) && $root.selectedSegment?1:0}; width: 7rem;`"
+                                @click="onEditObservation"
+                                icon="edit"
+                                color="primary"
+                            )
+                                | Edit
+                            transition(name="fade")
+                                ui-button.cancel-button(
+                                    :style="`position: absolute; opacity: ${editing?1:0}; pointer-events: ${editing?'all':'none'};`"
+                                    @click="onCancelEdit"
+                                    icon="cancel"
+                                    color="accent"
+                                )
+                                    | Cancel
                 transition(name="fade")    
                     container.input-area(v-if="!noSegment()" margin-top="2rem" @keydown="preventBubbling")
                         row.start-time-wrapper
@@ -109,37 +111,42 @@
                                 ui-icon
                                     | skip_next
                         
-                        ui-textbox(
-                            ref="labelElement"
-                            :disabled="!editing"
-                            floating-label
-                            label="Label"
-                            :invalid="!isValid.label"
-                            v-model="observationData.label"
-                            @change="onLabelChange"
-                            @input="onLabelChange"
-                        )
-                        ui-textbox(
-                            :disabled="!editing"
-                            floating-label
-                            label="Label Confidence"
-                            :invalid="!isValid.labelConfidence"
-                            v-model="observationData.labelConfidence"
-                        )
-                        ui-textbox(
-                            :disabled="!editing"
-                            floating-label
-                            label="Observer (username)"
-                            :invalid="!isValid.observer"
-                            v-model="observationData.observer"
-                        )
-                        ui-textbox(
-                            :disabled="!editing"
-                            floating-label
-                            label="Video Id"
-                            :invalid="!isValid.videoId"
-                            v-model="observationData.videoId"
-                        )
+                        div(tabindex="-1")
+                            ui-textbox(
+                                ref="labelElement"
+                                :disabled="!editing"
+                                floating-label
+                                label="Label"
+                                :invalid="!isValid.label"
+                                v-model="observationData.label"
+                                @change="onLabelChange"
+                                @input="onLabelChange"
+                            )
+                            ui-tooltip(v-if="editing" position="left" animation="fade")
+                                | all lowercase letters, numbers, dashes and periods
+                        div(tabindex="-1")
+                            ui-textbox(
+                                :disabled="!editing"
+                                floating-label
+                                label="Label Confidence"
+                                :invalid="!isValid.labelConfidence"
+                                v-model="observationData.labelConfidence"
+                            )
+                            ui-tooltip(v-if="editing" position="left" animation="fade")
+                                | a value between -1 and 1
+                        div(tabindex="-1")
+                            ui-textbox(
+                                :disabled="!editing"
+                                ref="observerElement"
+                                floating-label
+                                label="Observer (username)"
+                                :invalid="!isValid.observer"
+                                v-model="observationData.observer"
+                                @change="onObserverChange"
+                                @input="onObserverChange"
+                            )
+                            ui-tooltip(v-if="editing" position="left" animation="fade")
+                                | all lowercase letters, numbers, dashes and periods
                         UiSwitch(:disabled="!editing" v-model="observationData.isHuman")
                             | Observer Is Human
                         UiSwitch(:disabled="!editing" v-model="observationData.confirmedBySomeone" v-if="!observationData.isHuman")
@@ -147,13 +154,33 @@
                         UiSwitch(:disabled="!editing" v-model="observationData.rejectedBySomeone" v-if="!observationData.isHuman")
                             | Rejected By ≥1 Human
                             
-                        column(v-if="!noSegment()" align-h="center" width="100%" @mouseenter="doShowOtherData" @mouseleave="hideOtherData")
-                            div(style="margin-top: 1.2rem")
-                            span(style="background: var(--gray); color: white; padding: 0.5rem; border-radius: 1rem;")
+                        div(style="min-height: 4rem")
+                        column(
+                            v-if="!noSegment()"
+                            align-h="center"
+                            width="90%"
+                            background="whitesmoke" 
+                            border-radius="1rem"
+                            padding="1rem"
+                            :overflow="showOtherData?'auto':'hidden'" 
+                            @mouseenter="doShowOtherData" 
+                            @mouseleave="hideOtherData"
+                            position="absolute"
+                            bottom="1rem"
+                            left="5%"
+                        )
+                            span(style="width: 12rem; text-align: center; color: var(--gray); padding: 0.5rem; border-radius: 1rem;")
                                 | other data
                             transition(name="quick-fade")
-                                column(align-h="left" :style="`transition: all ease 0.3s; opacity: ${showOtherData?1:0}; max-height: ${showOtherData?'30rem':0}; height: fit-content; max-width: 100%; min-width: 100%;`")
+                                column(align-h="left" :style="`transition: all ease 0.3s; opacity: ${showOtherData?1:0}; max-height: ${showOtherData?'40rem':0}; height: fit-content; max-width: 100%; min-width: 100%;`")
                                     div(style="margin-top: 0.5rem")
+                                    ui-textbox(
+                                        :disabled="true"
+                                        floating-label
+                                        label="Video Id"
+                                        :invalid="!isValid.videoId"
+                                        v-model="observationData.videoId"
+                                    )
                                     ui-textbox(
                                         :disabled="true"
                                         floating-label
@@ -285,9 +312,13 @@ export default {
         },
         onLabelChange() {
             this.observationData.label = observationTooling.coerceLabel(this.observationData.label)
+            // the component is a bit buggy, so we have to do this
+            this.$refs.labelElement.$el.querySelector("input").value = this.observationData.label
         },
         onObserverChange() {
             this.observationData.observer = observationTooling.coerceObserver(this.observationData.observer)
+            // the component is a bit buggy, so we have to do this
+            this.$refs.observerElement.$el.querySelector("input").value = this.observationData.observer
         },
         preventBubbling(eventObject) {
             if (eventObject.ctrlKey && eventObject.key == "s") {
@@ -477,6 +508,14 @@ div[data-fjio3y598t3hi2]
             transition: all ease 0.3s
             
     .observation-widget
+        padding: 1.7rem 2.4rem
+        padding-top: 0.5rem
+        position: relative
+        background: white
+        width: 20rem
+        border-radius: 1rem
+        box-shadow: var(--shadow-1)
+        
         transition: all ease 0.3s
         
         --button-color: darkgray
@@ -525,15 +564,6 @@ div[data-fjio3y598t3hi2]
         .delete-button
             --button-color: var(--red)
             flex-basis: 45%
-
-
-    .observation-widget
-        padding: 1.7rem 2.4rem
-        position: relative
-        background: white
-        width: 20rem
-        border-radius: 1rem
-        box-shadow: var(--shadow-1)
         
         .start-time-wrapper,.end-time-wrapper
             width: 100%
