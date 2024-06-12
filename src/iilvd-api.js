@@ -794,7 +794,7 @@ const fakeBackend = {
                     disagreement: 0,
                 },
             }
-
+            
             // 
             // this section should be rewritten to use the search^ instead of Javascript filters
             // 
@@ -813,9 +813,9 @@ const fakeBackend = {
             })
             for (const each of items) {
                 // filters 
-                if ((each.observation.labelConfidence < min) || (each.observation.labelConfidence > max)) { return }
-                if (hideUnchecked && (!each.confirmedBySomeone && !each.rejectedBySomeone)) { return }
-                if (hideDisagreement && (each.confirmedBySomeone && each.rejectedBySomeone)) { return }
+                if ((each.observation.labelConfidence < min) || (each.observation.labelConfidence > max)) { continue }
+                if (hideUnchecked && (!each.confirmedBySomeone && !each.rejectedBySomeone)) { continue }
+                if (hideDisagreement && (each.confirmedBySomeone && each.rejectedBySomeone)) { continue }
                 
                 // 
                 // this section is actual logic
