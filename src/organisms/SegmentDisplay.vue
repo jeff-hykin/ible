@@ -28,7 +28,7 @@
                     :selected="eachSegment.$uuid == ($root.selectedSegment&&$root.selectedSegment.$uuid)"
                     :background-color="$root.labels[eachSegment.observation.label].color"
                     :border-color="$root.labels[eachSegment.observation.label].color"
-                    :key="eachSegment.$uuid"
+                    :key="eachSegment.createdAt||eachSegment.$uuid"
                     :style="`--color: ${$root.labels[eachSegment.observation.label].color}`"
                     @click="jumpSegment(eachSegment.$displayIndex)"
                 )
