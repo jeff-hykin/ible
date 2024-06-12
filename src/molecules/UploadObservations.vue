@@ -151,7 +151,6 @@ export default {
             return yaml.stringify(this.latestUploadErrorsObject)
         },
         numberOfErrors() {
-            console.debug(`Object.values(this.latestUploadErrorsObject) is:`,Object.values(this.latestUploadErrorsObject))
             return Object.values(this.latestUploadErrorsObject).flat(2).length
         },
         quitUpload() {
@@ -209,6 +208,13 @@ export default {
             // start uploading all the observations
             // 
             try {
+                
+                // NOTE: yes uploading in bulk would be faster. This code is leftover from when it uploaded to a very slow server
+                //       and it was important to have a progress bar. It was also so that errors could be seen immediately
+                //       and so that errors to each observation could gathered instead of only stopping at the first one
+                // a complete refactor of this (while keeping helpful error messages) would be nice
+                
+                
                 this.$toasted.show(`each file at least seems to be valid JSON 👍 `).goAway(6500)
                 
                 this.uploadCanceled = false
@@ -229,8 +235,6 @@ export default {
                     value.observation.label = toKebabCase(`${value.observation.label}`.toLowerCase())
                     try {
                         const frontendErrorMessages = observationTooling.validateObservations([value])[0]
-                        console.debug(`value is:`,value)
-                        console.debug(`frontendErrorMessages is:`,frontendErrorMessages)
                         if (frontendErrorMessages.length > 0) {
                             throw Error(yaml.stringify(frontendErrorMessages))
                         }
@@ -241,7 +245,6 @@ export default {
                             continue
                         }
                         errorCount++
-                        this.errorPreview = `There were some (${this.numberOfErrors()}) errors:`
                         const alreadyShown = this.numberOfErrors() > 0
                         const whichFile = `file ${fileIndex} ${JSON.stringify(fileName).slice(1,-1)}`
                         const whichObservation = `observation ${observationIndex}`
@@ -254,18 +257,15 @@ export default {
                         const isFirstErrorForObservation = !(this.latestUploadErrorsObject[whichFile][whichObservation] instanceof Array)
                         const hasACreatedAtValue = !!value.createdAt
                         if (isFirstErrorForObservation && hasACreatedAtValue) {
-                            messages = [ `"createdAt": ${JSON.stringify(value.createdAt)}\n`, ...messages ]
+                            messages = [ `The observation with: "createdAt": ${JSON.stringify(value.createdAt)}\n`, ...messages ]
                         }
                         this.latestUploadErrorsObject[whichFile][whichObservation] = [
                             ...(this.latestUploadErrorsObject[whichFile][whichObservation]||[]),
                             ...messages.map(each=>`\n${each}`),
                         ]
-                        console.debug(`this.latestUploadErrorsObject is:`,this.latestUploadErrorsObject)
-                        console.debug(`Object.values(this.latestUploadErrorsObject) is:`,Object.values(this.latestUploadErrorsObject))
                         // otherwise Vue doesn't seem to know its been modified
                         this.latestUploadErrorsObject = this.latestUploadErrorsObject
-                        console.debug(`messages is:`,messages)
-                        console.debug(`this.numberOfErrors is:`,this.numberOfErrors())
+                        this.errorPreview = `There were some (${this.numberOfErrors()}) errors:`
                         if (this.numberOfErrors()>0 && !alreadyShown) {
                             this.$refs.errorModal.open()
                         }
