@@ -123,6 +123,9 @@ export default {
         }
     },
     methods: {
+        theColor(eachSegment) {
+            return this.$root.labels[eachSegment?.observation?.label]?.color
+        },
         attemptSegmentSelection() {
             // select the first segment if no segment is selcted
             try {
