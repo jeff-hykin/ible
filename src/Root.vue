@@ -407,6 +407,7 @@ export default RootComponent = {
         --blue: #60a5de;
         --red: #e57373;
         --break-tag-height: 18px;
+        --gray: lightgray;
     }
     #vue-root {
         overflow: hidden;

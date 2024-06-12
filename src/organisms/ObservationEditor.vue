@@ -147,21 +147,30 @@
                         UiSwitch(:disabled="!editing" v-model="observationData.rejectedBySomeone" v-if="!observationData.isHuman")
                             | Rejected By ≥1 Human
                             
-                        div(style="margin-top: 2rem")
-                        ui-textbox(
-                            :disabled="true"
-                            floating-label
-                            label="Created At"
-                            v-model="humanTime"
-                        )
-                        ui-textbox(
-                            style="margin-top: -1rem"
-                            :disabled="true"
-                            floating-label
-                            label="Id"
-                            tooltip="This is based on 'Created At'"
-                            v-model="observationData.createdAt"
-                        )
+                        column(v-if="!noSegment()" align-h="center" width="100%" @mouseenter="doShowOtherData" @mouseleave="hideOtherData")
+                            div(style="margin-top: 1.2rem")
+                            span(style="background: var(--gray); color: white; padding: 0.5rem; border-radius: 1rem;")
+                                | other data
+                            transition(name="quick-fade")
+                                column(align-h="left" :style="`transition: all ease 0.3s; opacity: ${showOtherData?1:0}; max-height: ${showOtherData?'30rem':0}; height: fit-content; max-width: 100%; min-width: 100%;`")
+                                    div(style="margin-top: 0.5rem")
+                                    ui-textbox(
+                                        :disabled="true"
+                                        floating-label
+                                        label="Created At"
+                                        v-model="humanTime"
+                                    )
+                                    ui-textbox(
+                                        style="margin-top: -0.4rem"
+                                        :disabled="true"
+                                        floating-label
+                                        label="Id"
+                                        tooltip="This is based on 'Created At'"
+                                        v-model="observationData.createdAt"
+                                    )
+                                    column(align-h="left" color="gray" width="100%" max-width="100%" overflow="auto")
+                                        | customInfo
+                                        JsonTree.json-tree(:data="observationData.customInfo||{}")
 </template>
 
 <script>
@@ -179,6 +188,7 @@ export default {
         "jumpSegment",
     ],
     components: {
+        JsonTree: require('vue-json-tree').default,
         UiSwitch: require("../atoms/UiSwitch").default,
     },
     data() {
@@ -190,6 +200,7 @@ export default {
             dataCopy: null,
             editing: false,
             dontShow: true,
+            showOtherData: false,
         }
     },
     mounted() {
@@ -266,6 +277,12 @@ export default {
         }
     },
     methods: {
+        doShowOtherData() {
+            this.showOtherData = true
+        },
+        hideOtherData() {
+            this.showOtherData = false
+        },
         onLabelChange() {
             this.observationData.label = observationTooling.coerceLabel(this.observationData.label)
         },
@@ -558,5 +575,18 @@ div[data-fjio3y598t3hi2]
             
         .new-observation-button, .upload-observations-button
             margin-right: 1rem
+    
+    .quick-fade-enter-active, .quick-fade-leave-active
+        transition: all 0.7s
+    
+    .quick-fade-enter, .quick-fade-leave-to
+        opacity: 0
+
+.json-tree
+    min-width: 100%
+    max-width: 100%
+    
+    .json-tree-sign
+        visibility: hidden
     
 </style>
