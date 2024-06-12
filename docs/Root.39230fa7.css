@@ -5819,9 +5819,6 @@ div[data-fjio3y598t3hi2] .add-observation-area .new-observation-button, div[data
 }.search[data-v-cdd074] {
   background: radial-gradient(circle, #b1bac3 0%, #7d8c9b 100%);
 }
-.search .delete-button[data-v-cdd074] {
-  opacity: 0;
-}
 .search .download-button[data-v-cdd074] {
   transition: all 0.3s ease;
   box-shadow: var(--shadow-1);
@@ -5834,6 +5831,22 @@ div[data-fjio3y598t3hi2] .add-observation-area .new-observation-button, div[data
 }
 .search .download-button[data-v-cdd074]:hover {
   --text-color: white;
+}
+.search .delete-button[data-v-cdd074] {
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-1);
+  border-radius: 1rem;
+  border: var(--text-color) 2px solid;
+  color: var(--text-color);
+}
+.search .delete-button[data-v-cdd074]:not(:hover) {
+  --text-color: whitesmoke;
+  background: gray;
+}
+.search .delete-button[data-v-cdd074]:hover {
+  --text-color: white;
+  background: red;
 }
 .search .text-grid h5[data-v-cdd074] {
   min-width: fit-content;

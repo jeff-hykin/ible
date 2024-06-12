@@ -8542,7 +8542,113 @@ if (inBrowser) {
 
 var _default = Vue;
 exports.default = _default;
-},{}],"node_modules/good-vue/dist/index.js":[function(require,module,exports) {
+},{}],"src/plugins/child.js":[function(require,module,exports) {
+// api
+//     $child(...args)
+let Vue = require("vue").default;
+
+Object.defineProperty(Vue.prototype, "$child", {
+  get() {
+    return (firstRef, ...args) => new Promise((resolve, reject) => {
+      let checker;
+
+      checker = () => {
+        let ref = this.$refs[firstRef]; // base case
+
+        if (ref && args.length === 0) {
+          resolve(ref); // recursive child case
+        } else if (ref) {
+          ref.$child(...args).then(resolve); // recursive wait case
+        } else {
+          this.$nextTick(() => {
+            setTimeout(checker, 500);
+          });
+        }
+      };
+
+      checker();
+    });
+  }
+
+});
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
+var bundleURL = null;
+
+function getBundleURLCached() {
+  if (!bundleURL) {
+    bundleURL = getBundleURL();
+  }
+
+  return bundleURL;
+}
+
+function getBundleURL() {
+  // Attempt to find the URL of the current script and use that as the base URL
+  try {
+    throw new Error();
+  } catch (err) {
+    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
+
+    if (matches) {
+      return getBaseURL(matches[0]);
+    }
+  }
+
+  return '/';
+}
+
+function getBaseURL(url) {
+  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)\/[^/]+$/, '$1') + '/';
+}
+
+exports.getBundleURL = getBundleURLCached;
+exports.getBaseURL = getBaseURL;
+},{}],"node_modules/parcel-bundler/src/builtins/css-loader.js":[function(require,module,exports) {
+var bundle = require('./bundle-url');
+
+function updateLink(link) {
+  var newLink = link.cloneNode();
+
+  newLink.onload = function () {
+    link.remove();
+  };
+
+  newLink.href = link.href.split('?')[0] + '?' + Date.now();
+  link.parentNode.insertBefore(newLink, link.nextSibling);
+}
+
+var cssTimeout = null;
+
+function reloadCSS() {
+  if (cssTimeout) {
+    return;
+  }
+
+  cssTimeout = setTimeout(function () {
+    var links = document.querySelectorAll('link[rel="stylesheet"]');
+
+    for (var i = 0; i < links.length; i++) {
+      if (bundle.getBaseURL(links[i].href) === bundle.getBundleURL()) {
+        updateLink(links[i]);
+      }
+    }
+
+    cssTimeout = null;
+  }, 50);
+}
+
+module.exports = reloadCSS;
+},{"./bundle-url":"node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"node_modules/css-baseline/css/3.css":[function(require,module,exports) {
+
+        var reloadCSS = require('_css_loader');
+        module.hot.dispose(reloadCSS);
+        module.hot.accept(reloadCSS);
+      
+},{"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js"}],"src/plugins/css-baseline-plugin.js":[function(require,module,exports) {
+"use strict";
+
+require("css-baseline/css/3.css");
+},{"css-baseline/css/3.css":"node_modules/css-baseline/css/3.css"}],"node_modules/good-vue/dist/index.js":[function(require,module,exports) {
 /*!
  * good-vue v1.3.1
  * (c) 
@@ -25334,74 +25440,7 @@ if (typeof window !== 'undefined' && window.Vue) {
 /***/ })
 /******/ ]);
 });
-},{}],"node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
-var bundleURL = null;
-
-function getBundleURLCached() {
-  if (!bundleURL) {
-    bundleURL = getBundleURL();
-  }
-
-  return bundleURL;
-}
-
-function getBundleURL() {
-  // Attempt to find the URL of the current script and use that as the base URL
-  try {
-    throw new Error();
-  } catch (err) {
-    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
-
-    if (matches) {
-      return getBaseURL(matches[0]);
-    }
-  }
-
-  return '/';
-}
-
-function getBaseURL(url) {
-  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)\/[^/]+$/, '$1') + '/';
-}
-
-exports.getBundleURL = getBundleURLCached;
-exports.getBaseURL = getBaseURL;
-},{}],"node_modules/parcel-bundler/src/builtins/css-loader.js":[function(require,module,exports) {
-var bundle = require('./bundle-url');
-
-function updateLink(link) {
-  var newLink = link.cloneNode();
-
-  newLink.onload = function () {
-    link.remove();
-  };
-
-  newLink.href = link.href.split('?')[0] + '?' + Date.now();
-  link.parentNode.insertBefore(newLink, link.nextSibling);
-}
-
-var cssTimeout = null;
-
-function reloadCSS() {
-  if (cssTimeout) {
-    return;
-  }
-
-  cssTimeout = setTimeout(function () {
-    var links = document.querySelectorAll('link[rel="stylesheet"]');
-
-    for (var i = 0; i < links.length; i++) {
-      if (bundle.getBaseURL(links[i].href) === bundle.getBundleURL()) {
-        updateLink(links[i]);
-      }
-    }
-
-    cssTimeout = null;
-  }, 50);
-}
-
-module.exports = reloadCSS;
-},{"./bundle-url":"node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"node_modules/keen-ui/dist/keen-ui.css":[function(require,module,exports) {
+},{}],"node_modules/keen-ui/dist/keen-ui.css":[function(require,module,exports) {
 
         var reloadCSS = require('_css_loader');
         module.hot.dispose(reloadCSS);
@@ -26047,76 +26086,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 let Vue = require("vue").default;
 
 Vue.use(_portalVue.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","portal-vue":"node_modules/portal-vue/dist/portal-vue.common.js"}],"src/plugins/root-hooks-plugin.js":[function(require,module,exports) {
-// TODO: fix potential issue of the "this" somehow not refering to the active component (maybe hotreload/debugging issue)
-// api
-//     rootHooks
-let Vue = require("vue").default;
-
-let rootHooksSymbol = Symbol("$rootHooks");
-Object.defineProperty(Vue.prototype, "$rootHooks", {
-  get() {
-    if (this[rootHooksSymbol] == undefined) {
-      this[rootHooksSymbol] = {};
-    }
-
-    return this[rootHooksSymbol];
-  },
-
-  set(value) {
-    this[rootHooksSymbol] = value;
-  }
-
-});
-const unwatcherSymbol = Symbol("unwatchers");
-Vue.mixin(module.exports = {
-  beforeCreate() {
-    const newOption = this.$options.rootHooks;
-
-    if (!newOption) {
-      return;
-    }
-
-    const vueStaticDestination = this.$rootHooks || this;
-
-    if (vueStaticDestination instanceof Object) {
-      if (newOption instanceof Function) {
-        Object.assign(vueStaticDestination, newOption.apply(this));
-      } else if (typeof newOption === 'object') {
-        Object.assign(vueStaticDestination, newOption);
-      }
-    }
-
-    this[unwatcherSymbol] = []; // 
-    // watchers
-    // 
-
-    const thisComponent = this;
-
-    if (this.$rootHooks.watch instanceof Object) {
-      for (let [eachKey, eachValue] of Object.entries(this.$rootHooks.watch)) {
-        if (eachValue.bind instanceof Function) {
-          eachValue = this.$rootHooks.watch[eachKey] = eachValue.bind(thisComponent);
-        }
-
-        this[unwatcherSymbol].push(this.$root.$watch(eachKey, eachValue, {
-          deep: true
-        }));
-      }
-    }
-  },
-
-  beforeDestroy() {
-    // call all of the unwatchers
-    if (this[unwatcherSymbol] instanceof Array) {
-      for (let each of this[unwatcherSymbol]) {
-        each();
-      }
-    }
-  }
-
-});
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/resolvables-plugin.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","portal-vue":"node_modules/portal-vue/dist/portal-vue.common.js"}],"src/plugins/resolvables-plugin.js":[function(require,module,exports) {
 // api
 // resolvables:
 //     [resolvable].promise
@@ -26311,6 +26281,75 @@ Vue.mixin(module.exports = {
           }
 
         });
+      }
+    }
+  }
+
+});
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/root-hooks-plugin.js":[function(require,module,exports) {
+// TODO: fix potential issue of the "this" somehow not refering to the active component (maybe hotreload/debugging issue)
+// api
+//     rootHooks
+let Vue = require("vue").default;
+
+let rootHooksSymbol = Symbol("$rootHooks");
+Object.defineProperty(Vue.prototype, "$rootHooks", {
+  get() {
+    if (this[rootHooksSymbol] == undefined) {
+      this[rootHooksSymbol] = {};
+    }
+
+    return this[rootHooksSymbol];
+  },
+
+  set(value) {
+    this[rootHooksSymbol] = value;
+  }
+
+});
+const unwatcherSymbol = Symbol("unwatchers");
+Vue.mixin(module.exports = {
+  beforeCreate() {
+    const newOption = this.$options.rootHooks;
+
+    if (!newOption) {
+      return;
+    }
+
+    const vueStaticDestination = this.$rootHooks || this;
+
+    if (vueStaticDestination instanceof Object) {
+      if (newOption instanceof Function) {
+        Object.assign(vueStaticDestination, newOption.apply(this));
+      } else if (typeof newOption === 'object') {
+        Object.assign(vueStaticDestination, newOption);
+      }
+    }
+
+    this[unwatcherSymbol] = []; // 
+    // watchers
+    // 
+
+    const thisComponent = this;
+
+    if (this.$rootHooks.watch instanceof Object) {
+      for (let [eachKey, eachValue] of Object.entries(this.$rootHooks.watch)) {
+        if (eachValue.bind instanceof Function) {
+          eachValue = this.$rootHooks.watch[eachKey] = eachValue.bind(thisComponent);
+        }
+
+        this[unwatcherSymbol].push(this.$root.$watch(eachKey, eachValue, {
+          deep: true
+        }));
+      }
+    }
+  },
+
+  beforeDestroy() {
+    // call all of the unwatchers
+    if (this[unwatcherSymbol] instanceof Array) {
+      for (let each of this[unwatcherSymbol]) {
+        each();
       }
     }
   }
@@ -29309,36 +29348,7 @@ var _vueToasted = _interopRequireDefault(require("vue-toasted"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_vueToasted.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-toasted":"node_modules/vue-toasted/dist/vue-toasted.min.js"}],"src/plugins/child.js":[function(require,module,exports) {
-// api
-//     $child(...args)
-let Vue = require("vue").default;
-
-Object.defineProperty(Vue.prototype, "$child", {
-  get() {
-    return (firstRef, ...args) => new Promise((resolve, reject) => {
-      let checker;
-
-      checker = () => {
-        let ref = this.$refs[firstRef]; // base case
-
-        if (ref && args.length === 0) {
-          resolve(ref); // recursive child case
-        } else if (ref) {
-          ref.$child(...args).then(resolve); // recursive wait case
-        } else {
-          this.$nextTick(() => {
-            setTimeout(checker, 500);
-          });
-        }
-      };
-
-      checker();
-    });
-  }
-
-});
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/window-listeners-plugin.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-toasted":"node_modules/vue-toasted/dist/vue-toasted.min.js"}],"src/plugins/window-listeners-plugin.js":[function(require,module,exports) {
 // api
 //     windowListeners:{}
 let Vue = require("vue").default;
@@ -29438,6 +29448,78 @@ Vue.mixin(module.exports = {
     }
 
   }
+});
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/workers-plugin.js":[function(require,module,exports) {
+// api
+//     workers
+// summary
+//     workers are aynsc functions that can only have
+//     one active instance
+//     calling a worker function again before the first one is finished    
+//     will simply wait for the first one to finish and return that output
+let Vue = require("vue").default;
+
+let workersSymbol = Symbol("$workers");
+Object.defineProperty(Vue.prototype, "$workers", {
+  get() {
+    if (this[workersSymbol] == undefined) {
+      this[workersSymbol] = {};
+    }
+
+    return this[workersSymbol];
+  },
+
+  set(value) {
+    this[workersSymbol] = value;
+  }
+
+});
+Vue.mixin(module.exports = {
+  beforeCreate() {
+    const newOption = this.$options.workers;
+
+    if (!newOption) {
+      return;
+    }
+
+    const vueStaticDestination = this.$workers || this;
+
+    if (vueStaticDestination instanceof Object) {
+      if (newOption instanceof Function) {
+        Object.assign(vueStaticDestination, newOption.apply(this));
+      } else if (typeof newOption === 'object') {
+        Object.assign(vueStaticDestination, newOption);
+      }
+    } // 
+    // watchers
+    // 
+
+
+    const thisComponent = this;
+
+    if (this.$workers instanceof Object) {
+      for (let [eachKey, eachValue] of Object.entries(this.$workers)) {
+        // if its a function that can be bound
+        if (eachValue instanceof Function) {
+          const functionAttachedToInstance = eachValue.bind(thisComponent);
+          let functionIsRunning = false;
+          let promiseToRunningFunction = null; // wrap the function in a checker
+
+          this.$methods[eachKey] = this.$workers[eachKey] = async (...args) => {
+            if (!functionIsRunning) {
+              functionIsRunning = true;
+              promiseToRunningFunction = functionAttachedToInstance(...args);
+            }
+
+            let result = await promiseToRunningFunction;
+            functionIsRunning = false;
+            return result;
+          };
+        }
+      }
+    }
+  }
+
 });
 },{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"node_modules/vue-plyr/dist/vue-plyr.esm.js":[function(require,module,exports) {
 var global = arguments[3];
@@ -37445,105 +37527,23 @@ _vue.default.use(_vuePlyr.default, {
     invertTime: false
   }
 });
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-plyr":"node_modules/vue-plyr/dist/vue-plyr.esm.js","vue-plyr/dist/vue-plyr.css":"node_modules/vue-plyr/dist/vue-plyr.css"}],"node_modules/css-baseline/css/3.css":[function(require,module,exports) {
-
-        var reloadCSS = require('_css_loader');
-        module.hot.dispose(reloadCSS);
-        module.hot.accept(reloadCSS);
-      
-},{"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js"}],"src/plugins/css-baseline-plugin.js":[function(require,module,exports) {
-"use strict";
-
-require("css-baseline/css/3.css");
-},{"css-baseline/css/3.css":"node_modules/css-baseline/css/3.css"}],"src/plugins/workers-plugin.js":[function(require,module,exports) {
-// api
-//     workers
-// summary
-//     workers are aynsc functions that can only have
-//     one active instance
-//     calling a worker function again before the first one is finished    
-//     will simply wait for the first one to finish and return that output
-let Vue = require("vue").default;
-
-let workersSymbol = Symbol("$workers");
-Object.defineProperty(Vue.prototype, "$workers", {
-  get() {
-    if (this[workersSymbol] == undefined) {
-      this[workersSymbol] = {};
-    }
-
-    return this[workersSymbol];
-  },
-
-  set(value) {
-    this[workersSymbol] = value;
-  }
-
-});
-Vue.mixin(module.exports = {
-  beforeCreate() {
-    const newOption = this.$options.workers;
-
-    if (!newOption) {
-      return;
-    }
-
-    const vueStaticDestination = this.$workers || this;
-
-    if (vueStaticDestination instanceof Object) {
-      if (newOption instanceof Function) {
-        Object.assign(vueStaticDestination, newOption.apply(this));
-      } else if (typeof newOption === 'object') {
-        Object.assign(vueStaticDestination, newOption);
-      }
-    } // 
-    // watchers
-    // 
-
-
-    const thisComponent = this;
-
-    if (this.$workers instanceof Object) {
-      for (let [eachKey, eachValue] of Object.entries(this.$workers)) {
-        // if its a function that can be bound
-        if (eachValue instanceof Function) {
-          const functionAttachedToInstance = eachValue.bind(thisComponent);
-          let functionIsRunning = false;
-          let promiseToRunningFunction = null; // wrap the function in a checker
-
-          this.$methods[eachKey] = this.$workers[eachKey] = async (...args) => {
-            if (!functionIsRunning) {
-              functionIsRunning = true;
-              promiseToRunningFunction = functionAttachedToInstance(...args);
-            }
-
-            let result = await promiseToRunningFunction;
-            functionIsRunning = false;
-            return result;
-          };
-        }
-      }
-    }
-  }
-
-});
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"src/plugins/*.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-plyr":"node_modules/vue-plyr/dist/vue-plyr.esm.js","vue-plyr/dist/vue-plyr.css":"node_modules/vue-plyr/dist/vue-plyr.css"}],"src/plugins/*.js":[function(require,module,exports) {
 module.exports = {
+  "child": require("./child.js"),
+  "css-baseline-plugin": require("./css-baseline-plugin.js"),
   "good-vue-plugin": require("./good-vue-plugin.js"),
   "keen-ui-plugin": require("./keen-ui-plugin.js"),
   "portal-plugin": require("./portal-plugin.js"),
-  "root-hooks-plugin": require("./root-hooks-plugin.js"),
   "resolvables-plugin": require("./resolvables-plugin.js"),
+  "root-hooks-plugin": require("./root-hooks-plugin.js"),
   "router-plugin": require("./router-plugin.js"),
   "vue-toasted-plugin": require("./vue-toasted-plugin.js"),
-  "child": require("./child.js"),
   "window-listeners-plugin": require("./window-listeners-plugin.js"),
   "without-watchers": require("./without-watchers.js"),
-  "youtube-player-plugin": require("./youtube-player-plugin.js"),
-  "css-baseline-plugin": require("./css-baseline-plugin.js"),
-  "workers-plugin": require("./workers-plugin.js")
+  "workers-plugin": require("./workers-plugin.js"),
+  "youtube-player-plugin": require("./youtube-player-plugin.js")
 };
-},{"./good-vue-plugin.js":"src/plugins/good-vue-plugin.js","./keen-ui-plugin.js":"src/plugins/keen-ui-plugin.js","./portal-plugin.js":"src/plugins/portal-plugin.js","./root-hooks-plugin.js":"src/plugins/root-hooks-plugin.js","./resolvables-plugin.js":"src/plugins/resolvables-plugin.js","./router-plugin.js":"src/plugins/router-plugin.js","./vue-toasted-plugin.js":"src/plugins/vue-toasted-plugin.js","./child.js":"src/plugins/child.js","./window-listeners-plugin.js":"src/plugins/window-listeners-plugin.js","./without-watchers.js":"src/plugins/without-watchers.js","./youtube-player-plugin.js":"src/plugins/youtube-player-plugin.js","./css-baseline-plugin.js":"src/plugins/css-baseline-plugin.js","./workers-plugin.js":"src/plugins/workers-plugin.js"}],"node_modules/file-saver/dist/FileSaver.min.js":[function(require,module,exports) {
+},{"./child.js":"src/plugins/child.js","./css-baseline-plugin.js":"src/plugins/css-baseline-plugin.js","./good-vue-plugin.js":"src/plugins/good-vue-plugin.js","./keen-ui-plugin.js":"src/plugins/keen-ui-plugin.js","./portal-plugin.js":"src/plugins/portal-plugin.js","./resolvables-plugin.js":"src/plugins/resolvables-plugin.js","./root-hooks-plugin.js":"src/plugins/root-hooks-plugin.js","./router-plugin.js":"src/plugins/router-plugin.js","./vue-toasted-plugin.js":"src/plugins/vue-toasted-plugin.js","./window-listeners-plugin.js":"src/plugins/window-listeners-plugin.js","./without-watchers.js":"src/plugins/without-watchers.js","./workers-plugin.js":"src/plugins/workers-plugin.js","./youtube-player-plugin.js":"src/plugins/youtube-player-plugin.js"}],"node_modules/file-saver/dist/FileSaver.min.js":[function(require,module,exports) {
 var define;
 var global = arguments[3];
 (function(a,b){if("function"==typeof define&&define.amd)define([],b);else if("undefined"!=typeof exports)b();else{b(),a.FileSaver={exports:{}}.exports}})(this,function(){"use strict";function b(a,b){return"undefined"==typeof b?b={autoBom:!1}:"object"!=typeof b&&(console.warn("Deprecated: Expected third argument to be a object"),b={autoBom:!b}),b.autoBom&&/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(a.type)?new Blob(["\uFEFF",a],{type:a.type}):a}function c(a,b,c){var d=new XMLHttpRequest;d.open("GET",a),d.responseType="blob",d.onload=function(){g(d.response,b,c)},d.onerror=function(){console.error("could not download file")},d.send()}function d(a){var b=new XMLHttpRequest;b.open("HEAD",a,!1);try{b.send()}catch(a){}return 200<=b.status&&299>=b.status}function e(a){try{a.dispatchEvent(new MouseEvent("click"))}catch(c){var b=document.createEvent("MouseEvents");b.initMouseEvent("click",!0,!0,window,0,0,0,80,20,!1,!1,!1,!1,0,null),a.dispatchEvent(b)}}var f="object"==typeof window&&window.window===window?window:"object"==typeof self&&self.self===self?self:"object"==typeof global&&global.global===global?global:void 0,a=f.navigator&&/Macintosh/.test(navigator.userAgent)&&/AppleWebKit/.test(navigator.userAgent)&&!/Safari/.test(navigator.userAgent),g=f.saveAs||("object"!=typeof window||window!==f?function(){}:"download"in HTMLAnchorElement.prototype&&!a?function(b,g,h){var i=f.URL||f.webkitURL,j=document.createElement("a");g=g||b.name||"download",j.download=g,j.rel="noopener","string"==typeof b?(j.href=b,j.origin===location.origin?e(j):d(j.href)?c(b,g,h):e(j,j.target="_blank")):(j.href=i.createObjectURL(b),setTimeout(function(){i.revokeObjectURL(j.href)},4E4),setTimeout(function(){e(j)},0))}:"msSaveOrOpenBlob"in navigator?function(f,g,h){if(g=g||f.name||"download","string"!=typeof f)navigator.msSaveOrOpenBlob(b(f,h),g);else if(d(f))c(f,g,h);else{var i=document.createElement("a");i.href=f,i.target="_blank",setTimeout(function(){e(i)})}}:function(b,d,e,g){if(g=g||open("","_blank"),g&&(g.document.title=g.document.body.innerText="downloading..."),"string"==typeof b)return c(b,d,e);var h="application/octet-stream"===b.type,i=/constructor/i.test(f.HTMLElement)||f.safari,j=/CriOS\/[\d]+/.test(navigator.userAgent);if((j||h&&i||a)&&"undefined"!=typeof FileReader){var k=new FileReader;k.onloadend=function(){var a=k.result;a=j?a:a.replace(/^data:[^;]*;/,"data:attachment/file;"),g?g.location.href=a:location=a,g=null},k.readAsDataURL(b)}else{var l=f.URL||f.webkitURL,m=l.createObjectURL(b);g?g.location=m:location.href=m,g=null,setTimeout(function(){l.revokeObjectURL(m)},4E4)}});f.saveAs=g.saveAs=g,"undefined"!=typeof module&&(module.exports=g)});
@@ -76468,7 +76468,7 @@ var _default = {
   computed: {
     uuidOfSelectedSegment: {
       get() {
-        return this.$root.selectedSegment?.$uuid || this.observationData.createdAt;
+        return this.observationData.createdAt;
       },
 
       set(value) {
@@ -76509,7 +76509,7 @@ var _default = {
         console.debug(`selectedSegment is:`, selectedSegment);
 
         if (selectedSegment instanceof Object) {
-          this.observationData = this.observationEntryToData(selectedSegment); // this.uuidOfSelectedSegment = selectedSegment.$uuid||this.uuidOfSelectedSegment
+          this.observationData = this.observationEntryToData(selectedSegment);
         }
       },
 
@@ -77809,7 +77809,7 @@ exports.default = _default;
                   ? _c(
                       "row",
                       {
-                        key: eachSegment.$uuid,
+                        key: eachSegment.createdAt || eachSegment.$uuid,
                         staticClass: "segment",
                         style:
                           "--color: " +
@@ -79295,6 +79295,9 @@ exports.default = void 0;
 //
 //
 //
+//
+//
+//
 let {
   backendHelpers,
   fakeBackend
@@ -79317,7 +79320,8 @@ var _default = {
   data: () => ({
     debouncedSubmitSearch: () => {},
     colors,
-    observer: $root.filterAndSort.observer
+    observer: $root.filterAndSort.observer,
+    numberOfSearchResults: 0
   }),
 
   mounted() {
@@ -79332,9 +79336,73 @@ var _default = {
       this.$emit("goToVideo", data);
     },
 
-    download() {
+    async download() {
       console.log(`download clicked`);
-      download("data.json", JSON.stringify(observationEntries, 0, 4));
+
+      if (observationEntries.length == 0) {
+        const allEntries = await backendHelpers.getObservations({
+          where,
+          returnObject: false
+        });
+        const allEntriesFake = await fakeBackend.getObservations({
+          where,
+          returnObject: false
+        });
+        download("data.json", JSON.stringify(allEntries, 0, 4));
+      } else {
+        download("data.json", JSON.stringify(observationEntries, 0, 4));
+      }
+    },
+
+    async showDeletePrompt() {
+      let entries = observationEntries;
+
+      if (entries.length == 0) {
+        const allEntries = await backendHelpers.getObservations({
+          where,
+          returnObject: true
+        });
+        const allEntriesFake = await fakeBackend.getObservations({
+          where,
+          returnObject: false
+        });
+        entries = allEntries;
+      }
+
+      if (confirm(`Are you sure?\n\n    Ok = Delete ${entries.length} observations\n    Cancel = Keep Data`)) {
+        const toastObject = this.$toasted.show(`Deleting...`, {
+          closeOnSwipe: false,
+          action: {
+            text: 'Close',
+            onClick: (e, _) => {
+              toastObject.goAway(0);
+            }
+          }
+        });
+        const toastElement = toastObject.el;
+        toastElement.innerHTML = `<div><br>${toastElement.innerHTML}<br><p>0 of ${entries.length}\n</p></div>`;
+        let count = 0;
+
+        for (const each of entries) {
+          await backendHelpers.deleteObservation({
+            uuidOfSelectedSegment: each.createdAt
+          });
+          await fakeBackend.deleteObservation({
+            uuidOfSelectedSegment: each.createdAt
+          });
+          count++;
+          toastElement.innerHTML = toastElement.innerHTML.replace(/<p>.+/, `<p>${count} of ${entries.length}`);
+        }
+
+        if (this.$root.routeData$.labelName) {
+          this.$root.selectAllLabels();
+          this.$root.push({ ...this.$root.routeData$,
+            labelName: null
+          });
+        }
+
+        window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"));
+      }
     },
 
     falsePositiveRatio() {
@@ -79426,13 +79494,23 @@ var _default = {
 
       console.log(`querying the backend for observationEntries`);
       observationEntries = await backendHelpers.getObservations({
-        where
+        where,
+        returnObject: true
       });
       let fakeObservationEntries = await fakeBackend.getObservations({
-        where
+        where,
+        returnObject: true
       });
       console.debug(`BACKEND: observationEntries is:`, observationEntries);
-      console.debug(`FAKE   : observationEntries is:`, fakeObservationEntries); // show the time of the first load
+      console.debug(`FAKE   : observationEntries is:`, fakeObservationEntries); // ensure the createdAt is the ID
+
+      for (const [key, value] of Object.entries(observationEntries)) {
+        value.createdAt = key;
+        console.debug(`value is:`, value);
+      }
+
+      observationEntries = Object.values(observationEntries);
+      this.numberOfSearchResults = observationEntries.length; // show the time of the first load
 
       if (this.$root.loadStart) {
         let loadDuration = (new Date().getTime() - this.$root.loadStart) / 1000;
@@ -79498,6 +79576,24 @@ exports.default = _default;
           staticStyle: { "min-width": "100%", "margin-top": "1rem" }
         },
         [
+          _c(
+            "ui-button",
+            {
+              staticClass: "delete-button",
+              attrs: {
+                icon: "delete",
+                color: "black",
+                tooltipPosition: "top",
+                tooltip:
+                  "Delete all " +
+                  (_vm.numberOfSearchResults ||
+                    _vm.$root.searchResults.counts.total) +
+                  " search results"
+              },
+              on: { click: _vm.showDeletePrompt }
+            },
+            [_vm._v("Delete All")]
+          ),
           _c("VideoIdSearch", { on: { goToVideo: _vm.goToVideo } }),
           _c(
             "ui-button",
@@ -79509,7 +79605,8 @@ exports.default = _default;
                 tooltipPosition: "top",
                 tooltip:
                   "Download all " +
-                  _vm.$root.searchResults.counts.total +
+                  (_vm.numberOfSearchResults ||
+                    _vm.$root.searchResults.counts.total) +
                   " results as JSON"
               },
               on: { click: _vm.download }
@@ -82672,16 +82769,30 @@ var _default = RootComponent = {
     addLabel(labelName, videoId) {
       // if the label doesnt exist
       if (!this.$root.labels[labelName]) {
-        this.$toasted.show(`New label added`).goAway(3500); // then add it
+        this.$toasted.show(`New label added`).goAway(3500);
+        const noneAreSelected = Object.values(this.$root.labels).every(each => !each.selected); // then add it
 
         this.$root.labels[labelName] = {
           color: (0, _utils.getColor)(labelName),
           segmentCount: 1,
           videoCount: 1,
           videos: [videoId],
+          selected: !noneAreSelected // if nothing is selected, keep it that way
+
+        };
+      }
+    },
+
+    selectAllLabels() {
+      const newLabelValues = {};
+
+      for (const [key, value] of Object.entries(this.$root.labels)) {
+        newLabelValues[key] = { ...value,
           selected: true
         };
       }
+
+      this.$root.labels = newLabelValues;
     }
 
   }
@@ -82773,7 +82884,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61212" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51002" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

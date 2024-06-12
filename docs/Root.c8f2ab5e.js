@@ -29372,6 +29372,78 @@ Vue.mixin(module.exports = {
 
   }
 });
+},{"vue":"NtAQ"}],"Y7uC":[function(require,module,exports) {
+// api
+//     workers
+// summary
+//     workers are aynsc functions that can only have
+//     one active instance
+//     calling a worker function again before the first one is finished    
+//     will simply wait for the first one to finish and return that output
+let Vue = require("vue").default;
+
+let workersSymbol = Symbol("$workers");
+Object.defineProperty(Vue.prototype, "$workers", {
+  get() {
+    if (this[workersSymbol] == undefined) {
+      this[workersSymbol] = {};
+    }
+
+    return this[workersSymbol];
+  },
+
+  set(value) {
+    this[workersSymbol] = value;
+  }
+
+});
+Vue.mixin(module.exports = {
+  beforeCreate() {
+    const newOption = this.$options.workers;
+
+    if (!newOption) {
+      return;
+    }
+
+    const vueStaticDestination = this.$workers || this;
+
+    if (vueStaticDestination instanceof Object) {
+      if (newOption instanceof Function) {
+        Object.assign(vueStaticDestination, newOption.apply(this));
+      } else if (typeof newOption === 'object') {
+        Object.assign(vueStaticDestination, newOption);
+      }
+    } // 
+    // watchers
+    // 
+
+
+    const thisComponent = this;
+
+    if (this.$workers instanceof Object) {
+      for (let [eachKey, eachValue] of Object.entries(this.$workers)) {
+        // if its a function that can be bound
+        if (eachValue instanceof Function) {
+          const functionAttachedToInstance = eachValue.bind(thisComponent);
+          let functionIsRunning = false;
+          let promiseToRunningFunction = null; // wrap the function in a checker
+
+          this.$methods[eachKey] = this.$workers[eachKey] = async (...args) => {
+            if (!functionIsRunning) {
+              functionIsRunning = true;
+              promiseToRunningFunction = functionAttachedToInstance(...args);
+            }
+
+            let result = await promiseToRunningFunction;
+            functionIsRunning = false;
+            return result;
+          };
+        }
+      }
+    }
+  }
+
+});
 },{"vue":"NtAQ"}],"fgJi":[function(require,module,exports) {
 var global = arguments[3];
 "use strict";
@@ -37372,79 +37444,7 @@ _vue.default.use(_vuePlyr.default, {
     invertTime: false
   }
 });
-},{"vue":"NtAQ","vue-plyr":"fgJi","vue-plyr/dist/vue-plyr.css":"jJO6"}],"Y7uC":[function(require,module,exports) {
-// api
-//     workers
-// summary
-//     workers are aynsc functions that can only have
-//     one active instance
-//     calling a worker function again before the first one is finished    
-//     will simply wait for the first one to finish and return that output
-let Vue = require("vue").default;
-
-let workersSymbol = Symbol("$workers");
-Object.defineProperty(Vue.prototype, "$workers", {
-  get() {
-    if (this[workersSymbol] == undefined) {
-      this[workersSymbol] = {};
-    }
-
-    return this[workersSymbol];
-  },
-
-  set(value) {
-    this[workersSymbol] = value;
-  }
-
-});
-Vue.mixin(module.exports = {
-  beforeCreate() {
-    const newOption = this.$options.workers;
-
-    if (!newOption) {
-      return;
-    }
-
-    const vueStaticDestination = this.$workers || this;
-
-    if (vueStaticDestination instanceof Object) {
-      if (newOption instanceof Function) {
-        Object.assign(vueStaticDestination, newOption.apply(this));
-      } else if (typeof newOption === 'object') {
-        Object.assign(vueStaticDestination, newOption);
-      }
-    } // 
-    // watchers
-    // 
-
-
-    const thisComponent = this;
-
-    if (this.$workers instanceof Object) {
-      for (let [eachKey, eachValue] of Object.entries(this.$workers)) {
-        // if its a function that can be bound
-        if (eachValue instanceof Function) {
-          const functionAttachedToInstance = eachValue.bind(thisComponent);
-          let functionIsRunning = false;
-          let promiseToRunningFunction = null; // wrap the function in a checker
-
-          this.$methods[eachKey] = this.$workers[eachKey] = async (...args) => {
-            if (!functionIsRunning) {
-              functionIsRunning = true;
-              promiseToRunningFunction = functionAttachedToInstance(...args);
-            }
-
-            let result = await promiseToRunningFunction;
-            functionIsRunning = false;
-            return result;
-          };
-        }
-      }
-    }
-  }
-
-});
-},{"vue":"NtAQ"}],"Xeh1":[function(require,module,exports) {
+},{"vue":"NtAQ","vue-plyr":"fgJi","vue-plyr/dist/vue-plyr.css":"jJO6"}],"Xeh1":[function(require,module,exports) {
 module.exports = {
   "child": require("./child.js"),
   "css-baseline-plugin": require("./css-baseline-plugin.js"),
@@ -37457,10 +37457,10 @@ module.exports = {
   "vue-toasted-plugin": require("./vue-toasted-plugin.js"),
   "window-listeners-plugin": require("./window-listeners-plugin.js"),
   "without-watchers": require("./without-watchers.js"),
-  "youtube-player-plugin": require("./youtube-player-plugin.js"),
-  "workers-plugin": require("./workers-plugin.js")
+  "workers-plugin": require("./workers-plugin.js"),
+  "youtube-player-plugin": require("./youtube-player-plugin.js")
 };
-},{"./child.js":"HT0w","./css-baseline-plugin.js":"xmsx","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./portal-plugin.js":"HMJZ","./resolvables-plugin.js":"mVwj","./root-hooks-plugin.js":"T1YL","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./window-listeners-plugin.js":"XpWL","./without-watchers.js":"aLvM","./youtube-player-plugin.js":"mQXc","./workers-plugin.js":"Y7uC"}],"i0aF":[function(require,module,exports) {
+},{"./child.js":"HT0w","./css-baseline-plugin.js":"xmsx","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./portal-plugin.js":"HMJZ","./resolvables-plugin.js":"mVwj","./root-hooks-plugin.js":"T1YL","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./window-listeners-plugin.js":"XpWL","./without-watchers.js":"aLvM","./workers-plugin.js":"Y7uC","./youtube-player-plugin.js":"mQXc"}],"i0aF":[function(require,module,exports) {
 var define;
 var global = arguments[3];
 (function(a,b){if("function"==typeof define&&define.amd)define([],b);else if("undefined"!=typeof exports)b();else{b(),a.FileSaver={exports:{}}.exports}})(this,function(){"use strict";function b(a,b){return"undefined"==typeof b?b={autoBom:!1}:"object"!=typeof b&&(console.warn("Deprecated: Expected third argument to be a object"),b={autoBom:!b}),b.autoBom&&/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(a.type)?new Blob(["\uFEFF",a],{type:a.type}):a}function c(a,b,c){var d=new XMLHttpRequest;d.open("GET",a),d.responseType="blob",d.onload=function(){g(d.response,b,c)},d.onerror=function(){console.error("could not download file")},d.send()}function d(a){var b=new XMLHttpRequest;b.open("HEAD",a,!1);try{b.send()}catch(a){}return 200<=b.status&&299>=b.status}function e(a){try{a.dispatchEvent(new MouseEvent("click"))}catch(c){var b=document.createEvent("MouseEvents");b.initMouseEvent("click",!0,!0,window,0,0,0,80,20,!1,!1,!1,!1,0,null),a.dispatchEvent(b)}}var f="object"==typeof window&&window.window===window?window:"object"==typeof self&&self.self===self?self:"object"==typeof global&&global.global===global?global:void 0,a=f.navigator&&/Macintosh/.test(navigator.userAgent)&&/AppleWebKit/.test(navigator.userAgent)&&!/Safari/.test(navigator.userAgent),g=f.saveAs||("object"!=typeof window||window!==f?function(){}:"download"in HTMLAnchorElement.prototype&&!a?function(b,g,h){var i=f.URL||f.webkitURL,j=document.createElement("a");g=g||b.name||"download",j.download=g,j.rel="noopener","string"==typeof b?(j.href=b,j.origin===location.origin?e(j):d(j.href)?c(b,g,h):e(j,j.target="_blank")):(j.href=i.createObjectURL(b),setTimeout(function(){i.revokeObjectURL(j.href)},4E4),setTimeout(function(){e(j)},0))}:"msSaveOrOpenBlob"in navigator?function(f,g,h){if(g=g||f.name||"download","string"!=typeof f)navigator.msSaveOrOpenBlob(b(f,h),g);else if(d(f))c(f,g,h);else{var i=document.createElement("a");i.href=f,i.target="_blank",setTimeout(function(){e(i)})}}:function(b,d,e,g){if(g=g||open("","_blank"),g&&(g.document.title=g.document.body.innerText="downloading..."),"string"==typeof b)return c(b,d,e);var h="application/octet-stream"===b.type,i=/constructor/i.test(f.HTMLElement)||f.safari,j=/CriOS\/[\d]+/.test(navigator.userAgent);if((j||h&&i||a)&&"undefined"!=typeof FileReader){var k=new FileReader;k.onloadend=function(){var a=k.result;a=j?a:a.replace(/^data:[^;]*;/,"data:attachment/file;"),g?g.location.href=a:location=a,g=null},k.readAsDataURL(b)}else{var l=f.URL||f.webkitURL,m=l.createObjectURL(b);g?g.location=m:location.href=m,g=null,setTimeout(function(){l.revokeObjectURL(m)},4E4)}});f.saveAs=g.saveAs=g,"undefined"!=typeof module&&(module.exports=g)});
@@ -40565,8 +40565,6 @@ function isValidName(value) {
   return false;
 }
 
-const currentFixedSizeOfYouTubeVideoId = 11; // This is not guarenteed to stay this way forever
-
 function humandReadableTime(milliseconds) {
   function numberEnding(number) {
     return number > 1 ? 's' : '';
@@ -40880,7 +40878,6 @@ module.exports = {
   Delayable,
   download,
   isValidName,
-  currentFixedSizeOfYouTubeVideoId,
   humandReadableTime,
   deferredPromise,
   asyncIteratorToList,
@@ -70492,10 +70489,16 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.coerceLabel = coerceLabel;
 exports.coerceObserver = coerceObserver;
+exports.coerceCreatedAt = coerceCreatedAt;
+exports.createdAtIsValid = createdAtIsValid;
+exports.videoIdIsValid = videoIdIsValid;
+exports.labelConfidenceIsValid = labelConfidenceIsValid;
+exports.observerIsValid = observerIsValid;
+exports.labelIsValid = labelIsValid;
 exports.quickLocalValidationCheck = quickLocalValidationCheck;
 exports.coerceObservation = coerceObservation;
 exports.validateObservations = validateObservations;
-exports.InvalidFormatError = exports.minSizeOfLocalVideoId = exports.minSizeOfYouTubeVideoId = exports.minSizeOfUnixTimestamp = exports.createUuid = exports.getLocalVideoName = exports.isLocalVideo = void 0;
+exports.createDefaultObservationEntry = exports.InvalidFormatError = exports.minSizeOfLocalVideoId = exports.currentFixedSizeOfYouTubeVideoId = exports.minSizeOfUnixTimestamp = exports.createUuid = exports.getLocalVideoName = exports.isLocalVideo = void 0;
 
 var _string = require("./string.js");
 
@@ -70520,8 +70523,8 @@ const createUuid = () => new Date().getTime() + `${Math.random()}`.slice(1);
 exports.createUuid = createUuid;
 const minSizeOfUnixTimestamp = 10;
 exports.minSizeOfUnixTimestamp = minSizeOfUnixTimestamp;
-const minSizeOfYouTubeVideoId = 11;
-exports.minSizeOfYouTubeVideoId = minSizeOfYouTubeVideoId;
+const currentFixedSizeOfYouTubeVideoId = 11;
+exports.currentFixedSizeOfYouTubeVideoId = currentFixedSizeOfYouTubeVideoId;
 const minSizeOfLocalVideoId = localVideoPrefix.length;
 exports.minSizeOfLocalVideoId = minSizeOfLocalVideoId;
 const namePattern = /^[a-z0-9-.]+$/;
@@ -70544,12 +70547,32 @@ class InvalidFormatError extends Error {
     return yaml.stringify(this.messages);
   }
 
-} // 
+}
+
+exports.InvalidFormatError = InvalidFormatError;
+
+const createDefaultObservationEntry = () => ({
+  createdAt: createUuid(),
+  type: "segment",
+  videoId: null,
+  startTime: (window.player?.currentTime || 0).toFixed(3) - 0,
+  endTime: ((window.player?.currentTime || 0) + 0.01).toFixed(3) - 0,
+  observer: storageObject.observer || "",
+  isHuman: true,
+  confirmedBySomeone: false,
+  rejectedBySomeone: false,
+  observation: {
+    label: storageObject.recentLabel || "example-label",
+    labelConfidence: 0.95,
+    spacialInfo: {}
+  },
+  customInfo: {}
+}); // 
 // indvidual coercsion
 // 
 
 
-exports.InvalidFormatError = InvalidFormatError;
+exports.createDefaultObservationEntry = createDefaultObservationEntry;
 
 function coerceLabel(label) {
   return toKebabCase(label.toLowerCase());
@@ -70557,6 +70580,20 @@ function coerceLabel(label) {
 
 function coerceObserver(observer) {
   return toKebabCase(observer.toLowerCase());
+}
+
+function coerceCreatedAt(createdAt) {
+  if (typeof createdAt != 'string') {
+    const asString = (0, _string.toString)(createdAt);
+
+    if (createdAtIsValid(asString)) {
+      createdAt = asString;
+    } else {
+      createdAt = createUuid();
+    }
+  }
+
+  return createdAt;
 } // 
 // indvidual checks
 // 
@@ -70588,6 +70625,22 @@ function labelConfidenceIsValid(labelConfidence) {
   }
 
   return false;
+}
+
+function observerIsValid(observer) {
+  if (typeof observer != "string" || !isValidName(observer)) {
+    return false;
+  }
+
+  return true;
+}
+
+function labelIsValid(label) {
+  if (typeof label != "string" || !isValidName(label)) {
+    return false;
+  }
+
+  return true;
 } // 
 // aggregated checks
 // 
@@ -70620,21 +70673,12 @@ function coerceObservation(observationEntry) {
   // enforce unix timestamp (e.g. id)
   // 
 
-  if (typeof observationEntry.createdAt != 'string') {
-    const asString = (0, _string.toString)(observationEntry.createdAt);
-
-    if (createdAtIsValid(asString)) {
-      observationEntry.createdAt = asString;
-    } else {
-      observationEntry.createdAt = createUuid();
-    }
-  } // 
+  observationEntry.createdAt = coerceCreatedAt(observationEntry.createdAt); // 
   // enforce simplfied names
   // 
 
-
   observationEntry.observation.label = coerceLabel(observationEntry.observation.label);
-  observationEntry.observer = coerceObservation(observationEntry.observer); // 
+  observationEntry.observer = coerceObserver(observationEntry.observer); // 
   // enforce numeric start/endTimes 
   // 
 
@@ -70666,7 +70710,7 @@ function validateObservations(observations) {
       // 
 
 
-      if (videoIdIsValid(observationEntry.videoId)) {
+      if (!videoIdIsValid(observationEntry.videoId)) {
         errorMessages.push(`(observationEntry.videoId: ${(0, _string.toRepresentation)(observationEntry.videoId)})\n\nAn observationEntry must have a "videoId" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to either start with "/videos/" for local videos or be exactly 11 characters long for YouTube video ids`);
       } // 
       // startTime/endTime
@@ -70693,7 +70737,7 @@ function validateObservations(observations) {
       // 
 
 
-      if (typeof observationEntry.observer != "string" || !isValidName(observationEntry.observer)) {
+      if (!observerIsValid(observationEntry.observer)) {
         errorMessages.push(`(observationEntry.observer: ${(0, _string.toRepresentation)(observationEntry.observer)})\n\nAn observationEntry must have a "observer" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`);
       } // 
       // observation
@@ -70707,7 +70751,7 @@ function validateObservations(observations) {
       // 
 
 
-      if (typeof observationEntry?.observation?.label != "string" || !isValidName(observationEntry.observation.label)) {
+      if (!labelIsValid(observationEntry?.observation?.label)) {
         errorMessages.push(`(observationEntry.observation.label: ${(0, _string.toRepresentation)(observationEntry.observation.label)})\n\nAn observationEntry must have a "observation": { "label":  }\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`);
       } // 
       // confidence
@@ -70721,15 +70765,15 @@ function validateObservations(observations) {
       //
 
 
-      if (observationEntry.isHuman === true || observationEntry.isHuman === false) {
-        errorMessages.push(`(observationEntry.isHuman: ${(0, _string.toRepresentation)(observationEntry.isHuman)})\n\nAn observationEntry must have a "isHuman" property\n- it needs to be a boolean`);
+      if (observationEntry.isHuman !== true && observationEntry.isHuman !== false) {
+        errorMessages.push(`(observationEntry.isHuman: ${(0, _string.toRepresentation)(observationEntry.isHuman)})\n\nAn observationEntry must have a "isHuman" property\n- it needs to be a boolean\n${JSON.stringify(observationEntry)}`);
       }
 
-      if (observationEntry.confirmedBySomeone == null || observationEntry.confirmedBySomeone === true || observationEntry.confirmedBySomeone === false) {
-        errorMessages.push(`(observationEntry.confirmedBySomeone: ${(0, _string.toRepresentation)(observationEntry.confirmedBySomeone)})\n\nAn observationEntry must have a "confirmedBySomeone" property\n- it needs to be a boolean or null`);
+      if (observationEntry.confirmedBySomeone != null && observationEntry.confirmedBySomeone !== true && observationEntry.confirmedBySomeone !== false) {
+        errorMessages.push(`(observationEntry.confirmedBySomeone: ${(0, _string.toRepresentation)(observationEntry.confirmedBySomeone)})\n\nThe "confirmedBySomeone" property\n- needs to be a boolean or null`);
       }
 
-      if (observationEntry.rejectedBySomeone == null || observationEntry.rejectedBySomeone === true || observationEntry.rejectedBySomeone === false) {
+      if (observationEntry.rejectedBySomeone != null && observationEntry.rejectedBySomeone !== true && observationEntry.rejectedBySomeone !== false) {
         errorMessages.push(`(observationEntry.rejectedBySomeone: ${(0, _string.toRepresentation)(observationEntry.rejectedBySomeone)})\n\nAn observationEntry must have a "rejectedBySomeone" property\n- it needs to be a boolean or null`);
       }
     }
@@ -71495,7 +71539,7 @@ const managers = {
         value.videos = [...value.videos];
       }
 
-      return labels;
+      return observers;
     },
 
     async whenEditObservations({
@@ -71570,7 +71614,7 @@ const managers = {
         addEntry(observationEntry);
       }
 
-      return labels;
+      return videos;
     },
 
     async whenEditObservations({
@@ -71595,27 +71639,25 @@ const fakeBackend = {
   async setObservations(observationEntries, {
     withCoersion = false
   } = {}) {
+    // observationEntries[0] = {
+    //     "createdAt": "1623456789.308420294042",
+    //     "type": "segment",
+    //     "videoId": "FLK5-00l0r4",
+    //     "startTime": 125.659,
+    //     "endTime": 127.661,
+    //     "observer": "CSCE636-Spring2021-WuAiSeDUdl-1",
+    //     "isHuman": true,
+    //     "observation": {
+    //         "label": "happy",
+    //         "labelConfidence": -0.99
+    //     },
+    //     "customInfo": {},
+    // }
     // 
     // synchonous changes before bulk set
     // 
     if (withCoersion) {
-      for (const observationEntry of observationEntries) {
-        // observationEntry = {
-        //     "createdAt": "1623456789.308420294042",
-        //     "type": "segment",
-        //     "videoId": "FLK5-00l0r4",
-        //     "startTime": 125.659,
-        //     "endTime": 127.661,
-        //     "observer": "CSCE636-Spring2021-WuAiSeDUdl-1",
-        //     "isHuman": true,
-        //     "observation": {
-        //         "label": "happy",
-        //         "labelConfidence": -0.99
-        //     },
-        //     "customInfo": {},
-        // }
-        observationEntry = observationTooling.coerceObservation(observationEntry);
-      }
+      observationEntries = observationEntries.map(observationTooling.coerceObservation);
     } // 
     // validate
     // 
@@ -71651,7 +71693,7 @@ const fakeBackend = {
   setObservation(observationEntry, {
     withCoersion = false
   } = {}) {
-    return fakeBackend.setObservations([observationEntries], {
+    return fakeBackend.setObservations([observationEntry], {
       withCoersion
     });
   },
@@ -71952,15 +71994,272 @@ module.exports = {
     async getObservations({
       where = [],
       returnObject = false
-    }) {
-      return (await backend).mongoInterface.getAll({
+    } = {}) {
+      let results = await (await backend).mongoInterface.getAll({
         from: 'observations',
         where: [{
           valueOf: ['type'],
           is: 'segment'
         }, ...where],
-        returnObject
+        returnObject: true
       });
+      console.log("reset meee"); // {
+      //     "0.3307717043956069": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 0.813,
+      //         "endTime": 1.813,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.5615513748064442": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 0.476,
+      //         "endTime": 1.186,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.11446907486080893": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 1.204,
+      //         "endTime": 1.911,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy-version2",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.4031582846023173": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 0.336,
+      //         "endTime": 1.336,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy-testing",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.018973744483224753": {
+      //         "type": "segment",
+      //         "observer": "p2",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 0.785,
+      //         "endTime": 1.707,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "new-label",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.1465596891418881": {
+      //         "type": "segment",
+      //         "observer": "p2",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 0.731,
+      //         "endTime": 0.741,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "ta-da",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.9602843337489538": {
+      //         "type": "segment",
+      //         "observer": "p2",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 1.779,
+      //         "endTime": 2.039,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "ta-da",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.9810197852822777": {
+      //         "type": "segment",
+      //         "observer": "p3",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 1.618,
+      //         "endTime": 2.383,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "label-3",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.9915320235602465": {
+      //         "type": "segment",
+      //         "observer": "p3",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 1.431,
+      //         "endTime": 2.02,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "null": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 0,
+      //         "endTime": 0.663,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "another-label",
+      //             "labelConfidence": 0.95,
+      //             "spacialInfo": {}
+      //         },
+      //         "createdAt": "1718136271227.6968301759719835",
+      //         "customInfo": {}
+      //     }
+      // }
+      // console.log("JSON.stringify", JSON.stringify(results) == JSON.stringify({
+      //     "0.9238981860608155": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "e2HzKY5imTE",
+      //         "startTime": 162.093,
+      //         "endTime": 165.928,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.3307717043956069": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 0.813,
+      //         "endTime": 1.813,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.5615513748064442": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 0.476,
+      //         "endTime": 1.186,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.0204040255937199": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "e2HzKY5imTE",
+      //         "startTime": 1592.748,
+      //         "endTime": 1600.468,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.41703294157747894": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "e2HzKY5imTE",
+      //         "startTime": 1062.545,
+      //         "endTime": 1068.471,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.6245011281678999": {
+      //         "type": "segment",
+      //         "observer": "p1",
+      //         "videoId": "e2HzKY5imTE",
+      //         "startTime": 390.828,
+      //         "endTime": 405.079,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     },
+      //     "0.9915320235602465": {
+      //         "type": "segment",
+      //         "observer": "p3",
+      //         "videoId": "/videos/demo.mp4",
+      //         "startTime": 1.431,
+      //         "endTime": 2.02,
+      //         "isHuman": true,
+      //         "confirmedBySomeone": false,
+      //         "rejectedBySomeone": false,
+      //         "observation": {
+      //             "label": "howdy",
+      //             "labelConfidence": 0.95
+      //         }
+      //     }
+      // }))
+      // let count = 10
+      // for (const [key, value] of Object.entries(results)) {
+      //     if (value.startTime == 1.431 || count>0&&value.videoId == "/videos/demo.mp4") {
+      //         count--
+      //         console.debug(`value is:`,value)
+      //         delete results[key]
+      //     }
+      // }
+      // console.debug(`count is:`,count)
+      // return returnObject ? {} : []
+
+      return returnObject ? results : Object.values(results);
     },
 
     async deleteObservation({
@@ -74196,6 +74495,7 @@ var _default = {
             // I'm also fighting interal-vue errors because vue2 is end-of-life and buggy
 
             Object.defineProperty(window, "player", {
+              configurable: true,
               get: () => {
                 if (window.resetPlayer) {
                   return {
@@ -74208,13 +74508,12 @@ var _default = {
                 if (this.$refs.nativePlayer) {
                   output = this.$refs.nativePlayer;
                 } else {
-                  output = document.querySelector(".plyr").__vue__.player.media;
+                  output = document.querySelector(".plyr")?.__vue__?.player?.media;
                 }
 
                 return output;
               }
             });
-            console.debug(`this.player is:`, this.player);
             this.setupPlayer(this.player);
             this.$emit("VideoPlayer-loaded", this.player);
             resolve(this.player);
@@ -74285,7 +74584,7 @@ var _default = {
       console.debug(`eventObject is:`, eventObject); // only when focused on the nothing or this element
       // (this is to exclude textboxes)
 
-      if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || (0, _object.get)({
+      if (window.player instanceof Object && ["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || (0, _object.get)({
         keyList: ["path"],
         from: eventObject,
         failValue: []
@@ -74433,7 +74732,7 @@ var _default = {
 
   created() {
     setInterval(() => {
-      this.displayTime = window.player.currentTime;
+      this.displayTime = window.player?.currentTime;
     }, 100);
   },
 
@@ -74807,6 +75106,9 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 //
 //
 //
+//
+//
+//
 let {
   backend,
   backendHelpers,
@@ -74815,37 +75117,26 @@ let {
 
 let {
   getColor,
-  currentFixedSizeOfYouTubeVideoId,
   isValidName,
   storageObject
 } = require("../utils");
 
+window.backendHelpers = backendHelpers;
 var _default = {
   props: ["currentTime", "duration", "jumpSegment"],
   components: {
     UiSwitch: require("../atoms/UiSwitch").default
   },
-  data: () => ({
-    observationData: {
-      createdAt: observationTooling.createUuid(),
-      videoId: null,
-      startTime: 0,
-      endTime: 0,
-      observer: "",
-      label: "",
-      labelConfidence: 0.99,
-      isHuman: true,
-      confirmedBySomeone: false,
-      rejectedBySomeone: false,
-      customInfo: {},
-      spacialInfo: {}
-    },
-    uuidOfSelectedSegment: null,
-    dataCopy: null,
-    editing: false,
-    dontShow: true
-  }),
-  computed: {},
+
+  data() {
+    const defaultObservationData = this.observationEntryToData(observationTooling.createDefaultObservationEntry());
+    return {
+      observationData: defaultObservationData,
+      dataCopy: null,
+      editing: false,
+      dontShow: true
+    };
+  },
 
   mounted() {
     window.Editor = this; // debugging
@@ -74854,14 +75145,25 @@ var _default = {
   },
 
   computed: {
+    uuidOfSelectedSegment: {
+      get() {
+        return this.observationData.createdAt;
+      },
+
+      set(value) {
+        this.observationData.createdAt = value;
+      }
+
+    },
+
     humanTime() {
-      return new Date(this.observationData.createdAt).toString();
+      return new Date(this.observationData.createdAt - 0).toString();
     },
 
     // TODO: check this before submitting to backend
     allValid() {
       // not("some of them are invalid")
-      return !Object.values(this.valid).some(value => !value);
+      return !Object.values(this.isValid).some(value => !value);
     },
 
     isValid() {
@@ -74876,8 +75178,6 @@ var _default = {
     watch: {
       "routeData$.videoId": function () {
         if (this.editing) {
-          this.dataCopy = {};
-          this.editing = false;
           this.resetData();
         }
       },
@@ -74888,21 +75188,7 @@ var _default = {
         console.debug(`selectedSegment is:`, selectedSegment);
 
         if (selectedSegment instanceof Object) {
-          this.uuidOfSelectedSegment = selectedSegment.$uuid;
-          this.observationData = {
-            createdAt: selectedSegment.createdAt,
-            videoId: selectedSegment.videoId,
-            startTime: selectedSegment.startTime,
-            endTime: selectedSegment.endTime,
-            observer: selectedSegment.observer,
-            isHuman: selectedSegment.isHuman,
-            confirmedBySomeone: selectedSegment.confirmedBySomeone,
-            rejectedBySomeone: selectedSegment.rejectedBySomeone,
-            label: (selectedSegment.observation || {}).label,
-            labelConfidence: (selectedSegment.observation || {}).labelConfidence,
-            customInfo: selectedSegment.customInfo,
-            spacialInfo: (selectedSegment.observation || {}).spacialInfo || {}
-          };
+          this.observationData = this.observationEntryToData(selectedSegment);
         }
       },
 
@@ -74968,12 +75254,7 @@ var _default = {
 
     async onNewObservation() {
       if (!this.editing) {
-        this.dataCopy = {};
         this.resetData();
-        this.observationData.startTime = (window.player?.currentTime || 0).toFixed(3);
-        this.observationData.endTime = ((window.player?.currentTime || 0) + 0.01).toFixed(3);
-        this.observationData.label = storageObject.recentLabel || this.$root?.routeData$?.labelName || "example-label";
-        this.uuidOfSelectedSegment = observationTooling.createUuid();
         this.onEditObservation();
       }
     },
@@ -74995,55 +75276,50 @@ var _default = {
     async onSaveEdit() {
       console.log(`onSaveEdit`);
 
-      if (typeof this.observationData.observer == "string" && this.observationData.observer.length > 0) {
+      if (observationTooling.observerIsValid(this.observationData.observer)) {
         storageObject.observer = this.observationData.observer;
       }
 
-      if (typeof this.observationData.label == "string" && this.observationData.label.length > 0) {
+      if (observationTooling.labelIsValid(this.observationData.label)) {
         storageObject.recentLabel = this.observationData.label;
       }
 
       if (!this.allValid) {
-        this.$toasted.show(`Some fields are invalid (should be marked red)`).goAway(2500);
-      } // convert to numbers 
+        this.$toasted.show(`Some fields are invalid`).goAway(2500);
+        return;
+      }
 
+      const observationEntry = observationTooling.coerceObservation(this.observationDataToEntry(this.observationData)); // round trip to adopt any coersions
 
-      this.observationData.startTime -= 0;
-      this.observationData.endTime -= 0;
-      let observationEntry = {
-        createdAt: this.observationData.createdAt,
-        type: "segment",
-        videoId: this.observationData.videoId,
-        startTime: this.observationData.startTime,
-        endTime: this.observationData.endTime,
-        observer: this.observationData.observer,
-        isHuman: this.observationData.isHuman,
-        confirmedBySomeone: this.observationData.confirmedBySomeone,
-        rejectedBySomeone: this.observationData.rejectedBySomeone,
-        observation: {
-          label: this.observationData.label,
-          labelConfidence: this.observationData.labelConfidence,
-          spacialInfo: this.observationData.spacialInfo
-        },
-        customInfo: this.observationData.customInfo
-      }; // 
-      // save on storageObject
+      this.observationData = this.observationEntryToData(observationEntry); // 
+      // update external things
       // 
 
-      this.$root.addLabel(observationEntry.observation.label);
+      this.$root.addLabel(observationEntry.observation.label, observationEntry.videoId);
       const observationsForVideo = storageObject[this.observationData.videoId] || {};
       observationsForVideo[this.uuidOfSelectedSegment] = observationEntry;
-      storageObject[this.observationData.videoId] = observationsForVideo;
+      storageObject[this.observationData.videoId] = observationsForVideo; // 
+      // send to backend
+      // 
+
+      let thereWasAnError = false;
 
       try {
         await backendHelpers.setObservation({
-          uuidOfSelectedSegment,
+          uuidOfSelectedSegment: this.uuidOfSelectedSegment,
           observation: observationEntry
         });
-        await fakeBackend.setObservation(observationEntry, {
-          withCoersion: true
-        });
+
+        try {
+          await fakeBackend.setObservation(observationEntry, {
+            withCoersion: true
+          });
+        } catch (error) {
+          this.$toasted.show(`There was an error, look at console`).goAway(5500);
+          console.error(error.toString());
+        }
       } catch (error) {
+        thereWasAnError = true;
         this.$toasted.show(`There was an error on the database`).goAway(5500);
         console.error("# ");
         console.error("# BACKEND ERROR");
@@ -75061,24 +75337,31 @@ var _default = {
           }
         });
         this.$toasted.show(`(Full error log in the console)`).goAway(6500); // throw error
+      } // 
+      // on success
+      // 
+
+
+      if (!thereWasAnError) {
+        this.editing = false;
+        this.$toasted.show(`Changes saved`).goAway(2500);
+        this.$root.selectedSegment = observationEntry;
+        this.$root.retrieveLabels();
+        window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"));
       }
-
-      this.editing = false;
-      this.$toasted.show(`Changes saved`).goAway(2500); // create label if it doesn't exist
-
-      this.$root.addLabel(this.observationData.label, observationEntry.videoId);
-      this.$root.selectedSegment = observationEntry; // tell segments they need to get the data from the backend again
-
-      window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"));
-      this.$root.retrieveLabels();
     },
 
     async onDelete() {
+      console.log(`onDelete called`);
       this.editing = false;
       let index = this.$root.selectedSegment.$displayIndex;
+      console.debug(`this.uuidOfSelectedSegment is:`, this.uuidOfSelectedSegment);
 
       if (this.uuidOfSelectedSegment) {
-        backendHelpers.deleteObservation({
+        await backendHelpers.deleteObservation({
+          uuidOfSelectedSegment: this.uuidOfSelectedSegment
+        });
+        await fakeBackend.deleteObservation({
           uuidOfSelectedSegment: this.uuidOfSelectedSegment
         });
         this.$root.selectedVideo.keySegments = [...this.$root.selectedVideo.keySegments].filter(each => each.$uuid != this.uuidOfSelectedSegment);
@@ -75093,19 +75376,10 @@ var _default = {
     },
 
     resetData() {
-      this.$root.selectedSegment = null;
-      this.observationData = {
-        createdAt: observationTooling.createUuid(),
-        videoId: this.$root.selectedVideo && this.$root.selectedVideo.$id,
-        startTime: window.player?.currentTime || 0 || 0,
-        endTime: window.player?.currentTime || 0 || window.player.duration || 0,
-        observer: window.storageObject.observer || "",
-        label: this.$root?.routeData$?.labelName || "",
-        labelConfidence: 0.95,
-        confirmedBySomeone: false,
-        rejectedBySomeone: false,
-        isHuman: true
-      };
+      this.editing = false;
+      this.dataCopy = {};
+      this.observationData = this.observationEntryToData(observationTooling.createDefaultObservationEntry());
+      this.observationData.videoId = this.$root.selectedVideo?.$id;
     },
 
     setStartToCurrentTime() {
@@ -75114,6 +75388,44 @@ var _default = {
 
     setEndToCurrentTime() {
       this.observationData.endTime = (window.player?.currentTime || 0).toFixed(3);
+    },
+
+    observationDataToEntry(observationData) {
+      return observationTooling.coerceObservation({
+        createdAt: observationData.createdAt,
+        type: "segment",
+        videoId: observationData.videoId,
+        startTime: observationData.startTime,
+        endTime: observationData.endTime,
+        observer: observationData.observer,
+        isHuman: observationData.isHuman,
+        confirmedBySomeone: observationData.confirmedBySomeone,
+        rejectedBySomeone: observationData.rejectedBySomeone,
+        observation: {
+          label: observationData.label,
+          labelConfidence: observationData.labelConfidence,
+          spacialInfo: observationData.spacialInfo
+        },
+        customInfo: observationData.customInfo
+      });
+    },
+
+    observationEntryToData(observationEntry) {
+      observationEntry = observationTooling.coerceObservation(observationEntry);
+      return {
+        createdAt: observationEntry.createdAt,
+        videoId: observationEntry.videoId,
+        startTime: observationEntry.startTime,
+        endTime: observationEntry.endTime,
+        observer: observationEntry.observer,
+        isHuman: observationEntry.isHuman,
+        confirmedBySomeone: observationEntry.confirmedBySomeone,
+        rejectedBySomeone: observationEntry.rejectedBySomeone,
+        customInfo: observationEntry.customInfo,
+        label: observationEntry.observation?.label,
+        labelConfidence: observationEntry.observation?.labelConfidence,
+        spacialInfo: observationEntry.observation?.spacialInfo || {}
+      };
     }
 
   }
@@ -75127,7 +75439,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($3acede, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"data-fjio3y598t3hi2":"data-fjio3y598t3hi2","width":"min-content","margin-bottom":"2rem","align-self":"flex-start","position":"relative","min-width":"20rem","min-height":"44vh"}},[_c('column',{staticClass:"add-container",attrs:{"opacity":_vm.editing?0:1}},[_c('ui-button',{staticClass:"add-button",attrs:{"icon":"add","color":"primary","raised":"raised","tooltip":"create a new observation","tooltipPosition":"right"},on:{"click":_vm.onNewObservation}},[_vm._v("New Observation")])],1),_c('container',{attrs:{"height":"20px"}}),_c('transition',{attrs:{"name":"fade"}},[_c('column',{staticClass:"observation-widget",attrs:{"min-height":"38rem","position":"relative"}},[(!_vm.noSegment() && !_vm.editing)?_c('row',{staticStyle:{"position":"absolute","font-size":"1rem","color":"gray","right":"0.9rem","top":"0.7rem","cursor":"pointer","opacity":"0.5"},on:{"click":_vm.deSelectSegment}},[_vm._v("X"),_c('ui-tooltip',{attrs:{"position":"top","animation":"fade"}},[_vm._v("De-Select this segment")])],1):_vm._e(),(_vm.noSegment())?_c('row',{staticStyle:{"position":"absolute","width":"100%","height":"100%","font-size":"1.476rem","color":"gray"}},[_vm._v("No Observation Selected")]):_vm._e(),_c('transition',{attrs:{"name":"fade"}},[(!_vm.noSegment())?_c('row',{attrs:{"align-h":"space-between","width":"100%"}},[_c('h5',[_vm._v("Observation")]),((!_vm.editing) && _vm.$root.selectedSegment)?_c('ui-button',{staticClass:"edit-button",attrs:{"icon":"edit","color":"primary"},on:{"click":_vm.onEditObservation}},[_vm._v("Edit")]):_vm._e()],1):_vm._e()],1),_c('transition',{attrs:{"name":"fade"}},[(!_vm.noSegment() || _vm.editing)?_c('row',{staticClass:"button-row",attrs:{"align-h":"space-evenly","width":"100%","margin-bottom":"0.7rem","margin-top":"0.5rem"}},[(_vm.editing)?_c('ui-button',{staticClass:"save-button",attrs:{"icon":"save","color":"primary"},on:{"click":_vm.onSaveEdit}},[_vm._v("Save")]):_vm._e(),(_vm.editing)?_c('container',{attrs:{"flex-basis":"10%","width":"10%"}}):_vm._e(),(_vm.editing)?_c('ui-button',{staticClass:"delete-button",attrs:{"icon":"delete","color":"red"},on:{"click":_vm.onDelete}},[_vm._v("Delete")]):_vm._e()],1):_vm._e()],1),_c('transition',{attrs:{"name":"fade"}},[(_vm.editing)?_c('ui-button',{staticClass:"cancel-button",attrs:{"icon":"cancel","color":"accent"},on:{"click":_vm.onCancelEdit}},[_vm._v("Cancel")]):_vm._e()],1),_c('transition',{attrs:{"name":"fade"}},[(!_vm.noSegment())?_c('container',{staticClass:"input-area",attrs:{"margin-top":"2rem"},on:{"keydown":_vm.preventBubbling}},[_c('row',{staticClass:"start-time-wrapper"},[_c('ui-textbox',{attrs:{"disabled":!_vm.editing,"label":"Start Time (seconds)","placeholder":("" + (_vm.observationData.startTime)),"invalid":!_vm.isValid.startTime,"type":"number"},model:{value:(_vm.observationData.startTime),callback:function ($$v) {_vm.$set(_vm.observationData, "startTime", _vm._n($$v))},expression:"observationData.startTime"}}),(_vm.editing)?_c('ui-button',{staticClass:"set-to-current-time-button",attrs:{"tabindex":"-1","color":"primary","size":"small","tooltip":"Set start time to current video time","tooltipPosition":"top"},on:{"click":_vm.setStartToCurrentTime}},[_c('ui-icon',[_vm._v("skip_next")])],1):_vm._e()],1),_c('row',{staticClass:"end-time-wrapper"},[_c('ui-textbox',{attrs:{"disabled":!_vm.editing,"label":"End Time (seconds)","placeholder":("" + (_vm.observationData.endTime)),"invalid":!_vm.isValid.endTime,"type":"number"},model:{value:(_vm.observationData.endTime),callback:function ($$v) {_vm.$set(_vm.observationData, "endTime", _vm._n($$v))},expression:"observationData.endTime"}}),(_vm.editing)?_c('ui-button',{staticClass:"set-to-current-time-button",attrs:{"tabindex":"-1","color":"primary","size":"small","tooltip":"Set end time to current video time","tooltipPosition":"top"},on:{"click":_vm.setEndToCurrentTime}},[_c('ui-icon',[_vm._v("skip_next")])],1):_vm._e()],1),_c('ui-textbox',{ref:"labelElement",attrs:{"disabled":!_vm.editing,"floating-label":"floating-label","label":"Label","invalid":!_vm.isValid.label},on:{"change":_vm.onLabelChange,"input":_vm.onLabelChange},model:{value:(_vm.observationData.label),callback:function ($$v) {_vm.$set(_vm.observationData, "label", $$v)},expression:"observationData.label"}}),_c('ui-textbox',{attrs:{"disabled":!_vm.editing,"floating-label":"floating-label","label":"Label Confidence","invalid":!_vm.isValid.labelConfidence},model:{value:(_vm.observationData.labelConfidence),callback:function ($$v) {_vm.$set(_vm.observationData, "labelConfidence", $$v)},expression:"observationData.labelConfidence"}}),_c('ui-textbox',{attrs:{"disabled":!_vm.editing,"floating-label":"floating-label","label":"Observer (username)","invalid":!_vm.isValid.observer},model:{value:(_vm.observationData.observer),callback:function ($$v) {_vm.$set(_vm.observationData, "observer", $$v)},expression:"observationData.observer"}}),_c('ui-textbox',{attrs:{"disabled":!_vm.editing,"floating-label":"floating-label","label":"Video Id","invalid":!_vm.isValid.videoId},model:{value:(_vm.observationData.videoId),callback:function ($$v) {_vm.$set(_vm.observationData, "videoId", $$v)},expression:"observationData.videoId"}}),_c('UiSwitch',{attrs:{"disabled":!_vm.editing},model:{value:(_vm.observationData.isHuman),callback:function ($$v) {_vm.$set(_vm.observationData, "isHuman", $$v)},expression:"observationData.isHuman"}},[_vm._v("Observer Is Human")]),(!_vm.observationData.isHuman)?_c('UiSwitch',{attrs:{"disabled":!_vm.editing},model:{value:(_vm.observationData.confirmedBySomeone),callback:function ($$v) {_vm.$set(_vm.observationData, "confirmedBySomeone", $$v)},expression:"observationData.confirmedBySomeone"}},[_vm._v("Confirmed By ≥1 Human")]):_vm._e(),(!_vm.observationData.isHuman)?_c('UiSwitch',{attrs:{"disabled":!_vm.editing},model:{value:(_vm.observationData.rejectedBySomeone),callback:function ($$v) {_vm.$set(_vm.observationData, "rejectedBySomeone", $$v)},expression:"observationData.rejectedBySomeone"}},[_vm._v("Rejected By ≥1 Human")]):_vm._e(),_c('ui-textbox',{attrs:{"disabled":true,"floating-label":"floating-label","label":"Created At"},model:{value:(_vm.humanTime),callback:function ($$v) {_vm.humanTime=$$v},expression:"humanTime"}}),_c('ui-textbox',{attrs:{"disabled":true,"floating-label":"floating-label","label":"Id","tooltip":"This is based on 'Created At'"},model:{value:(_vm.observationData.createdAt),callback:function ($$v) {_vm.$set(_vm.observationData, "createdAt", $$v)},expression:"observationData.createdAt"}})],1):_vm._e()],1)],1)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"data-fjio3y598t3hi2":"data-fjio3y598t3hi2","width":"min-content","margin-bottom":"2rem","align-self":"flex-start","position":"relative","min-width":"20rem","min-height":"44vh"}},[_c('column',{staticClass:"add-container",attrs:{"opacity":_vm.editing?0:1}},[_c('ui-button',{staticClass:"add-button",attrs:{"icon":"add","color":"primary","raised":"raised","tooltip":"create a new observation","tooltipPosition":"right"},on:{"click":_vm.onNewObservation}},[_vm._v("New Observation")])],1),_c('container',{attrs:{"height":"20px"}}),_c('transition',{attrs:{"name":"fade"}},[_c('column',{staticClass:"observation-widget",attrs:{"min-height":"38rem","position":"relative"}},[(!_vm.noSegment() && !_vm.editing)?_c('row',{staticStyle:{"position":"absolute","font-size":"1rem","color":"gray","right":"0.9rem","top":"0.7rem","cursor":"pointer","opacity":"0.5"},on:{"click":_vm.deSelectSegment}},[_vm._v("X"),_c('ui-tooltip',{attrs:{"position":"top","animation":"fade"}},[_vm._v("De-Select this segment")])],1):_vm._e(),(_vm.noSegment())?_c('row',{staticStyle:{"position":"absolute","width":"100%","height":"100%","font-size":"1.476rem","color":"gray"}},[_vm._v("No Observation Selected")]):_vm._e(),_c('transition',{attrs:{"name":"fade"}},[(!_vm.noSegment())?_c('row',{attrs:{"align-h":"space-between","width":"100%"}},[_c('h5',[_vm._v("Observation")]),((!_vm.editing) && _vm.$root.selectedSegment)?_c('ui-button',{staticClass:"edit-button",attrs:{"icon":"edit","color":"primary"},on:{"click":_vm.onEditObservation}},[_vm._v("Edit")]):_vm._e()],1):_vm._e()],1),_c('transition',{attrs:{"name":"fade"}},[(!_vm.noSegment() || _vm.editing)?_c('row',{staticClass:"button-row",attrs:{"align-h":"space-evenly","width":"100%","margin-bottom":"0.7rem","margin-top":"0.5rem"}},[(_vm.editing)?_c('ui-button',{staticClass:"save-button",attrs:{"icon":"save","color":"primary"},on:{"click":_vm.onSaveEdit}},[_vm._v("Save")]):_vm._e(),(_vm.editing)?_c('container',{attrs:{"flex-basis":"10%","width":"10%"}}):_vm._e(),(_vm.editing)?_c('ui-button',{staticClass:"delete-button",attrs:{"icon":"delete","color":"red"},on:{"click":_vm.onDelete}},[_vm._v("Delete")]):_vm._e()],1):_vm._e()],1),_c('transition',{attrs:{"name":"fade"}},[(_vm.editing)?_c('ui-button',{staticClass:"cancel-button",attrs:{"icon":"cancel","color":"accent"},on:{"click":_vm.onCancelEdit}},[_vm._v("Cancel")]):_vm._e()],1),_c('transition',{attrs:{"name":"fade"}},[(!_vm.noSegment())?_c('container',{staticClass:"input-area",attrs:{"margin-top":"2rem"},on:{"keydown":_vm.preventBubbling}},[_c('row',{staticClass:"start-time-wrapper"},[_c('ui-textbox',{attrs:{"disabled":!_vm.editing,"label":"Start Time (seconds)","placeholder":("" + (_vm.observationData.startTime)),"invalid":!_vm.isValid.startTime,"type":"number"},model:{value:(_vm.observationData.startTime),callback:function ($$v) {_vm.$set(_vm.observationData, "startTime", _vm._n($$v))},expression:"observationData.startTime"}}),(_vm.editing)?_c('ui-button',{staticClass:"set-to-current-time-button",attrs:{"tabindex":"-1","color":"primary","size":"small","tooltip":"Set start time to current video time","tooltipPosition":"top"},on:{"click":_vm.setStartToCurrentTime}},[_c('ui-icon',[_vm._v("skip_next")])],1):_vm._e()],1),_c('row',{staticClass:"end-time-wrapper"},[_c('ui-textbox',{attrs:{"disabled":!_vm.editing,"label":"End Time (seconds)","placeholder":("" + (_vm.observationData.endTime)),"invalid":!_vm.isValid.endTime,"type":"number"},model:{value:(_vm.observationData.endTime),callback:function ($$v) {_vm.$set(_vm.observationData, "endTime", _vm._n($$v))},expression:"observationData.endTime"}}),(_vm.editing)?_c('ui-button',{staticClass:"set-to-current-time-button",attrs:{"tabindex":"-1","color":"primary","size":"small","tooltip":"Set end time to current video time","tooltipPosition":"top"},on:{"click":_vm.setEndToCurrentTime}},[_c('ui-icon',[_vm._v("skip_next")])],1):_vm._e()],1),_c('ui-textbox',{ref:"labelElement",attrs:{"disabled":!_vm.editing,"floating-label":"floating-label","label":"Label","invalid":!_vm.isValid.label},on:{"change":_vm.onLabelChange,"input":_vm.onLabelChange},model:{value:(_vm.observationData.label),callback:function ($$v) {_vm.$set(_vm.observationData, "label", $$v)},expression:"observationData.label"}}),_c('ui-textbox',{attrs:{"disabled":!_vm.editing,"floating-label":"floating-label","label":"Label Confidence","invalid":!_vm.isValid.labelConfidence},model:{value:(_vm.observationData.labelConfidence),callback:function ($$v) {_vm.$set(_vm.observationData, "labelConfidence", $$v)},expression:"observationData.labelConfidence"}}),_c('ui-textbox',{attrs:{"disabled":!_vm.editing,"floating-label":"floating-label","label":"Observer (username)","invalid":!_vm.isValid.observer},model:{value:(_vm.observationData.observer),callback:function ($$v) {_vm.$set(_vm.observationData, "observer", $$v)},expression:"observationData.observer"}}),_c('ui-textbox',{attrs:{"disabled":!_vm.editing,"floating-label":"floating-label","label":"Video Id","invalid":!_vm.isValid.videoId},model:{value:(_vm.observationData.videoId),callback:function ($$v) {_vm.$set(_vm.observationData, "videoId", $$v)},expression:"observationData.videoId"}}),_c('UiSwitch',{attrs:{"disabled":!_vm.editing},model:{value:(_vm.observationData.isHuman),callback:function ($$v) {_vm.$set(_vm.observationData, "isHuman", $$v)},expression:"observationData.isHuman"}},[_vm._v("Observer Is Human")]),(!_vm.observationData.isHuman)?_c('UiSwitch',{attrs:{"disabled":!_vm.editing},model:{value:(_vm.observationData.confirmedBySomeone),callback:function ($$v) {_vm.$set(_vm.observationData, "confirmedBySomeone", $$v)},expression:"observationData.confirmedBySomeone"}},[_vm._v("Confirmed By ≥1 Human")]):_vm._e(),(!_vm.observationData.isHuman)?_c('UiSwitch',{attrs:{"disabled":!_vm.editing},model:{value:(_vm.observationData.rejectedBySomeone),callback:function ($$v) {_vm.$set(_vm.observationData, "rejectedBySomeone", $$v)},expression:"observationData.rejectedBySomeone"}},[_vm._v("Rejected By ≥1 Human")]):_vm._e(),_c('div',{staticStyle:{"margin-top":"2rem"}}),_c('ui-textbox',{attrs:{"disabled":true,"floating-label":"floating-label","label":"Created At"},model:{value:(_vm.humanTime),callback:function ($$v) {_vm.humanTime=$$v},expression:"humanTime"}}),_c('ui-textbox',{staticStyle:{"margin-top":"-1rem"},attrs:{"disabled":true,"floating-label":"floating-label","label":"Id","tooltip":"This is based on 'Created At'"},model:{value:(_vm.observationData.createdAt),callback:function ($$v) {_vm.$set(_vm.observationData, "createdAt", $$v)},expression:"observationData.createdAt"}})],1):_vm._e()],1)],1)],1)],1)}
 var staticRenderFns = []
 
           return {
@@ -75250,7 +75562,8 @@ var _default = {
   rootHooks: {
     watch: {
       labels() {
-        // make sure the label is still valid
+        console.log(`labels changed`); // make sure the label is still valid
+
         let label = this.$root?.selectedSegment?.label;
 
         if (label) {
@@ -75261,7 +75574,7 @@ var _default = {
           }
         }
 
-        if (window.player.duration) {
+        if (window.player?.duration) {
           console.log(`[SegmentDisplay] labels changed, updating segments`);
           this.updateSegments();
         }
@@ -75272,7 +75585,7 @@ var _default = {
       },
 
       "selectedVideo.keySegments": function () {
-        if (window.player.duration) {
+        if (window.player?.duration) {
           console.log(`[SegmentDisplay] keySegments changed, updating segments`);
           this.updateSegments();
         }
@@ -75296,7 +75609,7 @@ var _default = {
 
     async updateSegments(...args) {
       const originalVideoId = this.$root?.routeData$?.videoId;
-      const duration = window.player.duration;
+      const duration = window.player?.duration;
 
       if (originalVideoId) {
         let keySegments;
@@ -75614,6 +75927,7 @@ var _default = {
       setTimeout(() => {
         this.$root.labels[labelName] = actualValue;
       }, generalTimeoutFrequency);
+      window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"));
     }
 
   }
@@ -75627,7 +75941,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($9e2fc6, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"segments",attrs:{"align-h":"left"}},[_c('transition',{attrs:{"name":"fade"}},[_c('h5',[_vm._v("Observations")])]),_c('transition',{attrs:{"name":"fade"}},[_c('row',{staticClass:"segment-container",attrs:{"align-h":"space-between","position":"relative","height":((_vm.segmentsInfo.maxLevel*2.2) + "rem")}},[(_vm.segmentsInfo.organizedSegments.length <= 0)?_c('row',{attrs:{"font-size":"14pt","font-weight":"lighter","color":"gray","position":"absolute","width":"100%","padding":"0.7rem"}},[_vm._v("No observations with given filters")]):_vm._e(),_vm._l((_vm.segmentsInfo.organizedSegments),function(eachSegment,index){return (_vm.segmentsInfo.organizedSegments.length > 0)?_c('row',{key:eachSegment.$uuid,staticClass:"segment",style:(("--color: " + (_vm.$root.labels[eachSegment.observation.label].color))),attrs:{"left":eachSegment.$renderData.leftPercent,"width":eachSegment.$renderData.widthPercent,"top":eachSegment.$renderData.topAmount,"isHuman":eachSegment.isHuman,"confirmedBySomeone":eachSegment.confirmedBySomeone,"rejectedBySomeone":eachSegment.rejectedBySomeone,"selected":eachSegment.$uuid == (_vm.$root.selectedSegment&&_vm.$root.selectedSegment.$uuid),"background-color":_vm.$root.labels[eachSegment.observation.label].color,"border-color":_vm.$root.labels[eachSegment.observation.label].color},on:{"click":function($event){return _vm.jumpSegment(eachSegment.$displayIndex)}}},[_vm._v(_vm._s(_vm.computeSymbol(eachSegment.confirmedBySomeone, eachSegment.rejectedBySomeone))),_c('ui-tooltip',{attrs:{"position":"left","animation":"fade"}},[_c('column',{attrs:{"align-h":"left"}},[_c('span',[_vm._v("label: "+_vm._s(eachSegment.observation.label))]),_c('span',[_vm._v("length: "+_vm._s((eachSegment.endTime - eachSegment.startTime).toFixed(2))+" sec")]),_c('span',[_vm._v("start: "+_vm._s(eachSegment.startTime.toFixed(3))+" sec")]),_c('span',[_vm._v("human?: "+_vm._s(eachSegment.isHuman))])])],1)],1):_vm._e()})],2)],1),_c('row',{attrs:{"position":"relative","align-h":"left","align-v":"top","width":"100%"}},[_c('h5',[_vm._v("Filter Observations by Label")]),_c('ui-button',{staticClass:"outline-button",staticStyle:{"position":"absolute","right":"1.5rem","top":"-0.3rem","--button-color":"darkgray"},on:{"click":_vm.toggleAllLabels}},[_vm._v("Toggle All")])],1),_c('container',{staticClass:"labels"},_vm._l((_vm.$root.labels),function(eachLevel,eachLabelName){return (eachLabelName != '(no segments)')?_c('container',{staticClass:"label-toggle",style:(("--label-color: " + (_vm.$root.labels[eachLabelName].selected ? _vm.$root.labels[eachLabelName].color : 'gray') + ";"))},[_c('ui-checkbox',{staticStyle:{"align-items":"flex-start"},on:{"change":function($event){return _vm.toggleLabel(eachLabelName)}},model:{value:(_vm.$root.labels[eachLabelName].selected),callback:function ($$v) {_vm.$set(_vm.$root.labels[eachLabelName], "selected", $$v)},expression:"$root.labels[eachLabelName].selected"}},[_vm._v(_vm._s(eachLabelName))])],1):_vm._e()}),1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"segments",attrs:{"align-h":"left"}},[_c('transition',{attrs:{"name":"fade"}},[_c('h5',[_vm._v("Observations")])]),_c('transition',{attrs:{"name":"fade"}},[_c('row',{staticClass:"segment-container",attrs:{"align-h":"space-between","position":"relative","height":((_vm.segmentsInfo.maxLevel*2.2) + "rem")}},[(_vm.segmentsInfo.organizedSegments.length <= 0)?_c('row',{attrs:{"font-size":"14pt","font-weight":"lighter","color":"gray","position":"absolute","width":"100%","padding":"0.7rem"}},[_vm._v("No observations with given filters")]):_vm._e(),_vm._l((_vm.segmentsInfo.organizedSegments),function(eachSegment,index){return (_vm.segmentsInfo.organizedSegments.length > 0)?_c('row',{key:eachSegment.createdAt||eachSegment.$uuid,staticClass:"segment",style:(("--color: " + (_vm.$root.labels[eachSegment.observation.label].color))),attrs:{"left":eachSegment.$renderData.leftPercent,"width":eachSegment.$renderData.widthPercent,"top":eachSegment.$renderData.topAmount,"isHuman":eachSegment.isHuman,"confirmedBySomeone":eachSegment.confirmedBySomeone,"rejectedBySomeone":eachSegment.rejectedBySomeone,"selected":eachSegment.$uuid == (_vm.$root.selectedSegment&&_vm.$root.selectedSegment.$uuid),"background-color":_vm.$root.labels[eachSegment.observation.label].color,"border-color":_vm.$root.labels[eachSegment.observation.label].color},on:{"click":function($event){return _vm.jumpSegment(eachSegment.$displayIndex)}}},[_vm._v(_vm._s(_vm.computeSymbol(eachSegment.confirmedBySomeone, eachSegment.rejectedBySomeone))),_c('ui-tooltip',{attrs:{"position":"left","animation":"fade"}},[_c('column',{attrs:{"align-h":"left"}},[_c('span',[_vm._v("label: "+_vm._s(eachSegment.observation.label))]),_c('span',[_vm._v("length: "+_vm._s((eachSegment.endTime - eachSegment.startTime).toFixed(2))+" sec")]),_c('span',[_vm._v("start: "+_vm._s(eachSegment.startTime.toFixed(3))+" sec")]),_c('span',[_vm._v("human?: "+_vm._s(eachSegment.isHuman))])])],1)],1):_vm._e()})],2)],1),_c('row',{attrs:{"position":"relative","align-h":"left","align-v":"top","width":"100%"}},[_c('h5',[_vm._v("Filter Observations by Label")]),_c('ui-button',{staticClass:"outline-button",staticStyle:{"position":"absolute","right":"1.5rem","top":"-0.3rem","--button-color":"darkgray"},on:{"click":_vm.toggleAllLabels}},[_vm._v("Toggle All")])],1),_c('container',{staticClass:"labels"},_vm._l((_vm.$root.labels),function(eachLevel,eachLabelName){return (eachLabelName != '(no segments)')?_c('container',{staticClass:"label-toggle",style:(("--label-color: " + (_vm.$root.labels[eachLabelName].selected ? _vm.$root.labels[eachLabelName].color : 'gray') + ";"))},[_c('ui-checkbox',{staticStyle:{"align-items":"flex-start"},on:{"change":function($event){return _vm.toggleLabel(eachLabelName)}},model:{value:(_vm.$root.labels[eachLabelName].selected),callback:function ($$v) {_vm.$set(_vm.$root.labels[eachLabelName], "selected", $$v)},expression:"$root.labels[eachLabelName].selected"}},[_vm._v(_vm._s(eachLabelName))])],1):_vm._e()}),1)],1)}
 var staticRenderFns = []
 
           return {
@@ -76182,8 +76496,7 @@ var _observation_tooling = require("../observation_tooling.js");
 //
 //
 const {
-  storageObject,
-  currentFixedSizeOfYouTubeVideoId
+  storageObject
 } = require('../utils'); // make sure cachedVideoIds exists as an Array
 
 
@@ -76249,7 +76562,7 @@ var _default = {
 
       newVideoId = this.extractVideoIdIfPossible(newVideoId);
 
-      if (newVideoId.length == currentFixedSizeOfYouTubeVideoId || (0, _observation_tooling.isLocalVideo)(newVideoId)) {
+      if (newVideoId.length == _observation_tooling.currentFixedSizeOfYouTubeVideoId || (0, _observation_tooling.isLocalVideo)(newVideoId)) {
         // pushing searched video route
         this.$root.routeData$.videoId = newVideoId; // emit video event
 
@@ -76322,20 +76635,36 @@ var _default = {
   props: ["labelName", "label"],
   methods: {
     selectLabel(labelName, label) {
+      const currentVideoId = this.$root.getVideoId();
       label.name = labelName; // (there must be at least one video with the label, unless the database is corrupt)
 
       let selectedVideoId = Object.keys(label.videos)[0]; // get it from the cache (auto-adds to cache if needed)
 
       this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500);
-      window.resetPlayer = true;
-      setTimeout(() => {
-        // TODO: i should do a proper fix for this
-        window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"));
-      }, 100);
+
+      if (selectedVideoId != currentVideoId) {
+        window.resetPlayer = true;
+      }
+
       this.$root.push({
         labelName,
         videoId: selectedVideoId
       });
+      const newLabelValues = {};
+
+      for (const [key, value] of Object.entries(this.$root.labels)) {
+        if (key != labelName) {
+          newLabelValues[key] = { ...value,
+            selected: false
+          };
+        } else {
+          newLabelValues[key] = { ...value,
+            selected: true
+          };
+        }
+      }
+
+      this.$root.labels = newLabelValues;
     }
 
   }
@@ -76604,6 +76933,9 @@ exports.default = void 0;
 //
 //
 //
+//
+//
+//
 let {
   backendHelpers,
   fakeBackend
@@ -76626,7 +76958,8 @@ var _default = {
   data: () => ({
     debouncedSubmitSearch: () => {},
     colors,
-    observer: $root.filterAndSort.observer
+    observer: $root.filterAndSort.observer,
+    numberOfSearchResults: 0
   }),
 
   mounted() {
@@ -76641,9 +76974,73 @@ var _default = {
       this.$emit("goToVideo", data);
     },
 
-    download() {
+    async download() {
       console.log(`download clicked`);
-      download("data.json", JSON.stringify(observationEntries, 0, 4));
+
+      if (observationEntries.length == 0) {
+        const allEntries = await backendHelpers.getObservations({
+          where,
+          returnObject: false
+        });
+        const allEntriesFake = await fakeBackend.getObservations({
+          where,
+          returnObject: false
+        });
+        download("data.json", JSON.stringify(allEntries, 0, 4));
+      } else {
+        download("data.json", JSON.stringify(observationEntries, 0, 4));
+      }
+    },
+
+    async showDeletePrompt() {
+      let entries = observationEntries;
+
+      if (entries.length == 0) {
+        const allEntries = await backendHelpers.getObservations({
+          where,
+          returnObject: true
+        });
+        const allEntriesFake = await fakeBackend.getObservations({
+          where,
+          returnObject: false
+        });
+        entries = allEntries;
+      }
+
+      if (confirm(`Are you sure?\n\n    Ok = Delete ${entries.length} observations\n    Cancel = Keep Data`)) {
+        const toastObject = this.$toasted.show(`Deleting...`, {
+          closeOnSwipe: false,
+          action: {
+            text: 'Close',
+            onClick: (e, _) => {
+              toastObject.goAway(0);
+            }
+          }
+        });
+        const toastElement = toastObject.el;
+        toastElement.innerHTML = `<div><br>${toastElement.innerHTML}<br><p>0 of ${entries.length}\n</p></div>`;
+        let count = 0;
+
+        for (const each of entries) {
+          await backendHelpers.deleteObservation({
+            uuidOfSelectedSegment: each.createdAt
+          });
+          await fakeBackend.deleteObservation({
+            uuidOfSelectedSegment: each.createdAt
+          });
+          count++;
+          toastElement.innerHTML = toastElement.innerHTML.replace(/<p>.+/, `<p>${count} of ${entries.length}`);
+        }
+
+        if (this.$root.routeData$.labelName) {
+          this.$root.selectAllLabels();
+          this.$root.push({ ...this.$root.routeData$,
+            labelName: null
+          });
+        }
+
+        window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"));
+      }
     },
 
     falsePositiveRatio() {
@@ -76735,13 +77132,23 @@ var _default = {
 
       console.log(`querying the backend for observationEntries`);
       observationEntries = await backendHelpers.getObservations({
-        where
+        where,
+        returnObject: true
       });
       let fakeObservationEntries = await fakeBackend.getObservations({
-        where
+        where,
+        returnObject: true
       });
       console.debug(`BACKEND: observationEntries is:`, observationEntries);
-      console.debug(`FAKE   : observationEntries is:`, fakeObservationEntries); // show the time of the first load
+      console.debug(`FAKE   : observationEntries is:`, fakeObservationEntries); // ensure the createdAt is the ID
+
+      for (const [key, value] of Object.entries(observationEntries)) {
+        value.createdAt = key;
+        console.debug(`value is:`, value);
+      }
+
+      observationEntries = Object.values(observationEntries);
+      this.numberOfSearchResults = observationEntries.length; // show the time of the first load
 
       if (this.$root.loadStart) {
         let loadDuration = (new Date().getTime() - this.$root.loadStart) / 1000;
@@ -76792,7 +77199,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($cdd074, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"search",attrs:{"align-v":"top","width":"100%"}},[_c('row',{staticClass:"video-wrapper",staticStyle:{"min-width":"100%","margin-top":"1rem"}},[_c('VideoIdSearch',{on:{"goToVideo":_vm.goToVideo}}),_c('ui-button',{staticClass:"download-button",attrs:{"icon":"download","color":"primary","tooltipPosition":"top","tooltip":("Download all " + (_vm.$root.searchResults.counts.total) + " results as JSON")},on:{"click":_vm.download}},[_vm._v("Download")])],1),_c('row',{staticClass:"search-summary",attrs:{"align-v":"top","align-h":"space-around","padding":"1rem 4rem","height":"min-content","width":"100%"}},[_c('column',{staticClass:"card",attrs:{"width":"26rem","padding":"0.6rem 1rem"}},[_c('LabelLister')],1),_c('column',{staticClass:"card",attrs:{"width":"32rem","flex-grow":"0.3","overflow-x":"hidden"}},[_c('h3',{staticStyle:{"font-weight":"100","margin-top":"-10px","border-bottom":"black solid 2px"}},[_vm._v("Stats")]),_c('br'),_c('br'),_c('column',{staticClass:"text-grid",attrs:{"align-h":"left","width":"90%"}},[_c('h5',[_vm._v("Total Videos: "+_vm._s(Object.keys(_vm.$root.searchResults.videos).length))]),_c('h5',[_vm._v("False Positive Ratio: "+_vm._s(_vm.falsePositiveRatio()))])]),_c('br'),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"showTotal":"showTotal","series":[_vm.$root.searchResults.counts.fromHuman, _vm.$root.searchResults.counts.rejected, _vm.$root.searchResults.uncheckedObservations.length, _vm.$root.searchResults.counts.confirmed, _vm.$root.searchResults.counts.disagreement],"labels":['Human','Rejected','Unchecked','Confirmed', 'Disagreement'],"colors":[ _vm.colors.blue, _vm.colors.red, _vm.colors.purple, _vm.colors.green, _vm.colors.yellow ]}})],1):_vm._e(),_c('h5',[_vm._v("Observers")]),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"series":Object.values(_vm.$root.searchResults.observers),"labels":Object.keys(_vm.$root.searchResults.observers)}})],1):_vm._e(),_c('h5',[_vm._v("Labels")]),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"series":Object.values(_vm.$root.searchResults.labels),"labels":Object.keys(_vm.$root.searchResults.labels)}})],1):_vm._e()],1),_c('column',{staticClass:"card search-observation",attrs:{"align-h":"left","min-height":"fit-content"}},[_c('h5',[_vm._v("Search Filters")]),_c('br'),_c('ui-autocomplete',{attrs:{"label":"Observer (username)","placeholder":"(Any)","suggestions":_vm.$root.getUsernameList()},model:{value:(_vm.observer),callback:function ($$v) {_vm.observer=$$v},expression:"observer"}}),_c('row',{attrs:{"align-h":"space-between"}},[_c('ui-textbox',{attrs:{"label":"Minium Confidence","placeholder":"(Any)"},model:{value:(_vm.$root.filterAndSort.minlabelConfidence),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "minlabelConfidence", $$v)},expression:"$root.filterAndSort.minlabelConfidence"}}),_c('ui-textbox',{attrs:{"label":"Max Confidence","placeholder":"(Any)"},model:{value:(_vm.$root.filterAndSort.maxlabelConfidence),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "maxlabelConfidence", $$v)},expression:"$root.filterAndSort.maxlabelConfidence"}})],1),_c('ui-textbox',{attrs:{"label":"Label","placeholder":"(Any)"},model:{value:(_vm.$root.routeData$.labelName),callback:function ($$v) {_vm.$set(_vm.$root.routeData$, "labelName", $$v)},expression:"$root.routeData$.labelName"}}),_c('br'),_c('row',{attrs:{"align-h":"space-between","align-v":"top"}},[_c('ui-radio-group',{attrs:{"name":"Kind of Observer","options":['Only Humans', 'Either', 'Only Robots'],"vertical":"vertical"},model:{value:(_vm.$root.filterAndSort.kindOfObserver),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "kindOfObserver", $$v)},expression:"$root.filterAndSort.kindOfObserver"}},[_vm._v("Kind of Observer")]),_c('row',{attrs:{"width":"2rem"}}),_c('ui-checkbox-group',{attrs:{"name":"validation","options":[ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement' ],"vertical":"vertical"},model:{value:(_vm.$root.filterAndSort.validation),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "validation", $$v)},expression:"$root.filterAndSort.validation"}},[_vm._v("Validation")])],1)],1)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"search",attrs:{"align-v":"top","width":"100%"}},[_c('row',{staticClass:"video-wrapper",staticStyle:{"min-width":"100%","margin-top":"1rem"}},[_c('ui-button',{staticClass:"delete-button",attrs:{"icon":"delete","color":"black","tooltipPosition":"top","tooltip":("Delete all " + (_vm.numberOfSearchResults||_vm.$root.searchResults.counts.total) + " search results")},on:{"click":_vm.showDeletePrompt}},[_vm._v("Delete All")]),_c('VideoIdSearch',{on:{"goToVideo":_vm.goToVideo}}),_c('ui-button',{staticClass:"download-button",attrs:{"icon":"download","color":"primary","tooltipPosition":"top","tooltip":("Download all " + (_vm.numberOfSearchResults||_vm.$root.searchResults.counts.total) + " results as JSON")},on:{"click":_vm.download}},[_vm._v("Download")])],1),_c('row',{staticClass:"search-summary",attrs:{"align-v":"top","align-h":"space-around","padding":"1rem 4rem","height":"min-content","width":"100%"}},[_c('column',{staticClass:"card",attrs:{"width":"26rem","padding":"0.6rem 1rem"}},[_c('LabelLister')],1),_c('column',{staticClass:"card",attrs:{"width":"32rem","flex-grow":"0.3","overflow-x":"hidden"}},[_c('h3',{staticStyle:{"font-weight":"100","margin-top":"-10px","border-bottom":"black solid 2px"}},[_vm._v("Stats")]),_c('br'),_c('br'),_c('column',{staticClass:"text-grid",attrs:{"align-h":"left","width":"90%"}},[_c('h5',[_vm._v("Total Videos: "+_vm._s(Object.keys(_vm.$root.searchResults.videos).length))]),_c('h5',[_vm._v("False Positive Ratio: "+_vm._s(_vm.falsePositiveRatio()))])]),_c('br'),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"showTotal":"showTotal","series":[_vm.$root.searchResults.counts.fromHuman, _vm.$root.searchResults.counts.rejected, _vm.$root.searchResults.uncheckedObservations.length, _vm.$root.searchResults.counts.confirmed, _vm.$root.searchResults.counts.disagreement],"labels":['Human','Rejected','Unchecked','Confirmed', 'Disagreement'],"colors":[ _vm.colors.blue, _vm.colors.red, _vm.colors.purple, _vm.colors.green, _vm.colors.yellow ]}})],1):_vm._e(),_c('h5',[_vm._v("Observers")]),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"series":Object.values(_vm.$root.searchResults.observers),"labels":Object.keys(_vm.$root.searchResults.observers)}})],1):_vm._e(),_c('h5',[_vm._v("Labels")]),_c('br'),(_vm.$root.searchResults.finishedComputing)?_c('div',{staticClass:"pie-wrapper"},[_c('PieChart',{attrs:{"series":Object.values(_vm.$root.searchResults.labels),"labels":Object.keys(_vm.$root.searchResults.labels)}})],1):_vm._e()],1),_c('column',{staticClass:"card search-observation",attrs:{"align-h":"left","min-height":"fit-content"}},[_c('h5',[_vm._v("Search Filters")]),_c('br'),_c('ui-autocomplete',{attrs:{"label":"Observer (username)","placeholder":"(Any)","suggestions":_vm.$root.getUsernameList()},model:{value:(_vm.observer),callback:function ($$v) {_vm.observer=$$v},expression:"observer"}}),_c('row',{attrs:{"align-h":"space-between"}},[_c('ui-textbox',{attrs:{"label":"Minium Confidence","placeholder":"(Any)"},model:{value:(_vm.$root.filterAndSort.minlabelConfidence),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "minlabelConfidence", $$v)},expression:"$root.filterAndSort.minlabelConfidence"}}),_c('ui-textbox',{attrs:{"label":"Max Confidence","placeholder":"(Any)"},model:{value:(_vm.$root.filterAndSort.maxlabelConfidence),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "maxlabelConfidence", $$v)},expression:"$root.filterAndSort.maxlabelConfidence"}})],1),_c('ui-textbox',{attrs:{"label":"Label","placeholder":"(Any)"},model:{value:(_vm.$root.routeData$.labelName),callback:function ($$v) {_vm.$set(_vm.$root.routeData$, "labelName", $$v)},expression:"$root.routeData$.labelName"}}),_c('br'),_c('row',{attrs:{"align-h":"space-between","align-v":"top"}},[_c('ui-radio-group',{attrs:{"name":"Kind of Observer","options":['Only Humans', 'Either', 'Only Robots'],"vertical":"vertical"},model:{value:(_vm.$root.filterAndSort.kindOfObserver),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "kindOfObserver", $$v)},expression:"$root.filterAndSort.kindOfObserver"}},[_vm._v("Kind of Observer")]),_c('row',{attrs:{"width":"2rem"}}),_c('ui-checkbox-group',{attrs:{"name":"validation","options":[ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement' ],"vertical":"vertical"},model:{value:(_vm.$root.filterAndSort.validation),callback:function ($$v) {_vm.$set(_vm.$root.filterAndSort, "validation", $$v)},expression:"$root.filterAndSort.validation"}},[_vm._v("Validation")])],1)],1)],1)],1)}
 var staticRenderFns = []
 
           return {
@@ -76943,10 +77350,9 @@ var _default = {
       window.resetPlayer = true;
       this.$root.push({
         videoId
-      });
-      setTimeout(() => {
-        window.location.reload();
-      }, 50);
+      }); // setTimeout(()=>{
+      //     window.location.reload()
+      // }, 50)
     }
 
   }
@@ -77174,7 +77580,7 @@ var _default = {
 
       if (!segment) {
         segment = this.closestSegment({
-          time: window.player.currentTime,
+          time: window.player?.currentTime,
           forward: true
         });
       }
@@ -77189,7 +77595,7 @@ var _default = {
 
       if (!segment) {
         segment = this.closestSegment({
-          time: window.player.currentTime,
+          time: window.player?.currentTime,
           forward: false
         });
       }
@@ -78273,7 +78679,7 @@ var _default = RootComponent = {
 
   mounted() {
     this.backend.then(async backend => {
-      this.$toasted.show(`Connected to backend, retrieving data`).goAway(6500);
+      this.$toasted.show(`Connected to backend`).goAway(3500);
       untrackedData.usernameList = untrackedData.usernameList.concat(await backend.getUsernames());
       let fakeUsernames = await fakeBackend.getUsernames();
       console.debug(`BACKEND: untrackedData.usernameList is:`, untrackedData.usernameList);
@@ -78557,16 +78963,30 @@ var _default = RootComponent = {
     addLabel(labelName, videoId) {
       // if the label doesnt exist
       if (!this.$root.labels[labelName]) {
-        this.$toasted.show(`New label added`).goAway(3500); // then add it
+        this.$toasted.show(`New label added`).goAway(3500);
+        const noneAreSelected = Object.values(this.$root.labels).every(each => !each.selected); // then add it
 
         this.$root.labels[labelName] = {
           color: (0, _utils.getColor)(labelName),
           segmentCount: 1,
           videoCount: 1,
           videos: [videoId],
+          selected: !noneAreSelected // if nothing is selected, keep it that way
+
+        };
+      }
+    },
+
+    selectAllLabels() {
+      const newLabelValues = {};
+
+      for (const [key, value] of Object.entries(this.$root.labels)) {
+        newLabelValues[key] = { ...value,
           selected: true
         };
       }
+
+      this.$root.labels = newLabelValues;
     }
 
   }
