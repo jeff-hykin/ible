@@ -68,7 +68,6 @@ export default {
     },
     watch: {
         "videoData.duration": function() {
-            console.debug(`[watch] this.videoData.duration is:`,this.videoData.duration)
             window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
         },
         "videoData.currentTime": function(value, prevValue) {

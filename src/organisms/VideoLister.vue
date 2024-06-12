@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import { fakeBackend } from '../iilvd-api.js'
+import { frontendDb } from '../iilvd-api.js'
 import { set } from '../object.js'
 import { isLocalVideo, getLocalVideoName } from '../observation_tooling.js'
 
@@ -37,8 +37,7 @@ export default {
             if (title != undefined) {
                 return title
             } else {
-                fakeBackend.getVideoTitle(videoId).then((title)=>{
-                    console.debug(`BACKEND: title is:`,title)
+                frontendDb.getVideoTitle(videoId).then((title)=>{
                     console.log(`received title ${title}`)
                     if (!(videoObject.summary instanceof Object)) {
                         videoObject.summary = {}

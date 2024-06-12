@@ -89,7 +89,7 @@
 </template>
 <script>
 const { humandReadableTime, download } = require("../utils.js")
-const { fakeBackend } = require("../iilvd-api.js")
+const { frontendDb } = require("../iilvd-api.js")
 import * as observationTooling from "../observation_tooling.js"
 import * as yaml from 'yaml'
 
@@ -234,7 +234,7 @@ export default {
                         if (frontendErrorMessages.length > 0) {
                             throw Error(yaml.stringify(frontendErrorMessages))
                         }
-                        await fakeBackend.setObservation(value)
+                        await frontendDb.setObservation(value)
                     } catch (error) {
                         if (error.message.match(/Message: Failed to fetch/)) {
                             this.$toasted.show(`Server took too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(6500)

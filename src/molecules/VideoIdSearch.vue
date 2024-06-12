@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import { fakeBackend } from '../iilvd-api.js'
+import { frontendDb } from '../iilvd-api.js'
 import { isLocalVideo, currentFixedSizeOfYouTubeVideoId } from '../observation_tooling.js'
 const { storageObject } = require('../utils')
 
@@ -45,7 +45,7 @@ export default {
                 this.suggestions = storageObject.cachedVideoIds
             } else {
                 // add results from the database
-                let possibleVideoIds = await fakeBackend.getVideoIds()
+                let possibleVideoIds = await frontendDb.getVideoIds()
                 this.suggestions = [...new Set(possibleVideoIds.concat(this.suggestions))]
             }
         }
@@ -79,7 +79,6 @@ export default {
                 this.$emit("goToVideo", newVideoId)
                 // sometimes the changes are not detected
                 this.$root.routeData$ = {...this.$root.routeData$}
-                console.debug(`this.$root.routeData$ is:`,JSON.stringify(this.$root.routeData$,0,4))
             } else if (!this.notificationAlreadyShown) {
                 this.notificationAlreadyShown = true
                 this.$toasted.show(`It looks like that video id isn't valid\n(its not 11 characters)\nWould you like to try and load it anyways?`, {

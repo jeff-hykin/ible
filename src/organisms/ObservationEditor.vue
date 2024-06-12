@@ -212,7 +212,7 @@
 <script>
 import { toKebabCase, toRepresentation } from '../string.js'
 import * as observationTooling from '../observation_tooling.js'
-let { backend, fakeBackend } = require('../iilvd-api.js')
+let { backend, frontendDb } = require('../iilvd-api.js')
 let { getColor, isValidName, storageObject } = require("../utils")
 
 export default {
@@ -275,7 +275,7 @@ export default {
             // when the selected segment changes
             selectedSegment() {
                 let selectedSegment = this.$root.selectedSegment
-                console.debug(`selectedSegment is:`,selectedSegment)
+                console.log(`selectedSegment is:`,selectedSegment)
                 if (selectedSegment instanceof Object) {
                     this.observationData = this.observationEntryToData(selectedSegment)
                 }
@@ -387,7 +387,7 @@ export default {
             // 
             let thereWasAnError = false
             try {
-                await fakeBackend.setObservation(observationEntry, {withCoersion:true})
+                await frontendDb.setObservation(observationEntry, {withCoersion:true})
             } catch (error) {
                 thereWasAnError = true
                 this.$toasted.show(`There was an error on the database`).goAway(5500)
@@ -421,9 +421,8 @@ export default {
             console.log(`onDelete called`)
             this.editing = false
             let index = this.$root.selectedSegment.$displayIndex
-            console.debug(`this.uuidOfSelectedSegment is:`,this.uuidOfSelectedSegment)
             if (this.uuidOfSelectedSegment) {
-                await fakeBackend.deleteObservation({uuidOfSelectedSegment: this.uuidOfSelectedSegment})
+                await frontendDb.deleteObservation({uuidOfSelectedSegment: this.uuidOfSelectedSegment})
                 this.$root.selectedVideo.keySegments = [...this.$root.selectedVideo.keySegments].filter(each=>each.$uuid != this.uuidOfSelectedSegment)
                 this.resetData()
                 window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))

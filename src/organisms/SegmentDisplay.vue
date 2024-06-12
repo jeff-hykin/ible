@@ -61,7 +61,7 @@
 <script>
 import { set } from '../object.js'
 const { wrapIndex, storageObject, checkIf, deferredPromise, dynamicSort } = require("../utils.js")
-const { fakeBackend } = require('../iilvd-api.js')
+const { frontendDb } = require('../iilvd-api.js')
 const generalTimeoutFrequency = 50 // ms 
 
 let untracked = {
@@ -140,14 +140,12 @@ export default {
             if (originalVideoId) {
                 let keySegments
                 try {
-                    keySegments = await fakeBackend.getObservations({
+                    keySegments = await frontendDb.getObservations({
                         where:[
                             { valueOf: ['videoId'], is: originalVideoId },
                         ],
                         returnObject: true,
                     })
-                    console.debug(`BACKEND: keySegments is:`,keySegments)
-                    // console.debug(`FAKE   : keySegments is:`,fakeKeySegments)
                 } catch (error) {
                     console.error("updateSegments error", error)
                     return
@@ -275,12 +273,11 @@ export default {
             }
         },
         async seekToSegmentStart() {
-            console.debug(`[seekToSegmentStart] (starting)`)
             // if no segment is selected
             if (!this.$root.selectedSegment) {
                 // the go to the first displayable segment
-                console.debug(`[seekToSegmentStart] there is no selected segment`)
-                console.debug(`[seekToSegmentStart] calling jumpSegment(0) and returning`)
+                // console.debug(`[seekToSegmentStart] there is no selected segment`)
+                // console.debug(`[seekToSegmentStart] calling jumpSegment(0) and returning`)
                 return this.jumpSegment(0)
             }
             // make sure the selected segment has a start time
@@ -302,7 +299,7 @@ export default {
                 player = window.player || player
                 try  {
                     const startTime = this.$root.selectedSegment.startTime
-                    console.debug(`[seekToSegmentStart] seeking to ${startTime}`)
+                    // console.debug(`[seekToSegmentStart] seeking to ${startTime}`)
                     player.currentTime = startTime
                     // there is a render issue and this is a hack to fix it
                     try {
@@ -317,7 +314,7 @@ export default {
                     }
                 // sometimes an error is caused by switching videos, and all thats needed is a restart
                 } catch (err) {
-                    console.debug(`[seekToSegmentStart] seeking to segment start (will retry):`,err)
+                    // console.debug(`[seekToSegmentStart] seeking to segment start (will retry):`,err)
                     return this.seekToSegmentStart()
                 }
             }
@@ -362,7 +359,7 @@ export default {
         },
         async jumpSegment(newIndex) {
             const functionCallId = Math.random().toFixed(6)
-            let debug = (message, ...args)=>console.debug(`[jumpSegment: ${functionCallId}] ${message}`, ...args)
+            let debug = (message, ...args)=>1||console.debug(`[jumpSegment: ${functionCallId}] ${message}`, ...args)
             
             // basic saftey check
             if (!(this.$root.selectedVideo.keySegments instanceof Array) || this.$root.selectedVideo.keySegments.length == 0) {

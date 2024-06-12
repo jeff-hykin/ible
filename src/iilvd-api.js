@@ -239,8 +239,6 @@ const indexDb = {
         return Promise.all(
             addresses.map(address=>{
                 if (address.length < 2 || address.some(each=>typeof each != 'string')) {
-                    console.debug(`outaddress.length < 2 is:`,address.length < 2)
-                    console.debug(`address.some(each=>typeof each != 'string') is:`,address.some(each=>typeof each != 'string'))
                     console.warn(`bad address:`,address)
                     return null
                 }
@@ -478,12 +476,6 @@ const indexDb = {
         return output
     },
 }
-// tables
-    // labels
-    // observations
-    // videos
-    // observers
-const minSizeOfUnixTimestamp = 10
 
 const managers = {
     labels: {
@@ -667,7 +659,7 @@ const managers = {
     },
 }
 
-const fakeBackend = {
+const frontendDb = {
     async setObservations(observationEntries, {withCoersion=false}={}) {
         // observationEntries[0] = {
         //     "createdAt": "1623456789.308420294042",
@@ -717,7 +709,7 @@ const fakeBackend = {
         ])
     },
     setObservation(observationEntry, {withCoersion=false}={}) {
-        return fakeBackend.setObservations([observationEntry],{withCoersion})
+        return frontendDb.setObservations([observationEntry],{withCoersion})
     },
     changeDb() {
         // done (do nothing)
@@ -841,8 +833,6 @@ const fakeBackend = {
                 }
             }
             
-            // save result for later
-            console.debug(`fresh summary is:`,results)
             return results
         },
         async labels() {
@@ -886,10 +876,10 @@ const fakeBackend = {
         }
     },
 }
-window.fakeBackend = fakeBackend
+window.frontendDb = frontendDb
 
 module.exports = {
-    fakeBackend,
+    frontendDb,
     mixin: {
         data: ()=>({
         }),

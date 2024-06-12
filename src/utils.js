@@ -6,7 +6,6 @@ class EventEmitter {
     }
 
     on(name, listener) {
-        console.debug(`name, listener is:`,name, listener)
         if (!this._events[name]) {
             this._events[name] = []
         }

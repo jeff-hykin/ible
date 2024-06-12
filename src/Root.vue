@@ -24,7 +24,7 @@ import { get, set } from "./object.js"
 // make lodash global because I like to live dangerously
 for (const [eachKey, eachValue] of Object.entries(require("lodash"))) { window[eachKey] = eachValue }
 
-let { backend, fakeBackend } = require("./iilvd-api")
+let { backend, frontendDb } = require("./iilvd-api")
 
 //
 // Routing Init
@@ -83,21 +83,6 @@ export default RootComponent = {
         window.Vue = Vue
         // get the labels ASAP
         this.retrieveLabels()
-        // pull in the route options 
-        console.debug(`this.$route is:`, this.$route)
-        
-        setTimeout(() => {
-            if (!this.loadedAll$) {
-                this.$toasted.show(`Are you on the A&M VPN?`).goAway(6500)
-                setTimeout(() => {
-                    this.$toasted.show(`If you are, then I think the Server might be down`).goAway(6500)
-                    this.$toasted.show(`(Complain to jeff.hykin@gmail.com)`).goAway(6500)
-                    setTimeout(()=>{
-                        this.$toasted.show(`I'll keep trying to connect in the meantime`).goAway(6500)
-                    }, 1600)
-                }, 1700)
-            }
-        }, 3500)
     },
     // 
     // global data
@@ -159,7 +144,7 @@ export default RootComponent = {
         }
     },
     mounted() {
-        fakeBackend.getUsernames().then(usernames=>{
+        frontendDb.getUsernames().then(usernames=>{
             untrackedData.usernameList = untrackedData.usernameList.concat(usernames)
         })
     },
@@ -191,7 +176,6 @@ export default RootComponent = {
         routeData$: {
             deep: true,
             handler() {
-                console.debug(`routeData$ changed:`, JSON.stringify(this.routeData$))
                 // remove null's
                 let routeDataNoNull = {...this.routeData$}
                 for (const [eachKey, eachValue] of Object.entries(routeDataNoNull)) {
@@ -304,7 +288,7 @@ export default RootComponent = {
                 try {
                     this.whenVideoIdChanges()
                 } catch (error) {
-                    console.debug(`error with this.whenVideoIdChanges is:`,error)
+                    console.error(`error with this.whenVideoIdChanges is:`,error)
                 }
                 untrackedData.prevVideoId = videoId
             }
@@ -345,11 +329,7 @@ export default RootComponent = {
             let prevLabels = get({ keyList: ["labels"], from: this, failValue: {} })
             let newLabels
             try {
-                // newLabels = await (await this.backend).summary.labels()
-                // const fakeNewLabels = await fakeBackend.summary.labels()
-                newLabels = await fakeBackend.summary.labels()
-                console.debug(`BACKEND: newLabels is:`, newLabels)
-                // console.debug(`FAKE   : newLabels is` , fakeNewLabels)
+                newLabels = await frontendDb.summary.labels()
             } catch (error) {
                 this.$toasted.show(`Unable to get summary.labels() from backend`).goAway(3500)
                 console.error(error.message)

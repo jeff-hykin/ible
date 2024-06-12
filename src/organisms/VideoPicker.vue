@@ -22,7 +22,6 @@ export default {
     windowListeners: {
         "CenterStage: videoIsReady": function() {
             console.log(`force updating because the video is ready`)
-            console.debug(`window.player is:`,window.player)
             this.$forceUpdate()
         },
     },

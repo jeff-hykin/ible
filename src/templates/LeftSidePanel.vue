@@ -35,7 +35,6 @@ export default {
         mouseLeft() {
             console.log(`mouseleave`)
             this.open = false
-            console.debug(`this.open is:`,this.open)
             this.$forceUpdate()
         }
     }

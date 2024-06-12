@@ -224,7 +224,6 @@ export default {
             }
         },
         keydownControls(eventObject) {
-            console.debug(`eventObject is:`,eventObject)
             // only when focused on the nothing or this element
             // (this is to exclude textboxes)
             if (window.player instanceof Object && ["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get({ keyList: ["path"], from: eventObject, failValue: [] }).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
