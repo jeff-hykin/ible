@@ -216,7 +216,7 @@ const indexDb = {
             const output = { done: false, value: null }
             const next = () => {
                 const address = addresses.shift()
-                if (address.length < 2 || addresses.some(each=>typeof each != 'string')) {
+                if (address.length < 2 || address.some(each=>typeof each != 'string')) {
                     console.warn(`bad address:`,address)
                     return null
                 }
@@ -245,62 +245,62 @@ const indexDb = {
             await dbPromise
         }
         addresses = [...addresses]
-        const next = await dbPromise.then(()=>new Promise((resolve, reject)=>{
-            const transaction = db.transaction([storeName], 'readwrite')
-            const objectStore = transaction.objectStore(storeName)
-            transaction.onerror = reject
-            Promise.all(
-                addresses.map(address=>{
-                    if (address.length < 2 || addresses.some(each=>typeof each != 'string')) {
-                        console.warn(`bad address:`,address)
-                        return null
-                    }
-                    const [ tableName, key, ...subAddress ] = address
-                    const id = JSON.stringify([tableName, key])
-                    // 
-                    // delete whole object
-                    // 
-                    if (subAddress.length == 0) {
-                        const request = objectStore.delete(id)
+        const transaction = db.transaction([storeName], 'readwrite')
+        const objectStore = transaction.objectStore(storeName)
+        transaction.onerror = reject
+        return Promise.all(
+            addresses.map(address=>{
+                if (address.length < 2 || address.some(each=>typeof each != 'string')) {
+                    console.debug(`outaddress.length < 2 is:`,address.length < 2)
+                    console.debug(`address.some(each=>typeof each != 'string') is:`,address.some(each=>typeof each != 'string'))
+                    console.warn(`bad address:`,address)
+                    return null
+                }
+                const [ tableName, key, ...subAddress ] = address
+                const id = JSON.stringify([tableName, key])
+                // 
+                // delete whole object
+                // 
+                if (subAddress.length == 0) {
+                    const request = objectStore.delete(id)
+                    const requestPromise = deferredPromise()
+                    Object.assign(request, {
+                        onsuccess: ()=>requestPromise.resolve(),
+                        onerror: (err)=>requestPromise.reject(err),
+                    })
+                    return requestPromise
+                // 
+                // delete part of object
+                // 
+                } else {
+                    return new Promise((resolve, reject)=>{
+                        const request = objectStore.get(id)
                         const requestPromise = deferredPromise()
                         Object.assign(request, {
-                            onsuccess: ()=>requestPromise.resolve(),
+                            onsuccess: ()=>requestPromise.resolve(request.result?.v),
                             onerror: (err)=>requestPromise.reject(err),
                         })
-                        return requestPromise
-                    // 
-                    // delete part of object
-                    // 
-                    } else {
-                        return new Promise((resolve, reject)=>{
-                            const request = objectStore.get(id)
-                            const requestPromise = deferredPromise()
-                            Object.assign(request, {
-                                onsuccess: ()=>requestPromise.resolve(request.result?.v),
-                                onerror: (err)=>requestPromise.reject(err),
-                            })
-                            return requestPromise.then(
-                                existingValue=>{
-                                    if (existingValue instanceof Object) {
-                                        remove({ keyList: subAddress, from: existingValue })
-                                        return new Promise(
-                                            (resolve, reject)=>
-                                                Object.assign(
-                                                    objectStore.put({id:id, k: key, t: tableName, v:existingValue,}), 
-                                                    {
-                                                        onsuccess:resolve,
-                                                        onerror:reject,
-                                                    },
-                                                )
-                                        )
-                                    }
+                        return requestPromise.then(
+                            existingValue=>{
+                                if (existingValue instanceof Object) {
+                                    remove({ keyList: subAddress, from: existingValue })
+                                    return new Promise(
+                                        (resolve, reject)=>
+                                            Object.assign(
+                                                objectStore.put({id:id, k: key, t: tableName, v:existingValue,}), 
+                                                {
+                                                    onsuccess:resolve,
+                                                    onerror:reject,
+                                                },
+                                            )
+                                    )
                                 }
-                            ).catch(reject)
-                        })
-                    }
-                })
-            ).then(resolve).catch(reject)
-        }))
+                            }
+                        ).catch(reject)
+                    })
+                }
+            })
+        )
     },
     async keys() {
         if (!db) {
