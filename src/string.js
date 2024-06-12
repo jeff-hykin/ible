@@ -199,9 +199,13 @@ export const toRepresentation = (item)=>{
     return recursionWrapper(item)
 }
 
-export const wordList = (str) => {
+export const wordList = (str, {keepTrailingSeparators=false,allowLongSplits=false}={}) => {
     const addedSeperator = str.replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/[^a-zA-Z0-9 _.-]/,"_").toLowerCase()
-    const words = addedSeperator.split(/[ _.-]+/g).filter(each=>each)
+    if (allowLongSplits) {
+        console.debug(`addedSeperator.split(/[ _.-]/g) is:`,addedSeperator.split(/[ _.-]/g))
+        return addedSeperator.split(/[ _.-]/g).filter(each=>keepTrailingSeparators||each)
+    }
+    const words = addedSeperator.split(/[ _.-]+/g).filter(each=>keepTrailingSeparators||each)
     return words
 }
 
@@ -219,8 +223,8 @@ export const toPascalCase = (str) => {
     return capatalizedWords.join('')
 }
 
-export const toKebabCase = (str) => {
-    const words = wordList(str)
+export const toKebabCase = (str, {keepTrailingSeparators=false, allowLongSplits=false}={}) => {
+    const words = wordList(str, {keepTrailingSeparators, allowLongSplits})
     return words.map(each=>each.toLowerCase()).join('-')
 }
 window.toKebabCase = toKebabCase

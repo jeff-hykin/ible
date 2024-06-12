@@ -47,11 +47,12 @@ export const createDefaultObservationEntry = ()=>({
 // 
 // indvidual coercsion
 // 
+    const nameCoerce = name=>toKebabCase(name.toLowerCase().replace(/[^a-zA-Z0-9-.]/g, "-"), {keepTrailingSeparators:true, allowLongSplits:true})
     export function coerceLabel(label) {
-        return toKebabCase(label.toLowerCase())
+        return nameCoerce(label)
     }
     export function coerceObserver(observer) {
-        return toKebabCase(observer.toLowerCase())
+        return nameCoerce(observer)
     }
     export function coerceCreatedAt(createdAt) {
         if (typeof createdAt != 'string') {
