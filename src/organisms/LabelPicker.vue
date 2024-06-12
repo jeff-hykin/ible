@@ -38,9 +38,7 @@ export default {
     ],
     data: ()=>({
         useLeftPanel: true,
-        needToLoad$: {
-            backend,
-        },
+        needToLoad$: {},
         items: {},
         searchTerm: "",
         fuseSuggestor: null,

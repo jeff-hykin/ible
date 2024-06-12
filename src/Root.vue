@@ -24,7 +24,7 @@ import { get, set } from "./object.js"
 // make lodash global because I like to live dangerously
 for (const [eachKey, eachValue] of Object.entries(require("lodash"))) { window[eachKey] = eachValue }
 
-let { backend, frontendDb } = require("./iilvd-api")
+let { frontendDb } = require("./iilvd-api")
 
 //
 // Routing Init
@@ -106,7 +106,6 @@ export default RootComponent = {
         return {
             loadStart: (new Date()).getTime(),
             needToLoad$: {
-                backend,
             },
             routeData$: initialRouteData,
             filterAndSort: {
@@ -121,9 +120,6 @@ export default RootComponent = {
                 videos: {},
                 uncheckedObservations: [0],
                 observers: {},
-                // this hardcoded value is only for initilization and is
-                // immediately replaced with the result of a backend call
-                // TODO: should probably still remove this
                 labels: {},
                 counts: {
                     total: 1,
@@ -138,7 +134,6 @@ export default RootComponent = {
             labels: {},
             videos: {},
             needToLoad$: {
-                backend,
             },
             videoLoadedPromise: deferredPromise(),
         }
@@ -331,7 +326,7 @@ export default RootComponent = {
             try {
                 newLabels = await frontendDb.summary.labels()
             } catch (error) {
-                this.$toasted.show(`Unable to get summary.labels() from backend`).goAway(3500)
+                this.$toasted.show(`Unable to get summary.labels()`).goAway(3500)
                 console.error(error.message)
                 console.error(error.stack)
                 return

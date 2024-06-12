@@ -711,9 +711,6 @@ const frontendDb = {
     setObservation(observationEntry, {withCoersion=false}={}) {
         return frontendDb.setObservations([observationEntry],{withCoersion})
     },
-    changeDb() {
-        // done (do nothing)
-    },
     async collectionNames() {
         // done (just used to load the db)
         return indexDb.keys()
@@ -876,16 +873,8 @@ const frontendDb = {
         }
     },
 }
-window.frontendDb = frontendDb
+window.frontendDb = frontendDb // debugging only
 
 module.exports = {
     frontendDb,
-    mixin: {
-        data: ()=>({
-        }),
-    },
 }
-window.backendHelpers = module.exports.backendHelpers
-
-// add the backend to all of the components
-Vue.mixin(module.exports.mixin)

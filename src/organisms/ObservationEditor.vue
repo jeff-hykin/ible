@@ -212,7 +212,7 @@
 <script>
 import { toKebabCase, toRepresentation } from '../string.js'
 import * as observationTooling from '../observation_tooling.js'
-let { backend, frontendDb } = require('../iilvd-api.js')
+let { frontendDb } = require('../iilvd-api.js')
 let { getColor, isValidName, storageObject } = require("../utils")
 
 export default {
@@ -253,7 +253,6 @@ export default {
         humanTime() {
             return (new Date(this.observationData.createdAt-0)).toString()
         },
-        // TODO: check this before submitting to backend
         allValid() {
             // not("some of them are invalid")
             return !Object.values(this.isValid).some(value=>!value)
@@ -383,7 +382,7 @@ export default {
             storageObject[this.observationData.videoId] = observationsForVideo
             
             // 
-            // send to backend
+            // send request to database
             // 
             let thereWasAnError = false
             try {
@@ -392,7 +391,7 @@ export default {
                 thereWasAnError = true
                 this.$toasted.show(`There was an error on the database`).goAway(5500)
                 console.error("# ")
-                console.error("# BACKEND ERROR")
+                console.error("# Database ERROR")
                 console.error("# ")
                 console.error(error.stack)
                 console.error(error)

@@ -33,7 +33,6 @@ export default {
     },
     methods: {
         mouseLeft() {
-            console.log(`mouseleave`)
             this.open = false
             this.$forceUpdate()
         }

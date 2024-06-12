@@ -188,7 +188,6 @@ export default {
             return NaN
         },
         async submitSearch() {
-            let backend = await this.backend
             const filterAndSort = {
                 ...this.$root.filterAndSort,
                 // also include label name if it exists
@@ -199,7 +198,7 @@ export default {
             let where = []
             
             // 
-            // build the backend query
+            // build the search query
             // 
             if (this.$root.routeData$.labelName                               ) { where.push({ valueOf: ['observation', 'label'             ], is:                     this.$root.routeData$.labelName            , }) }
             if (isNumber(this.$root.filterAndSort.maxlabelConfidence)         ) { where.push({ valueOf: ['observation', 'labelConfidence'   ], isLessThanOrEqualTo:    this.$root.filterAndSort.maxlabelConfidence, }) }
