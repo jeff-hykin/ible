@@ -752,54 +752,7 @@ const fakeBackend = {
         return indexDb.select({from:"observations", where, returnObject})
     },
     async deleteObservation({uuidOfSelectedSegment}) {
-        const observationEntry = await indexDb.get(["observations", uuidOfSelectedSegment])
-        if (observationEntry == undefined) {
-            return
-        }
-        
-        const labelAddress    = ["labels",    observationEntry.label   ]
-        const observerAddress = ["observers", observationEntry.observer]
-        const videoAddress    = ["videos",    observationEntry.videoId ]
-
-        const [ labelInfo, observerInfo, videoInfo ] = await Promise.all([
-            indexDb.get(labelAddress   ).then(value=>value||{}),
-            indexDb.get(observerAddress).then(value=>value||{}),
-            indexDb.get(videoAddress   ).then(value=>value||{}),
-        ])
-        
-        return Promise.all([
-            indexDb.deletes([["observations", uuidOfSelectedSegment]]),
-            indexDb.puts([
-                // add video
-                [
-                    videoAddress,
-                    {
-                        ...videoInfo,
-                        observationCount: (videoInfo?.count||1)-1,
-                        labelCount: {...videoInfo?.labelCount, [label]: ((videoInfo?.labelCount||{})[label]||1)-1},
-                    }
-                ],
-                // add observer
-                [
-                    observerAddress,
-                    {
-                        ...observerInfo,
-                        observationCount: (observerInfo?.count||1)-1,
-                        labelCount: {...observerInfo?.labelCount, [label]: ((observerInfo?.labelCount||{})[label]||1)-1},
-                        videos: [...new Set(...((observerInfo?.videos||[]).concat([observationEntry.videoId])))],
-                    }
-                ],
-                // update labels
-                [
-                    labelAddress,
-                    {
-                        ...labelInfo,
-                        count: (labelInfo?.count||1)-1,
-                        videos: [...new Set(...((labelInfo?.videos||[]).concat([observationEntry.videoId])))],
-                    },
-                ],
-            ]),
-        ])
+        return indexDb.deletes([["observations", uuidOfSelectedSegment]])
     },
     async getVideoIds() {
         let videoIds = []
