@@ -212,7 +212,7 @@
 <script>
 import { toKebabCase, toRepresentation } from '../string.js'
 import * as observationTooling from '../observation_tooling.js'
-let { backend, backendHelpers, fakeBackend } = require('../iilvd-api.js')
+let { backend, fakeBackend } = require('../iilvd-api.js')
 let { getColor, isValidName, storageObject } = require("../utils")
 
 export default {
@@ -387,13 +387,7 @@ export default {
             // 
             let thereWasAnError = false
             try {
-                await backendHelpers.setObservation({uuidOfSelectedSegment: this.uuidOfSelectedSegment, observation: observationEntry})
-                try {
-                    await fakeBackend.setObservation(observationEntry, {withCoersion:true})
-                } catch (error) {
-                    this.$toasted.show(`There was an error, look at console`).goAway(5500)
-                    console.error(error.toString())
-                }
+                await fakeBackend.setObservation(observationEntry, {withCoersion:true})
             } catch (error) {
                 thereWasAnError = true
                 this.$toasted.show(`There was an error on the database`).goAway(5500)
@@ -429,7 +423,6 @@ export default {
             let index = this.$root.selectedSegment.$displayIndex
             console.debug(`this.uuidOfSelectedSegment is:`,this.uuidOfSelectedSegment)
             if (this.uuidOfSelectedSegment) {
-                await backendHelpers.deleteObservation({uuidOfSelectedSegment: this.uuidOfSelectedSegment})
                 await fakeBackend.deleteObservation({uuidOfSelectedSegment: this.uuidOfSelectedSegment})
                 this.$root.selectedVideo.keySegments = [...this.$root.selectedVideo.keySegments].filter(each=>each.$uuid != this.uuidOfSelectedSegment)
                 this.resetData()

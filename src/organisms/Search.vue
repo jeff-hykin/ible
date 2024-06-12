@@ -111,7 +111,7 @@
             
 </template>
 <script>
-let { backendHelpers, fakeBackend } = require('../iilvd-api.js')
+let { fakeBackend } = require('../iilvd-api.js')
 let { colors, debounce, download, } = require("../utils.js")
 let observationEntries
 export default {
@@ -141,8 +141,6 @@ export default {
         async download() {
             console.log(`download clicked`)
             if (observationEntries?.length==0) {
-                // const allEntries = await backendHelpers.getObservations({where, returnObject: false})
-                // const allEntriesFake = await fakeBackend.getObservations({where, returnObject: false})
                 const allEntries = await fakeBackend.getObservations({where, returnObject: false})
                 download("data.json", JSON.stringify(allEntries,0,4))
             } else {
@@ -152,8 +150,6 @@ export default {
         async showDeletePrompt() {
             let entries = observationEntries
             if (entries?.length == 0) {
-                // const allEntries = await backendHelpers.getObservations({where, returnObject: false})
-                // const allEntriesFake = await fakeBackend.getObservations({where, returnObject: false})
                 for await (const [key, value] of fakeBackend.iter.observations) {
                     entries.push({ createdAt: key })
                     entries.push({ createdAt: value.createdAt })
@@ -170,7 +166,6 @@ export default {
                 toastElement.innerHTML = `<div><br>${toastElement.innerHTML}<br><p>0 of ${entries.length}\n</p></div>`
                 let count = 0
                 for (const each of entries) {
-                    await backendHelpers.deleteObservation({ uuidOfSelectedSegment: each.createdAt })
                     await fakeBackend.deleteObservation({ uuidOfSelectedSegment: each.createdAt })
                     count++
                     toastElement.innerHTML = toastElement.innerHTML.replace(/<p>.+/,`<p>${count} of ${entries.length}`)
@@ -199,11 +194,8 @@ export default {
                 // also include label name if it exists
                 ...(this.$root.routeData$.labelName? {labelName: this.$root.routeData$.labelName} : {}),
             }
-            // this.$root.searchResults = await backend.summary.general(filterAndSort)
-            // const fakeSearchResults  = await fakeBackend.summary.general(filterAndSort)
             this.$root.searchResults = await fakeBackend.summary.general(filterAndSort)
             console.debug(`BACKEND: searchResults`, this.$root.searchResults)
-            // console.debug(`FAKE   : searchResults`, fakeSearchResults)
             
             console.debug(`this.$root.searchResults is:`,JSON.stringify(this.$root.searchResults,0,4))
             
@@ -227,8 +219,6 @@ export default {
             // if (!this.$root.filterAndSort.validation.includes("Disagreement") ) { where.push({ valueOf: ['rejectedBySomeone'                ], isNot:                  true                          , }) 
             //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
             console.log(`querying the backend for observationEntries`)
-            // observationEntries = await backendHelpers.getObservations({where, returnObject: true})
-            // let fakeObservationEntries = await fakeBackend.getObservations({where, returnObject: true})
             observationEntries = await fakeBackend.getObservations({where, returnObject: true})
             console.debug(`BACKEND: observationEntries is:`,observationEntries)
             // console.debug(`FAKE   : observationEntries is:`,fakeObservationEntries)

@@ -61,7 +61,7 @@
 <script>
 import { set } from '../object.js'
 const { wrapIndex, storageObject, checkIf, deferredPromise, dynamicSort } = require("../utils.js")
-const { backendHelpers, fakeBackend } = require('../iilvd-api.js')
+const { fakeBackend } = require('../iilvd-api.js')
 const generalTimeoutFrequency = 50 // ms 
 
 let untracked = {
@@ -140,18 +140,6 @@ export default {
             if (originalVideoId) {
                 let keySegments
                 try {
-                    // keySegments = await backendHelpers.getObservations({
-                    //     where:[
-                    //         { valueOf: ['videoId'], is: originalVideoId },
-                    //     ],
-                    //     returnObject: true,
-                    // })
-                    // const fakeKeySegments = await fakeBackend.getObservations({
-                    //     where:[
-                    //         { valueOf: ['videoId'], is: originalVideoId },
-                    //     ],
-                    //     returnObject: true,
-                    // })
                     keySegments = await fakeBackend.getObservations({
                         where:[
                             { valueOf: ['videoId'], is: originalVideoId },

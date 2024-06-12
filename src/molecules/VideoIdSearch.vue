@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import { backendHelpers } from '../iilvd-api.js'
+import { fakeBackend } from '../iilvd-api.js'
 import { isLocalVideo, currentFixedSizeOfYouTubeVideoId } from '../observation_tooling.js'
 const { storageObject } = require('../utils')
 
@@ -45,7 +45,7 @@ export default {
                 this.suggestions = storageObject.cachedVideoIds
             } else {
                 // add results from the database
-                let possibleVideoIds = await backendHelpers.getVideoIds()
+                let possibleVideoIds = await fakeBackend.getVideoIds()
                 this.suggestions = [...new Set(possibleVideoIds.concat(this.suggestions))]
             }
         }

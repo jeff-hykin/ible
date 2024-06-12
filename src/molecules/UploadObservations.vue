@@ -89,7 +89,7 @@
 </template>
 <script>
 const { humandReadableTime, download } = require("../utils.js")
-const { fakeBackend, backendHelpers } = require("../iilvd-api.js")
+const { fakeBackend } = require("../iilvd-api.js")
 import * as observationTooling from "../observation_tooling.js"
 import * as yaml from 'yaml'
 
@@ -234,9 +234,6 @@ export default {
                         if (frontendErrorMessages.length > 0) {
                             throw Error(yaml.stringify(frontendErrorMessages))
                         }
-                        await backendHelpers.setObservation({
-                            uuidOfSelectedSegment: value.createdAt, observation: value
-                        })
                         await fakeBackend.setObservation(value)
                     } catch (error) {
                         if (error.message.match(/Message: Failed to fetch/)) {

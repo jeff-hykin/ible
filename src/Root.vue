@@ -159,14 +159,8 @@ export default RootComponent = {
         }
     },
     mounted() {
-        this.backend.then(async (backend)=>{
-            this.$toasted.show(`Connected to backend`).goAway(3500)
-            // untrackedData.usernameList = untrackedData.usernameList.concat(await backend.getUsernames())
-            
-            let fakeUsernames = await fakeBackend.getUsernames()
-            untrackedData.usernameList = untrackedData.usernameList.concat(fakeUsernames)
-            console.debug(`BACKEND: untrackedData.usernameList is:` ,untrackedData.usernameList)
-            // console.debug(`FAKE: untrackedData.usernameList is:` , fakeUsernames)
+        fakeBackend.getUsernames().then(usernames=>{
+            untrackedData.usernameList = untrackedData.usernameList.concat(usernames)
         })
     },
     watch: {

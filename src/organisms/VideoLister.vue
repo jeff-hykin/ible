@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import { backendHelpers, fakeBackend } from '../iilvd-api.js'
+import { fakeBackend } from '../iilvd-api.js'
 import { set } from '../object.js'
 import { isLocalVideo, getLocalVideoName } from '../observation_tooling.js'
 
@@ -46,14 +46,6 @@ export default {
                     videoObject.summary.title = title || null
                     this.$forceUpdate()
                 })
-                // backendHelpers.getVideoTitle(videoId).then(async (title)=>{
-                //     console.debug(`FAKE   : title is:`,await fakeBackend.getVideoTitle(videoId))
-                //     if (!(videoObject.summary instanceof Object)) {
-                //         videoObject.summary = {}
-                //     }
-                //     videoObject.summary.title = title || null
-                //     this.$forceUpdate()
-                // })
                 return "Loading..."
             }
         },
