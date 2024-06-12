@@ -84,7 +84,7 @@ export const createDefaultObservationEntry = ()=>({
     }
     export function labelConfidenceIsValid(labelConfidence) {
         if (Number.isFinite(labelConfidence)) {
-            if (labelConfidence <= 1 || labelConfidence >= -1) {
+            if (labelConfidence <= 1 && labelConfidence >= -1) {
                 return true
             }
         }
@@ -112,9 +112,13 @@ export const createDefaultObservationEntry = ()=>({
 
     // NOTE: this isn't necessarily a complete validation check
     export function quickLocalValidationCheck({observationData, videoDuration}) {
+        observationData.startTime-=0
+        observationData.endTime-=0
+        observationData.labelConfidence-=0
+        
         return {
             startTime: observationData.startTime >= 0 && observationData.startTime < observationData.endTime,
-            endTime: observationData.endTime > 0 && observationData.startTime < observationData.endTime && observationData.endTime <= videoDuration,
+            endTime: observationData.endTime > 0 && observationData.startTime < observationData.endTime && (videoDuration?observationData.endTime <= videoDuration:true),
             label: isValidName(observationData?.label),
             observer: isValidName(observationData?.observer),
             labelConfidence: labelConfidenceIsValid(observationData.labelConfidence),
@@ -134,15 +138,19 @@ export const createDefaultObservationEntry = ()=>({
         // 
         // enforce simplfied names
         // 
-        observationEntry.observation.label = coerceLabel(observationEntry.observation.label)
         observationEntry.observer = coerceObserver(observationEntry.observer)
+        if (!(observationEntry.observation instanceof Object)) {
+            observationEntry.observation = {}
+        }
+        observationEntry.observation.label = coerceLabel(observationEntry.observation.label)
 
         // 
         // enforce numeric start/endTimes 
         // 
         observationEntry.startTime -= 0
         observationEntry.endTime   -= 0
-        
+        observationEntry.observation.labelConfidence -= 0
+
         // help customInfo show up
         observationEntry.customInfo = observationEntry.customInfo||{}
         
