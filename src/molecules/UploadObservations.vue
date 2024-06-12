@@ -20,28 +20,6 @@
                 | cloud_upload
             ui-fileupload(name="file" type="secondary" @change="onUploadObservation" :multiple="true")
         
-        transition(name="fade")
-            Card(v-if="(uploadMessage && !uploadCanceled) || (latestUploadErrors.length > 0)" position="fixed" bottom="2rem" right="2rem" z-index="999" width="30rem" shadow="3" background="whitesmoke" align-h="left")
-                | {{uploadMessage}}
-                br(v-if="errorPreview")
-                | {{errorPreview}}
-                row(width="100%" max-width="100%" max-height="6rem" overflow="auto" white-space="pre" align-h="left" align-v="top")
-                    | {{latestUploadErrors}}
-                br
-                row(width="100%" align-h="space-between")
-                    ui-button.cancel-button(
-                        :style="`opacity: ${(uploadMessage && !uploadCanceled)?1:0}`"
-                        @click="quitUpload"
-                        icon="cancel"
-                    )
-                        | Cancel
-                    ui-button.error-button(
-                        v-if="latestUploadErrors.length > 0"
-                        @click="downloadErrorLog"
-                        icon="sms_failed"
-                    )
-                        | Download Error Log
-        
         //- help message
         portal(to="modal-popups")
             ui-modal.modal(fj20485gh93oi53g ref="helpModal" title="Example Upload" transition="scale-up")
@@ -85,11 +63,35 @@
                             br
                             br
                             | The JSON file is just a list of each observation represented as a kind of dictionary.
+        //- error message
+        portal(to="modal-popups")
+            ui-modal.modal(fj20485gh93oi53g ref="errorModal" :title="errorPreview" transition="scale-up")
+                    row(width="100%" align-h="space-between")
+                        ui-button.cancel-button(
+                            :style="`opacity: ${(uploadMessage && !uploadCanceled)?1:0}`"
+                            @click="quitUpload"
+                            icon="cancel"
+                        )
+                            | Cancel Upload
+                        ui-button.error-button(
+                            v-if="latestUploadErrors.length > 0"
+                            @click="downloadErrorLog"
+                            color="blue"
+                            icon="sms_failed"
+                        )
+                            | Download Error Log
+                    br
+                    | Note: #0 means first element (AKA 0 indexed)
+                    br
+                    code(style="max-width: 80vw; overflow: auto; white-space: preserve; display: flex;")
+                        | {{latestUploadErrors}}
     
 </template>
 <script>
 const { humandReadableTime, download } = require("../utils.js")
-const { fakeBackend } = require("../iilvd-api.js")
+const { fakeBackend, backendHelpers } = require("../iilvd-api.js")
+import * as observationTooling from "../observation_tooling.js"
+import * as yaml from 'yaml'
 
 export default {
     components: {
@@ -101,7 +103,7 @@ export default {
         uploadMessage: null,
         uploadCanceled: false,
         errorPreview: "",
-        latestUploadErrors: "",
+        latestUploadErrorsObject: "",
         dummyData1: {
             "createdAt": new Date().getTime() + `${Math.random()}`.slice(1),
             "type": "segment",
@@ -135,6 +137,14 @@ export default {
             "customInfo": {},
         },
     }),
+    computed: {
+        latestUploadErrors() {
+            return yaml.stringify(this.latestUploadErrorsObject)
+        },
+        numberOfErrors() {
+            return Object.values(this.latestUploadErrorsObject).flat(2).length
+        },
+    },
     watch: {
         dummyData1: {
             deep: true,
@@ -173,22 +183,22 @@ export default {
             // check the json of each file
             // 
             for (const [key, eachFile] of Object.entries(eventObject)) {
-                const fileNumber = key-0+1
+                const fileIndex = key-0
                 const fileText = await eachFile.text()
                 try {
                     // save the uploadTime to help with removing bad data
                     let index = -1
-                    for (let each of JSON.parse(fileText)) {
+                    for (let each of yaml.parse(fileText)) {
                         each.uploadTime = `${(new Date())}`
                         newObservations.push(each)
                         observationMapping[newObservations.length-1] = {
-                            fileNumber,
+                            fileIndex,
                             fileName: eachFile.name,
                             observationIndex: ++index,
                         }
                     }
                 } catch (error) {
-                    this.$toasted.show(`File Upload #${fileNumber} Error\nAre you sure the file is valid JSON?`, {
+                    this.$toasted.show(`File Upload #${fileIndex} Error\nAre you sure the file is valid JSON?`, {
                         closeOnSwipe: false,
                         action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
                     })
@@ -205,7 +215,7 @@ export default {
                 
                 this.uploadCanceled = false
                 this.uploadMessage = "starting upload"
-                this.latestUploadErrors = ""
+                this.latestUploadErrorsObject = {}
                 this.errorPreview = ""
                 const size = newObservations.length
                 const startTime = (new Date()).getTime()
@@ -214,22 +224,48 @@ export default {
                 
                 for (const [key, value] of Object.entries(newObservations)) {
                     const observationNumber = key-0+1
-                    const {fileNumber, fileName, observationIndex } = observationMapping[key]
-                    const fileNumberString = eventObject.length > 1? `File ${fileNumber} of ${eventObject.length}\n\n`:""
+                    const {fileIndex, fileName, observationIndex } = observationMapping[key]
+                    const fileIndexString = eventObject.length > 1? `File ${fileIndex} of ${eventObject.length}\n\n`:""
                     const timeRemainingString = timeRemaining?" (~ "+humandReadableTime(timeRemaining)+" remaining)":""
-                    this.uploadMessage = `${fileNumberString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n`
+                    this.uploadMessage = `${fileIndexString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n`
                     value.observation.label = toKebabCase(`${value.observation.label}`.toLowerCase())
                     try {
-                        await (await this.backend).addObservation(value)
-                        await fakeBackend.addObservation(value)
+                        const frontendErrorMessages = observationTooling.validateObservations([value])[0]
+                        if (frontendErrorMessages.length > 0) {
+                            throw Error(yaml.stringify(frontendErrorMessages))
+                        }
+                        await backendHelpers.setObservation({
+                            uuidOfSelectedSegment: value.createdAt, observation: value
+                        })
+                        await fakeBackend.setObservation(value)
                     } catch (error) {
                         if (error.message.match(/Message: Failed to fetch/)) {
                             this.$toasted.show(`Server took too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(6500)
                             continue
                         }
                         errorCount++
-                        this.errorPreview = `There were some (${errorCount}) errors:`
-                        this.latestUploadErrors += `\n- problem with file #${fileNumber} "${fileName}", observation #${observationIndex}:\n      `+error.message.split("\n").join("\n      ")+"\n"
+                        this.errorPreview = `There were some (${this.numberOfErrors}) errors:`
+                        const alreadyShown = this.numberOfErrors > 0
+                        const whichFile = `file ${fileIndex}: ${JSON.stringify(fileName)}`
+                        const whichObservation = `observation ${observationIndex}`
+                        this.latestUploadErrorsObject[whichFile] = this.latestUploadErrorsObject[whichFile]||{}
+                        let messages
+                        try { messages = yaml.parse(error.message) } catch (error) {}
+                        if (!(messages instanceof Array)) {
+                            messages = [error.message]
+                        }
+                        const isFirstErrorForObservation = !(this.latestUploadErrorsObject[whichFile][whichObservation] instanceof Array)
+                        const hasACreatedAtValue = !!whichObservation.createdAt
+                        if (isFirstErrorForObservation && hasACreatedAtValue) {
+                            messages = [ `"createdAt": ${JSON.stringify(whichObservation.createdAt)}`, ...messages ]
+                        }
+                        this.latestUploadErrorsObject[whichFile][whichObservation] = [
+                            ...this.latestUploadErrorsObject[whichFile][whichObservation],
+                            ...messages,
+                        ]
+                        if (this.numberOfErrors>0 && !alreadyShown) {
+                            this.$refs.errorModal.open()
+                        }
                     }
                     const changeInTime = (new Date()).getTime() - startTime
                     const changeInCount = observationNumber
@@ -244,7 +280,7 @@ export default {
                     }
                 }
                 
-                this.$toasted.show(`Upload Finished! Refresh to see changes`, {
+                this.$toasted.show(`Upload Finished. Refresh to see changes`, {
                     closeOnSwipe: false,
                     action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
                 })
