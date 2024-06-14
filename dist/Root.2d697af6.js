@@ -71385,8 +71385,8 @@ function quickLocalValidationCheck({
   observationData.endTime -= 0;
   observationData.labelConfidence -= 0;
   return {
-    startTime: observationData.startTime >= 0 && observationData.startTime < observationData.endTime,
-    endTime: observationData.endTime > 0 && observationData.startTime < observationData.endTime && (videoDuration ? observationData.endTime <= videoDuration : true),
+    startTime: observationData.startTime >= 0 && observationData.startTime <= observationData.endTime,
+    endTime: observationData.endTime >= 0 && observationData.startTime <= observationData.endTime && (videoDuration ? observationData.endTime <= videoDuration : true),
     label: isValidName(observationData?.label),
     observer: isValidName(observationData?.observer),
     labelConfidence: labelConfidenceIsValid(observationData.labelConfidence),
@@ -71466,8 +71466,8 @@ function validateObservations(observations) {
       }
 
       if (startTimeIsNumeric && endTimeIsNumeric) {
-        if (observationEntry.startTime >= observationEntry.endTime) {
-          errorMessages.push(`startTime: ${observationEntry.startTime}, endTime: ${observationEntry.endTime}\nAn observationEntry must have a startTime that is < endTime`);
+        if (observationEntry.startTime > observationEntry.endTime) {
+          errorMessages.push(`startTime: ${observationEntry.startTime}, endTime: ${observationEntry.endTime}\nAn observationEntry must have a startTime that is ≤ endTime`);
         }
       } // 
       // observer
@@ -81189,7 +81189,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61111" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55718" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
