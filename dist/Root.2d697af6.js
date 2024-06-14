@@ -8542,7 +8542,36 @@ if (inBrowser) {
 
 var _default = Vue;
 exports.default = _default;
-},{}],"node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
+},{}],"src/plugins/child.js":[function(require,module,exports) {
+// api
+//     $child(...args)
+let Vue = require("vue").default;
+
+Object.defineProperty(Vue.prototype, "$child", {
+  get() {
+    return (firstRef, ...args) => new Promise((resolve, reject) => {
+      let checker;
+
+      checker = () => {
+        let ref = this.$refs[firstRef]; // base case
+
+        if (ref && args.length === 0) {
+          resolve(ref); // recursive child case
+        } else if (ref) {
+          ref.$child(...args).then(resolve); // recursive wait case
+        } else {
+          this.$nextTick(() => {
+            setTimeout(checker, 500);
+          });
+        }
+      };
+
+      checker();
+    });
+  }
+
+});
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
 var bundleURL = null;
 
 function getBundleURLCached() {
@@ -8619,36 +8648,508 @@ module.exports = reloadCSS;
 "use strict";
 
 require("css-baseline/css/3.css");
-},{"css-baseline/css/3.css":"node_modules/css-baseline/css/3.css"}],"src/plugins/child.js":[function(require,module,exports) {
-// api
-//     $child(...args)
-let Vue = require("vue").default;
+},{"css-baseline/css/3.css":"node_modules/css-baseline/css/3.css"}],"node_modules/good-vue/dist/index.js":[function(require,module,exports) {
+/*!
+ * good-vue v1.3.1
+ * (c) 
+ * Released under the ISC License.
+ */
+'use strict';
 
-Object.defineProperty(Vue.prototype, "$child", {
-  get() {
-    return (firstRef, ...args) => new Promise((resolve, reject) => {
-      let checker;
+const component = {
+  props: {
+    'wrap': {
+      type: [String, Boolean],
+      validator: value => [true, false, 'reverse'].includes(value)
+    },
+    'shadow': {
+      type: [Number, String]
+    }
+  },
+  computed: {
+    flexWrapStyle() {
+      let wrap = this.$props.wrap || this.$attrs["flex-wrap"];
+      let value = wrap;
 
-      checker = () => {
-        let ref = this.$refs[firstRef]; // base case
+      if (wrap == true) {
+        value = 'wrap';
+      } else if (wrap == 'reverse') {
+        value = 'wrap-reverse';
+      } else if (wrap == false) {
+        value = 'nowrap';
+      }
 
-        if (ref && args.length === 0) {
-          resolve(ref); // recursive child case
-        } else if (ref) {
-          ref.$child(...args).then(resolve); // recursive wait case
-        } else {
-          this.$nextTick(() => {
-            setTimeout(checker, 500);
-          });
-        }
+      return value != null && {
+        'flex-wrap': value
       };
+    },
 
-      checker();
-    });
+    shadowStyle() {
+      let shadow = this.$props.shadow || this.$attrs["box-shadow"];
+      let value = shadow;
+
+      if (shadow == 0) {
+        value = 'none';
+      } else if (shadow == 1) {
+        value = '0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2)';
+      } else if (shadow == 2) {
+        value = '0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3)';
+      } else if (shadow == 3) {
+        value = '0 8px 17px 2px rgba(0,0,0,0.14), 0 3px 14px 2px rgba(0,0,0,0.12), 0 5px 5px -3px rgba(0,0,0,0.2)';
+      } else if (shadow == 4) {
+        value = '0 16px 24px 2px rgba(0,0,0,0.14), 0 6px 30px 5px rgba(0,0,0,0.12), 0 8px 10px -7px rgba(0,0,0,0.2)';
+      } else if (shadow == 5) {
+        value = '0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.2)';
+      }
+
+      return shadow && {
+        'box-shadow': value,
+        '-webkit-box-shadow': value
+      };
+    }
+
+  }
+};
+
+//
+var script = {
+  props: { ...component.props,
+    'align-h': {
+      type: String,
+      validator: value => ['left', 'right', 'center', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
+    },
+    'align-v': {
+      type: String,
+      validator: value => ['top', 'bottom', 'center', 'space-around', 'space-between', 'space-evenly', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
+    }
+  },
+  computed: { ...component.computed,
+
+    justifyContentStyle() {
+      let arrangement = this.$props.alignV || this.$attrs["justify-content"];
+      let value = arrangement;
+
+      if (arrangement == 'top') {
+        value = 'flex-start';
+      } else if (arrangement == 'bottom') {
+        value = 'flex-end';
+      }
+
+      return value != null && {
+        'justify-content': value
+      };
+    },
+
+    alignItemsStyle() {
+      let alignment = this.$props.alignH || this.$attrs["align-items"];
+      let value = alignment;
+      let additionalValues = {};
+
+      if (alignment == 'left') {
+        value = 'flex-start';
+        additionalValues = {
+          'text-align': 'left'
+        };
+      } else if (alignment == 'right') {
+        value = 'flex-end';
+        additionalValues = {
+          'text-align': 'right'
+        };
+      }
+
+      return value != null && {
+        'align-items': value,
+        ...additionalValues
+      };
+    }
+
+  }
+};
+
+function normalizeComponent(template, style, script, scopeId, isFunctionalTemplate, moduleIdentifier
+/* server only */
+, shadowMode, createInjector, createInjectorSSR, createInjectorShadow) {
+  if (typeof shadowMode !== 'boolean') {
+    createInjectorSSR = createInjector;
+    createInjector = shadowMode;
+    shadowMode = false;
+  } // Vue.extend constructor export interop.
+
+
+  var options = typeof script === 'function' ? script.options : script; // render functions
+
+  if (template && template.render) {
+    options.render = template.render;
+    options.staticRenderFns = template.staticRenderFns;
+    options._compiled = true; // functional template
+
+    if (isFunctionalTemplate) {
+      options.functional = true;
+    }
+  } // scopedId
+
+
+  if (scopeId) {
+    options._scopeId = scopeId;
   }
 
-});
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js"}],"node_modules/keen-ui/dist/keen-ui.js":[function(require,module,exports) {
+  var hook;
+
+  if (moduleIdentifier) {
+    // server build
+    hook = function hook(context) {
+      // 2.3 injection
+      context = context || // cached call
+      this.$vnode && this.$vnode.ssrContext || // stateful
+      this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext; // functional
+      // 2.2 with runInNewContext: true
+
+      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
+        context = __VUE_SSR_CONTEXT__;
+      } // inject component styles
+
+
+      if (style) {
+        style.call(this, createInjectorSSR(context));
+      } // register component module identifier for async chunk inference
+
+
+      if (context && context._registeredComponents) {
+        context._registeredComponents.add(moduleIdentifier);
+      }
+    }; // used by ssr in case component is cached and beforeCreate
+    // never gets called
+
+
+    options._ssrRegister = hook;
+  } else if (style) {
+    hook = shadowMode ? function () {
+      style.call(this, createInjectorShadow(this.$root.$options.shadowRoot));
+    } : function (context) {
+      style.call(this, createInjector(context));
+    };
+  }
+
+  if (hook) {
+    if (options.functional) {
+      // register for functional component in vue file
+      var originalRender = options.render;
+
+      options.render = function renderWithStyleInjection(h, context) {
+        hook.call(context);
+        return originalRender(h, context);
+      };
+    } else {
+      // inject component registration as beforeCreate hook
+      var existing = options.beforeCreate;
+      options.beforeCreate = existing ? [].concat(existing, hook) : [hook];
+    }
+  }
+
+  return script;
+}
+
+var normalizeComponent_1 = normalizeComponent;
+
+var isOldIE = typeof navigator !== 'undefined' && /msie [6-9]\\b/.test(navigator.userAgent.toLowerCase());
+function createInjector(context) {
+  return function (id, style) {
+    return addStyle(id, style);
+  };
+}
+var HEAD;
+var styles = {};
+
+function addStyle(id, css) {
+  var group = isOldIE ? css.media || 'default' : id;
+  var style = styles[group] || (styles[group] = {
+    ids: new Set(),
+    styles: []
+  });
+
+  if (!style.ids.has(id)) {
+    style.ids.add(id);
+    var code = css.source;
+
+    if (css.map) {
+      // https://developer.chrome.com/devtools/docs/javascript-debugging
+      // this makes source maps inside style tags work properly in Chrome
+      code += '\n/*# sourceURL=' + css.map.sources[0] + ' */'; // http://stackoverflow.com/a/26603875
+
+      code += '\n/*# sourceMappingURL=data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(css.map)))) + ' */';
+    }
+
+    if (!style.element) {
+      style.element = document.createElement('style');
+      style.element.type = 'text/css';
+      if (css.media) style.element.setAttribute('media', css.media);
+
+      if (HEAD === undefined) {
+        HEAD = document.head || document.getElementsByTagName('head')[0];
+      }
+
+      HEAD.appendChild(style.element);
+    }
+
+    if ('styleSheet' in style.element) {
+      style.styles.push(code);
+      style.element.styleSheet.cssText = style.styles.filter(Boolean).join('\n');
+    } else {
+      var index = style.ids.size - 1;
+      var textNode = document.createTextNode(code);
+      var nodes = style.element.childNodes;
+      if (nodes[index]) style.element.removeChild(nodes[index]);
+      if (nodes.length) style.element.insertBefore(textNode, nodes[index]);else style.element.appendChild(textNode);
+    }
+  }
+}
+
+var browser = createInjector;
+
+/* script */
+const __vue_script__ = script;
+/* template */
+
+var __vue_render__ = function () {
+  var _vm = this;
+
+  var _h = _vm.$createElement;
+
+  var _c = _vm._self._c || _h;
+
+  return _c('div', _vm._g({
+    staticClass: "good-column",
+    style: Object.assign({}, _vm.$attrs, _vm.justifyContentStyle, _vm.alignItemsStyle, _vm.flexWrapStyle, _vm.shadowStyle),
+    attrs: {
+      "unique-add1e7fe": ""
+    }
+  }, this.$listeners), [_vm._t("default")], 2);
+};
+
+var __vue_staticRenderFns__ = [];
+/* style */
+
+const __vue_inject_styles__ = function (inject) {
+  if (!inject) return;
+  inject("data-v-46e06dd6_0", {
+    source: ".good-column[unique-add1e7fe]{flex-direction:column}[unique-add1e7fe]{display:flex;flex-direction:column;align-items:center;justify-content:center;flex-wrap:nowrap;margin:0}",
+    map: undefined,
+    media: undefined
+  });
+};
+/* scoped */
+
+
+const __vue_scope_id__ = undefined;
+/* module identifier */
+
+const __vue_module_identifier__ = undefined;
+/* functional template */
+
+const __vue_is_functional_template__ = false;
+/* style inject SSR */
+
+var Column = normalizeComponent_1({
+  render: __vue_render__,
+  staticRenderFns: __vue_staticRenderFns__
+}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, browser, undefined);
+
+//
+var script$1 = {
+  props: { ...component.props,
+    'align-v': {
+      type: String,
+      validator: value => ['top', 'bottom', 'center', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
+    },
+    'align-h': {
+      type: String,
+      validator: value => ['left', 'right', 'center', 'space-around', 'space-between', 'space-evenly', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
+    }
+  },
+  computed: { ...component.computed,
+
+    justifyContentStyle() {
+      let arrangement = this.$props.alignH || this.$attrs["justify-content"];
+      let value = arrangement;
+      let additionalValues = {};
+
+      if (arrangement == 'left') {
+        value = 'flex-start';
+        additionalValues = {
+          'text-align': 'left'
+        };
+      } else if (arrangement == 'right') {
+        value = 'flex-end';
+        additionalValues = {
+          'text-align': 'right'
+        };
+      }
+
+      return value != null && {
+        'justify-content': value,
+        ...additionalValues
+      };
+    },
+
+    alignItemsStyle() {
+      let alignment = this.$props.alignV || this.$attrs["align-items"];
+      let value = alignment;
+
+      if (alignment == 'top') {
+        value = 'flex-start';
+      } else if (alignment == 'bottom') {
+        value = 'flex-end';
+      }
+
+      return value != null && {
+        'align-items': value
+      };
+    }
+
+  }
+};
+
+/* script */
+const __vue_script__$1 = script$1;
+/* template */
+
+var __vue_render__$1 = function () {
+  var _vm = this;
+
+  var _h = _vm.$createElement;
+
+  var _c = _vm._self._c || _h;
+
+  return _c('div', _vm._g({
+    staticClass: "good-row",
+    style: Object.assign({}, _vm.$attrs, _vm.justifyContentStyle, _vm.alignItemsStyle, _vm.flexWrapStyle, _vm.shadowStyle),
+    attrs: {
+      "unique-add1e7fa": ""
+    }
+  }, this.$listeners), [_vm._t("default")], 2);
+};
+
+var __vue_staticRenderFns__$1 = [];
+/* style */
+
+const __vue_inject_styles__$1 = function (inject) {
+  if (!inject) return;
+  inject("data-v-7148b7bc_0", {
+    source: ".good-row[unique-add1e7fa]{flex-direction:row}[unique-add1e7fa]{display:flex;flex-direction:row;justify-content:center;align-items:center;flex-wrap:nowrap;margin:0}",
+    map: undefined,
+    media: undefined
+  });
+};
+/* scoped */
+
+
+const __vue_scope_id__$1 = undefined;
+/* module identifier */
+
+const __vue_module_identifier__$1 = undefined;
+/* functional template */
+
+const __vue_is_functional_template__$1 = false;
+/* style inject SSR */
+
+var Row = normalizeComponent_1({
+  render: __vue_render__$1,
+  staticRenderFns: __vue_staticRenderFns__$1
+}, __vue_inject_styles__$1, __vue_script__$1, __vue_scope_id__$1, __vue_is_functional_template__$1, __vue_module_identifier__$1, browser, undefined);
+
+//
+var script$2 = {
+  props: { ...component.props
+  },
+  computed: { ...component.computed
+  }
+};
+
+/* script */
+const __vue_script__$2 = script$2;
+/* template */
+
+var __vue_render__$2 = function () {
+  var _vm = this;
+
+  var _h = _vm.$createElement;
+
+  var _c = _vm._self._c || _h;
+
+  return _c('div', _vm._g({
+    staticClass: "good-container",
+    style: Object.assign({}, _vm.shadowStyle, _vm.$attrs),
+    attrs: {
+      "unique-a23421e7a": ""
+    }
+  }, this.$listeners), [_vm._t("default")], 2);
+};
+
+var __vue_staticRenderFns__$2 = [];
+/* style */
+
+const __vue_inject_styles__$2 = function (inject) {
+  if (!inject) return;
+  inject("data-v-1d9d60fa_0", {
+    source: ".good-container[unique-a23421e7a]{flex-direction:column}[unique-a23421e7a]{display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;flex-wrap:nowrap;margin:0}",
+    map: undefined,
+    media: undefined
+  });
+};
+/* scoped */
+
+
+const __vue_scope_id__$2 = undefined;
+/* module identifier */
+
+const __vue_module_identifier__$2 = undefined;
+/* functional template */
+
+const __vue_is_functional_template__$2 = false;
+/* style inject SSR */
+
+var Container = normalizeComponent_1({
+  render: __vue_render__$2,
+  staticRenderFns: __vue_staticRenderFns__$2
+}, __vue_inject_styles__$2, __vue_script__$2, __vue_scope_id__$2, __vue_is_functional_template__$2, __vue_module_identifier__$2, browser, undefined);
+
+let globalData;
+let setupGlobalData = (Vue, data) => {
+  globalData = data; // connect the data to every child component
+
+  Vue.mixin({
+    data: () => ({
+      $global: globalData
+    })
+  });
+};
+
+var index = {
+  setupGlobalData,
+
+  install(Vue, options) {
+    // Let's register our component globally
+    // https://vuejs.org/v2/guide/components-registration.html
+    Vue.component("column", Column);
+    Vue.component("row", Row);
+    Vue.component("container", Container);
+  }
+
+};
+
+module.exports = index;
+
+},{}],"src/plugins/good-vue-plugin.js":[function(require,module,exports) {
+"use strict";
+
+var _vue = _interopRequireDefault(require("vue"));
+
+var _goodVue = _interopRequireDefault(require("good-vue"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+_vue.default.use(_goodVue.default);
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","good-vue":"node_modules/good-vue/dist/index.js"}],"node_modules/keen-ui/dist/keen-ui.js":[function(require,module,exports) {
 var define;
 var global = arguments[3];
 /*!
@@ -25585,508 +26086,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 let Vue = require("vue").default;
 
 Vue.use(_portalVue.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","portal-vue":"node_modules/portal-vue/dist/portal-vue.common.js"}],"node_modules/good-vue/dist/index.js":[function(require,module,exports) {
-/*!
- * good-vue v1.3.1
- * (c) 
- * Released under the ISC License.
- */
-'use strict';
-
-const component = {
-  props: {
-    'wrap': {
-      type: [String, Boolean],
-      validator: value => [true, false, 'reverse'].includes(value)
-    },
-    'shadow': {
-      type: [Number, String]
-    }
-  },
-  computed: {
-    flexWrapStyle() {
-      let wrap = this.$props.wrap || this.$attrs["flex-wrap"];
-      let value = wrap;
-
-      if (wrap == true) {
-        value = 'wrap';
-      } else if (wrap == 'reverse') {
-        value = 'wrap-reverse';
-      } else if (wrap == false) {
-        value = 'nowrap';
-      }
-
-      return value != null && {
-        'flex-wrap': value
-      };
-    },
-
-    shadowStyle() {
-      let shadow = this.$props.shadow || this.$attrs["box-shadow"];
-      let value = shadow;
-
-      if (shadow == 0) {
-        value = 'none';
-      } else if (shadow == 1) {
-        value = '0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2)';
-      } else if (shadow == 2) {
-        value = '0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3)';
-      } else if (shadow == 3) {
-        value = '0 8px 17px 2px rgba(0,0,0,0.14), 0 3px 14px 2px rgba(0,0,0,0.12), 0 5px 5px -3px rgba(0,0,0,0.2)';
-      } else if (shadow == 4) {
-        value = '0 16px 24px 2px rgba(0,0,0,0.14), 0 6px 30px 5px rgba(0,0,0,0.12), 0 8px 10px -7px rgba(0,0,0,0.2)';
-      } else if (shadow == 5) {
-        value = '0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.2)';
-      }
-
-      return shadow && {
-        'box-shadow': value,
-        '-webkit-box-shadow': value
-      };
-    }
-
-  }
-};
-
-//
-var script = {
-  props: { ...component.props,
-    'align-h': {
-      type: String,
-      validator: value => ['left', 'right', 'center', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
-    },
-    'align-v': {
-      type: String,
-      validator: value => ['top', 'bottom', 'center', 'space-around', 'space-between', 'space-evenly', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
-    }
-  },
-  computed: { ...component.computed,
-
-    justifyContentStyle() {
-      let arrangement = this.$props.alignV || this.$attrs["justify-content"];
-      let value = arrangement;
-
-      if (arrangement == 'top') {
-        value = 'flex-start';
-      } else if (arrangement == 'bottom') {
-        value = 'flex-end';
-      }
-
-      return value != null && {
-        'justify-content': value
-      };
-    },
-
-    alignItemsStyle() {
-      let alignment = this.$props.alignH || this.$attrs["align-items"];
-      let value = alignment;
-      let additionalValues = {};
-
-      if (alignment == 'left') {
-        value = 'flex-start';
-        additionalValues = {
-          'text-align': 'left'
-        };
-      } else if (alignment == 'right') {
-        value = 'flex-end';
-        additionalValues = {
-          'text-align': 'right'
-        };
-      }
-
-      return value != null && {
-        'align-items': value,
-        ...additionalValues
-      };
-    }
-
-  }
-};
-
-function normalizeComponent(template, style, script, scopeId, isFunctionalTemplate, moduleIdentifier
-/* server only */
-, shadowMode, createInjector, createInjectorSSR, createInjectorShadow) {
-  if (typeof shadowMode !== 'boolean') {
-    createInjectorSSR = createInjector;
-    createInjector = shadowMode;
-    shadowMode = false;
-  } // Vue.extend constructor export interop.
-
-
-  var options = typeof script === 'function' ? script.options : script; // render functions
-
-  if (template && template.render) {
-    options.render = template.render;
-    options.staticRenderFns = template.staticRenderFns;
-    options._compiled = true; // functional template
-
-    if (isFunctionalTemplate) {
-      options.functional = true;
-    }
-  } // scopedId
-
-
-  if (scopeId) {
-    options._scopeId = scopeId;
-  }
-
-  var hook;
-
-  if (moduleIdentifier) {
-    // server build
-    hook = function hook(context) {
-      // 2.3 injection
-      context = context || // cached call
-      this.$vnode && this.$vnode.ssrContext || // stateful
-      this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext; // functional
-      // 2.2 with runInNewContext: true
-
-      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
-        context = __VUE_SSR_CONTEXT__;
-      } // inject component styles
-
-
-      if (style) {
-        style.call(this, createInjectorSSR(context));
-      } // register component module identifier for async chunk inference
-
-
-      if (context && context._registeredComponents) {
-        context._registeredComponents.add(moduleIdentifier);
-      }
-    }; // used by ssr in case component is cached and beforeCreate
-    // never gets called
-
-
-    options._ssrRegister = hook;
-  } else if (style) {
-    hook = shadowMode ? function () {
-      style.call(this, createInjectorShadow(this.$root.$options.shadowRoot));
-    } : function (context) {
-      style.call(this, createInjector(context));
-    };
-  }
-
-  if (hook) {
-    if (options.functional) {
-      // register for functional component in vue file
-      var originalRender = options.render;
-
-      options.render = function renderWithStyleInjection(h, context) {
-        hook.call(context);
-        return originalRender(h, context);
-      };
-    } else {
-      // inject component registration as beforeCreate hook
-      var existing = options.beforeCreate;
-      options.beforeCreate = existing ? [].concat(existing, hook) : [hook];
-    }
-  }
-
-  return script;
-}
-
-var normalizeComponent_1 = normalizeComponent;
-
-var isOldIE = typeof navigator !== 'undefined' && /msie [6-9]\\b/.test(navigator.userAgent.toLowerCase());
-function createInjector(context) {
-  return function (id, style) {
-    return addStyle(id, style);
-  };
-}
-var HEAD;
-var styles = {};
-
-function addStyle(id, css) {
-  var group = isOldIE ? css.media || 'default' : id;
-  var style = styles[group] || (styles[group] = {
-    ids: new Set(),
-    styles: []
-  });
-
-  if (!style.ids.has(id)) {
-    style.ids.add(id);
-    var code = css.source;
-
-    if (css.map) {
-      // https://developer.chrome.com/devtools/docs/javascript-debugging
-      // this makes source maps inside style tags work properly in Chrome
-      code += '\n/*# sourceURL=' + css.map.sources[0] + ' */'; // http://stackoverflow.com/a/26603875
-
-      code += '\n/*# sourceMappingURL=data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(css.map)))) + ' */';
-    }
-
-    if (!style.element) {
-      style.element = document.createElement('style');
-      style.element.type = 'text/css';
-      if (css.media) style.element.setAttribute('media', css.media);
-
-      if (HEAD === undefined) {
-        HEAD = document.head || document.getElementsByTagName('head')[0];
-      }
-
-      HEAD.appendChild(style.element);
-    }
-
-    if ('styleSheet' in style.element) {
-      style.styles.push(code);
-      style.element.styleSheet.cssText = style.styles.filter(Boolean).join('\n');
-    } else {
-      var index = style.ids.size - 1;
-      var textNode = document.createTextNode(code);
-      var nodes = style.element.childNodes;
-      if (nodes[index]) style.element.removeChild(nodes[index]);
-      if (nodes.length) style.element.insertBefore(textNode, nodes[index]);else style.element.appendChild(textNode);
-    }
-  }
-}
-
-var browser = createInjector;
-
-/* script */
-const __vue_script__ = script;
-/* template */
-
-var __vue_render__ = function () {
-  var _vm = this;
-
-  var _h = _vm.$createElement;
-
-  var _c = _vm._self._c || _h;
-
-  return _c('div', _vm._g({
-    staticClass: "good-column",
-    style: Object.assign({}, _vm.$attrs, _vm.justifyContentStyle, _vm.alignItemsStyle, _vm.flexWrapStyle, _vm.shadowStyle),
-    attrs: {
-      "unique-add1e7fe": ""
-    }
-  }, this.$listeners), [_vm._t("default")], 2);
-};
-
-var __vue_staticRenderFns__ = [];
-/* style */
-
-const __vue_inject_styles__ = function (inject) {
-  if (!inject) return;
-  inject("data-v-46e06dd6_0", {
-    source: ".good-column[unique-add1e7fe]{flex-direction:column}[unique-add1e7fe]{display:flex;flex-direction:column;align-items:center;justify-content:center;flex-wrap:nowrap;margin:0}",
-    map: undefined,
-    media: undefined
-  });
-};
-/* scoped */
-
-
-const __vue_scope_id__ = undefined;
-/* module identifier */
-
-const __vue_module_identifier__ = undefined;
-/* functional template */
-
-const __vue_is_functional_template__ = false;
-/* style inject SSR */
-
-var Column = normalizeComponent_1({
-  render: __vue_render__,
-  staticRenderFns: __vue_staticRenderFns__
-}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, browser, undefined);
-
-//
-var script$1 = {
-  props: { ...component.props,
-    'align-v': {
-      type: String,
-      validator: value => ['top', 'bottom', 'center', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
-    },
-    'align-h': {
-      type: String,
-      validator: value => ['left', 'right', 'center', 'space-around', 'space-between', 'space-evenly', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
-    }
-  },
-  computed: { ...component.computed,
-
-    justifyContentStyle() {
-      let arrangement = this.$props.alignH || this.$attrs["justify-content"];
-      let value = arrangement;
-      let additionalValues = {};
-
-      if (arrangement == 'left') {
-        value = 'flex-start';
-        additionalValues = {
-          'text-align': 'left'
-        };
-      } else if (arrangement == 'right') {
-        value = 'flex-end';
-        additionalValues = {
-          'text-align': 'right'
-        };
-      }
-
-      return value != null && {
-        'justify-content': value,
-        ...additionalValues
-      };
-    },
-
-    alignItemsStyle() {
-      let alignment = this.$props.alignV || this.$attrs["align-items"];
-      let value = alignment;
-
-      if (alignment == 'top') {
-        value = 'flex-start';
-      } else if (alignment == 'bottom') {
-        value = 'flex-end';
-      }
-
-      return value != null && {
-        'align-items': value
-      };
-    }
-
-  }
-};
-
-/* script */
-const __vue_script__$1 = script$1;
-/* template */
-
-var __vue_render__$1 = function () {
-  var _vm = this;
-
-  var _h = _vm.$createElement;
-
-  var _c = _vm._self._c || _h;
-
-  return _c('div', _vm._g({
-    staticClass: "good-row",
-    style: Object.assign({}, _vm.$attrs, _vm.justifyContentStyle, _vm.alignItemsStyle, _vm.flexWrapStyle, _vm.shadowStyle),
-    attrs: {
-      "unique-add1e7fa": ""
-    }
-  }, this.$listeners), [_vm._t("default")], 2);
-};
-
-var __vue_staticRenderFns__$1 = [];
-/* style */
-
-const __vue_inject_styles__$1 = function (inject) {
-  if (!inject) return;
-  inject("data-v-7148b7bc_0", {
-    source: ".good-row[unique-add1e7fa]{flex-direction:row}[unique-add1e7fa]{display:flex;flex-direction:row;justify-content:center;align-items:center;flex-wrap:nowrap;margin:0}",
-    map: undefined,
-    media: undefined
-  });
-};
-/* scoped */
-
-
-const __vue_scope_id__$1 = undefined;
-/* module identifier */
-
-const __vue_module_identifier__$1 = undefined;
-/* functional template */
-
-const __vue_is_functional_template__$1 = false;
-/* style inject SSR */
-
-var Row = normalizeComponent_1({
-  render: __vue_render__$1,
-  staticRenderFns: __vue_staticRenderFns__$1
-}, __vue_inject_styles__$1, __vue_script__$1, __vue_scope_id__$1, __vue_is_functional_template__$1, __vue_module_identifier__$1, browser, undefined);
-
-//
-var script$2 = {
-  props: { ...component.props
-  },
-  computed: { ...component.computed
-  }
-};
-
-/* script */
-const __vue_script__$2 = script$2;
-/* template */
-
-var __vue_render__$2 = function () {
-  var _vm = this;
-
-  var _h = _vm.$createElement;
-
-  var _c = _vm._self._c || _h;
-
-  return _c('div', _vm._g({
-    staticClass: "good-container",
-    style: Object.assign({}, _vm.shadowStyle, _vm.$attrs),
-    attrs: {
-      "unique-a23421e7a": ""
-    }
-  }, this.$listeners), [_vm._t("default")], 2);
-};
-
-var __vue_staticRenderFns__$2 = [];
-/* style */
-
-const __vue_inject_styles__$2 = function (inject) {
-  if (!inject) return;
-  inject("data-v-1d9d60fa_0", {
-    source: ".good-container[unique-a23421e7a]{flex-direction:column}[unique-a23421e7a]{display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;flex-wrap:nowrap;margin:0}",
-    map: undefined,
-    media: undefined
-  });
-};
-/* scoped */
-
-
-const __vue_scope_id__$2 = undefined;
-/* module identifier */
-
-const __vue_module_identifier__$2 = undefined;
-/* functional template */
-
-const __vue_is_functional_template__$2 = false;
-/* style inject SSR */
-
-var Container = normalizeComponent_1({
-  render: __vue_render__$2,
-  staticRenderFns: __vue_staticRenderFns__$2
-}, __vue_inject_styles__$2, __vue_script__$2, __vue_scope_id__$2, __vue_is_functional_template__$2, __vue_module_identifier__$2, browser, undefined);
-
-let globalData;
-let setupGlobalData = (Vue, data) => {
-  globalData = data; // connect the data to every child component
-
-  Vue.mixin({
-    data: () => ({
-      $global: globalData
-    })
-  });
-};
-
-var index = {
-  setupGlobalData,
-
-  install(Vue, options) {
-    // Let's register our component globally
-    // https://vuejs.org/v2/guide/components-registration.html
-    Vue.component("column", Column);
-    Vue.component("row", Row);
-    Vue.component("container", Container);
-  }
-
-};
-
-module.exports = index;
-
-},{}],"src/plugins/good-vue-plugin.js":[function(require,module,exports) {
-"use strict";
-
-var _vue = _interopRequireDefault(require("vue"));
-
-var _goodVue = _interopRequireDefault(require("good-vue"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-_vue.default.use(_goodVue.default);
-},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","good-vue":"node_modules/good-vue/dist/index.js"}],"src/plugins/resolvables-plugin.js":[function(require,module,exports) {
+},{"vue":"node_modules/vue/dist/vue.runtime.esm.js","portal-vue":"node_modules/portal-vue/dist/portal-vue.common.js"}],"src/plugins/resolvables-plugin.js":[function(require,module,exports) {
 // api
 // resolvables:
 //     [resolvable].promise
@@ -37529,11 +37529,11 @@ _vue.default.use(_vuePlyr.default, {
 });
 },{"vue":"node_modules/vue/dist/vue.runtime.esm.js","vue-plyr":"node_modules/vue-plyr/dist/vue-plyr.esm.js","vue-plyr/dist/vue-plyr.css":"node_modules/vue-plyr/dist/vue-plyr.css"}],"src/plugins/*.js":[function(require,module,exports) {
 module.exports = {
-  "css-baseline-plugin": require("./css-baseline-plugin.js"),
   "child": require("./child.js"),
+  "css-baseline-plugin": require("./css-baseline-plugin.js"),
+  "good-vue-plugin": require("./good-vue-plugin.js"),
   "keen-ui-plugin": require("./keen-ui-plugin.js"),
   "portal-plugin": require("./portal-plugin.js"),
-  "good-vue-plugin": require("./good-vue-plugin.js"),
   "resolvables-plugin": require("./resolvables-plugin.js"),
   "root-hooks-plugin": require("./root-hooks-plugin.js"),
   "router-plugin": require("./router-plugin.js"),
@@ -37543,7 +37543,7 @@ module.exports = {
   "workers-plugin": require("./workers-plugin.js"),
   "youtube-player-plugin": require("./youtube-player-plugin.js")
 };
-},{"./css-baseline-plugin.js":"src/plugins/css-baseline-plugin.js","./child.js":"src/plugins/child.js","./keen-ui-plugin.js":"src/plugins/keen-ui-plugin.js","./portal-plugin.js":"src/plugins/portal-plugin.js","./good-vue-plugin.js":"src/plugins/good-vue-plugin.js","./resolvables-plugin.js":"src/plugins/resolvables-plugin.js","./root-hooks-plugin.js":"src/plugins/root-hooks-plugin.js","./router-plugin.js":"src/plugins/router-plugin.js","./vue-toasted-plugin.js":"src/plugins/vue-toasted-plugin.js","./window-listeners-plugin.js":"src/plugins/window-listeners-plugin.js","./without-watchers.js":"src/plugins/without-watchers.js","./workers-plugin.js":"src/plugins/workers-plugin.js","./youtube-player-plugin.js":"src/plugins/youtube-player-plugin.js"}],"node_modules/fuse.js/dist/fuse.esm.js":[function(require,module,exports) {
+},{"./child.js":"src/plugins/child.js","./css-baseline-plugin.js":"src/plugins/css-baseline-plugin.js","./good-vue-plugin.js":"src/plugins/good-vue-plugin.js","./keen-ui-plugin.js":"src/plugins/keen-ui-plugin.js","./portal-plugin.js":"src/plugins/portal-plugin.js","./resolvables-plugin.js":"src/plugins/resolvables-plugin.js","./root-hooks-plugin.js":"src/plugins/root-hooks-plugin.js","./router-plugin.js":"src/plugins/router-plugin.js","./vue-toasted-plugin.js":"src/plugins/vue-toasted-plugin.js","./window-listeners-plugin.js":"src/plugins/window-listeners-plugin.js","./without-watchers.js":"src/plugins/without-watchers.js","./workers-plugin.js":"src/plugins/workers-plugin.js","./youtube-player-plugin.js":"src/plugins/youtube-player-plugin.js"}],"node_modules/fuse.js/dist/fuse.esm.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -71233,7 +71233,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 const localVideoPrefix = "/videos/";
 
-const isLocalVideo = videoId => (0, _string.toString)(videoId).startsWith(localVideoPrefix);
+const isLocalVideo = videoId => (0, _string.toString)(videoId).replace(/\\videos\\/g, "/videos/").startsWith(localVideoPrefix);
 
 exports.isLocalVideo = isLocalVideo;
 
@@ -76657,7 +76657,7 @@ var _default = {
         };
       } else if (!this.notificationAlreadyShown) {
         this.notificationAlreadyShown = true;
-        this.$toasted.show(`It looks like that video id isn't valid\n(its not 11 characters)\nWould you like to try and load it anyways?`, {
+        this.$toasted.show(`I don't see that video\nWould you like to try and load it anyways?`, {
           keepOnHover: true,
           action: [{
             text: 'Load Anyways',
@@ -78424,6 +78424,7 @@ var _observation_tooling = require("../observation_tooling.js");
 //
 //
 //
+//
 var _default = {
   data: () => ({
     get
@@ -78527,15 +78528,27 @@ exports.default = _default;
                       eachVideoId +
                       "/mqdefault.jpg)",
                   position: "relative",
-                  "border-radius": "0.5rem"
+                  "border-radius": "0.5rem",
+                  overflow: "hidden"
                 }
               },
               [
+                _vm.isLocalVideo(eachVideoId)
+                  ? _c("video", {
+                      staticStyle: {
+                        width: "100%",
+                        "max-height": "16rem",
+                        "pointer-events": "none"
+                      },
+                      attrs: { src: eachVideoId }
+                    })
+                  : _vm._e(),
                 _c(
                   "span",
                   {
                     staticStyle: {
-                      "background-color": "rgba(0,0,0,0.10)",
+                      "background-color": "rgba(0,0,0,0.45)",
+                      color: "white",
                       position: "absolute",
                       bottom: "0.1rem",
                       left: "0.1rem",
@@ -80315,7 +80328,7 @@ exports.default = _default;
           color: "gray",
           icon: "live_help",
           raised: "raised",
-          tooltip: "Help with file upload",
+          tooltip: "Upload Format Requirements",
           tooltipPosition: "left"
         },
         on: { click: _vm.showHelp }
@@ -80449,71 +80462,6 @@ exports.default = _default;
                   )
                 ],
                 1
-              )
-            ],
-            1
-          )
-        ],
-        1
-      ),
-      _c(
-        "portal",
-        { attrs: { to: "modal-popups" } },
-        [
-          _c(
-            "ui-modal",
-            {
-              ref: "errorModal",
-              staticClass: "modal",
-              attrs: {
-                fj20485gh93oi53g: "fj20485gh93oi53g",
-                title: _vm.errorPreview,
-                transition: "scale-up"
-              }
-            },
-            [
-              _c(
-                "row",
-                { attrs: { width: "100%", "align-h": "space-between" } },
-                [
-                  _c(
-                    "ui-button",
-                    {
-                      staticClass: "cancel-button",
-                      style:
-                        "opacity: " +
-                        (_vm.uploadMessage && !_vm.uploadCanceled ? 1 : 0),
-                      attrs: { icon: "cancel" },
-                      on: { click: _vm.quitUpload }
-                    },
-                    [_vm._v("Cancel Upload")]
-                  ),
-                  _vm.latestUploadErrors().length > 0
-                    ? _c(
-                        "ui-button",
-                        {
-                          staticClass: "error-button",
-                          attrs: { icon: "sms_failed" },
-                          on: { click: _vm.downloadErrorLog }
-                        },
-                        [_vm._v("Download Error Log")]
-                      )
-                    : _vm._e()
-                ],
-                1
-              ),
-              _c("br"),
-              _c(
-                "code",
-                {
-                  staticStyle: {
-                    "max-width": "80vw",
-                    overflow: "auto",
-                    "white-space": "preserve",
-                    display: "flex"
-                  }
-                },
-                [_vm._v(_vm._s(_vm.latestUploadErrors()))]
               )
             ],
             1
@@ -81241,7 +81189,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60685" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61111" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

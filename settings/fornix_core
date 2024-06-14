@@ -53,6 +53,7 @@ __fornix_debug_message "    I found myself"
 # 
 __fornix_debug_message "    Establishing (possibly re-establishing) the three core env variables"
 export FORNIX_FOLDER="$(dirname "$(dirname "$path_to_file")")"
+export FORNIX_REAL_HOME="$HOME"
 export FORNIX_HOME="$FORNIX_FOLDER/settings/home/"
 export FORNIX_COMMANDS_FOLDER="$FORNIX_FOLDER/commands/"
 __fornix_debug_message "        FORNIX_FOLDER:          '$FORNIX_FOLDER'"

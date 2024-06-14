@@ -1,5 +1,5 @@
 {
-    "name": "ilvl",
+    "name": "ible",
     "version": "1.0.0",
     "description": "",
     "main": "src/Root.vue",
@@ -9,8 +9,12 @@
         "clean": "rm -rf .cache .parcel-cache docs/",
         "serve": "npx http-server ./docs/"
     },
+    "bin": {
+        "ible": "./main.js"
+    },
     "dependencies": {
-        "http-server": "^0.12.3"
+        "http-server": "^0.12.3",
+        "minimist": "^1.2.8"
     },
     "devDependencies": {
         "@vue/cli-plugin-babel": "^4.4.6",
