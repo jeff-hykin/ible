@@ -3,8 +3,9 @@
         span(v-if="videoResults.length == 0")
             | (No other videos matching this search)
         column.video-list-element(v-for="eachVideoId in videoResults" @click="selectVideo($event, eachVideoId)")
-            row.thumbnail(width="100%" height="100%" :background-image="isLocalVideo(eachVideoId) ? `url(/icon.png)` : `url(http://img.youtube.com/vi/${eachVideoId}/mqdefault.jpg)`" position="relative" border-radius="0.5rem")
-                span(style="background-color: rgba(0,0,0,0.10); position: absolute; bottom: 0.1rem; left: 0.1rem; padding: 0.5rem; border-radius: 0.5rem;")
+            row.thumbnail(width="100%" height="100%" :background-image="isLocalVideo(eachVideoId) ? `url(/icon.png)` : `url(http://img.youtube.com/vi/${eachVideoId}/mqdefault.jpg)`" position="relative" border-radius="0.5rem" overflow="hidden")
+                video(v-if="isLocalVideo(eachVideoId)" :src="eachVideoId" style="width: 100%;max-height: 16rem; pointer-events: none;")
+                span(style="background-color: rgba(0,0,0,0.45); color: white;position: absolute; bottom: 0.1rem; left: 0.1rem; padding: 0.5rem; border-radius: 0.5rem;")
                     | {{!isLocalVideo(eachVideoId)?"":`${getLocalVideoName(eachVideoId)}`}}
 </template>
 
