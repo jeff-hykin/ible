@@ -70,7 +70,7 @@ span
     color: black
     
 .video-list-container
-    overflow: scroll
+    overflow: auto
 
 .video-list-element
     height: 14rem 
