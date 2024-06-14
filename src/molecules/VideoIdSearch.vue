@@ -81,7 +81,7 @@ export default {
                 this.$root.routeData$ = {...this.$root.routeData$}
             } else if (!this.notificationAlreadyShown) {
                 this.notificationAlreadyShown = true
-                this.$toasted.show(`It looks like that video id isn't valid\n(its not 11 characters)\nWould you like to try and load it anyways?`, {
+                this.$toasted.show(`I don't see that video\nWould you like to try and load it anyways?`, {
                     keepOnHover:true,
                     action: [
                         {

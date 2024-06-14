@@ -3,7 +3,7 @@ import * as yaml from 'yaml'
 
 const localVideoPrefix = "/videos/"
 
-export const isLocalVideo = (videoId) => toString(videoId).startsWith(localVideoPrefix)
+export const isLocalVideo = (videoId) => toString(videoId).replace(/\\videos\\/g, "/videos/").startsWith(localVideoPrefix)
 export const getLocalVideoName = (videoId) => toString(videoId).slice(localVideoPrefix.length)
 export const createUuid = ()=>new Date().getTime() + `${Math.random()}`.slice(1)
 export const minSizeOfUnixTimestamp = 10
