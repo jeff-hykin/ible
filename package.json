@@ -1,6 +1,6 @@
 {
     "name": "ible",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "",
     "main": "src/Root.vue",
     "scripts": {
@@ -13,6 +13,7 @@
     "bin": {
         "ible": "./main.bundle.js"
     },
+    "type": "module",
     "dependencies": {
         "http-server": "14.1.1",
         "minimist": "1.2.8" 
