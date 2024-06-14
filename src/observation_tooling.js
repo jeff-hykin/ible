@@ -119,7 +119,7 @@ export const createDefaultObservationEntry = ()=>({
         
         return {
             startTime: observationData.startTime >= 0 && observationData.startTime <= observationData.endTime,
-            endTime: observationData.endTime > 0 && observationData.startTime <= observationData.endTime && (videoDuration?observationData.endTime <= videoDuration:true),
+            endTime: observationData.endTime >= 0 && observationData.startTime <= observationData.endTime && (videoDuration?observationData.endTime <= videoDuration:true),
             label: isValidName(observationData?.label),
             observer: isValidName(observationData?.observer),
             labelConfidence: labelConfidenceIsValid(observationData.labelConfidence),
