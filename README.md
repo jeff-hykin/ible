@@ -6,11 +6,10 @@ A tool for labeling segments of videos!
 
 - Prerequisite: know how to use a terminal
 - Install nodejs/npm
-- Download the code [zip file here](https://github.com/jeff-hykin/iilvd-online/archive/refs/heads/master.zip) (or better: `git clone https://github.com/jeff-hykin/iilvd-online`)
-- In a terminal, `cd` into the folder you downloaded
-- Run `npx http-server ./docs`
-- Put your videos in the `docs/videos/` folder
-- Open the url in your browser ([http://127.0.0.1:8080](http://127.0.0.1:8080))
+- `npm install --global ible`
+- `npx ible`
+- Put your videos in your home folder inside a videos folder (e.g. `$HOME/videos/`)
+- Open the url in your browser ([http://127.0.0.1:3000](http://127.0.0.1:3000))
 - Go to the search tab, and in the textbox type `/videos/name_of_your_video.mp4` and press enter
 - Create new annotations by clicking the "Add Observation" button!
 - See the [guide](https://github.com/jeff-hykin/iilvd-online/blob/master/iLab%20Database.pdf) for more info
