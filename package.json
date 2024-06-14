@@ -7,6 +7,7 @@
         "start": "npx parcel serve index.html --no-source-maps",
         "build": "rm -rf .cache .parcel-cache docs/*.js docs/*.css docs/*.html && npx parcel build index.html --out-dir docs --no-source-maps --no-minify --public-url './'",
         "clean": "rm -rf .cache .parcel-cache docs/",
+        "bundle": "deno bundle main.js > main.bundle.js",
         "serve": "npx http-server ./docs/"
     },
     "bin": {
