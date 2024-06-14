@@ -4,7 +4,7 @@
             color="gray"
             icon="live_help"
             raised
-            tooltip="Help with file upload"
+            tooltip="Upload Format Requirements"
             tooltipPosition="left"
             @click="showHelp"
         )
@@ -64,24 +64,24 @@
                             br
                             | The JSON file is just a list of each observation represented as a kind of dictionary.
         //- error message
-        portal(to="modal-popups")
-            ui-modal.modal(fj20485gh93oi53g ref="errorModal" :title="errorPreview" transition="scale-up")
-                    row(width="100%" align-h="space-between")
-                        ui-button.cancel-button(
-                            :style="`opacity: ${(uploadMessage && !uploadCanceled)?1:0}`"
-                            @click="quitUpload"
-                            icon="cancel"
-                        )
-                            | Cancel Upload
-                        ui-button.error-button(
-                            v-if="latestUploadErrors().length > 0"
-                            @click="downloadErrorLog"
-                            icon="sms_failed"
-                        )
-                            | Download Error Log
-                    br
-                    code(style="max-width: 80vw; overflow: auto; white-space: preserve; display: flex;")
-                        | {{latestUploadErrors()}}
+        //- portal(to="modal-popups")
+        //-     ui-modal.modal(fj20485gh93oi53g ref="errorModal" :title="errorPreview" transition="scale-up")
+        //-             row(width="100%" align-h="space-between")
+        //-                 ui-button.cancel-button(
+        //-                     :style="`opacity: ${(uploadMessage && !uploadCanceled)?1:0}`"
+        //-                     @click="quitUpload"
+        //-                     icon="cancel"
+        //-                 )
+        //-                     | Cancel Upload
+        //-                 ui-button.error-button(
+        //-                     v-if="latestUploadErrors().length > 0"
+        //-                     @click="downloadErrorLog"
+        //-                     icon="sms_failed"
+        //-                 )
+        //-                     | Download Error Log
+        //-             br
+        //-             code(style="max-width: 80vw; overflow: auto; white-space: preserve; display: flex;")
+        //-                 | {{latestUploadErrors()}}
     
 </template>
 <script>
