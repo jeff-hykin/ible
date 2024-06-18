@@ -7,7 +7,8 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import * as os from "node:os"
 import * as process from "node:process"
-import minimist from "./node_modules/minimist/index.js"
+import minimist from "npm:minimist"
+// import minimist from "./node_modules/minimist/index.js"
 
 import { FileSystem } from "https://deno.land/x/quickr@0.6.62/main/file_system.js"
 
@@ -48,7 +49,7 @@ const args = minimist(realArgs, {
 const hostname = args.hostname
 const port = args.port
 const baseDirectory = path.join(thisFolder, "docs")
-const videoDirectory = path.join(os.homedir(), "videos")
+const videoDirectory = FileSystem.makeAbsolutePath(path.join(os.homedir(), "videos"))
 
 //
 // setup the server
@@ -92,6 +93,7 @@ const mimeTypes = {
     ".ssa": "application/x-ssa",
     ".srt": "application/x-subrip",
 }
+const videoExtensions = Object.entries(mimeTypes).filter(([key, value]) => value.startsWith("video/")).map(([ext]) => ext.slice(1))
 
 const server = http.createServer((req, res) => {
     console.log(`Request for ${req.url} received.`)
@@ -103,6 +105,35 @@ const server = http.createServer((req, res) => {
         console.debug(`videoPath is:`,videoPath)
         if (fs.existsSync(videoPath)) {
             filePath = videoPath
+        }
+    } else if (req.url.startsWith("/backend/")) {
+        if (req.url.startsWith("/backend/list_videos/")) {
+            res.writeHead(200, { "Content-Type": "application/json" })
+            FileSystem.listFilePathsIn(
+                videoDirectory,
+                {
+                    recursively: true,
+                    shouldntInclude: (each)=>{
+                        const ending = each.split(".").slice(-1)[0]
+                        if (each.includes(".") && videoExtensions.includes(ending)) {
+                            return false
+                        }
+                        return true
+                    },
+                }
+            ).then(
+                (list)=>{
+                    console.log(`got a list of videos`)
+                    res.end(JSON.stringify(list.map(each=>each.slice(videoDirectory.length+1))), "utf-8")
+                }
+            ).catch(
+                (error)=>{
+                    res.writeHead(500)
+                    res.end(`Sorry, there was a problem getting the list of videos: ${error}\n\n${error.stack}`)
+                    res.end()
+                }
+            )
+            return
         }
     }
 
