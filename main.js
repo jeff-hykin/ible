@@ -17,7 +17,6 @@ const location1Info = await FileSystem.info(`${FileSystem.thisFolder}/package.js
 if (!location1Info.isFile) {
     thisFolder = `${FileSystem.thisFolder}/../ible`
 }
-const packageInfo = JSON.parse(FileSystem.sync.read(`${thisFolder}/package.json`))
 
 // Parse command-line arguments
 const realArgs = process.argv.slice(2)
@@ -33,7 +32,7 @@ Options:
 `)
     process.exit(0)
 } else if (realArgs[0] === "--version") {
-    console.log(`ible ${packageInfo.version}`)
+    console.log(`v1.0.8`)
     process.exit(0)
 }
 const args = minimist(realArgs, {

@@ -1,6 +1,6 @@
 {
     "name": "ible",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "description": "",
     "main": "src/Root.vue",
     "scripts": {
