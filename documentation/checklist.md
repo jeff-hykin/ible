@@ -13,6 +13,33 @@ Publication options:
     - public help thrust
     - hosted CMU
 
+Consider:
+- how to do markers
+    - `m` for instant marker
+- how to update the end-time of the segment
+    - if untouched, have it update with the video time
+    - enter to create
+    - enter again to save
+- how to handle video "done" for both labeling and verification
+- how to do CSV format (including escaping)
+
+Major Chonological Changes:
+- DONE: publish as npm package
+- get video ID's thing working
+- video centric data format as JSON
+    - upload
+    - download
+- display video speficic data
+- add settings modal
+    - username input box, goes directly
+    - if no username is set, ask for an email (modal popup)
+    - make observer non-editable in obsever view
+    - allow the username to be set from the URL
+        - remove it from the URL as soon as it gets set
+    - change username input somewhere other than on the observation, hide it from the editor view
+- CSV upload/download
+    - will I remove the format demonstration? (JSON)
+
 Say in paper:
 - "in an effort to reduce label noise" (citations) we
     - restrict labels to lowercase letters numbers and dashes
@@ -31,7 +58,6 @@ Small changes:
     - create backend endpoint for autocompleting videos names/paths
     - sidebar, filter videos by name (search box)
     - flatten the observation data structure
-    - give a notification for creating a new label (maybe on unfocus)
     - make createdAt an ID field, or make it not be a string (ensure its not rounded in excel)
     - have a "note" field
     - keyboard shortcut of "enter" to create a new observation, "enter" again to set the end time and select the label name
@@ -112,6 +138,7 @@ Big Changes:
 
 Future:
 - _
+    - give a notification for creating a new label (maybe on unfocus)
     - It beign an app
         - public health people
         - cognitive science
