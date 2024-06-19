@@ -1,13 +1,12 @@
 <template lang="pug">
     column.wrapper(:hide="!showFade")
-        column.search-positioner(@keydown="stopPropogation" @mouseenter="onHover" @mouseleave="restore")
-            Search(@goToVideo="restore")
+        column.search-positioner(@keydown="stopPropogation" @mouseenter="onHover" @mouseleave="hideSearchArea")
+            Search(@submit="hideSearchArea")
             TopButton(z-index="-1" background-color="slategray")
                 | Search
 </template>
 <script>
 export default {
-    props: [],
     components: {
         TopButton: require("../atoms/TopButton").default,
         Search: require("../organisms/Search").default,
@@ -26,7 +25,7 @@ export default {
         onHover(event) {
             this.showFade = true
         },
-        restore(event) {
+        hideSearchArea(event) {
             this.showFade = false
         }
     },

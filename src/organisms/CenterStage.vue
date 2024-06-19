@@ -9,39 +9,42 @@
     )
         WrappedTopSearch
         
-        column(v-if="!get({ keyList: ['routeData$', 'videoId'], from: $root, failValue: false })" width="100%" height="100vh" flex-shrink="1" color="gray")
+        column(v-if="!aVideoIsSelected()" width="100%" height="100vh" flex-shrink="1" color="gray")
             h5 No Video Selected
             
         transition(name="fade")
-            row.center-stage(v-show="get({ keyList: ['routeData$', 'videoId'], from: $root, failValue: false })" align-v="top" align-h="center" padding-top="8rem")
+            row.center-stage(v-show="aVideoIsSelected()" align-v="top" align-h="center" padding-top="8rem")
                 column.main-container(flex-grow=1 align-v="top")
-                    row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top" :opacity="get({ keyList: ['routeData$', 'videoId'], from: $root, failValue: false })? 1 : 0")
+                    row.below-video-search(flex-basis="100%" padding-top="1rem" align-v="top" :opacity="aVideoIsSelected()? 1 : 0")
                         //- Video area
                         column(align-v="top").video-width-sizer
                             row(width="96%" position="relative")
-                                VideoPlayer(ref="videoPlayer" v-model="videoData" :videoId="get({ keyList: ['routeData$', 'videoId'], from: $root, failValue: false })")
+                                VideoPlayer(
+                                    ref="videoPlayer"
+                                    :videoPathOrUrl="$root.videoInterface.videoPath"
+                                    @videoLoaded="$root.videoInterface.tellRootTheVideoHasLoaded"
+                                    @currentTimeChanged="updateCurrentTime"
+                                )
                             container.below-video
                                 //- BACK
                                 SideButton.left-side-button(left @click='wrapperForSelectPreviousSegment')
                                 //- segments
-                                SegmentDisplay(ref="segmentDisplay")
+                                SegmentDisplay(ref="segmentDisplay" :currentTime="currentTime")
                                 //- NEXT
                                 SideButton.right-side-button(right @click='wrapperForSelectNextSegment')
                 column.side-container(align-v="top" overflow="visible" min-height="50rem" width="fit-content")
                     ObservationEditor(
-                        :jumpSegment="jumpSegment"
-                        :currentTime="videoData.currentTime"
-                        :duration="videoData.duration"
+                        :jumpSegment="wrapperForJumpSegment"
+                        :currentTime="currentTime"
                     )
                     InfoSection.info-section(
-                        :labelName="get({ keyList: ['routeData$', 'labelName'], from: $root, failValue: '' })"
-                        :videoId="get({ keyList: ['routeData$', 'videoId'], from: $root, failValue: false })"
-                        :segmentUuid="get({ keyList: ['routeData$', 'segmentUuid'], from: $root, failValue: null })"
-                        :currentTime="videoData.currentTime"
+                        :labelName="activeData().labelName"
+                        :videoId="activeData().videoId"
+                        :segmentUuid="activeData().segmentUuid"
+                        :currentTime="currentTime"
                     )
 </template>
 <script>
-const { wrapIndex } = require('../utils')
 import { get } from "../object.js"
 
 export default {
@@ -57,36 +60,48 @@ export default {
         VideoLister: require("../organisms/VideoLister").default,
     },
     data: ()=>({
-        get,
-        videoData: {
-            duration: null,
-            currentTime: null,
-        },
+        // it is annoying to have a `this.currentTime` when
+        // the video core is inside of VideoPlayer
+        // and the videoInterface is $root.videoInterface
+        // the reason we have to keep this.currentTime
+        // is because the videoInterface is not tracked by Vue
+        // so even if we updated it (@currentTimeChanged)
+        // it wouldn't cause a re-render in downstream components
+        currentTime: null,
     }),
     mounted() {
-        window.centerStage = this
     },
     watch: {
-        "videoData.duration": function() {
-            window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
-        },
-        "videoData.currentTime": function(value, prevValue) {
-            let playing = !window.player?.paused
-            if (playing) {
-                let endTime = this.$root?.selectedSegment?.endTime||Infinity
-                if (value >= endTime && prevValue < endTime) {
-                    // pause video
-                    vuePlyr.player.pause()
-                    this.$toasted.show(`(End of Clip)`).goAway(2000)
-                }
-            }
-        },
     },
     rootHooks: {
     },
     windowListeners: {
     },
+    computed: {
+    },
     methods: {
+        get,
+        aVideoIsSelected() {
+            return this.$root.videoInterface.aVideoIsSelected
+        },
+        activeData() {
+            return {
+                labelName: this.$root.routeData$?.labelName||"",
+                videoId: this.$root.videoInterface.videoId||"",
+                segmentUuid: this.$root.routeData$?.segmentUuid||"",
+            }
+        },
+        getVideoPath() {
+            if ($root.videoInterface.aVideoIsSelected) {
+                return !$root.videoInterface.videoPath
+            }
+        },
+        updateCurrentTime(value) {
+            this.currentTime = value
+        },
+        wrapperForJumpSegment(...args) {
+            this.$refs.segmentDisplay.jumpSegment(...args)
+        },
         wrapperForSelectNextSegment() {
             return this.$refs.segmentDisplay.selectNextSegment()
         },

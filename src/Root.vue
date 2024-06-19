@@ -20,17 +20,14 @@ import plugins from "./plugins/*.js"
 import pages from "./pages/*.vue"
 import {getColor, deferredPromise} from "./utils.js"
 import { get, set } from "./object.js"
-
-// make lodash global because I like to live dangerously
-for (const [eachKey, eachValue] of Object.entries(require("lodash"))) { window[eachKey] = eachValue }
-
-let { frontendDb } = require("./iilvd-api")
+import * as videoTools from "./tooling/video_tooling.js"
+import { frontendDb } from "./iilvd-api.js"
+import { Router } from './plugins/router-plugin.js'
 
 //
 // Routing Init
 //
-import { Router } from './plugins/router-plugin'
-let prevRouteDataJson = "{}"
+let prevRouteDataJson = "null"
 // make sure home page exists
 if (!("Home" in pages)) {
     throw Error("Hey, this template expects there to be a 'Home.vue' page.\nIf you don't want one that's fine. Just change the router in the App.vue file so it doesn't expect/need one")
@@ -41,8 +38,7 @@ let RootComponent; setTimeout(()=>(new (Vue.extend(RootComponent))).$mount('#vue
 let untrackedData = {
     firstSearchLoad: true,
     usernameList: [],
-    prevVideoId: null,
-    videoLoadedCallbacks: new Set(),
+    videoIdToPath: {},
 }
 export default RootComponent = {
     name: 'RootComponent',
@@ -62,7 +58,7 @@ export default RootComponent = {
             {
                 name: "video",
                 path: '/video/*',
-                component: pages.Home.default
+                component: pages.Home.default,
             },
             // load up anything in the pages section
             ...Object.keys(pages).map(eachPageName=>({
@@ -80,7 +76,6 @@ export default RootComponent = {
     }),
     created() {
         window.$root = this // for debugging
-        window.Vue = Vue
         // get the labels ASAP
         this.retrieveLabels()
     },
@@ -91,19 +86,115 @@ export default RootComponent = {
         // 
         // calculate route
         // 
-        let initialRouteData = {
-            videoId: null,
-            labelName: null,
-            initWithHelp: false,
-        }
-        prevRouteDataJson = get({ keyList: ["query", "_"], from: this.$route, failValue: "{}" })
-        for (const [eachKey, eachValue] of Object.entries(JSON.parse(prevRouteDataJson))) {
-            if (eachValue != null) {
-                initialRouteData[eachKey] = eachValue
+            let initialRouteData = {
+                videoId: null,
+                labelName: null,
+                initWithHelp: false,
             }
-        }
+            prevRouteDataJson = get({ keyList: ["query", "_"], from: this.$route, failValue: "{}" })
+            for (const [eachKey, eachValue] of Object.entries(JSON.parse(prevRouteDataJson))) {
+                if (eachValue != null) {
+                    initialRouteData[eachKey] = eachValue
+                }
+            }
+        
+        // 
+        // setup video interface
+        // 
+        // NOTE: normally we would keep it modular, except that its connected to the router and tons of parent-elements
+        //       need to interact with it for global keyboard controls, segment rendering, etc
+        //       so we put it in here
+        // NOTE2: none of this stuff is intended to be reactive, there's just no good way to access it when its outside of $data
+            const runVideoCallbacks = async ()=>{
+                for (const eachCallback of [...this.videoInterface._videoLoadedPermanentCallbacks].concat([...this.videoInterface._videoLoadedTemporaryCallbacks])) {
+                    try {
+                        await eachCallback()
+                    } catch (error) {
+                        console.error(error.stack)
+                        console.error(`\n\nerror with callback from .wheneverVideoIsLoaded(func)`)
+                        console.error(error)
+                        console.error(`func is:\n${eachCallback.toString()}`)
+                    }
+                }
+            }
+            const $root = this
+            let promise = deferredPromise()
+            promise.then(runVideoCallbacks)
+            const videoInterface = {
+                _videoLoadedPromise: promise,
+                _videoLoadedPermanentCallbacks: new Set(),
+                _videoLoadedTemporaryCallbacks: new Set(),
+                _player: null,
+                // this gets triggered first/immediately
+                _videoInRouteHasChanged() {
+                    console.debug(`$root.routeData$.videoInfo is:`,$root.routeData$.videoInfo)
+                    // refresh the promise
+                    const promise = deferredPromise()
+                    promise.then(runVideoCallbacks)
+                    $root.videoInterface._videoLoadedPromise = promise
+                    $root.videoInterface._videoLoadedTemporaryCallbacks = new Set()
+                },
+                get aVideoIsSelected() {
+                    return !!$root.routeData$?.videoInfo?.path
+                },
+                get player() {
+                    return $root.videoInterface._player
+                },
+                get videoId() {
+                    return $root.routeData$?.videoInfo?.videoId
+                },
+                get videoPath() {
+                    return $root.routeData$?.videoInfo?.path
+                },
+                tellRootTheVideoHasLoaded(player) {
+                    $root.videoInterface._player = player
+                    return $root.videoInterface._videoLoadedPromise.resolve($root.videoInterface._player)
+                },
+                async goToThisVideo(videoInfo) {
+                    $root.videoInterface._player = null
+                    $root.videoInterface._videoLoadedTemporaryCallbacks = new Set()
+                    // 
+                    // add what we know to the videoInfo
+                    // 
+                    if (!!videoInfo?.videoId && typeof videoInfo?.videoId == "string") {
+                        let videoPath = untrackedData.videoIdToPath[videoInfo.videoId]
+                        const moreVideoInfo = await frontendDb.getVideoById(videoInfo.videoId)
+                        if (moreVideoInfo) {
+                            videoInfo = { videoPath, ...moreVideoInfo, ...videoInfo}
+                        }
+                    } else if (!!videoInfo?.path && typeof videoInfo?.path == "string") {
+                        const moreVideoInfo = await frontendDb.getVideoByPath(videoInfo.path)
+                        if (moreVideoInfo) {
+                            videoInfo = {...moreVideoInfo, ...videoInfo}
+                        }
+                    }
+                    return $root.push({ videoInfo })
+                },
+                onceVideoIsLoaded(callback) {
+                    $root.videoInterface._videoLoadedTemporaryCallbacks.add(callback)
+                    return $root.videoInterface._videoLoadedPromise
+                },
+                wheneverVideoIsLoaded(callback) {
+                    $root.videoInterface._videoLoadedPermanentCallbacks.add(callback)
+                },
+                getVideoPathNames() {
+                    return window.storageObject.videoPathNames
+                },
+                refreshLocalVideoData() {
+                    window.backend.getLocalVideoNames().then(names=>{
+                        untrackedData.videoIdToPath = Object.fromEntries(
+                            names.map(eachName=>[eachName, videoTools.extractLocalVideoId(eachName)])
+                        )
+                        window.storageObject.videoPathNames = names
+                    }).catch(error=>{})
+                },
+            }
+            setInterval(()=>{
+                this.videoInterface.refreshLocalVideoData()
+            }, 5000)
         
         return {
+            videoInterface,
             loadStart: (new Date()).getTime(),
             needToLoad$: {
             },
@@ -135,7 +226,6 @@ export default RootComponent = {
             videos: {},
             needToLoad$: {
             },
-            videoLoadedPromise: deferredPromise(),
         }
     },
     mounted() {
@@ -153,19 +243,26 @@ export default RootComponent = {
                     return
                 }
                 // then let the video be set each time new search results roll in
-                if (this.$root.routeData$.videoId == null) {
-                    if (!isEmpty(this.searchResults.videos)) {
-                        this.routeData$.videoId = Object.keys(this.searchResults.videos)[0]
-                        // Vue isn't detecting deep changes on routeData without this >:(
-                        this.$root.routeData$ = {...this.$root.routeData$}
-                    }
+                if (!this.$root.videoInterface.aVideoIsSelected && this.searchResults instanceof Array && this.searchResults.length > 0) {
+                    const videoIdOfFirstResult = Object.keys(this.$root.searchResults.videos)[0]
+                    this.$root.videoInterface.goToThisVideo({videoId: videoIdOfFirstResult})
                 }
             }
         },
         $route: {
             deep: true,
             handler() {
-                this.importDataFromUrl()
+                // 
+                // import data from url
+                // 
+                prevRouteDataJson = this.$route?.query?._ || "{}"
+                let newObject = {}
+                for (const [eachKey, eachValue] of Object.entries(JSON.parse(prevRouteDataJson))) {
+                    if (eachValue != null) {
+                        newObject[eachKey] = eachValue
+                    }
+                }
+                this.routeData$ = newObject
             }
         },
         routeData$: {
@@ -179,10 +276,18 @@ export default RootComponent = {
                     }
                 }
                 
+                // prevent navigating to the same location
+                const previousRouteData = JSON.parse(prevRouteDataJson)
+                const currentJson = JSON.stringify(routeDataNoNull)
+                if (prevRouteDataJson === currentJson) {
+                    return
+                }
+                prevRouteDataJson = currentJson
+                
                 // 
                 // select label
                 // 
-                if (isString(this.routeData$.labelName) && !isEmpty(this.routeData$.labelName)) {
+                if (typeof this.routeData$.labelName == 'string' && !!this.routeData$.labelName) {
                     // if label exists
                     let label = (this, [ "labels", this.routeData$.labelName ], null)
                     // make sure to toggle the label
@@ -191,16 +296,11 @@ export default RootComponent = {
                         this.labels = {...this.labels}
                     }
                 }
-            
-                // 
-                // select video
-                // 
-                this.setVideoObject()
                 
-                // prevent navigating to the same location
-                const currentJson = JSON.stringify(routeDataNoNull)
-                if (prevRouteDataJson === currentJson) {
-                    return
+                const videoIdChanged = JSON.stringify(previousRouteData?.videoInfo) !== JSON.stringify(JSON.parse(currentJson)?.videoInfo)
+                console.debug(`videoIdChanged is:`,videoIdChanged)
+                if (videoIdChanged) {
+                    this.videoInterface._videoInRouteHasChanged()
                 }
                 
                 // 
@@ -223,94 +323,17 @@ export default RootComponent = {
     computed: {
     },
     methods: {
-        getVideoId() {
-            const videoId = get({ keyList: ["routeData$", "videoId"], from: this, failValue: null })
-            if (typeof videoId != 'string' || videoId.length == 0) {
-                return null
-            }
-            return videoId
-        },
         getUsernameList() {
             untrackedData.usernameList = [... new Set(untrackedData.usernameList.concat(Object.keys(this.searchResults.observers)))]
             return untrackedData.usernameList
-        },
-        bigMessage(message) {
-            this.$toasted.show(`<pre style="max-width: 70vw; max-height: 50vh; overflow: auto; white-space: pre-wrap;">${escape(message)}<pre>`,{
-                closeOnSwipe: false,
-                action: {
-                    text:'Close',
-                    onClick: (e, toastObject)=>{toastObject.goAway(0)}
-                },
-            })
-        },
-        importDataFromUrl() {
-            prevRouteDataJson = get({ keyList: ["query", "_"], from: this.$route, failValue: "{}" })
-            let newObject = {}
-            for (const [eachKey, eachValue] of Object.entries(JSON.parse(prevRouteDataJson))) {
-                if (eachValue != null) {
-                    newObject[eachKey] = eachValue
-                }
-            }
-            this.routeData$ = newObject
-        },
-        // this gets triggered first/immediately
-        whenVideoIdChanges() {
-            // refresh the callback system
-            untrackedData.videoLoadedCallbacks = new Set()
-            this.$root.videoLoadedPromise = deferredPromise()
-        },
-        whenVideoIsLoaded(callback) {
-            // dont double-up callbacks
-            if (!untrackedData.videoLoadedCallbacks.has(callback)) {
-                untrackedData.videoLoadedCallbacks.add(callback)
-                this.$root.videoLoadedPromise.then(async ()=>{
-                    try {
-                        await callback()
-                    } catch (error) {
-                        console.error(error.stack)
-                        console.error(`\n\nerror with callback from .whenVideoIsLoaded(func)`)
-                        console.error(error)
-                        console.error(`func is:\n${func.toString()}`)
-                    }
-                })
-            }
-            return this.$root.videoLoadedPromise
-        },
-        setVideoObject() {
-            let videoId = get({ keyList: ["routeData$", "videoId"], from: this, failValue: null })
-            const videoHasChanged = untrackedData.prevVideoId != videoId
-            if (videoHasChanged) {
-                try {
-                    this.whenVideoIdChanges()
-                } catch (error) {
-                    console.error(`error with this.whenVideoIdChanges is:`,error)
-                }
-                untrackedData.prevVideoId = videoId
-            }
-            if (isString(videoId) && videoId.length > 0) {
-                this.$root.selectedVideo = this.$root.getCachedVideoObject(videoId)
-            } else {
-                this.$root.selectedVideo = {}
-            }
         },
         push(data) {
             this.pushChangeToHistory = true
             this.routeData$ = {...this.routeData$, ...data}
         },
-        getCachedVideoObject(id) {
-            // if video isn't cached
-            if (!(this.$root.videos[id] instanceof Object)) {
-                // then cache it
-                this.$root.videos[id] = {}
-            }
-            // ensure the id didn't get messed up
-            this.$root.videos[id].$id = id
-            // return the cached video
-            return this.$root.videos[id]
-        },
         getNamesOfSelectedLabels() {
             let labelNames = Object.entries(this.$root.labels).filter(([eachKey, eachValue])=>(eachValue.selected)).map(([eachKey, eachValue])=>(eachKey))
-            if (isEmpty(labelNames)) {
+            if (!labelNames || labelNames instanceof Array && labelNames.length == 0) {
                 return Object.keys(this.$root.labels)
             } else {
                 return labelNames

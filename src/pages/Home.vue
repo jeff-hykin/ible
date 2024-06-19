@@ -37,7 +37,6 @@ export default {
                 (await this.$child("uploadObservations", "helpModal")).open()
             })
         }
-        this.$root.setVideoObject()
     },
 }
 </script>

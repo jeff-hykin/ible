@@ -38,17 +38,17 @@ export class InvalidFormatError extends Error {
         return yaml.stringify(this.messages)
     }
 }
-export const createDefaultObservationEntry = ()=>({
+export const createDefaultObservationEntry = (currentTime)=>({
     observationId: createUuid(),
     type: "segment",
     videoId:            null,
-    startTime:          (window.player?.currentTime||0).toFixed(3)-0,
-    endTime:            ((window.player?.currentTime||0)+0.01).toFixed(3)-0,
-    observer:           storageObject.observer||"",
+    startTime:          (currentTime||0).toFixed(3)-0,
+    endTime:            ((currentTime||0)+0.01).toFixed(3)-0,
+    observer:           window.storageObject.observer||"",
     isHuman:            true,
     confirmedBySomeone: false,
     rejectedBySomeone:  false,
-    label:           storageObject.recentLabel || "example-label",
+    label:           window.storageObject.recentLabel || "example-label",
     labelConfidence: 0.95,
     spacialInfo:     {},
 })

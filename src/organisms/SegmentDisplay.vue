@@ -60,9 +60,9 @@
 </template>
 <script>
 import { set } from '../object.js'
-const { wrapIndex, storageObject, checkIf, deferredPromise, dynamicSort } = require("../utils.js")
-const { frontendDb } = require('../iilvd-api.js')
-const generalTimeoutFrequency = 50 // ms 
+import { wrapIndex, checkIf, deferredPromise, dynamicSort } from "../utils.js"
+import { frontendDb } from '../iilvd-api.js'
+const generalTimeoutFrequency = 50 // ms
 
 let untracked = {
     lastSeekFinished: deferredPromise(),
@@ -70,6 +70,7 @@ let untracked = {
 }
 export default {
     props: [
+        "currentTime",
     ],
     components: {
         SideButton: require("../atoms/SideButton").default,
@@ -83,7 +84,7 @@ export default {
     }),
     mounted() {
         window.SegmentDisplay = this
-        this.$root.whenVideoIsLoaded(this.updateSegments)
+        this.$root.videoInterface.wheneverVideoIsLoaded(this.updateSegments)
     },
     watch: {
     },
@@ -100,7 +101,7 @@ export default {
                         this.$root.selectedSegment = null
                     }
                 }
-                if (window.player?.duration) {
+                if (this.$root.videoInterface?.player?.duration) {
                     console.log(`[SegmentDisplay] labels changed, updating segments`)
                     this.updateSegments()
                 }
@@ -109,7 +110,7 @@ export default {
                 this.$root.selectedSegment = null
             },
             "selectedVideo.keySegments": function() {
-                if (window.player?.duration) {
+                if (this.$root.videoInterface?.player?.duration) {
                     console.log(`[SegmentDisplay] keySegments changed, updating segments`)
                     this.updateSegments()
                 }
@@ -162,7 +163,7 @@ export default {
         },
         async updateSegments(...args) {
             const originalVideoId = this.$root?.routeData$?.videoId
-            const duration = window.player?.duration
+            const duration = this.$root.videoInterface?.player?.duration
             if (originalVideoId) {
                 let keySegments
                 try {
@@ -184,7 +185,7 @@ export default {
                 
                 // if theres no duration then the visual segments can't be generated 
                 if (!duration) {
-                    console.log(`[SegmentDisplay] window.player.duration unavailable, cant update segments`)
+                    console.log(`[SegmentDisplay] videoInterface?.player?.duration unavailable, cant update segments`)
                     return
                 }
                 
@@ -311,7 +312,7 @@ export default {
                 return
             }
             
-            const videoId = this.$root.getVideoId()
+            const videoId = this.$root.videoInterface.videoId
             if (videoId == null) {
                 return
             }
@@ -320,8 +321,8 @@ export default {
             // set what should happen (latest action overwrites previous)
             // 
             
-            const seekAction = (player)=>{
-                player = window.player || player
+            const seekAction = ()=>{
+                player = this.$root.videoInterface?.player
                 try  {
                     const startTime = this.$root.selectedSegment.startTime
                     // console.debug(`[seekToSegmentStart] seeking to ${startTime}`)
@@ -345,8 +346,7 @@ export default {
             }
             
             // if the video is already loaded then just do the thing
-            if (this.$root.videoLoadedPromise.status != "pending") {
-                const player = await this.$root.videoLoadedPromise
+            if (this.$root.videoInterface.player) {
                 seekAction(player)
             // otherwise schedule the action
             } else {
@@ -355,27 +355,29 @@ export default {
                 untracked.singleActionAfterVideoLoaded[videoId] = seekAction
                 // if nothing is scheduled, then schedule something
                 if (!actionAlreadyScheduled) {
-                    this.$root.videoLoadedPromise.then(async (player)=>{
-                        try {
-                            const videoIdChanged = videoId != this.$root.getVideoId()
-                            if (!videoIdChanged) {
-                                try {
-                                    await untracked.singleActionAfterVideoLoaded[videoId](player)
-                                } catch (error) {
-                                    console.error(error.stack)
-                                    console.error(`[seekToSegmentStart] error with untracked.singleActionAfterVideoLoaded[videoId]():`)
-                                    console.error(error)
+                    this.$root.videoInterface.onceVideoIsLoaded(
+                        async (player)=>{
+                            try {
+                                const videoIdChanged = videoId != this.$root.videoInterface.videoId
+                                if (!videoIdChanged) {
+                                    try {
+                                        await untracked.singleActionAfterVideoLoaded[videoId](player)
+                                    } catch (error) {
+                                        console.error(error.stack)
+                                        console.error(`[seekToSegmentStart] error with untracked.singleActionAfterVideoLoaded[videoId]():`)
+                                        console.error(error)
+                                    }
                                 }
+                                untracked.singleActionAfterVideoLoaded[videoId] = null
+                            } catch (error) {
+                                console.error(error.stack)
+                                console.error(`[seekToSegmentStart] error with untracked.singleActionAfterVideoLoaded[videoId]():`)
+                                console.error(error)
                             }
-                            untracked.singleActionAfterVideoLoaded[videoId] = null
-                        } catch (error) {
-                            console.error(error.stack)
-                            console.error(`[seekToSegmentStart] error with untracked.singleActionAfterVideoLoaded[videoId]():`)
-                            console.error(error)
+                            // then resolve after the singular action is done
+                            untracked.lastSeekFinished.resolve()
                         }
-                        // then resolve after the singular action is done
-                        untracked.lastSeekFinished.resolve()
-                    })
+                    )
                 }
                 
                 // this promise is already scheduled to be fullfilled
@@ -426,7 +428,7 @@ export default {
                 console.debug(`this.closestSegment is:`,this.closestSegment)
                 console.debug(`this is:`,this)
                 window.SegmentDisplay = this
-                segment = this.closestSegment({time: window.player?.currentTime, forward: true})
+                segment = this.closestSegment({time: this.currentTime, forward: true})
                 if (segment) {
                     this.jumpSegment(segment.$displayIndex)
                 }
@@ -440,7 +442,7 @@ export default {
                 console.debug(`this.closestSegment is:`,this.closestSegment)
                 console.debug(`this is:`,this)
                 window.SegmentDisplay = this
-                segment = this.closestSegment({time: window.player?.currentTime, forward: false})
+                segment = this.closestSegment({time: this.currentTime, forward: false})
                 if (segment) {
                     this.jumpSegment(segment.$displayIndex)
                 }

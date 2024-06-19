@@ -9,7 +9,7 @@
                 :tooltip="`Delete all ${numberOfSearchResults||$root.searchResults.counts.total} search results`"
             )
                 | Delete All
-            VideoIdSearch(@goToVideo='goToVideo')
+            VideoIdSearch(@submit='searchWasSubmitted')
             ui-button.download-button(
                 @click="download"
                 icon="download"
@@ -111,8 +111,10 @@
             
 </template>
 <script>
-let { frontendDb } = require('../iilvd-api.js')
-let { colors, debounce, download, } = require("../utils.js")
+import { frontendDb } from '../iilvd-api.js'
+import { colors, debounce, download, } from "../utils.js"
+import { isNumber } from "lodash"
+
 let observationEntries
 export default {
     components: {
@@ -134,8 +136,8 @@ export default {
     computed: {
     },
     methods: {
-        goToVideo(data) {
-            this.$emit("goToVideo", data)
+        searchWasSubmitted(data) {
+            this.$emit("submit", data)
         },
         async download() {
             console.log(`download clicked`)

@@ -7,7 +7,6 @@
 </template>
 
 <script>
-const { wrapIndex } = require('../utils')
 const { openPanel } = require("../templates/RightSidePanel")
 
 export default {

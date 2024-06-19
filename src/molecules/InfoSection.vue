@@ -4,7 +4,7 @@
         br
         | Current Video ID: {{videoId}}
         br
-        | Pause Time: {{displayTime && displayTime.toFixed(2)}} sec
+        | Pause Time: {{(currentTime||0).toFixed(2)}} sec
         br
         | {{segmentUuid && `Selected Segment UUID:`}}
         span.uuid 
@@ -19,12 +19,8 @@ export default {
         "segmentUuid",
     ],
     data: ()=>({
-        displayTime: null,
     }),
     created() {
-        setInterval(() => {
-            this.displayTime = window.player?.currentTime
-        }, 100)
     },
     watch: {
     }

@@ -212,13 +212,12 @@
 <script>
 import { toKebabCase, toRepresentation } from '../string.js'
 import * as observationTooling from '../observation_tooling.js'
-let { frontendDb } = require('../iilvd-api.js')
-let { getColor, isValidName, storageObject } = require("../utils")
+import { frontendDb } from '../iilvd-api.js'
+import { getColor, isValidName, storageObject } from "../utils"
 
 export default {
     props: [
         "currentTime",
-        "duration",
         "jumpSegment",
     ],
     components: {
@@ -240,6 +239,7 @@ export default {
     mounted() {
         window.Editor = this // debugging
         this.resetData()
+        this.$root.videoInterface.wheneverVideoIsLoaded(this.wheneverVideoChanges)
     },
     computed: {
         uuidOfSelectedSegment: {
@@ -260,17 +260,12 @@ export default {
         isValid() {
             return observationTooling.quickLocalValidationCheck({
                 observationData: this.observationData,
-                videoDuration: window.player?.duration 
+                videoDuration: this.$root.videoInterface?.player?.duration,
             })
         },
     },
     rootHooks: {
         watch: {
-            "routeData$.videoId": function() {
-                if (this.editing) {
-                    this.resetData()
-                }
-            },
             // when the selected segment changes
             selectedSegment() {
                 let selectedSegment = this.$root.selectedSegment
@@ -302,8 +297,8 @@ export default {
                     return
                 }
             }
-            if (eventObj.key == "m") {
-                this.observationData.endTime = window.player?.currentTime.toFixed(3)
+            if (eventObj.key == "m" && this.currentTime != null) {
+                this.observationData.endTime = this.currentTime.toFixed(3)
             }
             if (eventObj.key == "s" && this.editing) {
                 this.onSaveEdit()
@@ -312,6 +307,11 @@ export default {
         }
     },
     methods: {
+        wheneverVideoChanges() {
+            if (this.editing) {
+                this.resetData()
+            }
+        },
         doShowOtherData() {
             this.showOtherData = true
         },
@@ -449,15 +449,15 @@ export default {
             this.editing = false
             this.dataCopy = {}
             this.observationData = this.observationEntryToData(
-                observationTooling.createDefaultObservationEntry()
+                observationTooling.createDefaultObservationEntry(this.currentTime)
             )
             this.observationData.videoId = this.$root.selectedVideo?.$id
         },
         setStartToCurrentTime() {
-            this.observationData.startTime = (window.player?.currentTime||0).toFixed(3)
+            this.observationData.startTime = (this.currentTime||0).toFixed(3)
         },
         setEndToCurrentTime() {
-            this.observationData.endTime = (window.player?.currentTime||0).toFixed(3)
+            this.observationData.endTime = (this.currentTime||0).toFixed(3)
         },
         observationEntryToData(observationEntry) {
             observationEntry = observationTooling.coerceObservation(observationEntry)

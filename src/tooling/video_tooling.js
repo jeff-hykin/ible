@@ -29,7 +29,7 @@ export const extractYoutubeVideoId = (url) => {
 }
 
 const minimumLocalIdSize = 11
-const extractLocalVideoId = (path) => {
+export const extractLocalVideoId = (path) => {
     let fileName = Path.basename(toString(path))
     if (!fileName.includes(".") || !endsWithVideoExtension(path) || fileName.split(".").length <= 2 || fileName.split(".").slice(-2)[0].length < minimumLocalIdSize) {
         return null
@@ -48,6 +48,20 @@ export function videoIdIsValid(videoId) {
     return false
 }
 
+/**
+ * searchTermToVideoInfo
+ *
+ * @example
+ *     console.log(
+ *        searchTermToVideoInfo("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+ *     )
+ *     // {
+ *     //     isYoutubeUrl: true,
+ *     //     hasProblem: false,
+ *     //     videoId: "dQw4w9WgXcQ",
+ *     //     path: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+ *     // }
+ */
 export const searchTermToVideoInfo = (searchTerm)=>{
     if (!searchTerm) {
         return null
@@ -58,7 +72,6 @@ export const searchTermToVideoInfo = (searchTerm)=>{
             isYoutubeUrl: true,
             videoId: extractYoutubeVideoId(searchTerm),
             path: searchTerm,
-            hasProblem: false,
         }
     } else {
         const localVideoId = extractLocalVideoId(searchTerm)
@@ -66,7 +79,6 @@ export const searchTermToVideoInfo = (searchTerm)=>{
             isYoutubeUrl: false,
             videoId: localVideoId,
             path: `/videos/${searchTerm}`,
-            hasProblem: !!localVideoId,
         }
     }
 }

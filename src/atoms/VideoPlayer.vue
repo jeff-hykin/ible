@@ -19,19 +19,13 @@
         
 </template>
 <script>
-import { extractYoutubeVideoId, isLocalVideo } from ".../tooling/video_tooling.js"
+import { extractYoutubeVideoId, isLocalVideo } from "../tooling/video_tooling.js"
 import { deferredPromise } from "../utils.js"
 import { get, set } from "../object.js"
 
-// tasks:
-    // remove this.player
-    // remove videoPathOrUrl_
-    // finish removing reference to $root
-    // remove window.resetPlayer = false
-
 export default {
     // emits:
-        // :newVideoStartedLoading
+        // :videoStartedLoading
         // :videoLoaded
         // :currentTimeChanged
     props: [
@@ -50,14 +44,14 @@ export default {
     },
     watch: {
         videoPathOrUrl() {
-            this.loadVideo()
+            this.internalLoadVideo()
         },
     },
     mounted() {
         this.intervalId = setInterval(this.onInterval, 100)
         
         window.VideoPlayer = this // debugging
-        this.loadVideo()
+        this.internalLoadVideo()
     },
     // allow things to dynamically hook into the updated event
     destroyed() {
@@ -80,7 +74,10 @@ export default {
         onInterval() {
             this.focusWatcher()
             // currentTime updater
-            const currentTime = this.player?.currentTime
+            let currentTime = this.player?.currentTime
+            if (currentTime != null) {
+                currentTime = currentTime-0
+            }
             if (this.player?.currentTime != this._previousCurrentTime) {
                 this._previousCurrentTime = currentTime
                 this.$emit("currentTimeChanged", currentTime)
@@ -103,9 +100,9 @@ export default {
             this._previousVideoPathOrUrl = null
             this.player = null
         },
-        loadVideo() {
+        internalLoadVideo() {
             // 
-            // newVideoStartedLoading event
+            // videoStartedLoading event
             // 
                 // if no change
                 if (this._previousVideoPathOrUrl == this.videoPathOrUrl) {
@@ -113,7 +110,7 @@ export default {
                 }
                 this._previousVideoPathOrUrl = this.videoPathOrUrl
                 this.resetData()
-                this.$emit("newVideoStartedLoading", this.videoPathOrUrl)
+                this.$emit("videoStartedLoading", this.videoPathOrUrl)
             
             
             // 
@@ -122,7 +119,7 @@ export default {
                 const videoPathOrUrl = this.videoPathOrUrl
                 const tryingToLoadNullVideo = !videoPathOrUrl
                 if (tryingToLoadNullVideo) {
-                    this.$emit("newVideoLoaded", null)
+                    this.$emit("videoLoaded", null)
                     return
                 }
             

@@ -1,8 +1,8 @@
 let { deferredPromise, asyncIteratorToList, getColor, dynamicSort } = require("./utils.js")
 let { get, set, remove } = require("./object.js")
 let { toKebabCase, toSnakeCase, toScreamingtoKebabCase, toScreamingtoSnakeCase } = require("./string.js")
-const { each, add } = require("lodash")
 const observationTooling = require("./observation_tooling.js")
+import { isNumber } from "lodash"
  
 // 
 // indexDB solution
@@ -720,7 +720,7 @@ const frontendDb = {
         return [...new Set(usernames)]
     },
     async getVideoTitle(videoId) {
-        return indexDb.get([videoId, "summary", "title"])
+        return indexDb.get([ "videos", videoId, "summary", "title"])
     },
     async getObservations({where=[], returnObject=false}) {
         return indexDb.select({from:"observations", where, returnObject})
@@ -728,12 +728,17 @@ const frontendDb = {
     async deleteObservation({uuidOfSelectedSegment}) {
         return indexDb.deletes([["observations", uuidOfSelectedSegment]])
     },
-    async getVideoIds() {
-        const videoIds = new Set()
-        for await (const [ key, each ] of indexDb.iter.observations) {
-            videoIds.add(each.videoId)
-        }
-        return [...videoIds]
+    async getVideoById(videoId) {
+        // TODO: clean this up after changing data structure
+        return indexDb.get(["videos", videoId, ])
+    },
+    async getVideoByPath(videoPath) {
+        return indexDb.select({
+            from:'videos',
+            where:[
+                { valueOf: ['path'], is: videoPath },
+            ],
+        })
     },
     summary: {
         async general(filterAndSort) {

@@ -2,7 +2,7 @@
     column.video-list-container(width="100%" padding="1rem" align-v="top")
         span(v-if="videoResults.length == 0")
             | (No other videos matching this search)
-        column.video-list-element(v-for="eachVideoId in videoResults" @click="selectVideo($event, eachVideoId)")
+        column.video-list-element(v-for="eachVideoId in videoResults" @click="$root.videoInterface.goToThisVideo({videoId:eachVideoId})")
             row.thumbnail(width="100%" height="100%" :background-image="isLocalVideo(eachVideoId) ? `url(/icon.png)` : `url(http://img.youtube.com/vi/${eachVideoId}/mqdefault.jpg)`" position="relative" border-radius="0.5rem" overflow="hidden")
                 video(v-if="isLocalVideo(eachVideoId)" :src="eachVideoId" style="width: 100%;max-height: 16rem; pointer-events: none;")
                 span(style="background-color: rgba(0,0,0,0.45); color: white;position: absolute; bottom: 0.1rem; left: 0.1rem; padding: 0.5rem; border-radius: 0.5rem;")
@@ -14,14 +14,16 @@ import { frontendDb } from '../iilvd-api.js'
 import { set } from '../object.js'
 import { isLocalVideo, getLocalVideoName } from '../observation_tooling.js'
 
+// TASKS:
+    // test clicking on video in video list
+
 export default {
     data: ()=>({
-        get
     }),
     computed: {
         videoResults() {
             let videos = this.$root.searchResults.videos
-            let selectedId = this.$root?.routeData$?.videoId
+            let selectedId = this.$root.videoInterface.videoId
             let filtered = Object.keys(videos).filter(each=>each!==selectedId)
             return filtered
         }
@@ -29,35 +31,6 @@ export default {
     methods: {
         isLocalVideo,
         getLocalVideoName,
-        getTitleFor(videoId) {
-            let videoObject = this.$root.getCachedVideoObject(videoId)
-            let title = videoObject&&videoObject.summary&&videoObject.summary.title
-            if (title === null) {
-                return "[Title not in database]"
-            }
-            if (title != undefined) {
-                return title
-            } else {
-                frontendDb.getVideoTitle(videoId).then((title)=>{
-                    console.log(`received title ${title}`)
-                    if (!(videoObject.summary instanceof Object)) {
-                        videoObject.summary = {}
-                    }
-                    videoObject.summary.title = title || null
-                    this.$forceUpdate()
-                })
-                return "Loading..."
-            }
-        },
-        selectVideo(eventObj, videoId) {
-            console.log(`clicked video ${videoId}`)
-            window.resetPlayer = true
-            this.$root.push({videoId})
-            // setTimeout(()=>{
-            //     window.location.reload()
-            // }, 50)
-            
-        },
     }
 }
 </script>
