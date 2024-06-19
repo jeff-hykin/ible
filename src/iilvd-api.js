@@ -1,4 +1,3 @@
-let Vue = require("vue").default
 let { deferredPromise, asyncIteratorToList, getColor, dynamicSort } = require("./utils.js")
 let { get, set, remove } = require("./object.js")
 let { toKebabCase, toSnakeCase, toScreamingtoKebabCase, toScreamingtoSnakeCase } = require("./string.js")
@@ -875,6 +874,11 @@ const frontendDb = {
 }
 window.frontendDb = frontendDb // debugging only
 
+window.backend = {
+    async getLocalVideoNames() {
+        return JSON.parse(await (await fetch("/backend/list_videos/")).text()) 
+    },
+}
 module.exports = {
     frontendDb,
 }

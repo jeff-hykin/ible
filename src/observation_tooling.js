@@ -5,11 +5,22 @@ import {
     localVideoPrefix,
     isLocalVideo,
     getLocalVideoName,
-    createUuid,
     minSizeOfUnixTimestamp,
     currentFixedSizeOfYouTubeVideoId,
-    minSizeOfLocalVideoId
+    minSizeOfLocalVideoId,
+    videoIdIsValid,
 } from './tooling/video_tooling.js'
+export {
+    localVideoPrefix,
+    isLocalVideo,
+    getLocalVideoName,
+    minSizeOfUnixTimestamp,
+    currentFixedSizeOfYouTubeVideoId,
+    minSizeOfLocalVideoId,
+    videoIdIsValid,
+} from './tooling/video_tooling.js'
+
+export const createUuid = ()=>new Date().getTime() + `${Math.random()}`.slice(1)
 
 const namePattern = /^[a-z0-9-.]+$/
 function isValidName(value) {
@@ -75,14 +86,6 @@ export const createDefaultObservationEntry = ()=>({
             return false
         }
         return true
-    }
-    export function videoIdIsValid(videoId) {
-        if (typeof videoId == "string") {
-            if (isLocalVideo(videoId) || videoId.length == currentFixedSizeOfYouTubeVideoId) {
-                return true
-            }
-        }
-        return false
     }
     export function labelConfidenceIsValid(labelConfidence) {
         if (Number.isFinite(labelConfidence)) {

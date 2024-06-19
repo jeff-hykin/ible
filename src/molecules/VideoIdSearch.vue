@@ -1,22 +1,23 @@
 <template lang="pug">
     //- search for video
-    ui-textbox.rounded-search(
+    ui-autocomplete.rounded-search(
         placeholder="Video name or YouTube URL"
         @focus="selectSearchText"
         @keydown.enter="videoSelect"
         @change="videoSelect"
         @paste="videoSelect"
         v-model="searchTerm"
+        :suggestions="suggestions"
     )
 </template>
 
 <script>
 import { frontendDb } from '../iilvd-api.js'
-import { isLocalVideo, currentFixedSizeOfYouTubeVideoId } from '../observation_tooling.js'
-const { storageObject } = require('../utils')
+import * as videoTooling from '../tooling/video_tooling.js'
+import { storageObject } from '../utils.js'
 
-// make sure cachedVideoIds exists as an Array
-storageObject.cachedVideoIds = storageObject.cachedVideoIds || []
+// make sure cachedVideoSearchTerms exists as an Array
+storageObject.cachedVideoSearchTerms = storageObject.cachedVideoSearchTerms || []
 
 export default {
     components: {
@@ -29,12 +30,26 @@ export default {
     }),
     mounted() {
         // add some default suggestions
-        this.suggestions = storageObject.cachedVideoIds
+        this.suggestions = storageObject.cachedVideoSearchTerms
+        backend.getLocalVideoNames().then(names=>{
+            this.suggestions = names
+            storageObject.cachedVideoSearchTerms = names
+        })
+        this.interval = setInterval(()=>{
+            backend.getLocalVideoNames().then(names=>{
+                this.suggestions = names
+                storageObject.cachedVideoSearchTerms = names
+            }).catch(error=>{})
+        }, 5000)
+    },
+    // unmount
+    beforeDestroy() {
+        clearInterval(this.interval)
     },
     watch: {
         suggestions(newValue) {
             // save video id suggestions to local storage
-            storageObject.cachedVideoIds = newValue
+            storageObject.cachedVideoSearchTerms = newValue
         },
         // when the search term changes
         async searchTerm(value) {
@@ -42,7 +57,7 @@ export default {
             // if no search term
             if (typeof value != 'string' || value.trim().length <= minNumberOfCharactersBeforeSearch) {
                 // load all suggestions from storage if search isn't long enough
-                this.suggestions = storageObject.cachedVideoIds
+                this.suggestions = storageObject.cachedVideoSearchTerms
             } else {
                 // add results from the database
                 let possibleVideoIds = await frontendDb.getVideoIds()
@@ -65,23 +80,15 @@ export default {
             return newVideoId
         },
         videoSelect() {
-            let newVideoId = this.searchTerm.trim()
-            // if search empty do nothing
-            if (newVideoId.length == 0) {
+            let videoSearchTerm = this.searchTerm.trim()
+            const videoInfo = videoTooling.searchTermToVideoInfo(videoSearchTerm)
+            if (!videoInfo) {
                 return
             }
-            newVideoId = this.extractVideoIdIfPossible(newVideoId)
             
-            if (newVideoId.length == currentFixedSizeOfYouTubeVideoId || isLocalVideo(newVideoId)) {
-                // pushing searched video route
-                this.$root.routeData$.videoId = newVideoId
-                // emit video event
-                this.$emit("goToVideo", newVideoId)
-                // sometimes the changes are not detected
-                this.$root.routeData$ = {...this.$root.routeData$}
-            } else if (!this.notificationAlreadyShown) {
-                this.notificationAlreadyShown = true
-                this.$toasted.show(`I don't see that video\nWould you like to try and load it anyways?`, {
+            if (videoInfo.hasProblem && !videoInfo.isYoutubeUrl) {
+                // FIXME
+                this.$toasted.show(`This video seems to be missing a video ID`, {
                     keepOnHover:true,
                     action: [
                         {
@@ -94,6 +101,13 @@ export default {
                         },
                     ]
                 })
+            } else {
+                // pushing searched video route
+                this.$root.routeData$.videoInfo = videoInfo
+                // emit video event
+                this.$emit("goToVideo")
+                // sometimes the changes are not detected
+                this.$root.routeData$ = {...this.$root.routeData$}
             }
         },
     }
@@ -110,4 +124,8 @@ export default {
     border-radius: 2rem
     height: fit-content
     box-shadow: var(--shadow-1)
+
+.ui-autocomplete-suggestion
+    min-height: 2rem
+    color: gray
 </style>

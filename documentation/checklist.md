@@ -26,6 +26,8 @@ Consider:
 Major Chonological Changes:
 - DONE: publish as npm package
 - get video ID's thing working
+    - TODO: finish switchging to `videoInfo` instead of `videoId`
+    - List videos in the sidebar
 - video centric data format as JSON
     - upload
     - download

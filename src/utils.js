@@ -119,7 +119,7 @@ export function readFileAsString(files) {
     return (new FileReader()).readAsText(files[0])
 }
 
-let colors = [ "#26c6da", "#e57373", "#ba68c8", "#04d895",  "#9575cd",  "#fec355", "#29b6f6", "#ff8a65", "#9ccc65", ]
+export let colors = [ "#26c6da", "#e57373", "#ba68c8", "#04d895",  "#9575cd",  "#fec355", "#29b6f6", "#ff8a65", "#9ccc65", ]
 colors.green  = "#04d895"
 colors.blue   = "#29b6f6"
 colors.purple = "#9575cd"

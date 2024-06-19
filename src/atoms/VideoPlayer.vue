@@ -7,7 +7,7 @@
             row.message(v-if='videoId && !player')
                 | Video Loading...
         video(v-if='isLocalVideo' ref="nativePlayer" controls style="width: 100%; z-index: 7;")
-           source(:src="videoId" type="video/mp4")
+           source(:src="`${$root.routeData$.videoInfo.path}`" type="video/mp4")
         //- vue-plyr(v-if='isLocalVideo' ref="vuePlyr1" :style="`transition: all ease 0.6s; opacity: ${videoId && player ? 1 : 0}`" :key="`${Math.random()}`.replace('.','')")
         vue-plyr(v-if='!isLocalVideo' ref="vuePlyr2" :style="`transition: all ease 0.6s; opacity: ${videoId && player ? 1 : 0}`" :key="`${Math.random()}`.replace('.','')")
             div.plyr__video-embed(v-if='!isLocalVideo')
