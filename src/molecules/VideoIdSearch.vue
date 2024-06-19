@@ -1,7 +1,7 @@
 <template lang="pug">
     //- search for video
     ui-textbox.rounded-search(
-        placeholder="Enter YouTube url or Video ID"
+        placeholder="Video name or YouTube URL"
         @focus="selectSearchText"
         @keydown.enter="videoSelect"
         @change="videoSelect"

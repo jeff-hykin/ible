@@ -135,7 +135,6 @@ export default {
     },
     methods: {
         goToVideo(data) {
-            console.log(`goToVideo event`)
             this.$emit("goToVideo", data)
         },
         async download() {
@@ -151,8 +150,8 @@ export default {
             let entries = observationEntries
             if (entries?.length == 0) {
                 for await (const [key, value] of frontendDb.iter.observations) {
-                    entries.push({ createdAt: key })
-                    entries.push({ createdAt: value.createdAt })
+                    entries.push({ observationId: key })
+                    entries.push({ observationId: value.observationId })
                 }
             }
             if (confirm(`Are you sure?\n\n    Ok = Delete ${entries.length} observations\n    Cancel = Keep Data`)) {
@@ -166,7 +165,7 @@ export default {
                 toastElement.innerHTML = `<div><br>${toastElement.innerHTML}<br><p>0 of ${entries.length}\n</p></div>`
                 let count = 0
                 for (const each of entries) {
-                    await frontendDb.deleteObservation({ uuidOfSelectedSegment: each.createdAt })
+                    await frontendDb.deleteObservation({ uuidOfSelectedSegment: each.observationId })
                     count++
                     toastElement.innerHTML = toastElement.innerHTML.replace(/<p>.+/,`<p>${count} of ${entries.length}`)
                 }
@@ -216,9 +215,9 @@ export default {
             //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
             observationEntries = await frontendDb.getObservations({where, returnObject: true})
             
-            // ensure the createdAt is the ID
+            // ensure the observationId is the ID
             for (const [key, value] of Object.entries(observationEntries)) {
-                value.createdAt = key
+                value.observationId = key
             }
             observationEntries = Object.values(observationEntries)
             this.numberOfSearchResults = observationEntries.length

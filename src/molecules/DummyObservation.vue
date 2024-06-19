@@ -42,7 +42,7 @@
             floating-label
             label="Id"
             tooltip="this needs to be unique! Use the unix epoch timestamp (milliseconds) + decimals of a random number"
-            v-model="observationData.createdAt"
+            v-model="observationData.observationId"
         )
 </template>
 <script>

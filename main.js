@@ -12,6 +12,8 @@ import minimist from "npm:minimist"
 
 import { FileSystem } from "https://deno.land/x/quickr@0.6.62/main/file_system.js"
 
+import { mimeTypes, videoExtensions } from "./src/utils.js"
+
 let thisFolder = FileSystem.thisFolder
 const location1 = `${FileSystem.thisFolder}/package.json`
 const location1Info = await FileSystem.info(`${FileSystem.thisFolder}/package.json`)
@@ -54,47 +56,6 @@ const videoDirectory = FileSystem.makeAbsolutePath(path.join(os.homedir(), "vide
 //
 // setup the server
 //
-const mimeTypes = {
-    ".html": "text/html",
-    ".js": "application/javascript",
-    ".css": "text/css",
-    ".json": "application/json",
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".gif": "image/gif",
-    ".wav": "audio/wav",
-    ".mp4": "video/mp4",
-    ".avi": "video/x-msvideo",
-    ".mov": "video/quicktime",
-    ".wmv": "video/x-ms-wmv",
-    ".flv": "video/x-flv",
-    ".webm": "video/webm",
-    ".ogg": "video/ogg",
-    ".mkv": "video/x-matroska",
-    ".3gp": "video/3gpp",
-    ".3g2": "video/3gpp2",
-    ".m4v": "video/x-m4v",
-    ".f4v": "video/mp4", // f4v is a variant of mp4
-    ".mng": "video/x-mng",
-    ".ts": "video/mp2t",
-    ".mpeg": "video/mpeg",
-    ".mpg": "video/mpeg",
-    ".mpe": "video/mpeg",
-    ".mpv": "video/mpv",
-    ".mxf": "application/mxf",
-    ".ogv": "video/ogg",
-    ".svi": "video/vnd.sealedmedia.softseal.mov",
-    ".3gp2": "video/3gpp2",
-    ".m2ts": "video/MP2T",
-    ".mts": "video/MP2T",
-    ".ttml": "application/ttml+xml",
-    ".xspf": "application/xspf+xml",
-    ".ass": "application/x-ass",
-    ".ssa": "application/x-ssa",
-    ".srt": "application/x-subrip",
-}
-const videoExtensions = Object.entries(mimeTypes).filter(([key, value]) => value.startsWith("video/")).map(([ext]) => ext.slice(1))
-
 const server = http.createServer((req, res) => {
     console.log(`Request for ${req.url} received.`)
     

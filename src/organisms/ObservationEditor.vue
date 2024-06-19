@@ -202,7 +202,7 @@
                                         floating-label
                                         label="Id"
                                         tooltip="This is based on 'Created At'"
-                                        v-model="observationData.createdAt"
+                                        v-model="observationData.observationId"
                                     )
                                     column(align-h="left" color="gray" width="100%" max-width="100%" overflow="auto")
                                         | customInfo
@@ -244,14 +244,14 @@ export default {
     computed: {
         uuidOfSelectedSegment: {
             get() {
-                return this.observationData.createdAt
+                return this.observationData.observationId
             },
             set(value) {
-                this.observationData.createdAt = value
+                this.observationData.observationId = value
             }
         },
         humanTime() {
-            return (new Date(this.observationData.createdAt-0)).toString()
+            return (new Date(this.observationData.observationId-0)).toString()
         },
         allValid() {
             // not("some of them are invalid")
@@ -447,7 +447,7 @@ export default {
         },
         observationDataToEntry(observationData) {
             return observationTooling.coerceObservation({
-                createdAt: observationData.createdAt,
+                observationId: observationData.observationId,
                 type: "segment",
                 videoId:            observationData.videoId,
                 startTime:          observationData.startTime,
@@ -467,7 +467,7 @@ export default {
         observationEntryToData(observationEntry) {
             observationEntry = observationTooling.coerceObservation(observationEntry)
             return {
-                createdAt:          observationEntry.createdAt,
+                observationId:          observationEntry.observationId,
                 videoId:            observationEntry.videoId,
                 startTime:          observationEntry.startTime,
                 endTime:            observationEntry.endTime,

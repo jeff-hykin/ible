@@ -17,7 +17,7 @@
     "type": "module",
     "dependencies": {
         "http-server": "14.1.1",
-        "minimist": "1.2.8" 
+        "minimist": "1.2.8"
     },
     "devDependencies": {
         "@vue/cli-plugin-babel": "^4.4.6",

@@ -1,14 +1,15 @@
 import { toString, toRepresentation } from "./string.js"
 import * as yaml from 'yaml'
 
-const localVideoPrefix = "/videos/"
-
-export const isLocalVideo = (videoId) => toString(videoId).replace(/\\videos\\/g, "/videos/").startsWith(localVideoPrefix)
-export const getLocalVideoName = (videoId) => toString(videoId).slice(localVideoPrefix.length)
-export const createUuid = ()=>new Date().getTime() + `${Math.random()}`.slice(1)
-export const minSizeOfUnixTimestamp = 10
-export const currentFixedSizeOfYouTubeVideoId = 11
-export const minSizeOfLocalVideoId = localVideoPrefix.length
+import {
+    localVideoPrefix,
+    isLocalVideo,
+    getLocalVideoName,
+    createUuid,
+    minSizeOfUnixTimestamp,
+    currentFixedSizeOfYouTubeVideoId,
+    minSizeOfLocalVideoId
+} from './tooling/video_tooling.js'
 
 const namePattern = /^[a-z0-9-.]+$/
 function isValidName(value) {
@@ -27,7 +28,7 @@ export class InvalidFormatError extends Error {
     }
 }
 export const createDefaultObservationEntry = ()=>({
-    createdAt: createUuid(),
+    observationId: createUuid(),
     type: "segment",
     videoId:            null,
     startTime:          (window.player?.currentTime||0).toFixed(3)-0,
@@ -54,23 +55,23 @@ export const createDefaultObservationEntry = ()=>({
     export function coerceObserver(observer) {
         return nameCoerce(observer)
     }
-    export function coerceCreatedAt(createdAt) {
-        if (typeof createdAt != 'string') {
-            const asString = toString(createdAt)
-            if (createdAtIsValid(asString)) {
-                createdAt = asString
+    export function coerceobservationId(observationId) {
+        if (typeof observationId != 'string') {
+            const asString = toString(observationId)
+            if (observationIdIsValid(asString)) {
+                observationId = asString
             } else {
-                createdAt = createUuid()
+                observationId = createUuid()
             }
         }
-        return createdAt
+        return observationId
     }
 
 // 
 // indvidual checks
 // 
-    export function createdAtIsValid(createdAt) {
-        if (typeof createdAt != "string" || createdAt.length < minSizeOfUnixTimestamp || !createdAt.match(/^\d+\.\d+$/)) {
+    export function observationIdIsValid(observationId) {
+        if (typeof observationId != "string" || observationId.length < minSizeOfUnixTimestamp || !observationId.match(/^\d+\.\d+$/)) {
             return false
         }
         return true
@@ -127,14 +128,14 @@ export const createDefaultObservationEntry = ()=>({
         }
     }
     /**
-     * guarentees createdAt will be correct and tries to help label, observer, startTime, endTime 
+     * guarentees observationId will be correct and tries to help label, observer, startTime, endTime 
      */
     export function coerceObservation(observationEntry) {
         observationEntry = {...observationEntry}
         // 
         // enforce unix timestamp (e.g. id)
         // 
-        observationEntry.createdAt = coerceCreatedAt(observationEntry.createdAt)
+        observationEntry.observationId = coerceobservationId(observationEntry.observationId)
         
         // 
         // enforce simplfied names
@@ -169,10 +170,10 @@ export const createDefaultObservationEntry = ()=>({
                 errorMessages.push(`An observationEntry must be an object, instead it was ${observationEntry == null ? `${observationEntry}` : typeof observationEntry}`)
             } else {
                 // 
-                // createdAt
+                // observationId
                 // 
-                if (typeof observationEntry.createdAt != "string" || observationEntry.createdAt.length < minSizeOfUnixTimestamp || !observationEntry.createdAt.match(/^\d+\.\d+$/)) {
-                    errorMessages.push(`observationEntry.createdAt: ${toRepresentation(observationEntry.createdAt)}\nAn observationEntry must have a "createdAt" property\n- it needs to be a string\n- the string needs to contain digits of a decimal number\n- the base digits need of a unix timestamp (milliseconds)\n- and the a decimal needs to be a random number`)
+                if (typeof observationEntry.observationId != "string" || observationEntry.observationId.length < minSizeOfUnixTimestamp || !observationEntry.observationId.match(/^\d+\.\d+$/)) {
+                    errorMessages.push(`observationEntry.observationId: ${toRepresentation(observationEntry.observationId)}\nAn observationEntry must have a "observationId" property\n- it needs to be a string\n- the string needs to contain digits of a decimal number\n- the base digits need of a unix timestamp (milliseconds)\n- and the a decimal needs to be a random number`)
                 }
 
                 // 

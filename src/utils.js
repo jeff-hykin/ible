@@ -1,6 +1,47 @@
-const { get, set } = require("./object.js")
+import { get, set } from "./object.js"
 
-class EventEmitter {
+export const mimeTypes = {
+    ".html": "text/html",
+    ".js": "application/javascript",
+    ".css": "text/css",
+    ".json": "application/json",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".gif": "image/gif",
+    ".wav": "audio/wav",
+    ".mp4": "video/mp4",
+    ".avi": "video/x-msvideo",
+    ".mov": "video/quicktime",
+    ".wmv": "video/x-ms-wmv",
+    ".flv": "video/x-flv",
+    ".webm": "video/webm",
+    ".ogg": "video/ogg",
+    ".mkv": "video/x-matroska",
+    ".3gp": "video/3gpp",
+    ".3g2": "video/3gpp2",
+    ".m4v": "video/x-m4v",
+    ".f4v": "video/mp4", // f4v is a variant of mp4
+    ".mng": "video/x-mng",
+    ".ts": "video/mp2t",
+    ".mpeg": "video/mpeg",
+    ".mpg": "video/mpeg",
+    ".mpe": "video/mpeg",
+    ".mpv": "video/mpv",
+    ".mxf": "application/mxf",
+    ".ogv": "video/ogg",
+    ".svi": "video/vnd.sealedmedia.softseal.mov",
+    ".3gp2": "video/3gpp2",
+    ".m2ts": "video/MP2T",
+    ".mts": "video/MP2T",
+    ".ttml": "application/ttml+xml",
+    ".xspf": "application/xspf+xml",
+    ".ass": "application/x-ass",
+    ".ssa": "application/x-ssa",
+    ".srt": "application/x-subrip",
+}
+export const videoExtensions = Object.entries(mimeTypes).filter(([key, value]) => value.startsWith("video/")).map(([ext]) => ext.slice(1))
+
+export class EventEmitter {
     constructor() {
         this._events = {}
     }
@@ -28,7 +69,7 @@ class EventEmitter {
     }
 }
 
-window.storageObject = new Proxy(window.localStorage, {
+export const storageObject = window.storageObject = new Proxy(window.localStorage, {
     get: function(target, key) {
         try {
             return JSON.parse(target.getItem(key))
@@ -51,7 +92,7 @@ window.storageObject = new Proxy(window.localStorage, {
     },
 })
 
-function debounce(func, wait, immediate) {
+export function debounce(func, wait, immediate) {
     var timeout
     return function(...args) {
         let context = this
@@ -70,7 +111,7 @@ function debounce(func, wait, immediate) {
     }
 }
 
-function readFileAsString(files) {
+export function readFileAsString(files) {
     if (files.length === 0) {
         console.log('No file is selected')
         return
@@ -85,7 +126,7 @@ colors.purple = "#9575cd"
 colors.red    = "#e57373"
 colors.yellow = "#fec355"
 let colorCopy = [...colors]
-function getColor(name) {
+export function getColor(name) {
     if (typeof name == "string") {
         let total = name.length
         for(let each in name) {
@@ -96,8 +137,8 @@ function getColor(name) {
     return colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())
 }
 
-const valueKey = Symbol("value")
-function Delayable() {
+export const valueKey = Symbol("value")
+export function Delayable() {
     // the infinite loop ("you're resolved after you've waited on yourself to be resolved" lol)
     this.promise = new Promise((resolve, reject)=>setTimeout(()=>this.promise.then(resolve).catch(reject), 0))
     // the "ready" switch, breaks the infinite loop
@@ -122,7 +163,7 @@ function Delayable() {
     }
 }
 
-function download(filename, text) {
+export function download(filename, text) {
     let element = document.createElement("a")
     element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(text))
     element.setAttribute("download", filename)
@@ -132,7 +173,7 @@ function download(filename, text) {
     document.body.removeChild(element)
 }
 
-function isValidName(value) {
+export function isValidName(value) {
     const namePattern = /^[a-z0-9-.]+$/
     if (typeof value == 'string') {
         return !!value.match(namePattern)
@@ -140,7 +181,7 @@ function isValidName(value) {
     return false
 }
 
-function humandReadableTime(milliseconds) {
+export function humandReadableTime(milliseconds) {
 
     function numberEnding (number) {
         return (number > 1) ? 's' : ''
@@ -171,7 +212,7 @@ function humandReadableTime(milliseconds) {
     return 'less than a second' //'just now' //or other string you like;
 }
 
-function deferredPromise() {
+export function deferredPromise() {
     let methods
     let state = "pending"
     const promise = new Promise((resolve, reject) => {
@@ -197,7 +238,7 @@ function deferredPromise() {
     return Object.assign(promise, methods)
 }
 
-async function asyncIteratorToList(asyncIterator) {
+export async function asyncIteratorToList(asyncIterator) {
     const results = []
     if (asyncIterator[Symbol.asyncIterator]) {
         asyncIterator = asyncIterator[Symbol.asyncIterator]()
@@ -208,14 +249,14 @@ async function asyncIteratorToList(asyncIterator) {
     return results
 }
 
-const quickHash = (str)=>{
+export const quickHash = (str)=>{
     let hash = 0, i = 0, len = str.length;
     while ( i < len ) {
         hash  = ((hash << 5) - hash + str.charCodeAt(i++)) << 0
     }
     return hash
 }
-const dynamicSort        = function (property, reverse=false) {
+export const dynamicSort        = function (property, reverse=false) {
     if (property instanceof Array) {
         if (reverse) {
             return (a,b) => {
@@ -262,7 +303,7 @@ const dynamicSort        = function (property, reverse=false) {
     }
 }
 
-const checkIf = ({ value, is }) => {
+export const checkIf = ({ value, is }) => {
     let typeOrClass = is 
     // 
     // Check typeOrClass
@@ -425,26 +466,9 @@ const checkIf = ({ value, is }) => {
     }
 }
 
-module.exports = {
-    EventEmitter,
-    storageObject,
-    readFileAsString,
-    colors,
-    getColor,
-    debounce,
-    Delayable,
-    download,
-    isValidName,
-    humandReadableTime,
-    deferredPromise,
-    asyncIteratorToList,
-    checkIf,
-    quickHash,
-    dynamicSort,
-    wrapIndex(val, list) {
-        if (val < 0) {
-            val = list.length + val
-        }
-        return val % list.length
-    },
+export function wrapIndex(val, list) {
+    if (val < 0) {
+        val = list.length + val
+    }
+    return val % list.length
 }

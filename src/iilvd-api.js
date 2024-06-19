@@ -525,7 +525,7 @@ const managers = {
             return managers.labels.regenerate(
                 existingValues,
                 {
-                    addressesToIgnore:oldObservationEntries.map(each=>["observations", each.createdAt]),
+                    addressesToIgnore:oldObservationEntries.map(each=>["observations", each.observationId]),
                     entriesToAssume: newObservationEntries,
                 },
             )
@@ -592,7 +592,7 @@ const managers = {
             return managers.labels.regenerate(
                 existingValues,
                 {
-                    addressesToIgnore:oldObservationEntries.map(each=>["observations", each.createdAt]),
+                    addressesToIgnore:oldObservationEntries.map(each=>["observations", each.observationId]),
                     entriesToAssume: newObservationEntries,
                 },
             )
@@ -651,7 +651,7 @@ const managers = {
             return managers.labels.regenerate(
                 existingValues,
                 {
-                    addressesToIgnore:oldObservationEntries.map(each=>["observations", each.createdAt]),
+                    addressesToIgnore:oldObservationEntries.map(each=>["observations", each.observationId]),
                     entriesToAssume: newObservationEntries,
                 },
             )
@@ -662,7 +662,7 @@ const managers = {
 const frontendDb = {
     async setObservations(observationEntries, {withCoersion=false}={}) {
         // observationEntries[0] = {
-        //     "createdAt": "1623456789.308420294042",
+        //     "observationId": "1623456789.308420294042",
         //     "type": "segment",
         //     "videoId": "FLK5-00l0r4",
         //     "startTime": 125.659,
@@ -690,7 +690,7 @@ const frontendDb = {
             throw new observationTooling.InvalidFormatError(errorMessagesPerObservation)
         }
     
-        const entryIds = observationEntries.map(({createdAt})=>["observations", createdAt])
+        const entryIds = observationEntries.map(({observationId})=>["observations", observationId])
         
         const newLabels    = managers.labels.regenerate(    {},{addressesToIgnore: entryIds, entriesToAssume: observationEntries,},)
         const newObservers = managers.observers.regenerate( {},{addressesToIgnore: entryIds, entriesToAssume: observationEntries,},)
@@ -701,7 +701,7 @@ const frontendDb = {
         // 
         return indexDb.puts([
             ...observationEntries.map(each=>[
-                ["observations", each.createdAt], each,
+                ["observations", each.observationId], each,
             ]),
             ...Object.entries(newLabels   ).map(([key, value])=>[   ["labels",    key],   value,   ]),
             ...Object.entries(newObservers).map(([key, value])=>[   ["observers", key],   value,   ]),

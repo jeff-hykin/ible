@@ -102,7 +102,7 @@ export default {
         errorPreview: "",
         latestUploadErrorsObject: {},
         dummyData1: {
-            "createdAt": new Date().getTime() + `${Math.random()}`.slice(1),
+            "observationId": new Date().getTime() + `${Math.random()}`.slice(1),
             "type": "segment",
             "videoId": "FLK5-00l0r4",
             "startTime": 125.659,
@@ -117,7 +117,7 @@ export default {
             "customInfo": {},
         },
         dummyData2: {
-            "createdAt": 1718116559422.8207249607261322,
+            "observationId": 1718116559422.8207249607261322,
             "videoId": "FLK5-00l0r4",
             "type": "segment",
             "startTime": 92.433,
@@ -255,9 +255,9 @@ export default {
                             messages = [error.message]
                         }
                         const isFirstErrorForObservation = !(this.latestUploadErrorsObject[whichFile][whichObservation] instanceof Array)
-                        const hasACreatedAtValue = !!value.createdAt
-                        if (isFirstErrorForObservation && hasACreatedAtValue) {
-                            messages = [ `The observation with: "createdAt": ${JSON.stringify(value.createdAt)}\n`, ...messages ]
+                        const hasAobservationIdValue = !!value.observationId
+                        if (isFirstErrorForObservation && hasAobservationIdValue) {
+                            messages = [ `The observation with: "observationId": ${JSON.stringify(value.observationId)}\n`, ...messages ]
                         }
                         this.latestUploadErrorsObject[whichFile][whichObservation] = [
                             ...(this.latestUploadErrorsObject[whichFile][whichObservation]||[]),
