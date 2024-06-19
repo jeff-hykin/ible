@@ -66,17 +66,6 @@ export default {
             console.log(`videoId for video player changed`)
             this.loadVideo()
         },
-        eventLine: {
-            deep: true,
-            handler() {
-                // schedule all the events
-                for (let each of this.eventLine) {
-                    this[each.function](...each.args)
-                    // remove each one
-                    this.eventLine.shift()
-                }
-            }
-        }
     },
     mounted() {
         window.VideoPlayer = this // debugging
