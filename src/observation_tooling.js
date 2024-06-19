@@ -131,21 +131,21 @@ export const createDefaultObservationEntry = ()=>({
      * guarentees observationId will be correct and tries to help label, observer, startTime, endTime 
      */
     export function coerceObservation(observationEntry) {
+        // doing this prevents/removes extraneous properties
         observationEntry = {
-            // doing this prevents/removes extraneous properties
-            observationId:      observationEntry.observationId,
-            type:               observationEntry.type,
-            videoId:            observationEntry.videoId,
-            startTime:          observationEntry.startTime,
-            endTime:            observationEntry.endTime,
-            observer:           observationEntry.observer,
-            isHuman:            observationEntry.isHuman,
-            confirmedBySomeone: observationEntry.confirmedBySomeone,
-            rejectedBySomeone:  observationEntry.rejectedBySomeone,
-            label:              observationEntry.label,
-            labelConfidence:    observationEntry.labelConfidence,
-            spacialInfo:        observationEntry.spacialInfo,
-            customInfo:         observationEntry.customInfo,
+            observationId:      observationEntry?.observationId,
+            type:               observationEntry?.type,
+            videoId:            observationEntry?.videoId,
+            startTime:          observationEntry?.startTime,
+            endTime:            observationEntry?.endTime,
+            observer:           observationEntry?.observer,
+            isHuman:            observationEntry?.isHuman,
+            confirmedBySomeone: observationEntry?.confirmedBySomeone,
+            rejectedBySomeone:  observationEntry?.rejectedBySomeone,
+            label:              observationEntry?.label,
+            labelConfidence:    observationEntry?.labelConfidence,
+            spacialInfo:        observationEntry?.spacialInfo,
+            customInfo:         observationEntry?.customInfo,
         }
         // 
         // enforce unix timestamp (e.g. id)
