@@ -17,7 +17,7 @@ export const endsWithVideoExtension = (videoPath) => {
     return videoPath.includes(".") && videoExtensions.includes(ending)
 }
 
-const extractYoutubeVideoId = (url) => {
+export const extractYoutubeVideoId = (url) => {
      try {
         if (newVideoId.match(/.*www\.youtube\.com/)) {
             return newVideoId.match(/.+(?:\?|&)v=(.{11})/)[1]
