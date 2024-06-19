@@ -109,11 +109,9 @@ export default {
             "endTime": 127.661,
             "observer": "CSCE636-Spring2021-WuAiSeDUdl-1",
             "isHuman": true,
-            "observation": {
-                "label": "happy",
-                "labelConfidence": -0.99,
-                "spacialInfo": {},
-            },
+            "label": "happy",
+            "labelConfidence": -0.99,
+            "spacialInfo": {},
             "customInfo": {},
         },
         dummyData2: {
@@ -126,11 +124,9 @@ export default {
             "isHuman": false,
             "confirmedBySomeone": false,
             "rejectedBySomeone": false,
-            "observation": {
-                "label": "sad",
-                "labelConfidence": 0.85,
-                "spacialInfo": {},
-            },
+            "label": "sad",
+            "labelConfidence": 0.85,
+            "spacialInfo": {},
             "customInfo": {},
         },
     }),
@@ -232,7 +228,7 @@ export default {
                     const fileIndexString = eventObject.length > 1? `File ${fileIndex} of ${eventObject.length}\n\n`:""
                     const timeRemainingString = timeRemaining?" (~ "+humandReadableTime(timeRemaining)+" remaining)":""
                     this.uploadMessage = `${fileIndexString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n`
-                    value.observation.label = toKebabCase(`${value.observation.label}`.toLowerCase())
+                    value.label = toKebabCase(`${value.label}`.toLowerCase())
                     try {
                         const frontendErrorMessages = observationTooling.validateObservations([value])[0]
                         if (frontendErrorMessages.length > 0) {

@@ -226,7 +226,7 @@ export default {
         UiSwitch: require("../atoms/UiSwitch").default,
     },
     data() {
-        const defaultObservationData = this.observationEntryToData(
+        const defaultObservationData = observationTooling.coerceObservation(
             observationTooling.createDefaultObservationEntry()
         )
         return {
@@ -276,7 +276,9 @@ export default {
                 let selectedSegment = this.$root.selectedSegment
                 console.log(`selectedSegment is:`,selectedSegment)
                 if (selectedSegment instanceof Object) {
-                    this.observationData = this.observationEntryToData(selectedSegment)
+                    this.observationData = observationTooling.coerceObservation(
+                        selectedSegment
+                    )
                 }
             },
             selectedVideo() {
@@ -367,16 +369,28 @@ export default {
                 return
             }
             
-            const observationEntry = observationTooling.coerceObservation(
-                this.observationDataToEntry(this.observationData)
+            const observationEntry = this.observationData = observationTooling.coerceObservation(
+                {
+                    observationId: this.observationData.observationId,
+                    type: "segment",
+                    videoId:            this.observationData.videoId,
+                    startTime:          this.observationData.startTime,
+                    endTime:            this.observationData.endTime,
+                    observer:           this.observationData.observer,
+                    isHuman:            this.observationData.isHuman,
+                    confirmedBySomeone: this.observationData.confirmedBySomeone,
+                    rejectedBySomeone:  this.observationData.rejectedBySomeone,
+                    label:           this.observationData.label,
+                    labelConfidence: this.observationData.labelConfidence,
+                    spacialInfo:     this.observationData.spacialInfo,
+                    customInfo: this.observationData.customInfo,
+                }
             )
-            // round trip to adopt any coersions
-            this.observationData = this.observationEntryToData(observationEntry)
             
             // 
             // update external things
             // 
-            this.$root.addLabel(observationEntry.observation.label, observationEntry.videoId)
+            this.$root.addLabel(observationEntry.label, observationEntry.videoId)
             const observationsForVideo = storageObject[this.observationData.videoId]||{}
             observationsForVideo[this.uuidOfSelectedSegment] = observationEntry
             storageObject[this.observationData.videoId] = observationsForVideo
@@ -445,29 +459,10 @@ export default {
         setEndToCurrentTime() {
             this.observationData.endTime = (window.player?.currentTime||0).toFixed(3)
         },
-        observationDataToEntry(observationData) {
-            return observationTooling.coerceObservation({
-                observationId: observationData.observationId,
-                type: "segment",
-                videoId:            observationData.videoId,
-                startTime:          observationData.startTime,
-                endTime:            observationData.endTime,
-                observer:           observationData.observer,
-                isHuman:            observationData.isHuman,
-                confirmedBySomeone: observationData.confirmedBySomeone,
-                rejectedBySomeone:  observationData.rejectedBySomeone,
-                observation: {
-                    label:           observationData.label,
-                    labelConfidence: observationData.labelConfidence,
-                    spacialInfo:     observationData.spacialInfo,
-                },
-                customInfo: observationData.customInfo,
-            })
-        },
         observationEntryToData(observationEntry) {
             observationEntry = observationTooling.coerceObservation(observationEntry)
             return {
-                observationId:          observationEntry.observationId,
+                observationId:      observationEntry.observationId,
                 videoId:            observationEntry.videoId,
                 startTime:          observationEntry.startTime,
                 endTime:            observationEntry.endTime,
@@ -476,9 +471,9 @@ export default {
                 confirmedBySomeone: observationEntry.confirmedBySomeone,
                 rejectedBySomeone:  observationEntry.rejectedBySomeone,
                 customInfo:         observationEntry.customInfo,
-                label:                  observationEntry.observation?.label,
-                labelConfidence:        observationEntry.observation?.labelConfidence,
-                spacialInfo:            observationEntry.observation?.spacialInfo||{},
+                label:              observationEntry.label,
+                labelConfidence:    observationEntry.labelConfidence,
+                spacialInfo:        observationEntry.spacialInfo||{},
             }
         }
     },

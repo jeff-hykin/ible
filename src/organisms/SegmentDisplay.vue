@@ -36,7 +36,7 @@
                     ui-tooltip(position="left" animation="fade")
                         column(align-h="left")
                             span
-                                | label: {{ eachSegment.observation.label }}
+                                | label: {{ eachSegment.label }}
                             span
                                 | length: {{  (eachSegment.endTime - eachSegment.startTime).toFixed(2) }} sec
                             span
@@ -124,7 +124,7 @@ export default {
     },
     methods: {
         theColor(eachSegment) {
-            return this.$root.labels[eachSegment?.observation?.label]?.color
+            return this.$root.labels[eachSegment.label]?.color
         },
         attemptSegmentSelection() {
             // select the first segment if no segment is selcted
@@ -215,7 +215,7 @@ export default {
             // only return segments that match the selected labels
             let namesOfSelectedLabels = this.$root.getNamesOfSelectedLabels()
             let displaySegments = (this.$root?.selectedVideo?.keySegments||[]).filter(
-                eachSegment=>(eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.observation.label) || namesOfSelectedLabels.length == 0)
+                eachSegment=>(eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.label) || namesOfSelectedLabels.length == 0)
             )
         
             // 2 percent of the width of the video

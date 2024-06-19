@@ -491,8 +491,8 @@ const managers = {
                     each=>each[1]
                 )
             const addEntry = (observationEntry)=>{
-                if (observationEntry.observation.label) {
-                    const labelName = observationEntry.observation.label
+                if (observationEntry.label) {
+                    const labelName = observationEntry.label
                     labels[labelName] = labels[labelName]||{}
                     labels[labelName].color = labels[labelName].color || getColor(labelName)
                     labels[labelName].count = (labels[labelName].count||0)+1
@@ -533,7 +533,7 @@ const managers = {
             existingTables.labels[newLabelName] = existingTables.labels[oldLabelName]
             delete existingTables.labels[oldLabelName]
             for (const [key, value] of Object.entries(existingTables.observations)) {
-                if (value.observation.label == oldLabelName) {
+                if (value.label == oldLabelName) {
                     value.observer = newLabelName
                 }
             }
@@ -557,7 +557,7 @@ const managers = {
             const addEntry = (observationEntry)=>{
                 if (observationEntry.observer) {
                     const videoId = observationEntry.videoId
-                    const label = observationEntry.observation.label
+                    const label = observationEntry.label
                     const observer = observationEntry.observer
                     observers[observer] = observers[observer]||{}
                     observers[observer].observationCount   = (observers[observer].observationCount||0)+1
@@ -623,7 +623,7 @@ const managers = {
             const addEntry = (observationEntry)=>{
                 if (observationEntry.videoId) {
                     const videoId = observationEntry.videoId
-                    const label = observationEntry.observation.label
+                    const label = observationEntry.label
                     videos[videoId] = videos[videoId]||{}
                     videos[videoId].count = (videos[videoId].count||0)+1
                     videos[videoId].observationsPerLabel = videos[videoId].observationsPerLabel||{}
@@ -668,10 +668,8 @@ const frontendDb = {
         //     "endTime": 127.661,
         //     "observer": "CSCE636-Spring2021-WuAiSeDUdl-1",
         //     "isHuman": true,
-        //     "observation": {
-        //         "label": "happy",
-        //         "labelConfidence": -0.99
-        //     },
+        //     "label": "happy",
+        //     "labelConfidence": -0.99,
         //     "customInfo": {},
         // }
 
@@ -745,9 +743,9 @@ const frontendDb = {
             // 
             // build the query
             // 
-            if (filterAndSort.labelName                            ) { where.push({ valueOf: ['observation', 'label'             ], is:                     filterAndSort.labelName         , }) }
-            if (isNumber(filterAndSort.maxlabelConfidence)         ) { where.push({ valueOf: ['observation', 'labelConfidence'   ], isLessThanOrEqualTo:    filterAndSort.maxlabelConfidence, }) }
-            if (isNumber(filterAndSort.minlabelConfidence)         ) { where.push({ valueOf: ['observation', 'labelConfidence'   ], isGreaterThanOrEqualTo: filterAndSort.minlabelConfidence, }) }
+            if (filterAndSort.labelName                            ) { where.push({ valueOf: ['label'                            ], is:                     filterAndSort.labelName         , }) }
+            if (isNumber(filterAndSort.maxlabelConfidence)         ) { where.push({ valueOf: ['labelConfidence'                  ], isLessThanOrEqualTo:    filterAndSort.maxlabelConfidence, }) }
+            if (isNumber(filterAndSort.minlabelConfidence)         ) { where.push({ valueOf: ['labelConfidence'                  ], isGreaterThanOrEqualTo: filterAndSort.minlabelConfidence, }) }
             if (filterAndSort.observer                             ) { where.push({ valueOf: ['observer'                         ], is:                     filterAndSort.observer          , }) }
             if (filterAndSort.kindOfObserver == "Only Humans"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     true                          , }) }
             if (filterAndSort.kindOfObserver == "Only Robots"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     false                         , }) }
@@ -789,7 +787,7 @@ const frontendDb = {
             })
             for (const each of items) {
                 // filters 
-                if ((each.observation.labelConfidence < min) || (each.observation.labelConfidence > max)) { continue }
+                if ((each.labelConfidence < min) || (each.labelConfidence > max)) { continue }
                 if (hideUnchecked && (!each.confirmedBySomeone && !each.rejectedBySomeone)) { continue }
                 if (hideDisagreement && (each.confirmedBySomeone && each.rejectedBySomeone)) { continue }
                 
@@ -802,8 +800,8 @@ const frontendDb = {
                 results.observers[each.observer] += 1
                 
                 // count observations for labels
-                if (!results.labels[each.observation.label]) { results.labels[each.observation.label] = 0 }
-                results.labels[each.observation.label] += 1
+                if (!results.labels[each.label]) { results.labels[each.label] = 0 }
+                results.labels[each.label] += 1
                 
                 // count observations for videos
                 if (!results.videos[each.videoId]) { results.videos[each.videoId] = 0 }
@@ -838,17 +836,15 @@ const frontendDb = {
             let videosWithLabels = new Set()
             for await (const [ key, eachObservationEntry ] of indexDb.iter.observations) {
                 videosWithLabels.add(eachObservationEntry.videoId)
-                if (eachObservationEntry.observation instanceof Object) {
-                    // init
-                    if (!Object.hasOwn(results, eachObservationEntry.observation.label)) {
-                        results[eachObservationEntry.observation.label] = {}
-                        results[eachObservationEntry.observation.label].videos = {[eachObservationEntry.videoId]: 1}
-                        results[eachObservationEntry.observation.label].segmentCount = 1
-                    // update
-                    } else {
-                        results[eachObservationEntry.observation.label].videos[eachObservationEntry.videoId] += 1
-                        results[eachObservationEntry.observation.label].segmentCount += 1
-                    }
+                // init
+                if (!Object.hasOwn(results, eachObservationEntry.label)) {
+                    results[eachObservationEntry.label] = {}
+                    results[eachObservationEntry.label].videos = {[eachObservationEntry.videoId]: 1}
+                    results[eachObservationEntry.label].segmentCount = 1
+                // update
+                } else {
+                    results[eachObservationEntry.label].videos[eachObservationEntry.videoId] += 1
+                    results[eachObservationEntry.label].segmentCount += 1
                 }
             }
             

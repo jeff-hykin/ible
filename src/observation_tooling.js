@@ -48,12 +48,9 @@ export const createDefaultObservationEntry = ()=>({
     isHuman:            true,
     confirmedBySomeone: false,
     rejectedBySomeone:  false,
-    observation: {
-        label:           storageObject.recentLabel || "example-label",
-        labelConfidence: 0.95,
-        spacialInfo:     {},
-    },
-    customInfo: {},
+    label:           storageObject.recentLabel || "example-label",
+    labelConfidence: 0.95,
+    spacialInfo:     {},
 })
 
 // 
@@ -134,7 +131,22 @@ export const createDefaultObservationEntry = ()=>({
      * guarentees observationId will be correct and tries to help label, observer, startTime, endTime 
      */
     export function coerceObservation(observationEntry) {
-        observationEntry = {...observationEntry}
+        observationEntry = {
+            // doing this prevents/removes extraneous properties
+            observationId:      observationEntry.observationId,
+            type:               observationEntry.type,
+            videoId:            observationEntry.videoId,
+            startTime:          observationEntry.startTime,
+            endTime:            observationEntry.endTime,
+            observer:           observationEntry.observer,
+            isHuman:            observationEntry.isHuman,
+            confirmedBySomeone: observationEntry.confirmedBySomeone,
+            rejectedBySomeone:  observationEntry.rejectedBySomeone,
+            label:              observationEntry.label,
+            labelConfidence:    observationEntry.labelConfidence,
+            spacialInfo:        observationEntry.spacialInfo,
+            customInfo:         observationEntry.customInfo,
+        }
         // 
         // enforce unix timestamp (e.g. id)
         // 
@@ -144,17 +156,14 @@ export const createDefaultObservationEntry = ()=>({
         // enforce simplfied names
         // 
         observationEntry.observer = coerceObserver(observationEntry.observer)
-        if (!(observationEntry.observation instanceof Object)) {
-            observationEntry.observation = {}
-        }
-        observationEntry.observation.label = coerceLabel(observationEntry.observation.label)
+        observationEntry.label = coerceLabel(observationEntry.label)
 
         // 
         // enforce numeric start/endTimes 
         // 
         observationEntry.startTime -= 0
         observationEntry.endTime   -= 0
-        observationEntry.observation.labelConfidence -= 0
+        observationEntry.labelConfidence -= 0
 
         // help customInfo show up
         observationEntry.customInfo = observationEntry.customInfo||{}
@@ -211,24 +220,17 @@ export const createDefaultObservationEntry = ()=>({
                 }
 
                 // 
-                // observation
-                // 
-                if (!(observationEntry.observation instanceof Object) ) {
-                    errorMessages.push(`observationEntry.observation: ${toRepresentation(observationEntry.observation)}\nAn observationEntry must have a "observation" property\n- it needs to be an object`)
-                }
-
-                // 
                 // label
                 // 
-                if (!labelIsValid(observationEntry?.observation?.label)) {
-                    errorMessages.push(`observationEntry.observation.label: ${toRepresentation(observationEntry.observation.label)}\nAn observationEntry must have a "observation": { "label":  }\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`)
+                if (!labelIsValid(observationEntry.label)) {
+                    errorMessages.push(`observationEntry.label: ${toRepresentation(observationEntry.label)}\nAn observationEntry must have a "label" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`)
                 }
                 
                 // 
                 // confidence
                 // 
-                if (!labelConfidenceIsValid(observationEntry?.observation?.labelConfidence)) {
-                    errorMessages.push(`observationEntry.observation.labelConfidence: ${toRepresentation(observationEntry.observation.label)}\nAn observationEntry must have a "observation": { "labelConfidence": }\n- it needs to be a number\n- it needs to be between 1 and -1 (inclusive)`)
+                if (!labelConfidenceIsValid(observationEntry.labelConfidence)) {
+                    errorMessages.push(`observationEntry.labelConfidence: ${toRepresentation(observationEntry.labelConfidence)}\nAn observationEntry must have a "labelConfidence" property\n- it needs to be a number\n- it needs to be between 1 and -1 (inclusive)`)
                 }
                 
                 // 

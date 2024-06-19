@@ -13,13 +13,13 @@
         ui-textbox(
             floating-label
             label="Label"
-            :invalid="!isValidName(observationData.observation.label)"
-            v-model="observationData.observation.label"
+            :invalid="!isValidName(observationData.label)"
+            v-model="observationData.label"
         )
         ui-textbox(
             floating-label
             label="Label Confidence"
-            v-model="observationData.observation.labelConfidence"
+            v-model="observationData.labelConfidence"
         )
         ui-textbox(
             floating-label

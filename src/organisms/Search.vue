@@ -199,9 +199,9 @@ export default {
             // 
             // build the search query
             // 
-            if (this.$root.routeData$.labelName                               ) { where.push({ valueOf: ['observation', 'label'             ], is:                     this.$root.routeData$.labelName            , }) }
-            if (isNumber(this.$root.filterAndSort.maxlabelConfidence)         ) { where.push({ valueOf: ['observation', 'labelConfidence'   ], isLessThanOrEqualTo:    this.$root.filterAndSort.maxlabelConfidence, }) }
-            if (isNumber(this.$root.filterAndSort.minlabelConfidence)         ) { where.push({ valueOf: ['observation', 'labelConfidence'   ], isGreaterThanOrEqualTo: this.$root.filterAndSort.minlabelConfidence, }) }
+            if (this.$root.routeData$.labelName                               ) { where.push({ valueOf: ['label'                            ], is:                     this.$root.routeData$.labelName            , }) }
+            if (isNumber(this.$root.filterAndSort.maxlabelConfidence)         ) { where.push({ valueOf: ['labelConfidence'                  ], isLessThanOrEqualTo:    this.$root.filterAndSort.maxlabelConfidence, }) }
+            if (isNumber(this.$root.filterAndSort.minlabelConfidence)         ) { where.push({ valueOf: ['labelConfidence'                  ], isGreaterThanOrEqualTo: this.$root.filterAndSort.minlabelConfidence, }) }
             if (this.$root.filterAndSort.observer                             ) { where.push({ valueOf: ['observer'                         ], is:                     this.$root.filterAndSort.observer          , }) }
             if (this.$root.filterAndSort.kindOfObserver == "Only Humans"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     true                          , }) }
             if (this.$root.filterAndSort.kindOfObserver == "Only Robots"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     false                         , }) }
