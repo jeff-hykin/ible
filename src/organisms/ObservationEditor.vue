@@ -424,7 +424,7 @@ export default {
             if (!thereWasAnError) {
                 this.editing = false
                 this.$toasted.show(`Changes saved`).goAway(2500)
-                this.$root.selectedSegment = observationEntry
+                this.deSelectSegment()
                 this.$root.retrieveLabels()
                 
                 window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))

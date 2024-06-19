@@ -70,7 +70,6 @@ let untracked = {
 }
 export default {
     props: [
-        "videoDuration",
     ],
     components: {
         SideButton: require("../atoms/SideButton").default,
@@ -120,19 +119,46 @@ export default {
     windowListeners: {
         "SegmentDisplay-updateSegments": function(...args) {
             this.updateSegments(...args)
+        },
+        keydown(eventObject) {
+            if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get({ keyList: ["path"], from: eventObject, failValue: [] }).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
+                // 
+                // key controls
+                // 
+                switch (eventObject.key) {
+                    case "ArrowRight":
+                        if (eventObject.ctrlKey) {
+                            console.log(`going to next clip`)
+                            eventObject.preventDefault()
+                            this.selectNextSegment()
+                        }
+                        break
+                    case "ArrowLeft":
+                        if (eventObject.ctrlKey) {
+                            console.log(`going to previous clip`)
+                            eventObject.preventDefault()
+                            this.selectPreviousSegment()
+                        }
+                        break
+                    // case "ArrowUp":
+                    //     if (eventObject.ctrlKey) {
+                    //         eventObject.preventDefault()
+                    //         // TODO: go to previous video in video list
+                    //     }
+                    //     break
+                    // case "ArrowDown":
+                    //     if (eventObject.ctrlKey) {
+                    //         eventObject.preventDefault()
+                    //         // TODO: go to next video in video list
+                    //     }
+                    //     break
+                }
+            }
         }
     },
     methods: {
         theColor(eachSegment) {
             return this.$root.labels[eachSegment.label]?.color
-        },
-        attemptSegmentSelection() {
-            // select the first segment if no segment is selcted
-            try {
-                if (!this.$root.selectedSegment) {
-                    this.$root.selectedSegment = this.segmentsInfo.organizedSegments[0]
-                }
-            } catch (err) {}
         },
         async updateSegments(...args) {
             const originalVideoId = this.$root?.routeData$?.videoId
@@ -171,7 +197,6 @@ export default {
                 }
             }
             this.visuallyReorganizeSegments()
-            this.attemptSegmentSelection()
         },
         processNewSegments({duration, keySegments}) {
             // element needs to be shown as at least __ % of the video width
@@ -355,6 +380,70 @@ export default {
                 
                 // this promise is already scheduled to be fullfilled
                 return untracked.lastSeekFinished
+            }
+        },
+        closestSegment({time, forward=true}) {
+            if (this.segmentsInfo.organizedSegments.length == 0) {
+                return null
+            } else {
+                let finalIndex = 0
+                if (forward) {
+                    let runningIndex = -1
+                    for (const each of this.segmentsInfo.organizedSegments) {
+                        runningIndex += 1
+                        if (each.startTime > time) {
+                            finalIndex = runningIndex
+                            break
+                        }
+                    }
+                } else {
+                    let finalIndex = 0
+                    let runningIndex = -1
+                    const segmentsBackwards = [...this.segmentsInfo.organizedSegments]
+                    // first one is largest number of seconds
+                    segmentsBackwards.sort((a,b)=>b.endTime-a.endTime)
+                    for (const each of segmentsBackwards) {
+                        runningIndex += 1
+                        if (each.endTime < time) {
+                            finalIndex = runningIndex
+                            break
+                        }
+                    }
+                    // because reversed:
+                    // 0 => last (length-1)
+                    // 1 => second to last (length-2)
+                    finalIndex = segmentsBackwards.length-(finalIndex+1)
+                }
+                console.debug(`finalIndex is:`,finalIndex)
+                return this.segmentsInfo.organizedSegments[finalIndex]
+            }
+        },
+        selectNextSegment() {
+            let segment = this.$root.selectedSegment
+            if (segment) {
+                this.jumpSegment(segment.$displayIndex+1)
+            } else {
+                console.debug(`this.closestSegment is:`,this.closestSegment)
+                console.debug(`this is:`,this)
+                window.SegmentDisplay = this
+                segment = this.closestSegment({time: window.player?.currentTime, forward: true})
+                if (segment) {
+                    this.jumpSegment(segment.$displayIndex)
+                }
+            }
+        },
+        selectPreviousSegment() {
+            let segment = this.$root.selectedSegment
+            if (segment) {
+                this.jumpSegment(segment.$displayIndex-1)
+            } else {
+                console.debug(`this.closestSegment is:`,this.closestSegment)
+                console.debug(`this is:`,this)
+                window.SegmentDisplay = this
+                segment = this.closestSegment({time: window.player?.currentTime, forward: false})
+                if (segment) {
+                    this.jumpSegment(segment.$displayIndex)
+                }
             }
         },
         async jumpSegment(newIndex) {

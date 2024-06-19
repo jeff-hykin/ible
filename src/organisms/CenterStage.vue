@@ -22,11 +22,11 @@
                                 VideoPlayer(ref="videoPlayer" v-model="videoData" :videoId="get({ keyList: ['routeData$', 'videoId'], from: $root, failValue: false })")
                             container.below-video
                                 //- BACK
-                                SideButton.left-side-button(left @click='decrementIndex')
+                                SideButton.left-side-button(left @click='wrapperForSelectPreviousSegment')
                                 //- segments
-                                SegmentDisplay(:jumpSegment="jumpSegment" :videoDuration="videoData.duration")
+                                SegmentDisplay(ref="segmentDisplay")
                                 //- NEXT
-                                SideButton.right-side-button(right @click='incrementIndex')
+                                SideButton.right-side-button(right @click='wrapperForSelectNextSegment')
                 column.side-container(align-v="top" overflow="visible" min-height="50rem" width="fit-content")
                     ObservationEditor(
                         :jumpSegment="jumpSegment"
@@ -83,104 +83,15 @@ export default {
         },
     },
     rootHooks: {
-        watch: {
-            selectedSegment() {
-            },
-        }
     },
     windowListeners: {
-        keydown(eventObject) {
-            if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get({ keyList: ["path"], from: eventObject, failValue: [] }).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
-                // 
-                // key controls
-                // 
-                switch (eventObject.key) {
-                    case "ArrowRight":
-                        if (eventObject.ctrlKey) {
-                            console.log(`going to next clip`)
-                            eventObject.preventDefault()
-                            this.incrementIndex()
-                        }
-                        break
-                    case "ArrowLeft":
-                        if (eventObject.ctrlKey) {
-                            console.log(`going to previous clip`)
-                            eventObject.preventDefault()
-                            this.decrementIndex()
-                        }
-                        break
-                    // case "ArrowUp":
-                    //     if (eventObject.ctrlKey) {
-                    //         eventObject.preventDefault()
-                    //         // TODO: go to previous video in video list
-                    //     }
-                    //     break
-                    // case "ArrowDown":
-                    //     if (eventObject.ctrlKey) {
-                    //         eventObject.preventDefault()
-                    //         // TODO: go to next video in video list
-                    //     }
-                    //     break
-                }
-            }
-        }
     },
     methods: {
-        closestSegment({time, forward=true}) {
-            if (window.SegmentDisplay.$data.segmentsInfo.organizedSegments.length == 0) {
-                return null
-            } else {
-                let finalIndex = 0
-                if (forward) {
-                    let runningIndex = 0
-                    for (const each of window.SegmentDisplay.$data.segmentsInfo.organizedSegments) {
-                        runningIndex += 1
-                        if (each.startTime > time) {
-                            finalIndex = runningIndex
-                            break
-                        }
-                    }
-                } else {
-                    let finalIndex = 0
-                    let runningIndex = 0
-                    const segmentsBackwards = [...window.SegmentDisplay.$data.segmentsInfo.organizedSegments]
-                    // first one is largest number of seconds
-                    segmentsBackwards.sort((a,b)=>b.endTime-a.endTime)
-                    for (const each of segmentsBackwards) {
-                        runningIndex += 1
-                        if (each.endTime < time) {
-                            finalIndex = runningIndex
-                            break
-                        }
-                    }
-                    // because reversed:
-                    // 0 => last (length-1)
-                    // 1 => second to last (length-2)
-                    finalIndex = segmentsBackwards.length-(finalIndex+1)
-                }
-                return window.SegmentDisplay.$data.segmentsInfo.organizedSegments[finalIndex]
-            }
+        wrapperForSelectNextSegment() {
+            return this.$refs.segmentDisplay.selectNextSegment()
         },
-        incrementIndex() {
-            let segment = this.$root.selectedSegment
-            if (!segment) {
-                segment = this.closestSegment({time: window.player?.currentTime, forward: true})
-            }
-            if (segment) {
-                this.jumpSegment(segment.$displayIndex+1)
-            }
-        },
-        decrementIndex() {
-            let segment = this.$root.selectedSegment
-            if (!segment) {
-                segment = this.closestSegment({time: window.player?.currentTime, forward: false})
-            }
-            if (segment) {
-                this.jumpSegment(segment.$displayIndex-1)
-            }
-        },
-        async jumpSegment(newIndex) {
-            window.SegmentDisplay.jumpSegment(newIndex)
+        wrapperForSelectPreviousSegment() {
+            return this.$refs.segmentDisplay.selectPreviousSegment()
         },
     }
 }
