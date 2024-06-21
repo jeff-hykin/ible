@@ -367,36 +367,27 @@ export default {
             if (this.segmentsInfo.organizedSegments.length == 0) {
                 return null
             } else {
-                let finalIndex = 0
+                let segment = null
                 if (forward) {
                     let runningIndex = -1
                     for (const each of this.segmentsInfo.organizedSegments) {
-                        runningIndex += 1
                         if (each.startTime > time) {
-                            finalIndex = runningIndex
+                            segment = each
                             break
                         }
                     }
                 } else {
-                    let finalIndex = 0
-                    let runningIndex = -1
                     const segmentsBackwards = [...this.segmentsInfo.organizedSegments]
                     // first one is largest number of seconds
-                    segmentsBackwards.sort((a,b)=>b.endTime-a.endTime)
+                    segmentsBackwards.sort((a,b)=>a.endTime-b.endTime).sort((a,b)=>b.startTime-a.startTime)
                     for (const each of segmentsBackwards) {
-                        runningIndex += 1
-                        if (each.endTime < time) {
-                            finalIndex = runningIndex
+                        if (each.startTime < time) {
+                            segment = each
                             break
                         }
                     }
-                    // because reversed:
-                    // 0 => last (length-1)
-                    // 1 => second to last (length-2)
-                    finalIndex = segmentsBackwards.length-(finalIndex+1)
                 }
-                console.debug(`finalIndex is:`,finalIndex)
-                return this.segmentsInfo.organizedSegments[finalIndex]
+                return segment
             }
         },
         selectNextSegment() {
