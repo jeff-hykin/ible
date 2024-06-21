@@ -27,7 +27,10 @@ Major Chonological Changes:
 - DONE: publish as npm package
 - get video ID's thing working
     - TODO: finish switchging to `videoInfo` instead of `videoId`
+    - figure out why segments are not showing up
     - List videos in the sidebar
+    - create error response for missing the videoId but having a valid videoPath
+- enable null
 - video centric data format as JSON
     - upload
     - download
