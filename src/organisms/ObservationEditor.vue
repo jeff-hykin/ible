@@ -391,9 +391,6 @@ export default {
             // update external things
             // 
             this.$root.addLabel(observationEntry.label, observationEntry.videoId)
-            const observationsForVideo = storageObject[this.observationData.videoId]||{}
-            observationsForVideo[this.uuidOfSelectedSegment] = observationEntry
-            storageObject[this.observationData.videoId] = observationsForVideo
             
             // 
             // send request to database
