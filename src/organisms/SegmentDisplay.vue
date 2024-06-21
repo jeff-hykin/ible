@@ -162,7 +162,7 @@ export default {
             return this.$root.labels[eachSegment.label]?.color
         },
         async updateSegments(...args) {
-            const originalVideoId = this.$root?.routeData$?.videoId
+            const originalVideoId = this.$root.videoInterface.videoId
             const duration = this.$root.videoInterface?.player?.duration
             if (originalVideoId) {
                 let keySegments
@@ -190,7 +190,7 @@ export default {
                 }
                 
                 // check then assign
-                if (originalVideoId == this.$root?.routeData$?.videoId) {
+                if (originalVideoId == this.$root.videoInterface.videoId) {
                     this.$withoutWatchers("SegmentDisplay-retrieveFromBackend", ()=>{
                         this.$root.selectedVideo.keySegments = this.processNewSegments({ duration, keySegments })
                     })
