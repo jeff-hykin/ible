@@ -278,8 +278,7 @@ export default {
                         return
                     }
                 }
-                
-                window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
+                this.$root.videoInterface.updateKeySegments()
                 this.$toasted.show(`Upload Finished`, {
                     closeOnSwipe: false,
                     action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },

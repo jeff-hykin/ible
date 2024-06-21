@@ -125,14 +125,19 @@ export default RootComponent = {
                 _videoLoadedPermanentCallbacks: new Set(),
                 _videoLoadedTemporaryCallbacks: new Set(),
                 _player: null,
+                keySegments: [],
+                keySegmentsPromise: Promise.resolve([]),
                 // this gets triggered first/immediately
                 _videoInRouteHasChanged() {
-                    console.debug(`$root.routeData$.videoInfo is:`,$root.routeData$.videoInfo)
+                    console.debug(`$root.routeData$.videoInfo is:`,{...$root.routeData$.videoInfo})
                     // refresh the promise
                     const promise = deferredPromise()
                     promise.then(runVideoCallbacks)
                     $root.videoInterface._videoLoadedPromise = promise
                     $root.videoInterface._videoLoadedTemporaryCallbacks = new Set()
+                    const currentVideoId = $root.videoInterface.videoId
+                    // get the segments for the current video
+                    $root.videoInterface.updateKeySegments()
                 },
                 get aVideoIsSelected() {
                     return !!$root.routeData$?.videoInfo?.path
@@ -148,7 +153,32 @@ export default RootComponent = {
                 },
                 tellRootTheVideoHasLoaded(player) {
                     $root.videoInterface._player = player
+                    // if there's no duration then wait for it to load
+                    if (!$root.videoInterface?.player?.duration) {
+                        console.warn(`[Root] tellRootTheVideoHasLoaded was called too early. It should only be called once the video player has a duration`)
+                        return new Promise((resolve, reject)=>{
+                            setTimeout(()=>{
+                                console.log(`waiting for duration to load`)
+                                resolve($root.videoInterface._videoInRouteHasChanged())
+                            },100)
+                        })
+                    }
                     return $root.videoInterface._videoLoadedPromise.resolve($root.videoInterface._player)
+                },
+                updateKeySegments() {
+                    const currentVideoId = $root.videoInterface.videoId
+                    $root.videoInterface.keySegmentsPromise = frontendDb.getObservations({
+                        where:[
+                            { valueOf: ['videoId'], is: currentVideoId },
+                        ],
+                        returnObject: false,
+                    }).then(keySegments=>{
+                        const videoIdChanged = currentVideoId != $root.videoInterface.videoId
+                        if (videoIdChanged) {
+                            return
+                        }
+                        $root.videoInterface.keySegments = keySegments
+                    })
                 },
                 async goToThisVideo(videoInfo) {
                     $root.videoInterface._player = null
@@ -160,7 +190,7 @@ export default RootComponent = {
                         let videoPath = untrackedData.videoIdToPath[videoInfo.videoId]
                         const moreVideoInfo = await frontendDb.getVideoById(videoInfo.videoId)
                         if (moreVideoInfo) {
-                            videoInfo = { videoPath, ...moreVideoInfo, ...videoInfo}
+                            videoInfo = { path: videoPath, ...moreVideoInfo, ...videoInfo}
                         }
                     } else if (!!videoInfo?.path && typeof videoInfo?.path == "string") {
                         const moreVideoInfo = await frontendDb.getVideoByPath(videoInfo.path)
@@ -170,15 +200,45 @@ export default RootComponent = {
                     }
                     return $root.push({ videoInfo })
                 },
-                onceVideoIsLoaded(callback) {
+                onceVideoIsLoaded(callback=()=>{}) {
+                    if ($root.videoInterface._videoLoadedPromise.state != "pending") {
+                        return Promise.resolve(callback()).catch(error=>{
+                            console.error(error.stack)
+                            console.error(error.message)
+                        })
+                    }
                     $root.videoInterface._videoLoadedTemporaryCallbacks.add(callback)
                     return $root.videoInterface._videoLoadedPromise
                 },
                 wheneverVideoIsLoaded(callback) {
+                    if ($root.videoInterface._videoLoadedPromise.state != "pending") {
+                        return Promise.resolve(callback()).catch(error=>{
+                            console.error(error.stack)
+                            console.error(error.message)
+                        })
+                    }
                     $root.videoInterface._videoLoadedPermanentCallbacks.add(callback)
                 },
                 getVideoPathNames() {
                     return window.storageObject.videoPathNames
+                },
+                getVideoInfos() {
+                    const videoInfos = []
+                    for (const [key, value] of Object.entries(untrackedData.videoIdToPath)) {
+                        videoInfos.push({
+                            videoId: key,
+                            path: value,
+                            isYoutubeUrl: false
+                        })
+                    }
+                    return videoInfos
+                },
+                videoIdToPath(videoId) {
+                    if (videoTools.isLocalVideo(videoId)) {
+                        return untrackedData.videoIdToPath[videoId]
+                    } else {
+                        return `https://www.youtube.com/embed/${videoTools.extractYoutubeVideoId(videoId)}?amp;iv_load_policy=3&amp;modestbranding=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1`
+                    }
                 },
                 refreshLocalVideoData() {
                     window.backend.getLocalVideoNames().then(names=>{
@@ -229,6 +289,7 @@ export default RootComponent = {
         }
     },
     mounted() {
+        this.videoInterface._videoInRouteHasChanged() //inital load 
         frontendDb.getUsernames().then(usernames=>{
             untrackedData.usernameList = untrackedData.usernameList.concat(usernames)
         })
@@ -298,7 +359,6 @@ export default RootComponent = {
                 }
                 
                 const videoIdChanged = JSON.stringify(previousRouteData?.videoInfo) !== JSON.stringify(JSON.parse(currentJson)?.videoInfo)
-                console.debug(`videoIdChanged is:`,videoIdChanged)
                 if (videoIdChanged) {
                     this.videoInterface._videoInRouteHasChanged()
                 }

@@ -25,10 +25,10 @@
                     :isHuman="eachSegment.isHuman"
                     :confirmedBySomeone="eachSegment.confirmedBySomeone"
                     :rejectedBySomeone="eachSegment.rejectedBySomeone"
-                    :selected="eachSegment.$uuid == ($root.selectedSegment&&$root.selectedSegment.$uuid)"
+                    :selected="eachSegment.observationId == ($root.selectedSegment&&$root.selectedSegment.observationId)"
                     :background-color="theColor(eachSegment)"
                     :border-color="theColor(eachSegment)"
-                    :key="eachSegment.observationId||eachSegment.$uuid"
+                    :key="eachSegment.observationId||eachSegment.observationId"
                     :style="`--color: ${theColor(eachSegment)}`"
                     @click="jumpSegment(eachSegment.$displayIndex)"
                 )
@@ -64,9 +64,13 @@ import { wrapIndex, checkIf, deferredPromise, dynamicSort } from "../utils.js"
 import { frontendDb } from '../iilvd-api.js'
 const generalTimeoutFrequency = 50 // ms
 
+// TASKS:
+    // fix references to this.$root.selectedVideo
+    // fix observation editor adding new observations to this.$root.videoInterface.keySegments
 let untracked = {
     lastSeekFinished: deferredPromise(),
     singleActionAfterVideoLoaded: {},
+    caller: null,
 }
 export default {
     props: [
@@ -81,17 +85,19 @@ export default {
             maxLevel: 1,
             organizedSegments: [],
         },
+        processedKeySegments: [],
     }),
     mounted() {
         window.SegmentDisplay = this
-        this.$root.videoInterface.wheneverVideoIsLoaded(this.updateSegments)
+        this.$root.videoInterface.wheneverVideoIsLoaded(this.resetSelectedSegment)
+        this.$root.videoInterface.onceVideoIsLoaded(()=>{untracked.caller = "initalLoad"; this.updateSegments()})
     },
     watch: {
     },
     rootHooks: {
         watch: {
             labels() {
-                console.log(`labels changed`)
+                console.log(`[SegmentDisplay] labels changed`)
                 // make sure the label is still valid
                 let label = this.$root?.selectedSegment?.label
                 if (label) {
@@ -103,24 +109,16 @@ export default {
                 }
                 if (this.$root.videoInterface?.player?.duration) {
                     console.log(`[SegmentDisplay] labels changed, updating segments`)
+                    untracked.caller = "labels"
                     this.updateSegments()
                 }
             },
-            selectedVideo() {
-                this.$root.selectedSegment = null
-            },
-            "selectedVideo.keySegments": function() {
-                if (this.$root.videoInterface?.player?.duration) {
-                    console.log(`[SegmentDisplay] keySegments changed, updating segments`)
-                    this.updateSegments()
-                }
+            "videoInterface.keySegments": function() {
+                this.$root.videoInterface.onceVideoIsLoaded(()=>{untracked.caller = "videoInterface.keySegments"; this.updateSegments()})
             },
         }
     },
     windowListeners: {
-        "SegmentDisplay-updateSegments": function(...args) {
-            this.updateSegments(...args)
-        },
         keydown(eventObject) {
             if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get({ keyList: ["path"], from: eventObject, failValue: [] }).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
                 // 
@@ -158,48 +156,36 @@ export default {
         }
     },
     methods: {
+        resetSelectedSegment() {
+            this.$root.selectedSegment = null
+        },
         theColor(eachSegment) {
             return this.$root.labels[eachSegment.label]?.color
         },
-        async updateSegments(...args) {
-            const originalVideoId = this.$root.videoInterface.videoId
-            const duration = this.$root.videoInterface?.player?.duration
-            if (originalVideoId) {
-                let keySegments
-                try {
-                    keySegments = await frontendDb.getObservations({
-                        where:[
-                            { valueOf: ['videoId'], is: originalVideoId },
-                        ],
-                        returnObject: true,
-                    })
-                } catch (error) {
-                    console.error("updateSegments error", error)
-                    return
-                }
-                
-                // add uuid to all of them
-                keySegments = Object.entries(keySegments).map(
-                    ([eachKey, eachValue])=>(eachValue.$uuid=eachKey,eachValue)
-                )
-                
-                // if theres no duration then the visual segments can't be generated 
-                if (!duration) {
-                    console.log(`[SegmentDisplay] videoInterface?.player?.duration unavailable, cant update segments`)
-                    return
-                }
-                
-                // check then assign
-                if (originalVideoId == this.$root.videoInterface.videoId) {
-                    this.$withoutWatchers("SegmentDisplay-retrieveFromBackend", ()=>{
-                        this.$root.selectedVideo.keySegments = this.processNewSegments({ duration, keySegments })
-                    })
-                    this.$emit("SegmentDisplay-segementsRetrived")
-                }
+        updateSegments() {
+            if (!this.$root.videoInterface?.player?.duration) {
+                console.warn(`[SegmentDisplay] updateSegments was called too early. This shouldn't happen so check where it is being called from`)
+                console.debug(`[SegmentDisplay] updateSegments caller is:`,untracked.caller)
+                return
             }
-            this.visuallyReorganizeSegments()
+            this.processedKeySegments = this.processNewSegments({
+                duration: this.$root.videoInterface?.player?.duration,
+                keySegments: this.$root.videoInterface.keySegments,
+            })
+            this.segmentsInfo = this.organizeVisualSegments({
+                namesOfSelectedLabels: this.$root.getNamesOfSelectedLabels(),
+                processedKeySegments: this.processedKeySegments,
+            })
+            // ^output looks like: this.segmentsInfo = {
+            //     maxLevel: 1,
+            //     organizedSegments: []
+            // }
         },
         processNewSegments({duration, keySegments}) {
+            if (!duration) {
+                console.warn(`[processNewSegments] processNewSegments was called with no duration (find where its being called from to fix)`)
+                return keySegments
+            }
             // element needs to be shown as at least __ % of the video width
             const minWidthPercent = 3
             let minWidthInSeconds = duration / (100 / minWidthPercent)
@@ -232,15 +218,9 @@ export default {
             
             return keySegments
         },
-        async visuallyReorganizeSegments() {
-            this.segmentsInfo = {
-                maxLevel: 1,
-                organizedSegments: []
-            }
-            
+        organizeVisualSegments({ processedKeySegments, namesOfSelectedLabels }) {
             // only return segments that match the selected labels
-            let namesOfSelectedLabels = this.$root.getNamesOfSelectedLabels()
-            let displaySegments = (this.$root?.selectedVideo?.keySegments||[]).filter(
+            let displaySegments = (processedKeySegments||[]).filter(
                 eachSegment=>(eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.label) || namesOfSelectedLabels.length == 0)
             )
         
@@ -272,7 +252,7 @@ export default {
                 eachSegment.$renderData.level = level 
                 eachSegment.$renderData.topAmount = `${level*heightOfSegment}rem`
             }
-            this.segmentsInfo = {
+            return {
                 maxLevel: levels.length,
                 organizedSegments: levels.flat(),
             }
@@ -321,8 +301,7 @@ export default {
             // set what should happen (latest action overwrites previous)
             // 
             
-            const seekAction = ()=>{
-                player = this.$root.videoInterface?.player
+            const seekAction = (player)=>{
                 try  {
                     const startTime = this.$root.selectedSegment.startTime
                     // console.debug(`[seekToSegmentStart] seeking to ${startTime}`)
@@ -347,7 +326,7 @@ export default {
             
             // if the video is already loaded then just do the thing
             if (this.$root.videoInterface.player) {
-                seekAction(player)
+                seekAction(this.$root.videoInterface.player)
             // otherwise schedule the action
             } else {
                 // check if anything scheduled
@@ -425,8 +404,6 @@ export default {
             if (segment) {
                 this.jumpSegment(segment.$displayIndex+1)
             } else {
-                console.debug(`this.closestSegment is:`,this.closestSegment)
-                console.debug(`this is:`,this)
                 window.SegmentDisplay = this
                 segment = this.closestSegment({time: this.currentTime, forward: true})
                 if (segment) {
@@ -439,8 +416,6 @@ export default {
             if (segment) {
                 this.jumpSegment(segment.$displayIndex-1)
             } else {
-                console.debug(`this.closestSegment is:`,this.closestSegment)
-                console.debug(`this is:`,this)
                 window.SegmentDisplay = this
                 segment = this.closestSegment({time: this.currentTime, forward: false})
                 if (segment) {
@@ -453,18 +428,18 @@ export default {
             let debug = (message, ...args)=>1||console.debug(`[jumpSegment: ${functionCallId}] ${message}`, ...args)
             
             // basic saftey check
-            if (!(this.$root.selectedVideo.keySegments instanceof Array) || this.$root.selectedVideo.keySegments.length == 0) {
+            if (!(this.processedKeySegments instanceof Array) || this.processedKeySegments.length == 0) {
                 return debug("segments don't exist, returning")
             }
             // get the previous segment or the first one in the list
-            let segment = this.$root.selectedSegment || this.$root.selectedVideo.keySegments[0]
-            const startingPoint = wrapIndex(newIndex, this.$root.selectedVideo.keySegments)
+            let segment = this.$root.selectedSegment || this.processedKeySegments[0]
+            const startingPoint = wrapIndex(newIndex, this.processedKeySegments)
             let indexOfPreviousSegment = (!segment) ? 0 : segment.$displayIndex
             if (newIndex != indexOfPreviousSegment || !segment.$shouldDisplay) {
                 let direction = indexOfPreviousSegment > newIndex ? -1 : 1
                 debug(`jump direction is: ${direction}`)
                 while (1) {
-                    let newSegment = this.$root.selectedVideo.keySegments[ wrapIndex(newIndex, this.$root.selectedVideo.keySegments) ]
+                    let newSegment = this.processedKeySegments[ wrapIndex(newIndex, this.processedKeySegments) ]
                     // if its a displayable segment then good, were done
                     if (newSegment.$shouldDisplay) {
                         segment = newSegment
@@ -474,7 +449,7 @@ export default {
                     // cycle the index
                     newIndex += direction
                     // if somehow ended back at the start then fail
-                    if (wrapIndex(newIndex, this.$root.selectedVideo.keySegments) == startingPoint) {
+                    if (wrapIndex(newIndex, this.processedKeySegments) == startingPoint) {
                         debug("couldn't find a displayable segment")
                         break
                     }
@@ -505,7 +480,8 @@ export default {
                 this.$root.labels[labelName] = actualValue
             }, generalTimeoutFrequency)
             
-            window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
+            // this is a hack to force the segment display to update
+            this.$root.videoInterface.updateKeySegments()
         },
     }
 }

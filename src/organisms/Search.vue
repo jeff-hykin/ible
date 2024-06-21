@@ -176,7 +176,7 @@ export default {
                     this.$root.selectAllLabels()
                     this.$root.push({...this.$root.routeData$, labelName: null})
                 }
-                window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
+                this.$root.videoInterface.updateKeySegments()
             }
         },
         falsePositiveRatio() {

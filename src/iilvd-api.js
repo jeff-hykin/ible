@@ -234,7 +234,7 @@ const indexDb = {
         addresses = [...addresses]
         const transaction = db.transaction([storeName], 'readwrite')
         const objectStore = transaction.objectStore(storeName)
-        transaction.onerror = reject
+        transaction.onerror = (error)=>console.error(`[indexDb.deletes] ${error}`)
         return Promise.all(
             addresses.map(address=>{
                 if (address.length < 2 || address.some(each=>typeof each != 'string')) {

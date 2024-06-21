@@ -17,7 +17,7 @@ export const endsWithVideoExtension = (videoPath) => {
     return videoPath.includes(".") && videoExtensions.includes(ending)
 }
 
-export const extractYoutubeVideoId = (url) => {
+export const extractYoutubeVideoId = (newVideoId) => {
      try {
         if (newVideoId.match(/.*www\.youtube\.com/)) {
             return newVideoId.match(/.+(?:\?|&)v=(.{11})/)[1]
@@ -28,7 +28,7 @@ export const extractYoutubeVideoId = (url) => {
     return undefined
 }
 
-const minimumLocalIdSize = 11
+const minimumLocalIdSize = 7
 export const extractLocalVideoId = (path) => {
     let fileName = Path.basename(toString(path))
     if (!fileName.includes(".") || !endsWithVideoExtension(path) || fileName.split(".").length <= 2 || fileName.split(".").slice(-2)[0].length < minimumLocalIdSize) {
@@ -41,6 +41,7 @@ export const extractLocalVideoId = (path) => {
 export function videoIdIsValid(videoId) {
     // FIXME: 
     if (typeof videoId == "string") {
+        console.debug(`isLocalVideo(${videoId}) is:`,isLocalVideo(videoId))
         if (isLocalVideo(videoId) || videoId.length == currentFixedSizeOfYouTubeVideoId) {
             return true
         }
@@ -74,15 +75,13 @@ export const searchTermToVideoInfo = (searchTerm)=>{
             path: searchTerm,
         }
     } else {
+        console.debug(`searchTerm is:`,searchTerm)
         const localVideoId = extractLocalVideoId(searchTerm)
+        console.debug(`localVideoId is:`,localVideoId)
         return {
             isYoutubeUrl: false,
             videoId: localVideoId,
             path: `/videos/${searchTerm}`,
         }
     }
-}
-
-export const getVideoPathFor = (searchString)=>{
-    // FIXME: todo
 }

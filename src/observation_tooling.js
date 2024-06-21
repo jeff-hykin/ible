@@ -134,7 +134,7 @@ export const createDefaultObservationEntry = (currentTime)=>({
         // doing this prevents/removes extraneous properties
         observationEntry = {
             observationId:      observationEntry?.observationId,
-            type:               observationEntry?.type,
+            type:               observationEntry?.type||(observationEntry?.startTime != observationEntry?.endTime?"segment":"marker"),
             videoId:            observationEntry?.videoId,
             startTime:          observationEntry?.startTime,
             endTime:            observationEntry?.endTime,
@@ -147,6 +147,7 @@ export const createDefaultObservationEntry = (currentTime)=>({
             spacialInfo:        observationEntry?.spacialInfo,
             customInfo:         observationEntry?.customInfo,
         }
+        
         // 
         // enforce unix timestamp (e.g. id)
         // 

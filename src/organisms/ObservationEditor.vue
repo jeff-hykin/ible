@@ -242,14 +242,6 @@ export default {
         this.$root.videoInterface.wheneverVideoIsLoaded(this.wheneverVideoChanges)
     },
     computed: {
-        uuidOfSelectedSegment: {
-            get() {
-                return this.observationData.observationId
-            },
-            set(value) {
-                this.observationData.observationId = value
-            }
-        },
         humanTime() {
             return (new Date(this.observationData.observationId-0)).toString()
         },
@@ -351,6 +343,7 @@ export default {
             this.dataCopy = JSON.parse(JSON.stringify(this.observationData))
             // instantly convert to kebab case if somehow it isn't already
             this.observationData.label = toKebabCase(`${this.observationData.label}`.toLowerCase())
+            this.observationData.videoId = this.$root.videoInterface.videoId
             this.editing = true
         },
         onCancelEdit() {
@@ -369,23 +362,7 @@ export default {
                 return
             }
             
-            const observationEntry = this.observationData = observationTooling.coerceObservation(
-                {
-                    observationId: this.observationData.observationId,
-                    type: "segment",
-                    videoId:            this.observationData.videoId,
-                    startTime:          this.observationData.startTime,
-                    endTime:            this.observationData.endTime,
-                    observer:           this.observationData.observer,
-                    isHuman:            this.observationData.isHuman,
-                    confirmedBySomeone: this.observationData.confirmedBySomeone,
-                    rejectedBySomeone:  this.observationData.rejectedBySomeone,
-                    label:           this.observationData.label,
-                    labelConfidence: this.observationData.labelConfidence,
-                    spacialInfo:     this.observationData.spacialInfo,
-                    customInfo: this.observationData.customInfo,
-                }
-            )
+            const observationEntry = this.observationData = observationTooling.coerceObservation(this.observationData)
             
             // 
             // update external things
@@ -395,11 +372,21 @@ export default {
             // 
             // send request to database
             // 
-            let thereWasAnError = false
             try {
                 await frontendDb.setObservation(observationEntry, {withCoersion:true})
+                
+                // on success
+                this.editing = false
+                this.$toasted.show(`Changes saved`).goAway(2500)
+                this.deSelectSegment()
+                this.$root.retrieveLabels()
+                
+                // this should cause the segment display to update
+                this.$root.videoInterface.keySegments = [
+                    ...this.$root.videoInterface.keySegments.filter(each=>each.observationId != observationEntry.observationId),
+                    observationEntry,
+                ]
             } catch (error) {
-                thereWasAnError = true
                 this.$toasted.show(`There was an error on the database`).goAway(5500)
                 console.error("# ")
                 console.error("# Database ERROR")
@@ -414,28 +401,21 @@ export default {
                 this.$toasted.show(`(Full error log in the console)`).goAway(6500)
                 // throw error
             }
-            
-            // 
-            // on success
-            // 
-            if (!thereWasAnError) {
-                this.editing = false
-                this.$toasted.show(`Changes saved`).goAway(2500)
-                this.deSelectSegment()
-                this.$root.retrieveLabels()
-                
-                window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
-            }
         },
         async onDelete() {
             console.log(`onDelete called`)
             this.editing = false
             let index = this.$root.selectedSegment.$displayIndex
-            if (this.uuidOfSelectedSegment) {
-                await frontendDb.deleteObservation({uuidOfSelectedSegment: this.uuidOfSelectedSegment})
-                this.$root.selectedVideo.keySegments = [...this.$root.selectedVideo.keySegments].filter(each=>each.$uuid != this.uuidOfSelectedSegment)
+            const observationId = this.observationData.observationId
+            if (observationId) {
+                await frontendDb.deleteObservation({uuidOfSelectedSegment: observationId })
                 this.resetData()
-                window.dispatchEvent(new CustomEvent("SegmentDisplay-updateSegments"))
+                // this should cause the segment display to update
+                this.$root.videoInterface.keySegments = [
+                    ...this.$root.videoInterface.keySegments.filter(each=>
+                        each.observationId != observationId
+                    ),
+                ]
                 this.$toasted.show(`Data has been deleted`).goAway(2500)
             }
             this.$root.selectedSegment = {}
@@ -448,7 +428,7 @@ export default {
             this.observationData = this.observationEntryToData(
                 observationTooling.createDefaultObservationEntry(this.currentTime)
             )
-            this.observationData.videoId = this.$root.selectedVideo?.$id
+            this.observationData.videoId = this.$root.videoInterface.videoId
         },
         setStartToCurrentTime() {
             this.observationData.startTime = (this.currentTime||0).toFixed(3)
