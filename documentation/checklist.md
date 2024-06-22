@@ -30,7 +30,7 @@ Major Chonological Changes:
     - figure out why segments are not showing up
     - List videos in the sidebar
     - create error response for missing the videoId but having a valid videoPath
-- enable null
+- enable null end time
 - video centric data format as JSON
     - upload
     - download

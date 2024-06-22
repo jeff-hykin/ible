@@ -47,13 +47,13 @@ export default {
                 return
             }
             
-            if (videoInfo.hasProblem && !videoInfo.isYoutubeUrl) {
+            if (videoInfo.videoId && !videoInfo.isYoutubeUrl) {
                 // FIXME
                 this.$toasted.show(`This video seems to be missing a video ID`, {
                     keepOnHover:true,
                     action: [
                         {
-                            text : 'Load Anyways',
+                            text : 'Load Anyway (View-Only)',
                             onClick : (eventData, toastObject) => {
                                 toastObject.goAway(1)
                             },

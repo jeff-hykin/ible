@@ -10,12 +10,12 @@ import * as process from "node:process"
 import minimist from "npm:minimist"
 // import minimist from "./node_modules/minimist/index.js"
 
-import { FileSystem } from "https://deno.land/x/quickr@0.6.62/main/file_system.js"
+import { FileSystem } from "https://deno.land/x/quickr@0.6.67/main/file_system.js"
 
 import { mimeTypes, videoExtensions } from "./src/utils.js"
+import * as utils from "./src/utils.js"
 
 let thisFolder = FileSystem.thisFolder
-const location1 = `${FileSystem.thisFolder}/package.json`
 const location1Info = await FileSystem.info(`${FileSystem.thisFolder}/package.json`)
 if (!location1Info.isFile) {
     thisFolder = `${FileSystem.thisFolder}/../ible`
@@ -56,76 +56,94 @@ const videoDirectory = FileSystem.makeAbsolutePath(path.join(os.homedir(), "vide
 //
 // setup the server
 //
-const server = http.createServer((req, res) => {
-    console.log(`Request for ${req.url} received.`)
+console.log(`# `)
+console.log(`# Server running at http://${hostname}:${port}/`)
+console.log(`# `)
+console.log()
+console.log(`Put your videos somewhere in here:\n${videoDirectory}`)
+Deno.serve({ port, hostname }, async (request) => {
+    const urlPath = (new URL(request.url)).pathname
+    console.debug(`urlPath is:`,urlPath)
+    let filePath = path.join(baseDirectory, urlPath === "/" ? "index.html" : urlPath)
     
-    let filePath = path.join(baseDirectory, req.url === "/" ? "index.html" : req.url)
-    
-    if (req.url.startsWith("/videos/")) {
-        let videoPath = path.join(videoDirectory, req.url.replace(/^\/videos\//, ""))
+    // 
+    // asking for a video file
+    // 
+    if (urlPath.startsWith("/videos/")) {
+        let videoPath = path.join(videoDirectory, urlPath.replace(/^\/videos\//, ""))
         console.debug(`videoPath is:`,videoPath)
         if (fs.existsSync(videoPath)) {
             filePath = videoPath
         }
-    } else if (req.url.startsWith("/backend/")) {
-        if (req.url.startsWith("/backend/list_videos/")) {
-            res.writeHead(200, { "Content-Type": "application/json" })
-            FileSystem.listFilePathsIn(
-                videoDirectory,
-                {
-                    recursively: true,
-                    shouldntInclude: (each)=>{
-                        const ending = each.split(".").slice(-1)[0]
-                        if (each.includes(".") && videoExtensions.includes(ending)) {
-                            return false
-                        }
-                        return true
-                    },
-                }
-            ).then(
-                (list)=>{
-                    console.log(`got a list of videos`)
-                    res.end(JSON.stringify(list.map(each=>each.slice(videoDirectory.length+1))), "utf-8")
-                }
-            ).catch(
-                (error)=>{
-                    res.writeHead(500)
-                    res.end(`Sorry, there was a problem getting the list of videos: ${error}\n\n${error.stack}`)
-                    res.end()
-                }
-            )
-            return
+    // 
+    // asking for API
+    // 
+    } else if (urlPath.startsWith("/backend/")) {
+        // 
+        // asking for list of videos
+        // 
+        if (urlPath.startsWith("/backend/list_videos/")) {
+            try {
+                    const list = await FileSystem.listFilePathsIn(
+                    videoDirectory,
+                    {
+                        recursively: true,
+                        shouldntInclude: (each)=>{
+                            const ending = each.split(".").slice(-1)[0]
+                            if (each.includes(".") && videoExtensions.includes(ending)) {
+                                return false
+                            }
+                            return true
+                        },
+                    }
+                )
+                const response = JSON.stringify(list.map(each=>each.slice(videoDirectory.length+1)))
+                return new Response(response, {status: 200})
+            } catch (error) {
+                return new Response(`Sorry, there was a problem getting the list of videos: ${error}\n\n${error.stack}`, {status: 400})
+            }
+        // 
+        // asking to give a video an id
+        // 
+        } else if (urlPath.startsWith("/backend/give_video_id/")) {
+            let videoPath = urlPath.slice("/backend/give_video_id/".length)
+            if (videoPath.startsWith("/videos/")) {
+                videoPath = videoPath.slice("/videos/".length)
+            }
+            if (!videoPath.includes(".")) {
+                return new Response(`Sorry, the video path must include a file extension (e.g. .mp4)\n`, { status: 400 })
+            }
+            const videoParts = videoPath.split(".")
+            const extension = videoParts.slice(-1)[0]
+            // generate random ASCII string
+            const videoId = utils.createVideoId()
+            const newPath = `${videoParts.slice(0,-1).join(".")}.${videoId}.${extension}`
+            
+            try {
+                await FileSystem.rename({from: `${videoDirectory}/${videoPath}`, to: `${videoDirectory}/${newPath}`})
+                const response = JSON.stringify({ videoId: videoId, videoPath: `/videos/${newPath}` })
+                return new Response(response, { status: 200 })
+            } catch (error) {
+                return new Response(`Sorry, there was a problem renaming the video: ${error}\n\n${error.stack}`, { status: 500 })
+            }
         }
     }
 
     let extname = String(path.extname(filePath)).toLowerCase()
     let contentType = mimeTypes[extname] || "application/octet-stream"
-
-    fs.readFile(filePath, (error, content) => {
-        if (error) {
-            if (error.code === "ENOENT") {
-                fs.readFile(path.join(baseDirectory, "404.html"), (err, content404) => {
-                    res.writeHead(404, { "Content-Type": "text/html" })
-                    res.end(content404, "utf-8")
-                })
-            } else {
-                res.writeHead(500)
-                res.end(`Sorry, check with the site admin for error: ${error.code} ..\n`)
-                res.end()
+    
+    try {
+        const fileContents = await Deno.readFile(filePath)
+        return new Response(
+            fileContents, 
+            {
+                status: 200,
+                headers: new Headers({"content-type":contentType}),
             }
-        } else {
-            res.writeHead(200, { "Content-Type": contentType })
-            res.end(content, "utf-8")
-        }
-    })
-})
-
-server.listen(port, hostname, () => {
-    console.log(`# `)
-    console.log(`# Server running at http://${hostname}:${port}/`)
-    console.log(`# `)
-    console.log()
-    console.log(`Put your videos somewhere in here:\n${videoDirectory}`)
+        )
+    } catch (error) {
+        return new Response(error.message, { status: 404 } )
+    }
 })
 
 // (this comment is part of deno-guillotine, dont remove) #>

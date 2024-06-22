@@ -40,6 +40,15 @@ export const mimeTypes = {
     ".srt": "application/x-subrip",
 }
 export const videoExtensions = Object.entries(mimeTypes).filter(([key, value]) => value.startsWith("video/")).map(([ext]) => ext.slice(1))
+export const videoIdLength = 11
+export const createVideoId = ()=>{
+    let videoId = ""
+    const base = 36
+    while (videoId.length < videoIdLength) {
+        videoId += Math.floor(Math.random() * base).toString(base)
+    }
+    return videoId
+}
 
 export class EventEmitter {
     constructor() {
@@ -471,4 +480,17 @@ export function wrapIndex(val, list) {
         val = list.length + val
     }
     return val % list.length
+}
+
+export const escapeHtml = (string)=>{
+    const htmlEscapes = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }
+    return string.replace(/[&<>"']/g, (m)=>{
+        return htmlEscapes[m]
+    })
 }

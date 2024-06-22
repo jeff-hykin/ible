@@ -879,6 +879,15 @@ window.backend = {
     async getLocalVideoNames() {
         return JSON.parse(await (await fetch("/backend/list_videos/")).text()) 
     },
+    async giveVideoAnId(videoPath) {
+        const response = await (await fetch(`/backend/give_video_id/${videoPath}`)).text()
+        try {
+            return JSON.parse(response) 
+        } catch (error) {
+            console.debug(`response is:`,response)
+            throw Error(response)
+        }
+    },
 }
 module.exports = {
     frontendDb,

@@ -18,7 +18,8 @@
 import Vue from "vue"
 import plugins from "./plugins/*.js"
 import pages from "./pages/*.vue"
-import {getColor, deferredPromise} from "./utils.js"
+import {getColor, deferredPromise, createVideoId, videoIdLength} from "./utils.js"
+import * as utils from "./utils.js"
 import { get, set } from "./object.js"
 import * as videoTools from "./tooling/video_tooling.js"
 import { frontendDb } from "./iilvd-api.js"
@@ -33,12 +34,16 @@ if (!("Home" in pages)) {
     throw Error("Hey, this template expects there to be a 'Home.vue' page.\nIf you don't want one that's fine. Just change the router in the App.vue file so it doesn't expect/need one")
 }
 
+// TASKS:
+    // check if videoId giver-outer is working
+
 // create Root instance and attach it (executed after this file loads)
 let RootComponent; setTimeout(()=>(new (Vue.extend(RootComponent))).$mount('#vue-root'), 0)
 let untrackedData = {
     firstSearchLoad: true,
     usernameList: [],
     videoIdToPath: {},
+    previousVideoInfoString: null,
 }
 export default RootComponent = {
     name: 'RootComponent',
@@ -128,8 +133,52 @@ export default RootComponent = {
                 keySegments: [],
                 keySegmentsPromise: Promise.resolve([]),
                 // this gets triggered first/immediately
-                _videoInRouteHasChanged() {
+                async _videoInRouteHasChanged() {
+                    const currentVideoInfoString = JSON.stringify($root.routeData$?.videoInfo)
+                    if (untrackedData.previousVideoInfoString == currentVideoInfoString) {
+                        return
+                    }
+                    untrackedData.previousVideoInfoString = currentVideoInfoString
+                    
                     console.debug(`$root.routeData$.videoInfo is:`,{...$root.routeData$.videoInfo})
+                    if ($root.routeData$?.videoInfo?.path && !$root.routeData$?.videoInfo?.videoId) {
+                        const exampleId = createVideoId()
+                        const existingVideoPath = $root.routeData$?.videoInfo?.path
+                        const videoBaseName = existingVideoPath.split(/\\|\//g).slice(-1)[0]
+                        const frontPart = videoBaseName.split('.').slice(0,-1).join('.')
+                        Vue.toasted.show(`<br>Hey! This video ("${utils.escapeHtml(videoBaseName)}") is missing a video ID<br>I can't record observations without an ID<br>Just rename the file to "${utils.escapeHtml(frontPart)}.${exampleId}.mp4"<br>Where "${exampleId}" is the video ID<br>`, {
+                            keepOnHover:true,
+                            action: [
+                                {
+                                    text : 'Rename It For Me',
+                                    onClick : async (eventData, toastObject) => {
+                                        try {
+                                            const { videoId, videoPath: path } = await window.backend.giveVideoAnId(existingVideoPath)
+                                            Vue.toasted.show(`Video renamed to "${utils.escapeHtml(path)}"`, {
+                                                closeOnSwipe: false,
+                                                keepOnHover:true,
+                                                action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
+                                            })
+                                            await $root.videoInterface.goToThisVideo({videoId, path})
+                                        } catch (error) {
+                                            Vue.toasted.show(`<br>Error<br>${utils.escapeHtml(error.message)}<br>`.replace(/\n/g,"<br>"), {
+                                                closeOnSwipe: false,
+                                                keepOnHover:true,
+                                                action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
+                                            })
+                                        }
+                                        toastObject.goAway(1)
+                                    },
+                                },
+                                {
+                                    text : 'Close',
+                                    onClick : (eventData, toastObject) => {
+                                        toastObject.goAway(1)
+                                    },
+                                },
+                            ]
+                        })
+                    }
                     // refresh the promise
                     const promise = deferredPromise()
                     promise.then(runVideoCallbacks)
@@ -183,6 +232,7 @@ export default RootComponent = {
                 async goToThisVideo(videoInfo) {
                     $root.videoInterface._player = null
                     $root.videoInterface._videoLoadedTemporaryCallbacks = new Set()
+                    const originalVideoInfo = {...videoInfo}
                     // 
                     // add what we know to the videoInfo
                     // 
@@ -198,7 +248,7 @@ export default RootComponent = {
                             videoInfo = {...moreVideoInfo, ...videoInfo}
                         }
                     }
-                    return $root.push({ videoInfo })
+                    return $root.push({ videoInfo: {...videoInfo, ...originalVideoInfo} })
                 },
                 onceVideoIsLoaded(callback=()=>{}) {
                     if ($root.videoInterface._videoLoadedPromise.state != "pending") {
