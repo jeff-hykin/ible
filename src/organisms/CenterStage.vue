@@ -25,14 +25,14 @@
                                     @videoLoaded="$root.videoInterface.tellRootTheVideoHasLoaded"
                                     @currentTimeChanged="updateCurrentTime"
                                 )
-                            container.below-video
+                            container.below-video(v-if="$root.videoInterface.videoId")
                                 //- BACK
                                 SideButton.left-side-button(left @click='wrapperForSelectPreviousSegment')
                                 //- segments
                                 SegmentDisplay(ref="segmentDisplay" :currentTime="currentTime")
                                 //- NEXT
                                 SideButton.right-side-button(right @click='wrapperForSelectNextSegment')
-                column.side-container(align-v="top" overflow="visible" min-height="50rem" width="fit-content")
+                column.side-container(v-if="$root.videoInterface.videoId" align-v="top" overflow="visible" min-height="50rem" width="fit-content")
                     ObservationEditor(
                         :jumpSegment="wrapperForJumpSegment"
                         :currentTime="currentTime"

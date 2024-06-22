@@ -8542,7 +8542,13 @@ if (inBrowser) {
 
 var _default = Vue;
 exports.default = _default;
-},{}],"HT0w":[function(require,module,exports) {
+},{}],"jJO6":[function(require,module,exports) {
+
+},{}],"xmsx":[function(require,module,exports) {
+"use strict";
+
+require("css-baseline/css/3.css");
+},{"css-baseline/css/3.css":"jJO6"}],"HT0w":[function(require,module,exports) {
 // api
 //     $child(...args)
 let Vue = require("vue").default;
@@ -8571,13 +8577,7 @@ Object.defineProperty(Vue.prototype, "$child", {
   }
 
 });
-},{"vue":"NtAQ"}],"jJO6":[function(require,module,exports) {
-
-},{}],"xmsx":[function(require,module,exports) {
-"use strict";
-
-require("css-baseline/css/3.css");
-},{"css-baseline/css/3.css":"jJO6"}],"YsuP":[function(require,module,exports) {
+},{"vue":"NtAQ"}],"YsuP":[function(require,module,exports) {
 /*!
  * good-vue v1.3.1
  * (c) 
@@ -29271,66 +29271,7 @@ var _vueToasted = _interopRequireDefault(require("vue-toasted"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_vueToasted.default);
-},{"vue":"NtAQ","vue-toasted":"oSP9"}],"XpWL":[function(require,module,exports) {
-// api
-//     windowListeners:{}
-let Vue = require("vue").default;
-
-let windowListenersSymbol = Symbol("$windowListeners");
-Object.defineProperty(Vue.prototype, "$windowListeners", {
-  get() {
-    if (this[windowListenersSymbol] == undefined) {
-      this[windowListenersSymbol] = {};
-    }
-
-    return this[windowListenersSymbol];
-  },
-
-  set(value) {
-    this[windowListenersSymbol] = value;
-  }
-
-});
-Vue.mixin(module.exports = {
-  beforeCreate() {
-    const newOption = this.$options.windowListeners;
-
-    if (!newOption) {
-      return;
-    }
-
-    const vueStaticDestination = this.$windowListeners || this;
-
-    if (vueStaticDestination instanceof Object) {
-      if (newOption instanceof Function) {
-        Object.assign(vueStaticDestination, newOption.apply(this));
-      } else if (typeof newOption === 'object') {
-        Object.assign(vueStaticDestination, newOption);
-      }
-    }
-
-    if (this.$windowListeners instanceof Object) {
-      for (let [eachKey, eachValue] of Object.entries(this.$windowListeners)) {
-        if (eachValue.bind instanceof Function) {
-          eachValue = eachValue.bind(this);
-        }
-
-        window.addEventListener(eachKey, eachValue);
-      }
-    }
-  },
-
-  beforeDestroy() {
-    // remove all the listeners
-    if (this[windowListenersSymbol] instanceof Object) {
-      for (let [eachKey, eachValue] of Object.entries(this[windowListenersSymbol])) {
-        window.removeEventListener(eachKey, eachValue);
-      }
-    }
-  }
-
-});
-},{"vue":"NtAQ"}],"aLvM":[function(require,module,exports) {
+},{"vue":"NtAQ","vue-toasted":"oSP9"}],"aLvM":[function(require,module,exports) {
 // api
 //     this.withoutWatchers(source, callback)
 let Vue = require("vue").default; // TODO: potenial issue if a second source calls this before the first one ends (async)
@@ -29439,6 +29380,65 @@ Vue.mixin(module.exports = {
             return result;
           };
         }
+      }
+    }
+  }
+
+});
+},{"vue":"NtAQ"}],"XpWL":[function(require,module,exports) {
+// api
+//     windowListeners:{}
+let Vue = require("vue").default;
+
+let windowListenersSymbol = Symbol("$windowListeners");
+Object.defineProperty(Vue.prototype, "$windowListeners", {
+  get() {
+    if (this[windowListenersSymbol] == undefined) {
+      this[windowListenersSymbol] = {};
+    }
+
+    return this[windowListenersSymbol];
+  },
+
+  set(value) {
+    this[windowListenersSymbol] = value;
+  }
+
+});
+Vue.mixin(module.exports = {
+  beforeCreate() {
+    const newOption = this.$options.windowListeners;
+
+    if (!newOption) {
+      return;
+    }
+
+    const vueStaticDestination = this.$windowListeners || this;
+
+    if (vueStaticDestination instanceof Object) {
+      if (newOption instanceof Function) {
+        Object.assign(vueStaticDestination, newOption.apply(this));
+      } else if (typeof newOption === 'object') {
+        Object.assign(vueStaticDestination, newOption);
+      }
+    }
+
+    if (this.$windowListeners instanceof Object) {
+      for (let [eachKey, eachValue] of Object.entries(this.$windowListeners)) {
+        if (eachValue.bind instanceof Function) {
+          eachValue = eachValue.bind(this);
+        }
+
+        window.addEventListener(eachKey, eachValue);
+      }
+    }
+  },
+
+  beforeDestroy() {
+    // remove all the listeners
+    if (this[windowListenersSymbol] instanceof Object) {
+      for (let [eachKey, eachValue] of Object.entries(this[windowListenersSymbol])) {
+        window.removeEventListener(eachKey, eachValue);
       }
     }
   }
@@ -37446,8 +37446,8 @@ _vue.default.use(_vuePlyr.default, {
 });
 },{"vue":"NtAQ","vue-plyr":"fgJi","vue-plyr/dist/vue-plyr.css":"jJO6"}],"Xeh1":[function(require,module,exports) {
 module.exports = {
-  "child": require("./child.js"),
   "css-baseline-plugin": require("./css-baseline-plugin.js"),
+  "child": require("./child.js"),
   "good-vue-plugin": require("./good-vue-plugin.js"),
   "keen-ui-plugin": require("./keen-ui-plugin.js"),
   "portal-plugin": require("./portal-plugin.js"),
@@ -37455,12 +37455,12 @@ module.exports = {
   "root-hooks-plugin": require("./root-hooks-plugin.js"),
   "router-plugin": require("./router-plugin.js"),
   "vue-toasted-plugin": require("./vue-toasted-plugin.js"),
-  "window-listeners-plugin": require("./window-listeners-plugin.js"),
   "without-watchers": require("./without-watchers.js"),
   "workers-plugin": require("./workers-plugin.js"),
+  "window-listeners-plugin": require("./window-listeners-plugin.js"),
   "youtube-player-plugin": require("./youtube-player-plugin.js")
 };
-},{"./child.js":"HT0w","./css-baseline-plugin.js":"xmsx","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./portal-plugin.js":"HMJZ","./resolvables-plugin.js":"mVwj","./root-hooks-plugin.js":"T1YL","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./window-listeners-plugin.js":"XpWL","./without-watchers.js":"aLvM","./workers-plugin.js":"Y7uC","./youtube-player-plugin.js":"mQXc"}],"jqRt":[function(require,module,exports) {
+},{"./css-baseline-plugin.js":"xmsx","./child.js":"HT0w","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./portal-plugin.js":"HMJZ","./resolvables-plugin.js":"mVwj","./root-hooks-plugin.js":"T1YL","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./without-watchers.js":"aLvM","./workers-plugin.js":"Y7uC","./window-listeners-plugin.js":"XpWL","./youtube-player-plugin.js":"mQXc"}],"jqRt":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -65075,7 +65075,7 @@ exports.humandReadableTime = humandReadableTime;
 exports.deferredPromise = deferredPromise;
 exports.asyncIteratorToList = asyncIteratorToList;
 exports.wrapIndex = wrapIndex;
-exports.checkIf = exports.dynamicSort = exports.quickHash = exports.valueKey = exports.colors = exports.storageObject = exports.EventEmitter = exports.videoExtensions = exports.mimeTypes = void 0;
+exports.escapeHtml = exports.checkIf = exports.dynamicSort = exports.quickHash = exports.valueKey = exports.colors = exports.storageObject = exports.EventEmitter = exports.createVideoId = exports.videoIdLength = exports.videoExtensions = exports.mimeTypes = void 0;
 
 var _object = require("./object.js");
 
@@ -65122,6 +65122,21 @@ const mimeTypes = {
 exports.mimeTypes = mimeTypes;
 const videoExtensions = Object.entries(mimeTypes).filter(([key, value]) => value.startsWith("video/")).map(([ext]) => ext.slice(1));
 exports.videoExtensions = videoExtensions;
+const videoIdLength = 11;
+exports.videoIdLength = videoIdLength;
+
+const createVideoId = () => {
+  let videoId = "";
+  const base = 36;
+
+  while (videoId.length < videoIdLength) {
+    videoId += Math.floor(Math.random() * base).toString(base);
+  }
+
+  return videoId;
+};
+
+exports.createVideoId = createVideoId;
 
 class EventEmitter {
   constructor() {
@@ -65601,6 +65616,21 @@ function wrapIndex(val, list) {
 
   return val % list.length;
 }
+
+const escapeHtml = string => {
+  const htmlEscapes = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  };
+  return string.replace(/[&<>"']/g, m => {
+    return htmlEscapes[m];
+  });
+};
+
+exports.escapeHtml = escapeHtml;
 },{"./object.js":"qwrU"}],"u92t":[function(require,module,exports) {
 "use strict";
 
@@ -65710,7 +65740,6 @@ const searchTermToVideoInfo = searchTerm => {
   } else {
     console.debug(`searchTerm is:`, searchTerm);
     const localVideoId = extractLocalVideoId(searchTerm);
-    console.debug(`localVideoId is:`, localVideoId);
     return {
       isYoutubeUrl: false,
       videoId: localVideoId,
@@ -77972,6 +78001,17 @@ window.frontendDb = frontendDb; // debugging only
 window.backend = {
   async getLocalVideoNames() {
     return JSON.parse(await (await fetch("/backend/list_videos/")).text());
+  },
+
+  async giveVideoAnId(videoPath) {
+    const response = await (await fetch(`/backend/give_video_id/${videoPath}`)).text();
+
+    try {
+      return JSON.parse(response);
+    } catch (error) {
+      console.debug(`response is:`, response);
+      throw Error(response);
+    }
   }
 
 };
@@ -79991,12 +80031,12 @@ var _default = {
         return;
       }
 
-      if (videoInfo.hasProblem && !videoInfo.isYoutubeUrl) {
+      if (videoInfo.videoId && !videoInfo.isYoutubeUrl) {
         // FIXME
         this.$toasted.show(`This video seems to be missing a video ID`, {
           keepOnHover: true,
           action: [{
-            text: 'Load Anyways',
+            text: 'Load Anyway (View-Only)',
             onClick: (eventData, toastObject) => {
               toastObject.goAway(1);
             }
@@ -81162,7 +81202,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($aaa267, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"width":"100%","height":"100vh","align-h":"center","align-v":"top","overflow":"auto","overflow-x":"hidden"}},[_c('WrappedTopSearch'),(!_vm.aVideoIsSelected())?_c('column',{attrs:{"width":"100%","height":"100vh","flex-shrink":"1","color":"gray"}},[_c('h5',[_vm._v("No Video Selected")])]):_vm._e(),_c('transition',{attrs:{"name":"fade"}},[_c('row',{directives:[{name:"show",rawName:"v-show",value:(_vm.aVideoIsSelected()),expression:"aVideoIsSelected()"}],staticClass:"center-stage",attrs:{"align-v":"top","align-h":"center","padding-top":"8rem"}},[_c('column',{staticClass:"main-container",attrs:{"flex-grow":"1","align-v":"top"}},[_c('row',{staticClass:"below-video-search",attrs:{"flex-basis":"100%","padding-top":"1rem","align-v":"top","opacity":_vm.aVideoIsSelected()? 1 : 0}},[_c('column',{staticClass:"video-width-sizer",attrs:{"align-v":"top"}},[_c('row',{attrs:{"width":"96%","position":"relative"}},[_c('VideoPlayer',{ref:"videoPlayer",attrs:{"videoPathOrUrl":_vm.$root.videoInterface.videoPath},on:{"videoLoaded":_vm.$root.videoInterface.tellRootTheVideoHasLoaded,"currentTimeChanged":_vm.updateCurrentTime}})],1),_c('container',{staticClass:"below-video"},[_c('SideButton',{staticClass:"left-side-button",attrs:{"left":"left"},on:{"click":_vm.wrapperForSelectPreviousSegment}}),_c('SegmentDisplay',{ref:"segmentDisplay",attrs:{"currentTime":_vm.currentTime}}),_c('SideButton',{staticClass:"right-side-button",attrs:{"right":"right"},on:{"click":_vm.wrapperForSelectNextSegment}})],1)],1)],1)],1),_c('column',{staticClass:"side-container",attrs:{"align-v":"top","overflow":"visible","min-height":"50rem","width":"fit-content"}},[_c('ObservationEditor',{attrs:{"jumpSegment":_vm.wrapperForJumpSegment,"currentTime":_vm.currentTime}}),_c('InfoSection',{staticClass:"info-section",attrs:{"labelName":_vm.activeData().labelName,"videoId":_vm.activeData().videoId,"segmentUuid":_vm.activeData().segmentUuid,"currentTime":_vm.currentTime}})],1)],1)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"width":"100%","height":"100vh","align-h":"center","align-v":"top","overflow":"auto","overflow-x":"hidden"}},[_c('WrappedTopSearch'),(!_vm.aVideoIsSelected())?_c('column',{attrs:{"width":"100%","height":"100vh","flex-shrink":"1","color":"gray"}},[_c('h5',[_vm._v("No Video Selected")])]):_vm._e(),_c('transition',{attrs:{"name":"fade"}},[_c('row',{directives:[{name:"show",rawName:"v-show",value:(_vm.aVideoIsSelected()),expression:"aVideoIsSelected()"}],staticClass:"center-stage",attrs:{"align-v":"top","align-h":"center","padding-top":"8rem"}},[_c('column',{staticClass:"main-container",attrs:{"flex-grow":"1","align-v":"top"}},[_c('row',{staticClass:"below-video-search",attrs:{"flex-basis":"100%","padding-top":"1rem","align-v":"top","opacity":_vm.aVideoIsSelected()? 1 : 0}},[_c('column',{staticClass:"video-width-sizer",attrs:{"align-v":"top"}},[_c('row',{attrs:{"width":"96%","position":"relative"}},[_c('VideoPlayer',{ref:"videoPlayer",attrs:{"videoPathOrUrl":_vm.$root.videoInterface.videoPath},on:{"videoLoaded":_vm.$root.videoInterface.tellRootTheVideoHasLoaded,"currentTimeChanged":_vm.updateCurrentTime}})],1),(_vm.$root.videoInterface.videoId)?_c('container',{staticClass:"below-video"},[_c('SideButton',{staticClass:"left-side-button",attrs:{"left":"left"},on:{"click":_vm.wrapperForSelectPreviousSegment}}),_c('SegmentDisplay',{ref:"segmentDisplay",attrs:{"currentTime":_vm.currentTime}}),_c('SideButton',{staticClass:"right-side-button",attrs:{"right":"right"},on:{"click":_vm.wrapperForSelectNextSegment}})],1):_vm._e()],1)],1)],1),(_vm.$root.videoInterface.videoId)?_c('column',{staticClass:"side-container",attrs:{"align-v":"top","overflow":"visible","min-height":"50rem","width":"fit-content"}},[_c('ObservationEditor',{attrs:{"jumpSegment":_vm.wrapperForJumpSegment,"currentTime":_vm.currentTime}}),_c('InfoSection',{staticClass:"info-section",attrs:{"labelName":_vm.activeData().labelName,"videoId":_vm.activeData().videoId,"segmentUuid":_vm.activeData().segmentUuid,"currentTime":_vm.currentTime}})],1):_vm._e()],1)],1)],1)}
 var staticRenderFns = []
 
           return {
@@ -82087,7 +82127,7 @@ var _ = _interopRequireDefault(require("./plugins/*.js"));
 
 var _2 = _interopRequireDefault(require("./pages/*.vue"));
 
-var _utils = require("./utils.js");
+var utils = _interopRequireWildcard(require("./utils.js"));
 
 var _object = require("./object.js");
 
@@ -82125,7 +82165,9 @@ let prevRouteDataJson = "null"; // make sure home page exists
 
 if (!("Home" in _2.default)) {
   throw Error("Hey, this template expects there to be a 'Home.vue' page.\nIf you don't want one that's fine. Just change the router in the App.vue file so it doesn't expect/need one");
-} // create Root instance and attach it (executed after this file loads)
+} // TASKS:
+// check if videoId giver-outer is working
+// create Root instance and attach it (executed after this file loads)
 
 
 let RootComponent;
@@ -82133,7 +82175,8 @@ setTimeout(() => new (_vue.default.extend(RootComponent))().$mount('#vue-root'),
 let untrackedData = {
   firstSearchLoad: true,
   usernameList: [],
-  videoIdToPath: {}
+  videoIdToPath: {},
+  previousVideoInfoString: null
 };
 
 var _default = RootComponent = {
@@ -82217,7 +82260,7 @@ var _default = RootComponent = {
     };
 
     const $root = this;
-    let promise = (0, _utils.deferredPromise)();
+    let promise = (0, utils.deferredPromise)();
     promise.then(runVideoCallbacks);
     const videoInterface = {
       _videoLoadedPromise: promise,
@@ -82228,11 +82271,75 @@ var _default = RootComponent = {
       keySegmentsPromise: Promise.resolve([]),
 
       // this gets triggered first/immediately
-      _videoInRouteHasChanged() {
-        console.debug(`$root.routeData$.videoInfo is:`, { ...$root.routeData$.videoInfo
-        }); // refresh the promise
+      async _videoInRouteHasChanged() {
+        const currentVideoInfoString = JSON.stringify($root.routeData$?.videoInfo);
 
-        const promise = (0, _utils.deferredPromise)();
+        if (untrackedData.previousVideoInfoString == currentVideoInfoString) {
+          return;
+        }
+
+        untrackedData.previousVideoInfoString = currentVideoInfoString;
+        console.debug(`$root.routeData$.videoInfo is:`, { ...$root.routeData$.videoInfo
+        });
+
+        if ($root.routeData$?.videoInfo?.path && !$root.routeData$?.videoInfo?.videoId) {
+          const exampleId = (0, utils.createVideoId)();
+          const existingVideoPath = $root.routeData$?.videoInfo?.path;
+          const videoBaseName = existingVideoPath.split(/\\|\//g).slice(-1)[0];
+          const frontPart = videoBaseName.split('.').slice(0, -1).join('.');
+
+          _vue.default.toasted.show(`<br>Hey! This video ("${utils.escapeHtml(videoBaseName)}") is missing a video ID<br>I can't record observations without an ID<br>Just rename the file to "${utils.escapeHtml(frontPart)}.${exampleId}.mp4"<br>Where "${exampleId}" is the video ID<br>`, {
+            keepOnHover: true,
+            action: [{
+              text: 'Rename It For Me',
+              onClick: async (eventData, toastObject) => {
+                try {
+                  const {
+                    videoId,
+                    videoPath: path
+                  } = await window.backend.giveVideoAnId(existingVideoPath);
+
+                  _vue.default.toasted.show(`Video renamed to "${utils.escapeHtml(path)}"`, {
+                    closeOnSwipe: false,
+                    keepOnHover: true,
+                    action: {
+                      text: 'Close',
+                      onClick: (e, toastObject) => {
+                        toastObject.goAway(0);
+                      }
+                    }
+                  });
+
+                  await $root.videoInterface.goToThisVideo({
+                    videoId,
+                    path
+                  });
+                } catch (error) {
+                  _vue.default.toasted.show(`<br>${utils.escapeHtml(error.message)}<br>`.replace(/\n/g, "<br>"), {
+                    closeOnSwipe: false,
+                    keepOnHover: true,
+                    action: {
+                      text: 'Close',
+                      onClick: (e, toastObject) => {
+                        toastObject.goAway(0);
+                      }
+                    }
+                  });
+                }
+
+                toastObject.goAway(1);
+              }
+            }, {
+              text: 'Close',
+              onClick: (eventData, toastObject) => {
+                toastObject.goAway(1);
+              }
+            }]
+          });
+        } // refresh the promise
+
+
+        const promise = (0, utils.deferredPromise)();
         promise.then(runVideoCallbacks);
         $root.videoInterface._videoLoadedPromise = promise;
         $root.videoInterface._videoLoadedTemporaryCallbacks = new Set();
@@ -82294,7 +82401,9 @@ var _default = RootComponent = {
 
       async goToThisVideo(videoInfo) {
         $root.videoInterface._player = null;
-        $root.videoInterface._videoLoadedTemporaryCallbacks = new Set(); // 
+        $root.videoInterface._videoLoadedTemporaryCallbacks = new Set();
+        const originalVideoInfo = { ...videoInfo
+        }; // 
         // add what we know to the videoInfo
         // 
 
@@ -82320,7 +82429,9 @@ var _default = RootComponent = {
         }
 
         return $root.push({
-          videoInfo
+          videoInfo: { ...videoInfo,
+            ...originalVideoInfo
+          }
         });
       },
 
@@ -82591,7 +82702,7 @@ var _default = RootComponent = {
 
 
       Object.keys(newLabels).forEach(eachLabelName => newLabels[eachLabelName] = {
-        color: (0, _utils.getColor)(eachLabelName),
+        color: (0, utils.getColor)(eachLabelName),
         ...newLabels[eachLabelName],
         // preserve selection information
         // TODO: should probably rewrite where/how this data is saved
@@ -82613,7 +82724,7 @@ var _default = RootComponent = {
       const noneAreSelected = Object.values(this.$root.labels).every(each => !each.selected); // then add it
 
       this.$root.labels[labelName] = {
-        color: (0, _utils.getColor)(labelName),
+        color: (0, utils.getColor)(labelName),
         segmentCount: 1,
         videoCount: 1,
         videos: [videoId],
