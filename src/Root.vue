@@ -330,21 +330,27 @@ export default RootComponent = {
                     disagreement: 0,
                 },
             },
-            selectedVideo: null,
             selectedSegment: null,
             labels: {},
             videos: {},
             needToLoad$: {
             },
+            email: window.storageObject.email,
         }
     },
     mounted() {
-        this.videoInterface._videoInRouteHasChanged() //inital load 
+        this.videoInterface._videoInRouteHasChanged() //inital load
+        setTimeout(() => {
+            this.getAValidEmail()
+        }, 100)
         frontendDb.getUsernames().then(usernames=>{
             untrackedData.usernameList = untrackedData.usernameList.concat(usernames)
         })
     },
     watch: {
+        email(newValue){
+            window.storageObject.email = this.$root.email
+        },
         "searchResults.videos": {
             deep: true,
             handler() {
@@ -433,6 +439,21 @@ export default RootComponent = {
     computed: {
     },
     methods: {
+        getAValidEmail() {
+            if (utils.isInvalidEmail(this.$root.email)) {
+                let prefix = ""
+                let email = ""
+                while (true) {
+                    email = prompt(`${prefix}What email do you want to attach to your observations?`)
+                    if (utils.isInvalidEmail(email)) {
+                        prefix = "Sorry that doesn't seem to be a valid email\n"
+                    } else {
+                        break
+                    }
+                }
+                this.$root.email = email
+            }
+        },
         getUsernameList() {
             untrackedData.usernameList = [... new Set(untrackedData.usernameList.concat(Object.keys(this.searchResults.observers)))]
             return untrackedData.usernameList
@@ -512,6 +533,7 @@ export default RootComponent = {
         --red: #e57373;
         --break-tag-height: 18px;
         --gray: #a8a8a8;
+        --darkgray: #686868;
     }
     #vue-root {
         overflow: hidden;

@@ -1,5 +1,6 @@
 import { toString, toRepresentation } from "./string.js"
 import * as yaml from 'yaml'
+import * as utils from './utils.js'
 
 import {
     localVideoPrefix,
@@ -43,7 +44,7 @@ export const createDefaultObservationEntry = (currentTime)=>({
     type: "segment",
     videoId:            null,
     startTime:          (currentTime||0).toFixed(3)-0,
-    endTime:            ((currentTime||0)+0.01).toFixed(3)-0,
+    endTime:            (currentTime||0).toFixed(3)-0,
     observer:           window.storageObject.observer||"",
     isHuman:            true,
     confirmedBySomeone: false,
@@ -61,7 +62,7 @@ export const createDefaultObservationEntry = (currentTime)=>({
         return nameCoerce(label)
     }
     export function coerceObserver(observer) {
-        return nameCoerce(observer)
+        return observer
     }
     export function coerceobservationId(observationId) {
         if (typeof observationId != 'string') {
@@ -92,11 +93,14 @@ export const createDefaultObservationEntry = (currentTime)=>({
         }
         return false
     }
-    export function observerIsValid(observer) {
-        if (typeof observer != "string" || !isValidName(observer)) {
-            return false
-        }
-        return true
+    export function observerIsValid({observer, isHuman}) {
+        return (
+            typeof observer == "string" &&
+            (
+                (isHuman && !utils.isInvalidEmail(observer))
+                || (!isHuman && isValidName(observer))
+            )
+        )
     }
     export function labelIsValid(label) {
         if (typeof label != "string" || !isValidName(label)) {
@@ -114,15 +118,18 @@ export const createDefaultObservationEntry = (currentTime)=>({
 
     // NOTE: this isn't necessarily a complete validation check
     export function quickLocalValidationCheck({observationData, videoDuration}) {
+        observationData = observationData||{}
         observationData.startTime-=0
         observationData.endTime-=0
         observationData.labelConfidence-=0
         
+        console.debug(`observationData?.observer is:`,observationData?.observer)
+
         return {
             startTime: observationData.startTime >= 0 && observationData.startTime <= observationData.endTime,
             endTime: observationData.endTime >= 0 && observationData.startTime <= observationData.endTime && (videoDuration?observationData.endTime <= videoDuration:true),
-            label: isValidName(observationData?.label),
-            observer: isValidName(observationData?.observer),
+            label: isValidName(observationData.label),
+            observer: observerIsValid(observationData),
             labelConfidence: labelConfidenceIsValid(observationData.labelConfidence),
             videoId: videoIdIsValid(observationData.videoId),
         }
@@ -156,7 +163,6 @@ export const createDefaultObservationEntry = (currentTime)=>({
         // 
         // enforce simplfied names
         // 
-        observationEntry.observer = coerceObserver(observationEntry.observer)
         observationEntry.label = coerceLabel(observationEntry.label)
 
         // 
@@ -216,8 +222,8 @@ export const createDefaultObservationEntry = (currentTime)=>({
                 // 
                 // observer
                 // 
-                if (!observerIsValid(observationEntry.observer)) {
-                    errorMessages.push(`observationEntry.observer: ${toRepresentation(observationEntry.observer)}\nAn observationEntry must have a "observer" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to contain only lowercase letters, numbers, dashes and periods`)
+                if (!observerIsValid(observationEntry)) {
+                    errorMessages.push(`observationEntry.observer: ${toRepresentation(observationEntry.observer)}\nAn observationEntry must have a "observer" property\n- for human observers it needs to be an email\n- for machine learning models it needs to be a string that contains only lowercase letters, numbers, dashes and periods`)
                 }
 
                 // 

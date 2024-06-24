@@ -150,7 +150,7 @@
                                 :disabled="!editing"
                                 ref="observerElement"
                                 floating-label
-                                label="Observer (username)"
+                                label="Observer"
                                 :invalid="!isValid.observer"
                                 v-model="observationData.observer"
                                 @change="onObserverChange"
@@ -250,6 +250,7 @@ export default {
             return !Object.values(this.isValid).some(value=>!value)
         },
         isValid() {
+            console.debug(`this.observationData.isHuman is:`,this.observationData.isHuman)
             return observationTooling.quickLocalValidationCheck({
                 observationData: this.observationData,
                 videoDuration: this.$root.videoInterface?.player?.duration,
@@ -275,6 +276,7 @@ export default {
     },
     windowListeners: {
         keydown(eventObj) {
+            console.debug(`eventObj is:`,eventObj)
             if (eventObj.key == "n") {
                 this.onNewObservation()
                 eventObj.preventDefault()
@@ -344,6 +346,7 @@ export default {
             // instantly convert to kebab case if somehow it isn't already
             this.observationData.label = toKebabCase(`${this.observationData.label}`.toLowerCase())
             this.observationData.videoId = this.$root.videoInterface.videoId
+            this.observationData.observer = this.$root.email
             this.editing = true
         },
         onCancelEdit() {
@@ -353,7 +356,6 @@ export default {
         },
         async onSaveEdit() {
             console.log(`onSaveEdit`)
-            
             if (observationTooling.observerIsValid(this.observationData.observer)) {    storageObject.observer    = this.observationData.observer }
             if (observationTooling.labelIsValid(this.observationData.label)      ) {    storageObject.recentLabel = this.observationData.label    }
             

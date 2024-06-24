@@ -1,6 +1,15 @@
 <template lang="pug">
     column.search(align-v="top" width="100%")
         row.video-wrapper(style="min-width: 100%; margin-top: 1rem;")
+            ui-textbox(
+                adlkfjadlskjflksd
+                floating-label
+                label=""
+                placeholder="email"
+                :invalid="emailIsInvalid"
+                v-model="$root.email"
+                color="gray"
+            )
             ui-button.delete-button(
                 @click="showDeletePrompt"
                 icon="delete"
@@ -113,6 +122,7 @@
 <script>
 import { frontendDb } from '../iilvd-api.js'
 import { colors, debounce, download, } from "../utils.js"
+import * as utils from "../utils.js"
 import { isNumber } from "lodash"
 
 let observationEntries
@@ -134,6 +144,9 @@ export default {
         this.debouncedSubmitSearch = debounce(this.submitSearch, 500)
     },
     computed: {
+        emailIsInvalid() {
+            return utils.isInvalidEmail(this.$root.email)
+        }
     },
     methods: {
         searchWasSubmitted(data) {
@@ -335,4 +348,15 @@ export default {
                 margin-right: 5px
                 margin-top: 5px
 
+
+.video-wrapper
+    ::v-deep.ui-textbox
+        position: absolute
+        left: 1rem
+        top: 1rem
+        background: transparent
+        width: 12rem
+        
+        .ui-textbox__input
+            color: var(--darkgray)
 </style>

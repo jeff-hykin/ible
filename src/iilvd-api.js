@@ -2,7 +2,6 @@ let { deferredPromise, asyncIteratorToList, getColor, dynamicSort } = require(".
 let { get, set, remove } = require("./object.js")
 let { toKebabCase, toSnakeCase, toScreamingtoKebabCase, toScreamingtoSnakeCase } = require("./string.js")
 const observationTooling = require("./observation_tooling.js")
-import { isNumber } from "lodash"
  
 // 
 // indexDB solution
@@ -534,7 +533,7 @@ const managers = {
             delete existingTables.labels[oldLabelName]
             for (const [key, value] of Object.entries(existingTables.observations)) {
                 if (value.label == oldLabelName) {
-                    value.observer = newLabelName
+                    value.label = newLabelName
                 }
             }
             return existingTables
@@ -749,8 +748,8 @@ const frontendDb = {
             // build the query
             // 
             if (filterAndSort.labelName                            ) { where.push({ valueOf: ['label'                            ], is:                     filterAndSort.labelName         , }) }
-            if (isNumber(filterAndSort.maxlabelConfidence)         ) { where.push({ valueOf: ['labelConfidence'                  ], isLessThanOrEqualTo:    filterAndSort.maxlabelConfidence, }) }
-            if (isNumber(filterAndSort.minlabelConfidence)         ) { where.push({ valueOf: ['labelConfidence'                  ], isGreaterThanOrEqualTo: filterAndSort.minlabelConfidence, }) }
+            if (Number.isFinite(filterAndSort.maxlabelConfidence)  ) { where.push({ valueOf: ['labelConfidence'                  ], isLessThanOrEqualTo:    filterAndSort.maxlabelConfidence, }) }
+            if (Number.isFinite(filterAndSort.minlabelConfidence)  ) { where.push({ valueOf: ['labelConfidence'                  ], isGreaterThanOrEqualTo: filterAndSort.minlabelConfidence, }) }
             if (filterAndSort.observer                             ) { where.push({ valueOf: ['observer'                         ], is:                     filterAndSort.observer          , }) }
             if (filterAndSort.kindOfObserver == "Only Humans"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     true                          , }) }
             if (filterAndSort.kindOfObserver == "Only Robots"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     false                         , }) }
