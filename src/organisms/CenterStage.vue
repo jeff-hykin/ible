@@ -40,7 +40,6 @@
                     InfoSection.info-section(
                         :labelName="activeData().labelName"
                         :videoId="activeData().videoId"
-                        :segmentUuid="activeData().segmentUuid"
                         :currentTime="currentTime"
                     )
 </template>
@@ -88,7 +87,6 @@ export default {
             return {
                 labelName: this.$root.routeData$?.labelName||"",
                 videoId: this.$root.videoInterface.videoId||"",
-                segmentUuid: this.$root.routeData$?.segmentUuid||"",
             }
         },
         getVideoPath() {

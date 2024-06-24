@@ -5,10 +5,6 @@
         | Current Video ID: {{videoId}}
         br
         | Pause Time: {{(currentTime||0).toFixed(2)}} sec
-        br
-        | {{segmentUuid && `Selected Segment UUID:`}}
-        span.uuid 
-            | {{segmentUuid}}
 </template>
 <script>
 export default {
@@ -16,7 +12,6 @@ export default {
         "videoId",
         "labelName",
         "currentTime",
-        "segmentUuid",
     ],
     data: ()=>({
     }),
