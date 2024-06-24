@@ -41,7 +41,7 @@ export class InvalidFormatError extends Error {
 }
 export const createDefaultObservationEntry = (currentTime)=>({
     observationId: createUuid(),
-    type: "segment",
+    type: "marker",
     videoId:            null,
     startTime:          (currentTime||0).toFixed(3)-0,
     endTime:            (currentTime||0).toFixed(3)-0,
