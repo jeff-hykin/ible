@@ -171,7 +171,7 @@
                                 column(align-h="left" :style="`transition: all ease 0.3s; opacity: ${showOtherData?1:0}; max-height: ${showOtherData?'40rem':0}; height: fit-content; max-width: 100%; min-width: 100%; `")
                                     div(style="margin-top: 0.5rem")
                                     div
-                                        ui-tooltip(v-if="editing" position="left" animation="fade" :trigger="$refs.observerElement")
+                                        //- ui-tooltip(v-if="editing" position="left" animation="fade" :trigger="$refs.observerElement")
                                             | all lowercase letters, numbers, dashes and periods
                                         ui-textbox(
                                             :disabled="true"
