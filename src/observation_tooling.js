@@ -141,7 +141,7 @@ export const createDefaultObservationEntry = (currentTime)=>({
         // doing this prevents/removes extraneous properties
         observationEntry = {
             observationId:      observationEntry?.observationId,
-            type:               observationEntry?.type||(observationEntry?.startTime != observationEntry?.endTime?"segment":"marker"),
+            type:               observationEntry?.startTime != observationEntry?.endTime ? "segment" : "marker",
             videoId:            observationEntry?.videoId,
             startTime:          observationEntry?.startTime,
             endTime:            observationEntry?.endTime,
