@@ -3,11 +3,11 @@
     ui-autocomplete.rounded-search(
         placeholder="Video name or YouTube URL"
         @focus="selectSearchText"
-        @keydown.enter="videoSelect"
-        @change="videoSelect"
+        @select="videoSelect"
         @paste="videoSelect"
         v-model="searchTerm"
         :suggestions="suggestions"
+        minChars=0
     )
 </template>
 
@@ -42,28 +42,18 @@ export default {
         },
         videoSelect() {
             let videoSearchTerm = this.searchTerm.trim()
+            if (!window.storageObject.videoPathNames.includes(videoSearchTerm)) {
+                if (!confirm("This doesn't seem to be one of the available videos, do you want me to try and load it anyways?")) {
+                    return
+                }
+            }
             const videoInfo = videoTooling.searchTermToVideoInfo(videoSearchTerm)
             if (!videoInfo) {
                 return
             }
             
-            if (videoInfo.videoId && !videoInfo.isYoutubeUrl) {
-                // FIXME
-                this.$toasted.show(`This video seems to be missing a video ID`, {
-                    keepOnHover:true,
-                    action: [
-                        {
-                            text : 'Load Anyway (View-Only)',
-                            onClick : (eventData, toastObject) => {
-                                toastObject.goAway(1)
-                            },
-                        },
-                    ]
-                })
-            } else {
-                this.$root.videoInterface.goToThisVideo(videoInfo)
-                this.$emit("submit", videoInfo) // triggers "hideSearchArea"
-            }
+            this.$root.videoInterface.goToThisVideo(videoInfo)
+            this.$emit("submit", videoInfo) // triggers "hideSearchArea"
         },
     }
 }
