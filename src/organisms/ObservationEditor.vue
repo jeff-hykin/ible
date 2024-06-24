@@ -142,20 +142,6 @@
                                 :invalid="!isValid.labelConfidence"
                                 v-model="observationData.labelConfidence"
                             )
-                        div(tabindex="-1")
-                            ui-tooltip(v-if="editing" position="left" animation="fade" :trigger="$refs.observerElement")
-                                | all lowercase letters, numbers, dashes and periods
-                            ui-textbox(
-                                tabindex="5"
-                                :disabled="!editing"
-                                ref="observerElement"
-                                floating-label
-                                label="Observer"
-                                :invalid="!isValid.observer"
-                                v-model="observationData.observer"
-                                @change="onObserverChange"
-                                @input="onObserverChange"
-                            )
                         UiSwitch(:disabled="!editing" v-model="observationData.isHuman" tabindex="6")
                             | Observer Is Human
                         UiSwitch(:disabled="!editing" v-model="observationData.confirmedBySomeone" v-if="!observationData.isHuman" tabindex="7")
@@ -177,24 +163,38 @@
                             position="absolute"
                             bottom="1rem"
                             left="5%"
+                            box-shadow="0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3)"
                         )
                             span(style="width: 12rem; text-align: center; color: var(--gray); padding: 0.5rem; border-radius: 1rem;")
                                 | other data
                             transition(name="quick-fade")
-                                column(align-h="left" :style="`transition: all ease 0.3s; opacity: ${showOtherData?1:0}; max-height: ${showOtherData?'40rem':0}; height: fit-content; max-width: 100%; min-width: 100%;`")
+                                column(align-h="left" :style="`transition: all ease 0.3s; opacity: ${showOtherData?1:0}; max-height: ${showOtherData?'40rem':0}; height: fit-content; max-width: 100%; min-width: 100%; `")
                                     div(style="margin-top: 0.5rem")
+                                    div
+                                        ui-tooltip(v-if="editing" position="left" animation="fade" :trigger="$refs.observerElement")
+                                            | all lowercase letters, numbers, dashes and periods
+                                        ui-textbox(
+                                            :disabled="true"
+                                            ref="observerElement"
+                                            floating-label
+                                            label="Observer"
+                                            :invalid="!isValid.observer"
+                                            v-model="observationData.observer"
+                                            @change="onObserverChange"
+                                            @input="onObserverChange"
+                                        )
+                                    ui-textbox(
+                                        :disabled="true"
+                                        floating-label
+                                        label="Created At"
+                                        v-model="humanTime"
+                                    )
                                     ui-textbox(
                                         :disabled="true"
                                         floating-label
                                         label="Video Id"
                                         :invalid="!isValid.videoId"
                                         v-model="observationData.videoId"
-                                    )
-                                    ui-textbox(
-                                        :disabled="true"
-                                        floating-label
-                                        label="Created At"
-                                        v-model="humanTime"
                                     )
                                     ui-textbox(
                                         style="margin-top: -0.4rem"
