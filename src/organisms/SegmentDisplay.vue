@@ -5,17 +5,29 @@
             h5
                 | Observations
         transition(name="fade")
-            row.segment-container(align-h="space-between" position="relative" :height="`${segmentsInfo.maxLevel*2.2}rem`")
-                row(
+            row.segment-container(align-h="space-between" position="relative" :height="`${segmentsInfo.maxLevel*2.2}rem`" :min-height="segmentsInfo.organizedSegments.length <= 0 ? '10rem' : 0")
+                column(
                     v-if="segmentsInfo.organizedSegments.length <= 0"
                     font-size="14pt"
                     font-weight="lighter"
                     color="gray"
                     position="absolute"
+                    min-height="12rem"
                     width="100%"
+                    align-h="center"
+                    text-align="center"
                     padding="0.7rem"
                 )
                     | No observations with given filters
+                    br
+                    span(style="margin-bottom: -1rem;")
+                        | (<u>press N</u> to create an observation at the current time)
+                    br
+                    span(style="margin-bottom: -1rem;")
+                        | (<u>press M</u> to set the endTime)
+                    br
+                    span(style="margin-bottom: -1rem;")
+                        | (<u>press ctrl+S</u> to save the observation)
                 row.segment(
                     v-if="segmentsInfo.organizedSegments.length > 0"
                     v-for="(eachSegment, index) in segmentsInfo.organizedSegments"
