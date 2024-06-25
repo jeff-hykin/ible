@@ -56,10 +56,15 @@ export function convertToCsv(data, { defaultHeaders=[], delimiter="\t" }={}) {
                 eachRow[index] = newString
                 continue
             }
-            eachRow[index] = yaml.stringify(each)
-            // don't have a trailing newline if its not needed (it IS needed for block-strings AFAIK)
-            if (eachRow[index].length-1 == each?.length && eachRow[index].slice(-1)[0] === "\n") {
-                eachRow[index] = each
+            const asString = yaml.stringify(each)
+            if (asString.startsWith('"') && asString.endsWith('"\n')) {
+                eachRow[index] = asString.slice(0,-1)
+            } else {
+                eachRow[index] = asString
+                // don't have a trailing newline if its not needed (it IS needed for block-strings AFAIK)
+                if (eachRow[index].length-1 == each?.length && eachRow[index].slice(-1)[0] === "\n") {
+                    eachRow[index] = each
+                }
             }
         }
     }
