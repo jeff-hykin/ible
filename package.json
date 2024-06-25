@@ -5,10 +5,10 @@
     "main": "src/Root.vue",
     "scripts": {
         "start": "npm run build && deno run -A ./main.js",
-        "build": "rm -rf .cache .parcel-cache docs/*.js docs/*.css docs/*.html && npx parcel build index.html --out-dir docs --no-source-maps --no-minify --public-url './'",
-        "clean": "rm -rf .cache .parcel-cache docs/",
+        "build": "run/compile",
+        "clean": "run/clean",
         "bundle": "deno bundle main.js > main.bundle.js",
-        "serve": "npx http-server ./docs/"
+        "serve": "deno run -A ./main.js"
     },
     "bin": {
         "ible.ps1": "./main.bundle.js",
