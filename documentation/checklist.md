@@ -13,37 +13,45 @@ Publication options:
     - public help thrust
     - hosted CMU
 
-Consider:
-- how to do markers
-    - `m` for instant marker
-- how to update the end-time of the segment
-    - if untouched, have it update with the video time
-    - enter to create
-    - enter again to save
-- how to handle video "done" for both labeling and verification
-- how to do CSV format (including escaping)
 
 Major Chonological Changes:
 - DONE: publish as npm package
-- get video ID's thing working
-    - TODO: finish switchging to `videoInfo` instead of `videoId`
+- DONE: get video ID's thing working
+    - finish switchging to `videoInfo` instead of `videoId`
     - figure out why segments are not showing up
     - List videos in the sidebar
     - create error response for missing the videoId but having a valid videoPath
-- enable null end time
-- video centric data format as JSON
-    - upload
-    - download
-- display video speficic data
-- add settings modal
-    - username input box, goes directly
-    - if no username is set, ask for an email (modal popup)
+
+- DONE: enable end time == start time
+    - check rendering of it
+
+- DONE: if no username is set, ask for an email (modal popup)
+    - change obsever to observer-email
     - make observer non-editable in obsever view
+
+- change "confirmed by one human"
+    - make "Confirm" "Reject" buttons in non-editing mode
+    - make a list of who has confirm/rejected
+
+- get listing of videos from backend to work
+
+- video centric data format
+    - add video entries to frontend DB
+    - on download
+        - * find all the relevent videos from the search
+        - combine the observation ID's with them
+        - create a TSV
+    - on upload
+        - check the headers
+        - check that the video data is the same
+        - 
+    - display video speficic data
+    - remove/update the format demonstration
+
+LATER:
+- add settings modal
     - allow the username to be set from the URL
         - remove it from the URL as soon as it gets set
-    - change username input somewhere other than on the observation, hide it from the editor view
-- CSV upload/download
-    - will I remove the format demonstration? (JSON)
 
 Say in paper:
 - "in an effort to reduce label noise" (citations) we
@@ -142,6 +150,16 @@ Big Changes:
         - rounding issue for createdAt
 
 Future:
+- would be much more efficient to do file-watching on the videos path instead of recursively listing all of them
+    - if there are too many videos this could actually cause a computation problem of too many requests for listing (memory leak and slow cpu)
+- how to do markers
+    - `m` for instant marker
+- how to update the end-time of the segment
+    - if untouched, have it update with the video time
+    - enter to create
+    - enter again to save
+- how to handle video "done" for both labeling and verification
+- how to do CSV format (including escaping)
 - _
     - give a notification for creating a new label (maybe on unfocus)
     - It beign an app

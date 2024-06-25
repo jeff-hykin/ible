@@ -52,6 +52,38 @@ const hostname = args.hostname
 const port = args.port
 const baseDirectory = path.join(thisFolder, "docs")
 const videoDirectory = FileSystem.makeAbsolutePath(path.join(os.homedir(), "videos"))
+const cache = {
+    videoPathsString: "[]",
+    localVideosHash: "",
+}
+
+// 
+// start watching the videos folder 
+// 
+const getVideoPaths = async (videoDirectory)=>{
+    const list = await FileSystem.listFilePathsIn(
+        videoDirectory,
+        {
+            recursively: true,
+            shouldntInclude: (each)=>{
+                const ending = each.split(".").slice(-1)[0]
+                if (each.includes(".") && videoExtensions.includes(ending)) {
+                    return false
+                }
+                return true
+            },
+        }
+    )
+    return list.map(each=>each.slice(videoDirectory.length+1))
+}
+const refreshVideoList = async ()=>{
+    cache.videoPathsString = JSON.stringify(await getVideoPaths(videoDirectory))
+    cache.localVideosHash = utils.quickHash(cache.videoPathsString)
+}
+// 5000 = repeat every (5000ms + duration of function call)
+new utils.DynamicInterval().setRate(5000).onInterval(()=>{
+    refreshVideoList()
+}).start()
 
 //
 // setup the server
@@ -71,7 +103,6 @@ Deno.serve({ port, hostname }, async (request) => {
     // 
     if (urlPath.startsWith("/videos/")) {
         let videoPath = path.join(videoDirectory, urlPath.replace(/^\/videos\//, ""))
-        console.debug(`videoPath is:`,videoPath)
         if (fs.existsSync(videoPath)) {
             filePath = videoPath
         }
@@ -80,28 +111,15 @@ Deno.serve({ port, hostname }, async (request) => {
     // 
     } else if (urlPath.startsWith("/backend/")) {
         // 
+        // asking for change hash
+        // 
+        if (urlPath.startsWith("/backend/video_change_hash/")) {
+            return new Response(JSON.stringify(cache.localVideosHash), {status: 200})
+        // 
         // asking for list of videos
         // 
-        if (urlPath.startsWith("/backend/list_videos/")) {
-            try {
-                    const list = await FileSystem.listFilePathsIn(
-                    videoDirectory,
-                    {
-                        recursively: true,
-                        shouldntInclude: (each)=>{
-                            const ending = each.split(".").slice(-1)[0]
-                            if (each.includes(".") && videoExtensions.includes(ending)) {
-                                return false
-                            }
-                            return true
-                        },
-                    }
-                )
-                const response = JSON.stringify(list.map(each=>each.slice(videoDirectory.length+1)))
-                return new Response(response, {status: 200})
-            } catch (error) {
-                return new Response(`Sorry, there was a problem getting the list of videos: ${error}\n\n${error.stack}`, {status: 400})
-            }
+        } else if (urlPath.startsWith("/backend/list_videos/")) {
+            return new Response(cache.videoPathsString, {status: 200})
         // 
         // asking to give a video an id
         // 

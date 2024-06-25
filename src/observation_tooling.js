@@ -123,8 +123,6 @@ export const createDefaultObservationEntry = (currentTime)=>({
         observationData.endTime-=0
         observationData.labelConfidence-=0
         
-        console.debug(`observationData?.observer is:`,observationData?.observer)
-
         return {
             startTime: observationData.startTime >= 0 && observationData.startTime <= observationData.endTime,
             endTime: observationData.endTime >= 0 && observationData.startTime <= observationData.endTime && (videoDuration?observationData.endTime <= videoDuration:true),

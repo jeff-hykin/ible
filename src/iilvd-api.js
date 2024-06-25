@@ -211,9 +211,19 @@ const indexDb = {
                 let requestPromise
                 const request = objectStore.get(id)
                 Object.assign(request, {
-                    onsuccess: ()=>requestPromise.resolve(
-                        [ address, get({ keyList: subAddress, from: request.result?.v, failValue: undefined }) ],
-                    ),
+                    onsuccess: (thingy)=>{
+                        if (subAddress.length == 0) {
+                            requestPromise.resolve(
+                                [ address, request.result?.v ]
+                            )
+                        } else {
+                            const value = get({ keyList: subAddress, from: request.result?.v, failValue: undefined })
+                            requestPromise.resolve(
+                                [ address, value ],
+                            )
+                        }
+                        return requestPromise
+                    },
                     onerror: (err)=>requestPromise.reject(err),
                 })
                 requestPromise = deferredPromise()
@@ -391,6 +401,9 @@ const indexDb = {
             return each
         }
     },
+    set(address, value) {
+        return indexDb.puts([[address, value]])
+    },
     async select({from, where=[], returnObject=false}) {
         let output
         if (returnObject) {
@@ -474,6 +487,7 @@ const indexDb = {
         return output
     },
 }
+window.indexDb = indexDb
 
 const managers = {
     labels: {
@@ -731,6 +745,26 @@ const frontendDb = {
         // TODO: clean this up after changing data structure
         return indexDb.get(["videos", videoId, ])
     },
+    async setVideos(videos) {
+        let addressValuePairs = []
+        for (const video of videos) {
+            if (typeof video.videoId != 'string') {
+                throw Error(`Tried to use frontendDb.setVideos() but one of the videos videoId wasn't a string`)
+            }
+            addressValuePairs.push([
+                ["videos", video.videoId],
+                video,
+            ])
+        }
+        return indexDb.puts(addressValuePairs)
+    },
+    async getVideos(videoIds) {
+        let values = []
+        for await (const [ address, value ] of indexDb.gets(videoIds.map(each=>["videos", each]))) {
+            values.push(value)
+        }
+        return values
+    },
     async getVideoByPath(videoPath) {
         return indexDb.select({
             from:'videos',
@@ -785,7 +819,6 @@ const frontendDb = {
             const items = await indexDb.select({
                 from:'observations',
                 where:[
-                    { valueOf: ['type'], is:'segment' },
                     ...where,
                 ],
             })
@@ -808,7 +841,7 @@ const frontendDb = {
                 results.labels[each.label] += 1
                 
                 // count observations for videos
-                if (!results.videos[each.videoId]) { results.videos[each.videoId] = 0 }
+                if (!results.videos[each.videoId]) { results.videos[each.videoId] = 0  }
                 results.videos[each.videoId] += 1
                 
                 results.counts.total += 1
@@ -875,8 +908,8 @@ const frontendDb = {
 window.frontendDb = frontendDb // debugging only
 
 window.backend = {
-    async getLocalVideoNames() {
-        return JSON.parse(await (await fetch("/backend/list_videos/")).text()) 
+    async getLocalVideoPaths() {
+        return JSON.parse(await (await fetch("/backend/list_videos/")).text())
     },
     async giveVideoAnId(videoPath) {
         const response = await (await fetch(`/backend/give_video_id/${videoPath}`)).text()

@@ -27,7 +27,7 @@ export default {
         // janky, but so is trying to pass them down all the way through the component tree
         // the issue is that $root.videoInterface is not reactive (the suggestions update, but the update wouldn't trigger a re-render)
         this.interval = setInterval(()=>{
-            this.suggestions = this.$root.videoInterface.getVideoPathNames()||[]
+            this.suggestions = (this.$root.videoInterface.getvideoPaths()||[]).filter(each=>each)
         }, 1000)
     },
     // unmount
@@ -42,7 +42,7 @@ export default {
         },
         videoSelect() {
             let videoSearchTerm = this.searchTerm.trim()
-            if (!window.storageObject.videoPathNames.includes(videoSearchTerm)) {
+            if (!window.storageObject.videoPaths.includes(videoSearchTerm)) {
                 if (!confirm("This doesn't seem to be one of the available videos, do you want me to try and load it anyways?")) {
                     return
                 }

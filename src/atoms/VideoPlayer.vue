@@ -7,7 +7,7 @@
             row.message(v-if='videoPathOrUrl && !player')
                 | Video Loading...
         video(v-if='isLocalVideo(videoPathOrUrl)' ref="nativePlayer" controls style="width: 100%; z-index: 7;")
-           source(:src="`${videoPathOrUrl}`" type="video/mp4")
+           source(:src="`/videos/${videoPathOrUrl}`" type="video/mp4")
         vue-plyr(v-if='!isLocalVideo(videoPathOrUrl)' ref="vuePlyr" :style="`transition: all ease 0.6s; opacity: ${videoPathOrUrl && player ? 1 : 0}`" :key="`${Math.random()}`.replace('.','')")
             div.plyr__video-embed(v-if='!isLocalVideo(videoPathOrUrl)')
                 iframe(

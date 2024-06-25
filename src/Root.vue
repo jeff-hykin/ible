@@ -20,11 +20,12 @@ import plugins from "./plugins/*.js"
 import pages from "./pages/*.vue"
 import {getColor, deferredPromise, createVideoId, videoIdLength} from "./utils.js"
 import * as utils from "./utils.js"
+import * as basics from "./tooling/basics.bundle.js"
 import { get, set } from "./object.js"
 import * as videoTools from "./tooling/video_tooling.js"
 import { frontendDb } from "./iilvd-api.js"
 import { Router } from './plugins/router-plugin.js'
-
+window.basics = basics // debugging
 //
 // Routing Init
 //
@@ -36,6 +37,7 @@ if (!("Home" in pages)) {
 
 // TASKS:
     // check if videoId giver-outer is working
+    // clean up videoIdToPath
 
 // create Root instance and attach it (executed after this file loads)
 let RootComponent; setTimeout(()=>(new (Vue.extend(RootComponent))).$mount('#vue-root'), 0)
@@ -43,6 +45,7 @@ let untrackedData = {
     firstSearchLoad: true,
     usernameList: [],
     videoIdToPath: {},
+    videoPaths: [],
     previousVideoInfoString: null,
 }
 export default RootComponent = {
@@ -269,8 +272,8 @@ export default RootComponent = {
                     }
                     $root.videoInterface._videoLoadedPermanentCallbacks.add(callback)
                 },
-                getVideoPathNames() {
-                    return window.storageObject.videoPathNames
+                getvideoPaths() {
+                    return window.storageObject.videoPaths
                 },
                 getVideoInfos() {
                     const videoInfos = []
@@ -283,6 +286,10 @@ export default RootComponent = {
                     }
                     return videoInfos
                 },
+                getLocalVideoName(videoId) {
+                    const videoPath = videoInterface.videoIdToPath(videoId)
+                    return videoTools.extractLocalVideoNameFromPath(videoPath)
+                },
                 videoIdToPath(videoId) {
                     if (videoTools.isLocalVideo(videoId)) {
                         return untrackedData.videoIdToPath[videoId]
@@ -290,18 +297,30 @@ export default RootComponent = {
                         return `https://www.youtube.com/embed/${videoTools.extractYoutubeVideoId(videoId)}?amp;iv_load_policy=3&amp;modestbranding=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1`
                     }
                 },
-                refreshLocalVideoData() {
-                    window.backend.getLocalVideoNames().then(names=>{
-                        untrackedData.videoIdToPath = Object.fromEntries(
-                            names.map(eachName=>[eachName, videoTools.extractLocalVideoId(eachName)])
-                        )
-                        window.storageObject.videoPathNames = names
-                    }).catch(error=>{})
+                async refreshLocalVideoData() {
+                    try {
+                        const videoPaths = await window.backend.getLocalVideoPaths()
+                        const videoIds = videoPaths.map(videoTools.extractLocalVideoId)
+                        let videos = []
+                        for (const [path,id] of basics.zip(videoPaths,videoIds)) {
+                            if (id) {
+                                videos.push({
+                                    videoId: id,
+                                    path: path,
+                                })
+                            }
+                        }
+                        // update any video paths
+                        await frontendDb.setVideos(videos)
+                        window.storageObject.videoPaths = videoPaths
+                    } catch (error) {
+                        console.warn(`Error getting videoPaths: ${error}`)
+                    }
                 },
             }
-            setInterval(()=>{
+            new utils.DynamicInterval().setRate(5000).onInterval(()=>{
                 this.videoInterface.refreshLocalVideoData()
-            }, 5000)
+            }).start()
         
         return {
             videoInterface,
@@ -408,7 +427,7 @@ export default RootComponent = {
                     // if label exists
                     let label = (this, [ "labels", this.routeData$.labelName ], null)
                     // make sure to toggle the label
-                    if (isObject(label)) {
+                    if (label instanceof Object) {
                         label.selected = true
                         this.labels = {...this.labels}
                     }
@@ -455,7 +474,7 @@ export default RootComponent = {
             }
         },
         getUsernameList() {
-            untrackedData.usernameList = [... new Set(untrackedData.usernameList.concat(Object.keys(this.searchResults.observers)))]
+            untrackedData.usernameList = [... new Set(untrackedData.usernameList.concat(Object.keys(this.searchResults.observers)))].filter(each=>each)
             return untrackedData.usernameList
         },
         push(data) {

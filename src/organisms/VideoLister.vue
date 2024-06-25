@@ -7,36 +7,67 @@
                 //- this is just used as a thumbnail
                 video(
                     v-if="isLocalVideo(eachVideoId)"
-                    :src="$root.videoInterface.videoIdToPath(eachVideoId)"
+                    :src="videoPaths[eachVideoId]"
                     style="width: 100%;max-height: 16rem; pointer-events: none;"
                 )
                 span(style="background-color: rgba(0,0,0,0.45); color: white;position: absolute; bottom: 0.1rem; left: 0.1rem; padding: 0.5rem; border-radius: 0.5rem;")
-                    | {{!isLocalVideo(eachVideoId)?"":`${getLocalVideoName(eachVideoId)}`}}
+                    | {{!isLocalVideo(eachVideoId)?"":`${videoNames[eachVideoId]||""}`}}
 </template>
 
 <script>
 import { frontendDb } from '../iilvd-api.js'
 import { set } from '../object.js'
 import { isLocalVideo, getLocalVideoName } from '../observation_tooling.js'
-
+import * as videoTools from "../tooling/video_tooling.js"
 // TASKS:
     // test clicking on video in video list
     // fix getLocalVideoName
 
 export default {
     data: ()=>({
+        videoNames: {},
+        videoPaths: {},
     }),
+    watch: {
+        '$root.searchResults.videos': {
+            deep: true,
+            handler() {
+                setTimeout(async () => {
+                    this.getVideoExtraInfo().catch(console.error)
+                }, 0)
+            }
+        },
+    },
+    mounted() {
+        window.VideoLister = this
+        setTimeout(async () => {
+            this.getVideoExtraInfo().catch(console.error)
+        }, 1000)
+    },
     computed: {
         videoResults() {
-            let videos = this.$root.searchResults.videos || this.$root.videoInterface.getVideoPathNames()
+            let videos = this.$root.searchResults.videos || this.$root.videoInterface.getvideoPaths()
             let selectedId = this.$root.videoInterface.videoId
             let filtered = Object.keys(videos).filter(each=>each!==selectedId)
             return filtered
-        }
+        },
     },
     methods: {
         isLocalVideo,
-        getLocalVideoName,
+        async getVideoExtraInfo() {
+            const videoIds = Object.keys(this.$root.searchResults.videos)
+            const videos = await frontendDb.getVideos(videoIds)
+            const videoNames = {}
+            const videoPaths = {}
+            for (const each of videos) {
+                if (each?.videoId) {
+                    videoPaths[each.videoId] = `/videos/${each.path}`
+                    videoNames[each.videoId]  = videoTools.extractLocalVideoNameFromPath(each.path)
+                }
+            }
+            this.videoNames = videoNames
+            this.videoPaths = videoPaths
+        },
     }
 }
 </script>

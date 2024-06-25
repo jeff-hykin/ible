@@ -528,7 +528,7 @@ const defaultOnError = (err) => {
  */
 export class DynamicInterval {
     constructor() {
-        this.onError = defaultOnError
+        this.errorCallback = defaultOnError
         this.callback = () => {}
         this.rate = null
         this.accountForDuration = true
@@ -541,16 +541,16 @@ export class DynamicInterval {
             if (this.accountForDuration) {
                 await this.callback()
             } else {
-                this.callback().catch(this.onError)
+                this.callback().catch(this.errorCallback)
             }
         } catch (err) {
             try {
-                await this.onError(err)
+                await this.errorCallback(err)
             } catch (error) {
                 defaultOnError(error)
             }
         }
-        this._id = setTimeout(this._runCallback, this.rate)
+        this._id = setTimeout(()=>this._runCallback(), this.rate)
     }
     
     setRate(rate) {
@@ -563,8 +563,8 @@ export class DynamicInterval {
         return this
     }
 
-    onError(onError) {
-        this.onError = onError
+    onError(callback) {
+        this.errorCallback = callback
         return this
     }
 
@@ -582,7 +582,7 @@ export class DynamicInterval {
         if (!Number.isFinite(this.rate)) {
             throw Error(`DynamicInterval.start() called but no call-rate was set`)
         }
-        this._id = setTimeout(this._runCallback, delay)
+        this._id = setTimeout(()=>this._runCallback(), delay)
         return this
     }
 }

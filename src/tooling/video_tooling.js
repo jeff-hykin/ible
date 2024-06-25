@@ -86,7 +86,6 @@ export const searchTermToVideoInfo = (searchTerm)=>{
             path: searchTerm,
         }
     } else {
-        console.debug(`searchTerm is:`,searchTerm)
         const localVideoId = extractLocalVideoId(searchTerm)
         return {
             isYoutubeUrl: false,
