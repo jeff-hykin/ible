@@ -29,13 +29,17 @@ Major Chonological Changes:
     - change obsever to observer-email
     - make observer non-editable in obsever view
 
+- DONE: get listing of videos from backend to work
+    - had to fix "gets"
+- verify that everything still works
+
 - change "confirmed by one human"
     - make "Confirm" "Reject" buttons in non-editing mode
     - make a list of who has confirm/rejected
-
-- get listing of videos from backend to work
+    - update all the validation stuff for it
 
 - video centric data format
+    - remove the generated-video manager in iilvd.js
     - add video entries to frontend DB
     - on download
         - * find all the relevent videos from the search
