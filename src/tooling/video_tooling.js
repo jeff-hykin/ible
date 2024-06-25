@@ -37,6 +37,18 @@ export const extractLocalVideoId = (path) => {
         return fileName.split(".").slice(-2)[0]
     }
 }
+export const extractLocalVideoNameFromPath = (videoPath) => {
+    if (!videoPath) {
+        return ""
+    }
+    const localId = extractLocalVideoId(videoPath)
+    if (!localId) {
+        return Path.basename(videoPath)
+    } else {
+        let nameParts = Path.basename(videoPath).split(".")
+        return nameParts.slice(0,-2).join(".")
+    }
+}
 
 export function videoIdIsValid(videoId) {
     // FIXME: 
