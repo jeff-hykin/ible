@@ -23,14 +23,10 @@ let [
     jsFiles,
     cssFiles,
     htmlFiles,
-    cacheFiles,
-    parcelCacheFiles,
 ] = await Promise.all([
-    glob(`${buildFolder}/**/*.js`),
-    glob(`${buildFolder}/**/*.css`),
-    glob(`${buildFolder}/**/*.html`),
-    glob(`${projectFolder}/.cache`),
-    glob(`${projectFolder}/.parcel-cache`),
+    glob(`${buildFolder}/*.js`),
+    glob(`${buildFolder}/*.css`),
+    glob(`${buildFolder}/*.html`),
 ])
-await FileSystem.remove([ ...jsFiles, ...cssFiles, ...htmlFiles, ...cacheFiles, ...parcelCacheFiles ])
+await FileSystem.remove([ ...jsFiles, ...cssFiles, ...htmlFiles, `${projectFolder}/.cache`, `${projectFolder}/.parcel-cache`])
 // (this comment is part of deno-guillotine, dont remove) #>
