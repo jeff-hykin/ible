@@ -24,7 +24,7 @@
                 icon="download"
                 color="primary"
                 tooltipPosition="top"
-                :tooltip="`Download all ${numberOfSearchResults||$root.searchResults.counts.total} results as JSON`"
+                :tooltip="`Download all ${numberOfSearchResults||$root.searchResults.counts.total} results as CSV's`"
             )
                 | Download
         row.search-summary(
@@ -123,7 +123,11 @@
 import { frontendDb } from '../iilvd-api.js'
 import { colors, debounce, download, } from "../utils.js"
 import * as utils from "../utils.js"
-import { isNumber } from "lodash"
+import * as csvTools from "../tooling/csv_tooling.js"
+import * as zipTools from "../tooling/zip_tooling.js"
+import * as basics from "../tooling/basics.bundle.js"
+import * as videoTooling from "../tooling/video_tooling.js"
+import * as observationTooling from "../observation_tooling.js"
 
 let observationEntries
 export default {
@@ -154,12 +158,21 @@ export default {
         },
         async download() {
             console.log(`download clicked`)
-            if (observationEntries?.length==0) {
-                const allEntries = await frontendDb.getObservations({where, returnObject: false})
-                download("data.json", JSON.stringify(allEntries,0,4))
-            } else {
-                download("data.json", JSON.stringify(observationEntries,0,4))
+            let entries = observationEntries
+            if (entries?.length==0) {
+                entries = await frontendDb.getObservations({where: [], returnObject: false})
             }
+            const videoIds = [...new Set(entries.map(each=>each.videoId))]
+            const videos = await frontendDb.getVideos(videoIds)
+            
+            download(
+                "data.ible.zip",
+                await zipTools.createZipOfTextFiles({
+                    "observations.csv": await observationTooling.observationsToCsv(entries),
+                    "videos.csv": await videoTooling.videosToCsv(videos),
+                    "observers#videos.csv": await videoTooling.videoObserverTableToCsv(videos),
+                })
+            )
         },
         async showDeletePrompt() {
             let entries = observationEntries
@@ -215,8 +228,8 @@ export default {
             // build the search query
             // 
             if (this.$root.routeData$.labelName                               ) { where.push({ valueOf: ['label'                            ], is:                     this.$root.routeData$.labelName            , }) }
-            if (isNumber(this.$root.filterAndSort.maxlabelConfidence)         ) { where.push({ valueOf: ['labelConfidence'                  ], isLessThanOrEqualTo:    this.$root.filterAndSort.maxlabelConfidence, }) }
-            if (isNumber(this.$root.filterAndSort.minlabelConfidence)         ) { where.push({ valueOf: ['labelConfidence'                  ], isGreaterThanOrEqualTo: this.$root.filterAndSort.minlabelConfidence, }) }
+            if (Number.isFinite(this.$root.filterAndSort.maxlabelConfidence)         ) { where.push({ valueOf: ['labelConfidence'                  ], isLessThanOrEqualTo:    this.$root.filterAndSort.maxlabelConfidence, }) }
+            if (Number.isFinite(this.$root.filterAndSort.minlabelConfidence)         ) { where.push({ valueOf: ['labelConfidence'                  ], isGreaterThanOrEqualTo: this.$root.filterAndSort.minlabelConfidence, }) }
             if (this.$root.filterAndSort.observer                             ) { where.push({ valueOf: ['observer'                         ], is:                     this.$root.filterAndSort.observer          , }) }
             if (this.$root.filterAndSort.kindOfObserver == "Only Humans"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     true                          , }) }
             if (this.$root.filterAndSort.kindOfObserver == "Only Robots"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     false                         , }) }

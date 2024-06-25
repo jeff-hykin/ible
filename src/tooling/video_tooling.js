@@ -1,5 +1,6 @@
 import { Path, toString } from "./basics.bundle.js"
 import { videoExtensions } from "../utils.js"
+import * as csvTools from "./csv_tooling.js"
 export const localVideoPrefix = "/videos/"
 
 export const isLocalVideo = (videoId) => videoId && !(
@@ -93,4 +94,95 @@ export const searchTermToVideoInfo = (searchTerm)=>{
             path: `/videos/${searchTerm}`,
         }
     }
+}
+
+export const videosToCsv = async (videos) => {
+    const headers = []
+    let videoRows = []
+    for (const each of videos) {
+        const usersWhoFinishedWatching  = Object.keys(each.usersFinishedWatchingAt||{})
+        const usersWhoFinishedLabeling  = Object.keys(each.usersFinishedLabelingAt||{})
+        const usersWhoFinishedVerifying = Object.keys(each.usersFinishedVerifyingAt||{})
+        
+        videoRows.push({
+            "uploadAction": "update",
+            "videoId": each.videoId,
+            "path": each.path,
+            "duration": each.duration,
+            "comment": each.comment||"",
+            "=numberOfObservations": each.numberOfObservations,
+            "=numberOfWatchers": usersWhoFinishedWatching.length,
+            "=numberOfLabelers": usersWhoFinishedLabeling.length,
+            "=numberOfVerifiers": usersWhoFinishedVerifying.length,
+            "=usersWhoFinishedWatching": usersWhoFinishedWatching.join(","),
+            "=usersWhoFinishedLabeling": usersWhoFinishedLabeling.join(","),
+            "=usersWhoFinishedVerifying": usersWhoFinishedVerifying.join(","),
+        })
+        // flatten out customInfo
+        for (const [key, value] of Object.entries(each.customInfo||{})) {
+            videoRows.slice(-1)[0][`customInfo.${key}`] = JSON.stringify(value)
+        }
+    }
+    
+    return csvTools.convertToCsv(
+        videoRows, 
+        {
+            defaultHeaders: [
+                "uploadAction",
+                "videoId",
+                "path",
+                "duration",
+            ],
+        }
+    )
+}
+
+export const videoObserverTableToCsv = async (videos) => {
+    let videoObserverRows = []
+    for (const each of videos) {
+        const usersWhoFinishedWatching  = Object.keys(each.usersFinishedWatchingAt||{})
+        const usersWhoFinishedLabeling  = Object.keys(each.usersFinishedLabelingAt||{})
+        const usersWhoFinishedVerifying = Object.keys(each.usersFinishedVerifyingAt||{})
+        
+        for (const [username, timeFinished] of Object.entries(usersWhoFinishedWatching)) {
+            videoObserverRows.push({
+                "uploadAction": "update",
+                "videoId": each.videoId,
+                "observer": username,
+                "observerAction": "watch",
+                "timeFinished": new Date(timeFinished).toISOString(),
+            })
+        }
+        for (const [username, timeFinished] of Object.entries(usersWhoFinishedLabeling)) {
+            videoObserverRows.push({
+                "uploadAction": "update",
+                "videoId": each.videoId,
+                "observer": username,
+                "observerAction": "label",
+                "timeFinished": new Date(timeFinished).toISOString(),
+            })
+        }
+        for (const [username, timeFinished] of Object.entries(usersWhoFinishedVerifying)) {
+            videoObserverRows.push({
+                "uploadAction": "update",
+                "videoId": each.videoId,
+                "observer": username,
+                "observerAction": "verify",
+                "timeFinished": new Date(timeFinished).toISOString(),
+            })
+        }
+    }
+    
+    return csvTools.convertToCsv(
+        videoObserverRows, 
+        {
+            defaultHeaders: [
+                "uploadAction",
+                "videoId",
+                "observer",
+                "observerAction",
+                "timeFinished",
+            ],
+        }
+    )
 }

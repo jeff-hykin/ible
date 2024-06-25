@@ -1,6 +1,7 @@
 import { toString, toRepresentation } from "./string.js"
 import * as yaml from 'yaml'
 import * as utils from './utils.js'
+import * as csvTools from './tooling/csv_tooling.js'
 
 import {
     localVideoPrefix,
@@ -254,4 +255,59 @@ export const createDefaultObservationEntry = (currentTime)=>({
             errorMessagesPerObservation.push(errorMessages)
         }
         return errorMessagesPerObservation
+    }
+// 
+// to CSV
+// 
+    export function observationsToCsv(entries) {
+        const observations = []
+        for (const each of entries) {
+            // TODO: do coersion of correctness on download
+            observations.push({
+                "uploadAction": "update",
+                "observationId": each.observationId,
+                "type": each.type,
+                "videoId": each.videoId,
+                "startTime": each.startTime,
+                "endTime": each.endTime,
+                "observer": each.observer,
+                "isHuman": each.isHuman,
+                "=confirmedBySomeone": each.confirmedBySomeone,
+                "=rejectedBySomeone": each.rejectedBySomeone,
+                "label": each.label,
+                "labelConfidence": each.labelConfidence,
+                "comment": each.comment||"",
+                "spacialInfo": JSON.stringify(each.spacialInfo),
+            })
+            // flatten out video
+            for (const [key, value] of Object.entries(each.video||{})) {
+                observations.slice(-1)[0][`=video.${key}`] = JSON.stringify(value)
+            }
+            // flatten out customInfo
+            for (const [key, value] of Object.entries(each.customInfo||{})) {
+                observations.slice(-1)[0][`customInfo.${key}`] = JSON.stringify(value)
+            }
+        }
+        
+        return csvTools.convertToCsv(
+            observations, 
+            {
+                defaultHeaders: [
+                    "uploadAction",
+                    "observationId",
+                    "type",
+                    "videoId",
+                    "startTime",
+                    "endTime",
+                    "observer",
+                    "isHuman",
+                    "=confirmedBySomeone",
+                    "=rejectedBySomeone",
+                    "label",
+                    "labelConfidence",
+                    "comment",
+                    "spacialInfo",
+                ],
+            }
+        )
     }

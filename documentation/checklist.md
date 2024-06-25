@@ -31,6 +31,9 @@ Major Chonological Changes:
 
 - DONE: get listing of videos from backend to work
     - had to fix "gets"
+
+- DONE: get zip.js working
+- get csv conversion working
 - verify that everything still works
 
 - change "confirmed by one human"
@@ -51,6 +54,9 @@ Major Chonological Changes:
         - 
     - display video speficic data
     - remove/update the format demonstration
+
+- get cli working on windows
+    - maybe use walkUpUntil to find node_modules
 
 LATER:
 - add settings modal
