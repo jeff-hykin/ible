@@ -27,6 +27,7 @@
         "apexcharts": "^3.22.2",
         "clipboardy": "^2.3.0",
         "css-baseline": "^1.1.10",
+        "csv": "^6.3.9",
         "edit-json-vue": "^1.0.13",
         "ez-rpc-frontend": "0.0.14",
         "file-saver": "^2.0.2",
