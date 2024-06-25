@@ -13,8 +13,19 @@ import { Console, clearAnsiStylesFrom, black, white, red, green, blue, yellow, c
 const projectFolder = `${FileSystem.thisFolder}/../`
 const buildFolder = `${projectFolder}/docs/`
 
+const watcher = Deno.watchFs([
+    `${projectFolder}/src/`,
+], {recursive: true})
+
 if (await run(`${projectFolder}/run/compile`).success) {
     await run(`${projectFolder}/run/serve`)
 }
+
+for await (const event of watcher) {
+    if (await run(`${projectFolder}/run/compile`).success) {
+        await run(`${projectFolder}/run/serve`)
+    }
+}
+
 
 // (this comment is part of deno-guillotine, dont remove) #>
