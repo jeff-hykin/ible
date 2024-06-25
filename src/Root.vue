@@ -25,6 +25,10 @@ import { get, set } from "./object.js"
 import * as videoTools from "./tooling/video_tooling.js"
 import { frontendDb } from "./iilvd-api.js"
 import { Router } from './plugins/router-plugin.js'
+import * as zipJs from "@zip.js/zip.js"
+import * as zipTools from "./tooling/zip_tooling.js"
+window.zipJs = zipJs
+window.zipTools = zipTools
 window.basics = basics // debugging
 //
 // Routing Init

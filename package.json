@@ -23,6 +23,7 @@
         "@vue/cli-plugin-babel": "^4.4.6",
         "@vue/cli-service": "^4.4.6",
         "@vue/component-compiler-utils": "^3.2.0",
+        "@zip.js/zip.js": "^2.7.45",
         "apexcharts": "^3.22.2",
         "clipboardy": "^2.3.0",
         "css-baseline": "^1.1.10",
