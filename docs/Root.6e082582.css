@@ -56,6 +56,7 @@
     --red: #e57373;
     --break-tag-height: 18px;
     --gray: #a8a8a8;
+    --darkgray: #686868;
 }
 #vue-root {
     overflow: hidden;
@@ -5671,6 +5672,16 @@ div[data-fjio3y598t3hi2] .quick-fade-enter, div[data-fjio3y598t3hi2] .quick-fade
   border-radius: 12px;
   margin-right: 5px;
   margin-top: 5px;
+}
+.video-wrapper[data-v-cdd074] .ui-textbox {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  background: transparent;
+  width: 12rem;
+}
+.video-wrapper[data-v-cdd074] .ui-textbox .ui-textbox__input {
+  color: var(--darkgray);
 }.wrapper[data-v-b68b87] {
   position: fixed;
   width: 102vw;
