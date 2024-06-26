@@ -40,7 +40,6 @@ if (!("Home" in pages)) {
 }
 
 // TASKS:
-    // check if videoId giver-outer is working
     // clean up videoIdToPath
 
 // create Root instance and attach it (executed after this file loads)
