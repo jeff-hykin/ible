@@ -97,19 +97,26 @@ export const searchTermToVideoInfo = (searchTerm)=>{
 }
 
 export const videosToCsv = async (videos) => {
-    const headers = []
     let videoRows = []
     for (const each of videos) {
         const usersWhoFinishedWatching  = Object.keys(each.usersFinishedWatchingAt||{})
         const usersWhoFinishedLabeling  = Object.keys(each.usersFinishedLabelingAt||{})
         const usersWhoFinishedVerifying = Object.keys(each.usersFinishedVerifyingAt||{})
         
+        // NOTE: 
+        const latestVideoAction = Math.max([
+            ...Object.values(each.usersFinishedWatchingAt||{}),
+            ...Object.values(each.usersFinishedLabelingAt||{}),
+            ...Object.values(each.usersFinishedVerifyingAt||{}),
+        ])
+        
         videoRows.push({
             "uploadAction": "update",
             "videoId": each.videoId,
             "path": each.path,
-            "duration": each.duration,
-            "comment": each.comment||"",
+            "durationInSeconds": each.durationInSeconds,
+            "comment": each.comment,
+            "=latestVideoAction": latestVideoAction,
             "=numberOfObservations": each.numberOfObservations,
             "=numberOfWatchers": usersWhoFinishedWatching.length,
             "=numberOfLabelers": usersWhoFinishedLabeling.length,
@@ -120,7 +127,7 @@ export const videosToCsv = async (videos) => {
         })
         // flatten out customInfo
         for (const [key, value] of Object.entries(each.customInfo||{})) {
-            videoRows.slice(-1)[0][`customInfo.${key}`] = JSON.stringify(value)
+            videoRows.slice(-1)[0][`customInfo.${key}`] = value
         }
     }
     
@@ -131,10 +138,56 @@ export const videosToCsv = async (videos) => {
                 "uploadAction",
                 "videoId",
                 "path",
-                "duration",
+                "durationInSeconds",
+                "comment",
             ],
         }
     )
+}
+
+export const videosCsvToActions = async (csvString) => {
+    const videoEntries = await csvTools.parseCsv(csvString)
+    console.debug(`videoEntries is:`,videoEntries)
+    const headers = videoEntries.shift()
+    const videoActions = []
+    for (const eachRow of videoEntries) {
+        const { uploadAction, videoId, ...eachEntry } = Object.fromEntries(basics.zip(headers, eachRow))
+        if (uploadAction == "ignore") {
+            continue
+        }
+        if (typeof videoId != "string") {
+            continue
+        }
+        const videoObject = {
+            videoId,
+            customInfo: {},
+        }
+        // rebuild customInfo
+        for (const [key, value] of Object.entries(eachEntry)) {
+            if (key.startsWith("customInfo.")) {
+                const customInfoKey = key.replace(/^customInfo\./, "")
+                videoObject.customInfo[customInfoKey] = value
+            }
+        }
+        
+        const detectedKeys = [
+            "durationInSeconds",
+            "path",
+            "comment",
+        ]
+        for (const detectedKey of detectedKeys) {
+            if (uploadAction=="update") {
+                if (eachEntry[detectedKey] != null) {
+                    videoObject[detectedKey] = eachEntry[detectedKey]
+                }
+            } else if (uploadAction=="overwrite") {
+                videoObject[detectedKey] = eachEntry[detectedKey]
+            }
+        }
+        
+        videoActions.push([ uploadAction, [videoId], videoObject ])
+    }
+    return videoActions
 }
 
 export const videoObserverTableToCsv = async (videos) => {
@@ -150,7 +203,7 @@ export const videoObserverTableToCsv = async (videos) => {
                 "videoId": each.videoId,
                 "observer": username,
                 "observerAction": "watch",
-                "timeFinished": new Date(timeFinished).toISOString(),
+                "timeFinished": new Date(timeFinished),
             })
         }
         for (const [username, timeFinished] of Object.entries(usersWhoFinishedLabeling)) {
@@ -159,7 +212,7 @@ export const videoObserverTableToCsv = async (videos) => {
                 "videoId": each.videoId,
                 "observer": username,
                 "observerAction": "label",
-                "timeFinished": new Date(timeFinished).toISOString(),
+                "timeFinished": new Date(timeFinished),
             })
         }
         for (const [username, timeFinished] of Object.entries(usersWhoFinishedVerifying)) {
@@ -168,7 +221,7 @@ export const videoObserverTableToCsv = async (videos) => {
                 "videoId": each.videoId,
                 "observer": username,
                 "observerAction": "verify",
-                "timeFinished": new Date(timeFinished).toISOString(),
+                "timeFinished": new Date(timeFinished),
             })
         }
     }
@@ -185,4 +238,55 @@ export const videoObserverTableToCsv = async (videos) => {
             ],
         }
     )
+}
+
+export const videoObserverTableCsvToActions = async (csvString) => {
+    const videoObserverRows = await csvTools.parseCsv(csvString)
+    const headers = videoObserverRows.shift()
+    const videos = {}
+    const videoActions = []
+    for (const eachRow of videoObserverRows) {
+        const { uploadAction, videoId, observer, observerAction, timeFinished } = Object.fromEntries(basics.zip(headers, eachRow))
+        if (uploadAction == "ignore") {
+            continue
+        }
+        if (typeof videoId != "string") {
+            continue
+        }
+        if (typeof observer != "string") {
+            continue
+        }
+        if (uploadAction == "delete") {
+            const keyList = [ "videoId", ]
+            if (observerAction == "watch") {
+                keyList.push("usersFinishedWatchingAt")
+                keyList.push(observer)
+            } else if (observerAction == "label") {
+                keyList.push("usersFinishedLabelingAt")
+                keyList.push(observer)
+            } else if (observerAction == "verify") {
+                keyList.push("usersFinishedVerifyingAt")
+                keyList.push(observer)
+            }
+            videoActions.push([ uploadAction, keyList ])
+            continue
+        }
+
+        videos[videoId] = videos[videoId] || {videoId}
+        const videoObject = videos[videoId]
+        if (observerAction == "watch") {
+            videoObject.usersFinishedWatchingAt = videoObject.usersFinishedWatchingAt || {}
+            videoObject.usersFinishedWatchingAt[observer] = timeFinished-0
+        } else if (observerAction == "label") {
+            videoObject.usersFinishedLabelingAt = videoObject.usersFinishedLabelingAt || {}
+            videoObject.usersFinishedLabelingAt[observer] = timeFinished-0
+        } else if (observerAction == "verify") {
+            videoObject.usersFinishedVerifyingAt = videoObject.usersFinishedVerifyingAt || {}
+            videoObject.usersFinishedVerifyingAt[observer] = timeFinished-0
+        }
+    }
+    for (const [videoId, videoObject] of Object.entries(videos)) {
+        videoActions.push([ "update", [videoId], videoObject ])
+    }
+    return videoActions
 }

@@ -2,6 +2,7 @@ import { toString, toRepresentation } from "./string.js"
 import * as yaml from 'yaml'
 import * as utils from './utils.js'
 import * as csvTools from './tooling/csv_tooling.js'
+import * as basics from './tooling/basics.bundle.js'
 
 import {
     localVideoPrefix,
@@ -65,7 +66,7 @@ export const createDefaultObservationEntry = (currentTime)=>({
     export function coerceObserver(observer) {
         return observer
     }
-    export function coerceobservationId(observationId) {
+    export function coerceObservationId(observationId) {
         if (typeof observationId != 'string') {
             const asString = toString(observationId)
             if (observationIdIsValid(asString)) {
@@ -157,7 +158,7 @@ export const createDefaultObservationEntry = (currentTime)=>({
         // 
         // enforce unix timestamp (e.g. id)
         // 
-        observationEntry.observationId = coerceobservationId(observationEntry.observationId)
+        observationEntry.observationId = coerceObservationId(observationEntry.observationId)
         
         // 
         // enforce simplfied names
@@ -257,8 +258,24 @@ export const createDefaultObservationEntry = (currentTime)=>({
         return errorMessagesPerObservation
     }
 // 
-// to CSV
+// CSV
 // 
+    const observationDownlaodHeaders = [
+        "uploadAction",
+        "observationId",
+        "=type",
+        "videoId",
+        "startTime",
+        "endTime",
+        "observer",
+        "isHuman",
+        "=confirmedBySomeone",
+        "=rejectedBySomeone",
+        "label",
+        "labelConfidence",
+        "comment",
+        "spacialInfo",
+    ]
     export function observationsToCsv(entries) {
         const observations = []
         for (const each of entries) {
@@ -266,7 +283,7 @@ export const createDefaultObservationEntry = (currentTime)=>({
             observations.push({
                 "uploadAction": "update",
                 "observationId": each.observationId,
-                "type": each.type,
+                "=type": each.startTime != each.endTime ? "segment" : "marker",
                 "videoId": each.videoId,
                 "startTime": each.startTime,
                 "endTime": each.endTime,
@@ -277,37 +294,73 @@ export const createDefaultObservationEntry = (currentTime)=>({
                 "label": each.label,
                 "labelConfidence": each.labelConfidence,
                 "comment": each.comment||"",
-                "spacialInfo": JSON.stringify(each.spacialInfo),
+                "spacialInfo": each.spacialInfo,
             })
             // flatten out video
             for (const [key, value] of Object.entries(each.video||{})) {
-                observations.slice(-1)[0][`=video.${key}`] = JSON.stringify(value)
+                observations.slice(-1)[0][`=video.${key}`] = value
             }
             // flatten out customInfo
             for (const [key, value] of Object.entries(each.customInfo||{})) {
-                observations.slice(-1)[0][`customInfo.${key}`] = JSON.stringify(value)
+                observations.slice(-1)[0][`customInfo.${key}`] = value
             }
         }
         
         return csvTools.convertToCsv(
             observations, 
             {
-                defaultHeaders: [
-                    "uploadAction",
-                    "observationId",
-                    "type",
-                    "videoId",
-                    "startTime",
-                    "endTime",
-                    "observer",
-                    "isHuman",
-                    "=confirmedBySomeone",
-                    "=rejectedBySomeone",
-                    "label",
-                    "labelConfidence",
-                    "comment",
-                    "spacialInfo",
-                ],
+                defaultHeaders: observationDownlaodHeaders,
             }
         )
     }
+
+    export const observationsCsvToActions = async (csvString) => {
+        const observationEntries = await csvTools.parseCsv(csvString)
+        const headers = observationEntries.shift()
+        const observationActions = []
+        for (const eachRow of observationEntries) {
+            const { uploadAction, observationId, ...eachEntry } = Object.fromEntries(basics.zip(headers, eachRow))
+            if (uploadAction == "ignore") {
+                continue
+            }
+            if (typeof observationId != "string") {
+                continue
+            }
+            const observationObject = {
+                observationId,
+                customInfo: {},
+            }
+            // rebuild customInfo
+            for (const [key, value] of Object.entries(eachEntry)) {
+                if (key.startsWith("customInfo.")) {
+                    const customInfoKey = key.replace(/^customInfo\./, "")
+                    observationObject.customInfo[customInfoKey] = value
+                }
+            }
+            
+            const detectedKeys = [
+                "videoId",
+                "startTime",
+                "endTime",
+                "observer",
+                "isHuman",
+                "label",
+                "labelConfidence",
+                "comment",
+                "spacialInfo",
+            ]
+            for (const detectedKey of detectedKeys) {
+                if (uploadAction=="update") {
+                    if (eachEntry[detectedKey] != null) {
+                        observationObject[detectedKey] = eachEntry[detectedKey]
+                    }
+                } else if (uploadAction=="overwrite") {
+                    observationObject[detectedKey] = eachEntry[detectedKey]
+                }
+            }
+            
+            observationActions.push([ uploadAction, [observationId], observationObject ])
+        }
+        return observationActions    
+    }
+

@@ -773,6 +773,32 @@ const frontendDb = {
             ],
         })
     },
+    async executeVideoActions(actions) {
+        for (const [ action, keyList, value ] of actions) {
+            if (action == "update") {
+                await indexDb.puts([[
+                    ["videos", ...keyList], value
+                ]])
+            } else if (action == "delete") {
+                await indexDb.deletes([[
+                    ["videos", ...keyList]
+                ]])
+            }
+        }
+    },
+    async executeObservationActions(actions) {
+        for (const [ action, keyList, value ] of actions) {
+            if (action == "update") {
+                await indexDb.puts([[
+                    ["observations", ...keyList], value
+                ]])
+            } else if (action == "delete") {
+                await indexDb.deletes([[
+                    ["observations", ...keyList]
+                ]])
+            }
+        }
+    },
     summary: {
         async general(filterAndSort) {
             await indexDb.loaded

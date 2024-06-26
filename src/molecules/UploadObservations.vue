@@ -89,7 +89,11 @@ const { humandReadableTime, download } = require("../utils.js")
 const { frontendDb } = require("../iilvd-api.js")
 import * as observationTooling from "../observation_tooling.js"
 import * as yaml from 'yaml'
+import * as zipTools from "../tooling/zip_tooling.js"
+import * as videoTooling from "../tooling/video_tooling.js"
 
+// TASKS:
+    // add good error handling for uploads that are problematic
 export default {
     components: {
         JsonTree: require('vue-json-tree').default,
@@ -175,119 +179,114 @@ export default {
             // 
             // check the json of each file
             // 
+            const files = {}
             for (const [key, eachFile] of Object.entries(eventObject)) {
                 const fileIndex = key-0
                 const fileText = await eachFile.text()
-                try {
-                    // save the uploadTime to help with removing bad data
-                    let index = -1
-                    for (let each of yaml.parse(fileText)) {
-                        each.uploadTime = `${(new Date())}`
-                        newObservations.push(each)
-                        observationMapping[newObservations.length-1] = {
-                            fileIndex,
-                            fileName: eachFile.name,
-                            observationIndex: ++index,
-                        }
-                    }
-                } catch (error) {
-                    this.$toasted.show(`File Upload #${fileIndex} Error\nAre you sure the file is valid JSON?`, {
-                        closeOnSwipe: false,
-                        action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
-                    })
-                    this.$toasted.show(`Processing Error`).goAway(2500)
-                    this.$toasted.show(`Are you sure the file is valid JSON?`).goAway(16500)
-                    return
-                }
+                const fileName = eachFile.name
+                files[fileName] = fileText
             }
+            
+            if (files["videos.yaml.tsv"]) {
+                videoTooling.videosCsvToActions(files["videos.yaml.tsv"]).then(frontendDb.executeVideoActions)
+            }
+            
+            if (files["observers#videos.yaml.tsv"]) {
+                videoTooling.videoObserverTableCsvToActions(files["observers#videos.yaml.tsv"]).then(frontendDb.executeVideoActions)
+            }
+            
+            if (files["observations.yaml.tsv"]) {
+                observationTooling.observationsCsvToActions(files["observations.yaml.tsv"]).then(frontendDb.executeObservationActions)
+            }
+            
             // 
             // start uploading all the observations
             // 
-            try {
+            // try {
                 
-                // NOTE: yes uploading in bulk would be faster. This code is leftover from when it uploaded to a very slow server
-                //       and it was important to have a progress bar. It was also so that errors could be seen immediately
-                //       and so that errors to each observation could gathered instead of only stopping at the first one
-                // a complete refactor of this (while keeping helpful error messages) would be nice
+            //     // NOTE: yes uploading in bulk would be faster. This code is leftover from when it uploaded to a very slow server
+            //     //       and it was important to have a progress bar. It was also so that errors could be seen immediately
+            //     //       and so that errors to each observation could gathered instead of only stopping at the first one
+            //     // a complete refactor of this (while keeping helpful error messages) would be nice
                 
                 
-                this.$toasted.show(`each file at least seems to be valid JSON 👍 `).goAway(6500)
+            //     this.$toasted.show(`each file at least seems to be valid JSON 👍 `).goAway(6500)
                 
-                this.uploadCanceled = false
-                this.uploadMessage = "starting upload"
-                this.latestUploadErrorsObject = {}
-                this.errorPreview = ""
-                const size = newObservations.length
-                const startTime = (new Date()).getTime()
-                let timeRemaining = null
-                let errorCount = 0
+            //     this.uploadCanceled = false
+            //     this.uploadMessage = "starting upload"
+            //     this.latestUploadErrorsObject = {}
+            //     this.errorPreview = ""
+            //     const size = newObservations.length
+            //     const startTime = (new Date()).getTime()
+            //     let timeRemaining = null
+            //     let errorCount = 0
                 
-                for (const [key, value] of Object.entries(newObservations)) {
-                    const observationNumber = key-0+1
-                    const {fileIndex, fileName, observationIndex } = observationMapping[key]
-                    const fileIndexString = eventObject.length > 1? `File ${fileIndex} of ${eventObject.length}\n\n`:""
-                    const timeRemainingString = timeRemaining?" (~ "+humandReadableTime(timeRemaining)+" remaining)":""
-                    this.uploadMessage = `${fileIndexString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n`
-                    value.label = toKebabCase(`${value.label}`.toLowerCase())
-                    try {
-                        const frontendErrorMessages = observationTooling.validateObservations([value])[0]
-                        if (frontendErrorMessages.length > 0) {
-                            throw Error(yaml.stringify(frontendErrorMessages))
-                        }
-                        await frontendDb.setObservation(value)
-                    } catch (error) {
-                        if (error.message.match(/Message: Failed to fetch/)) {
-                            this.$toasted.show(`Server took too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(6500)
-                            continue
-                        }
-                        errorCount++
-                        const alreadyShown = this.numberOfErrors() > 0
-                        const whichFile = `file ${fileIndex} ${JSON.stringify(fileName).slice(1,-1)}`
-                        const whichObservation = `observation ${observationIndex}`
-                        this.latestUploadErrorsObject[whichFile] = this.latestUploadErrorsObject[whichFile]||{}
-                        let messages
-                        try { messages = yaml.parse(error.message) } catch (error) {}
-                        if (!(messages instanceof Array)) {
-                            messages = [error.message]
-                        }
-                        const isFirstErrorForObservation = !(this.latestUploadErrorsObject[whichFile][whichObservation] instanceof Array)
-                        const hasAobservationIdValue = !!value.observationId
-                        if (isFirstErrorForObservation && hasAobservationIdValue) {
-                            messages = [ `The observation with: "observationId": ${JSON.stringify(value.observationId)}\n`, ...messages ]
-                        }
-                        this.latestUploadErrorsObject[whichFile][whichObservation] = [
-                            ...(this.latestUploadErrorsObject[whichFile][whichObservation]||[]),
-                            ...messages.map(each=>`\n${each}`),
-                        ]
-                        // otherwise Vue doesn't seem to know its been modified
-                        this.latestUploadErrorsObject = this.latestUploadErrorsObject
-                        this.errorPreview = `There were some (${this.numberOfErrors()}) errors:`
-                        if (this.numberOfErrors()>0 && !alreadyShown) {
-                            this.$refs.errorModal.open()
-                        }
-                    }
-                    const changeInTime = (new Date()).getTime() - startTime
-                    const changeInCount = observationNumber
-                    const rate = changeInTime/changeInCount
-                    const remainingObservationCount = size - observationNumber
-                    timeRemaining = remainingObservationCount * rate
+            //     for (const [key, value] of Object.entries(newObservations)) {
+            //         const observationNumber = key-0+1
+            //         const {fileIndex, fileName, observationIndex } = observationMapping[key]
+            //         const fileIndexString = eventObject.length > 1? `File ${fileIndex} of ${eventObject.length}\n\n`:""
+            //         const timeRemainingString = timeRemaining?" (~ "+humandReadableTime(timeRemaining)+" remaining)":""
+            //         this.uploadMessage = `${fileIndexString}Uploading ${observationNumber} of ${size}${timeRemainingString}\n`
+            //         value.label = toKebabCase(`${value.label}`.toLowerCase())
+            //         try {
+            //             const frontendErrorMessages = observationTooling.validateObservations([value])[0]
+            //             if (frontendErrorMessages.length > 0) {
+            //                 throw Error(yaml.stringify(frontendErrorMessages))
+            //             }
+            //             await frontendDb.setObservation(value)
+            //         } catch (error) {
+            //             if (error.message.match(/Message: Failed to fetch/)) {
+            //                 this.$toasted.show(`Server took too long to respond, and is probably still processing data<br>(Assuming upload will be a success)`).goAway(6500)
+            //                 continue
+            //             }
+            //             errorCount++
+            //             const alreadyShown = this.numberOfErrors() > 0
+            //             const whichFile = `file ${fileIndex} ${JSON.stringify(fileName).slice(1,-1)}`
+            //             const whichObservation = `observation ${observationIndex}`
+            //             this.latestUploadErrorsObject[whichFile] = this.latestUploadErrorsObject[whichFile]||{}
+            //             let messages
+            //             try { messages = yaml.parse(error.message) } catch (error) {}
+            //             if (!(messages instanceof Array)) {
+            //                 messages = [error.message]
+            //             }
+            //             const isFirstErrorForObservation = !(this.latestUploadErrorsObject[whichFile][whichObservation] instanceof Array)
+            //             const hasAobservationIdValue = !!value.observationId
+            //             if (isFirstErrorForObservation && hasAobservationIdValue) {
+            //                 messages = [ `The observation with: "observationId": ${JSON.stringify(value.observationId)}\n`, ...messages ]
+            //             }
+            //             this.latestUploadErrorsObject[whichFile][whichObservation] = [
+            //                 ...(this.latestUploadErrorsObject[whichFile][whichObservation]||[]),
+            //                 ...messages.map(each=>`\n${each}`),
+            //             ]
+            //             // otherwise Vue doesn't seem to know its been modified
+            //             this.latestUploadErrorsObject = this.latestUploadErrorsObject
+            //             this.errorPreview = `There were some (${this.numberOfErrors()}) errors:`
+            //             if (this.numberOfErrors()>0 && !alreadyShown) {
+            //                 this.$refs.errorModal.open()
+            //             }
+            //         }
+            //         const changeInTime = (new Date()).getTime() - startTime
+            //         const changeInCount = observationNumber
+            //         const rate = changeInTime/changeInCount
+            //         const remainingObservationCount = size - observationNumber
+            //         timeRemaining = remainingObservationCount * rate
                     
-                    if (this.uploadCanceled === true) {
-                        this.$toasted.show(`Canceling remaining upload`).goAway(2500)
-                        this.quitUpload()
-                        return
-                    }
-                }
-                this.$root.videoInterface.updateKeySegments()
-                this.$toasted.show(`Upload Finished`, {
-                    closeOnSwipe: false,
-                    action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
-                })
-            } catch (error) {
-                this.quitUpload()
-                throw error
-            }
-            this.quitUpload()
+            //         if (this.uploadCanceled === true) {
+            //             this.$toasted.show(`Canceling remaining upload`).goAway(2500)
+            //             this.quitUpload()
+            //             return
+            //         }
+            //     }
+            //     this.$root.videoInterface.updateKeySegments()
+            //     this.$toasted.show(`Upload Finished`, {
+            //         closeOnSwipe: false,
+            //         action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
+            //     })
+            // } catch (error) {
+            //     this.quitUpload()
+            //     throw error
+            // }
+            // this.quitUpload()
         },
     }
 }

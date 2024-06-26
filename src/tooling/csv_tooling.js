@@ -78,8 +78,8 @@ export function convertToCsv(data, { defaultHeaders=[], delimiter="\t" }={}) {
     })
 }
 
-export async function parseCsv(csvString) {
-    const rows = new Promise((resolve, reject) => {
+export async function parseCsv(csvString, { delimiter="\t" }={}) {
+    const rows = await new Promise((resolve, reject) => {
         csv.parse(csvString, { delimiter }, (err, output) => {
             if (err) {
                 return reject(err)

@@ -168,9 +168,9 @@ export default {
             download(
                 "data.ible.zip",
                 await zipTools.createZipOfTextFiles({
-                    "observations.csv": await observationTooling.observationsToCsv(entries),
-                    "videos.csv": await videoTooling.videosToCsv(videos),
-                    "observers#videos.csv": await videoTooling.videoObserverTableToCsv(videos),
+                    "observations.yaml.tsv": await observationTooling.observationsToCsv(entries),
+                    "videos.yaml.tsv": await videoTooling.videosToCsv(videos),
+                    "observers#videos.yaml.tsv": await videoTooling.videoObserverTableToCsv(videos),
                 })
             )
         },
