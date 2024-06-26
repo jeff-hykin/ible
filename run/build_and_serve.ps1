@@ -10,6 +10,8 @@ import { FileSystem, glob } from "https://deno.land/x/quickr@0.6.67/main/file_sy
 import { run, hasCommand, throwIfFails, zipInto, mergeInto, returnAsString, Timeout, Env, Cwd, Stdin, Stdout, Stderr, Out, Overwrite, AppendTo, } from "https://deno.land/x/quickr@0.6.67/main/run.js"
 import { Console, clearAnsiStylesFrom, black, white, red, green, blue, yellow, cyan, magenta, lightBlack, lightWhite, lightRed, lightGreen, lightBlue, lightYellow, lightMagenta, lightCyan, blackBackground, whiteBackground, redBackground, greenBackground, blueBackground, yellowBackground, magentaBackground, cyanBackground, lightBlackBackground, lightRedBackground, lightGreenBackground, lightYellowBackground, lightBlueBackground, lightMagentaBackground, lightCyanBackground, lightWhiteBackground, bold, reset, dim, italic, underline, inverse, strikethrough, gray, grey, lightGray, lightGrey, grayBackground, greyBackground, lightGrayBackground, lightGreyBackground, } from "https://deno.land/x/quickr@0.6.67/main/console.js"
 
+import { DynamicInterval } from "https://deno.land/x/good@1.7.1.1/flattened/dynamic_interval__class.js";
+
 const projectFolder = `${FileSystem.thisFolder}/../`
 const buildFolder = `${projectFolder}/docs/`
 
@@ -17,14 +19,28 @@ const watcher = Deno.watchFs([
     `${projectFolder}/src/`,
 ], {recursive: true})
 
-if (await run(`${projectFolder}/run/compile`).success) {
-    await run(`${projectFolder}/run/serve`)
+if (!(await run(`${projectFolder}/run/compile`).success)) {
+    Deno.exit(1)
 }
+const serverProcess = run(`${projectFolder}/run/serve`)
+
+let shouldCompile = true
+
+// effectively debounce the recompile
+let repeater = new DynamicInterval().setRate(100).onInterval(
+    async ()=>{
+        if (shouldCompile) {
+            shouldCompile = false
+            await run(`${projectFolder}/run/compile`)
+        }
+    }
+).onError(
+    (err)=>console.error(err)
+).start()
+
 
 for await (const event of watcher) {
-    if (await run(`${projectFolder}/run/compile`).success) {
-        await run(`${projectFolder}/run/serve`)
-    }
+    shouldCompile = true
 }
 
 

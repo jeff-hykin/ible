@@ -28,5 +28,11 @@ let [
     glob(`${buildFolder}/*.css`),
     glob(`${buildFolder}/*.html`),
 ])
-await FileSystem.remove([ ...jsFiles, ...cssFiles, ...htmlFiles, `${projectFolder}/.cache`, `${projectFolder}/.parcel-cache`])
+for (const each of [jsFiles,cssFiles,htmlFiles,`${projectFolder}/.cache`, `${projectFolder}/.parcel-cache`]) {
+    try {
+        await FileSystem.remove(each)
+    } catch (error) {
+        
+    }
+}
 // (this comment is part of deno-guillotine, dont remove) #>
