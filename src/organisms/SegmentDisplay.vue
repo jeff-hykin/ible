@@ -71,7 +71,7 @@
 
 </template>
 <script>
-import { set } from '../object.js'
+import { set, get } from '../object.js'
 import { wrapIndex, checkIf, deferredPromise, dynamicSort } from "../utils.js"
 import { frontendDb } from '../iilvd-api.js'
 import { Event, trigger, everyTime, once, globalEvents } from "../tooling/events.js"

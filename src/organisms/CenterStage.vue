@@ -32,7 +32,18 @@
                                 SegmentDisplay(ref="segmentDisplay" :currentTime="currentTime")
                                 //- NEXT
                                 SideButton.right-side-button(right @click='wrapperForSelectNextSegment')
-                            JsonTree.json-tree(:data="videoInfo||{}")
+                            row(width="100%" padding="2rem" align-v="top")
+                                JsonTree.json-tree(:data="videoInfo||{}")
+                                column(flex-basis="40%" width="100%")
+                                    UiSwitch(v-model="hasWatchedVideo")
+                                        div(style="width: 10rem")
+                                            | Watched Video
+                                    UiSwitch(v-model="hasLabeledVideo")
+                                        div(style="width: 10rem")
+                                            | Labeled Video
+                                    UiSwitch(v-model="hasVerifiedVideo")
+                                        div(style="width: 10rem")
+                                            | Verified Labels
                 column.side-container(v-if="$root.videoInterface.videoId" align-v="top" overflow="visible" min-height="50rem" width="fit-content")
                     ObservationEditor(
                         :jumpSegment="wrapperForJumpSegment"
@@ -47,11 +58,13 @@
 <script>
 import { frontendDb } from '../iilvd-api.js'
 import { get } from "../object.js"
+import { trigger, globalEvents, everyTime } from '../tooling/events.js'
 import { deferredPromise } from '../utils.js'
 
 export default {
     props: [],
     components: {
+        UiSwitch: require("../atoms/UiSwitch").default,
         SideButton: require("../atoms/SideButton").default,
         VideoPlayer: require("../atoms/VideoPlayer").default,
         InfoSection: require("../molecules/InfoSection").default,
@@ -72,11 +85,44 @@ export default {
         // it wouldn't cause a re-render in downstream components
         currentTime: null,
         videoInfo: {},
+        hasWatchedVideo: false,
+        hasLabeledVideo: false,
+        hasVerifiedVideo: false,
     }),
     mounted() {
         this.$root.videoInterface.wheneverVideoIsLoaded(this.updateVideoFrontendData)
     },
     watch: {
+        videoInfo() {
+            this.hasWatchedVideo  = this.videoInfo.usersFinishedWatchingAt[this.$root.email] != null
+            this.hasLabeledVideo  = this.videoInfo.usersFinishedLabelingAt[this.$root.email] != null
+            this.hasVerifiedVideo = this.videoInfo.usersFinishedVerifyingAt[this.$root.email] != null
+            trigger(globalEvents.updateVideoRequest, "CenterStage", this.videoInfo)
+        },
+        hasWatchedVideo() {
+            if (this.hasWatchedVideo) {
+                this.videoInfo.usersFinishedWatchingAt[this.$root.email] = new Date().getTime()
+            } else {
+                delete this.videoInfo.usersFinishedWatchingAt[this.$root.email]
+            }
+            this.videoInfo = { ...this.videoInfo }
+        },
+        hasLabeledVideo() {
+            if (this.hasLabeledVideo) {
+                this.videoInfo.usersFinishedLabelingAt[this.$root.email] = new Date().getTime()
+            } else {
+                delete this.videoInfo.usersFinishedLabelingAt[this.$root.email]
+            }
+            this.videoInfo = { ...this.videoInfo }
+        },
+        hasVerifiedVideo() {
+            if (this.hasVerifiedVideo) {
+                this.videoInfo.usersFinishedVerifyingAt[this.$root.email] = new Date().getTime()
+            } else {
+                delete this.videoInfo.usersFinishedVerifyingAt[this.$root.email]
+            }
+            this.videoInfo = { ...this.videoInfo }
+        },
     },
     rootHooks: {
     },
@@ -100,8 +146,7 @@ export default {
                 await frontendDb.setVideos([newVideoInfo])
             }
             frontendDb.getVideoById(videoId).then(videoInfo=>{
-                console.debug(`videoInfo is:`,videoInfo)
-                this.videoInfo = { ...videoInfo, usersFinishedWatchingAt:{},usersFinishedLabelingAt:{},usersFinishedVerifyingAt:{}, ...videoInfo}
+                this.videoInfo = { ...videoInfo, usersFinishedWatchingAt:{},usersFinishedLabelingAt:{},usersFinishedVerifyingAt:{}, ...videoInfo }
             })
         },
         aVideoIsSelected() {
@@ -191,7 +236,7 @@ export default {
         opacity: 0
 
 ::v-deep .json-tree
-    min-width: 100%
+    min-width: 60%
     max-width: 100%
     background: transparent
     color: gray

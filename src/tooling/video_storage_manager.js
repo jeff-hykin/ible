@@ -4,6 +4,7 @@ import { Event, trigger, everyTime, once, globalEvents } from "./events.js"
 // listens to:
 //     globalEvents.updateVideoPathsRequest
 //     globalEvents.requestVideosToList
+//     globalEvents.updateVideoRequest
 // triggers:
 //     globalEvents.videoStorageUpated
 
@@ -29,4 +30,13 @@ everyTime(globalEvents.requestVideosToList).then(async (who)=>{
         videos.push(each)
     }
     return videos
+})
+
+everyTime(globalEvents.updateVideoRequest).then(async (who, newVideoData)=>{
+    console.log(`${name} saw [updateVideoRequest] from ${who}`)
+    await indexDb.puts([[
+        ["videos", newVideoData.videoId],
+        newVideoData,
+    ]])
+    trigger(globalEvents.videoStorageUpated, name, newVideoData)
 })

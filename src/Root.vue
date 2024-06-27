@@ -64,6 +64,7 @@ let untrackedData = {
     videoIdToPath: {},
     videoPaths: [],
     previousVideoInfoString: null,
+    previousVideoPaths: null,
 }
 export default RootComponent = {
     name: 'RootComponent',
@@ -313,18 +314,21 @@ export default RootComponent = {
                 async refreshLocalVideoData() {
                     try {
                         const videoPaths = await window.backend.getLocalVideoPaths()
-                        const videoIds = videoPaths.map(videoTools.extractLocalVideoId)
-                        let videos = []
-                        for (const [path,id] of basics.zip(videoPaths,videoIds)) {
-                            if (id) {
-                                videos.push({
-                                    videoId: id,
-                                    path: path,
-                                })
+                        if (untrackedData.previousVideoPaths != videoPaths) {
+                            untrackedData.previousVideoPaths = videoPaths
+                            const videoIds = videoPaths.map(videoTools.extractLocalVideoId)
+                            let videos = []
+                            for (const [path,id] of basics.zip(videoPaths,videoIds)) {
+                                if (id) {
+                                    videos.push({
+                                        videoId: id,
+                                        path: path,
+                                    })
+                                }
                             }
+                            trigger(globalEvents.updateVideoPathsRequest, "root", videos)
+                            window.storageObject.videoPaths = videoPaths
                         }
-                        trigger(globalEvents.updateVideoPathsRequest, "root", videos)
-                        window.storageObject.videoPaths = videoPaths
                     } catch (error) {
                         console.warn(`Error getting videoPaths: ${error}`)
                     }

@@ -341,14 +341,15 @@ export default {
             return (this.observationData.rejectedBy||[]).includes(this.$root.email)
         },
         toggleConfirm() {
-            const shouldUnReject = this.hasConfirmed()
-            if (shouldUnReject) {
+            const shouldUnConfirm = this.hasConfirmed()
+            if (shouldUnConfirm) {
                 this.observationData.confirmedBy = this.observationData.confirmedBy.filter(each=>each!=this.$root.email)
             } else {
                 this.observationData.confirmedBy.push(this.$root.email)
                 this.observationData.rejectedBy = this.observationData.rejectedBy.filter(each=>each!=this.$root.email)
             }
             trigger(globalEvents.updateObservationRequest, "ObservationEditor", this.observationData)
+            this.$forceUpdate()
         },
         toggleReject() {
             const shouldUnReject = this.hasRejected()
@@ -359,6 +360,7 @@ export default {
                 this.observationData.confirmedBy = this.observationData.confirmedBy.filter(each=>each!=this.$root.email)
             }
             trigger(globalEvents.updateObservationRequest, "ObservationEditor", this.observationData)
+            this.$forceUpdate()
         },
         wheneverVideoChanges() {
             if (this.editing) {
