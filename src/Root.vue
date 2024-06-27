@@ -27,9 +27,14 @@ import { frontendDb } from "./iilvd-api.js"
 import { Router } from './plugins/router-plugin.js'
 import * as zipJs from "@zip.js/zip.js"
 import * as zipTools from "./tooling/zip_tooling.js"
+import { Event, trigger, everyTime, once, globalEvents } from "./tooling/events.js"
+
+import "./tooling/video_storage_manager.js"
+
 window.zipJs = zipJs
 window.zipTools = zipTools
 window.basics = basics // debugging
+
 //
 // Routing Init
 //
@@ -313,8 +318,7 @@ export default RootComponent = {
                                 })
                             }
                         }
-                        // update any video paths
-                        await frontendDb.setVideos(videos)
+                        trigger(globalEvents.updateVideoPaths, "root", videos)
                         window.storageObject.videoPaths = videoPaths
                     } catch (error) {
                         console.warn(`Error getting videoPaths: ${error}`)
@@ -358,6 +362,7 @@ export default RootComponent = {
             needToLoad$: {
             },
             email: window.storageObject.email,
+            noSearch: true,
         }
     },
     mounted() {
@@ -372,6 +377,13 @@ export default RootComponent = {
     watch: {
         email(newValue){
             window.storageObject.email = this.$root.email
+        },
+        "searchResults.filterAndSort": {
+            deep: true,
+            handler() {
+                const filterAndSort = this.$root.filterAndSort
+                this.$root.noSearch = filterAndSort.kindOfObserver == "Either" && !filterAndSort.observer && !filterAndSort.labelName && !filterAndSort.minlabelConfidence && !filterAndSort.maxlabelConfidence && (filterAndSort.validation.length == 4 || filterAndSort.validation.length == 0)
+            }
         },
         "searchResults.videos": {
             deep: true,

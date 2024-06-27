@@ -276,7 +276,6 @@ export default {
     },
     windowListeners: {
         keydown(eventObj) {
-            console.debug(`eventObj is:`,eventObj)
             if (eventObj.key == "n") {
                 this.onNewObservation()
                 eventObj.preventDefault()

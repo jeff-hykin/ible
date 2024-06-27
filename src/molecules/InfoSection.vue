@@ -1,10 +1,8 @@
 <template lang="pug">
     span.info-section
-        | Selected Label: {{labelName}}
-        br
-        | Current Video ID: {{videoId}}
-        br
         | Pause Time: {{(currentTime||0).toFixed(2)}} sec
+        br
+        | Selected Label: {{labelName}}
 </template>
 <script>
 export default {

@@ -32,6 +32,7 @@
                                 SegmentDisplay(ref="segmentDisplay" :currentTime="currentTime")
                                 //- NEXT
                                 SideButton.right-side-button(right @click='wrapperForSelectNextSegment')
+                            JsonTree.json-tree(:data="videoInfo||{}")
                 column.side-container(v-if="$root.videoInterface.videoId" align-v="top" overflow="visible" min-height="50rem" width="fit-content")
                     ObservationEditor(
                         :jumpSegment="wrapperForJumpSegment"
@@ -44,7 +45,9 @@
                     )
 </template>
 <script>
+import { frontendDb } from '../iilvd-api.js'
 import { get } from "../object.js"
+import { deferredPromise } from '../utils.js'
 
 export default {
     props: [],
@@ -57,6 +60,7 @@ export default {
         WrappedTopSearch: require("../organisms/WrappedTopSearch").default,
         Card: require("../molecules/Card").default,
         VideoLister: require("../organisms/VideoLister").default,
+        JsonTree: require('vue-json-tree').default,
     },
     data: ()=>({
         // it is annoying to have a `this.currentTime` when
@@ -67,8 +71,10 @@ export default {
         // so even if we updated it (@currentTimeChanged)
         // it wouldn't cause a re-render in downstream components
         currentTime: null,
+        videoInfo: {},
     }),
     mounted() {
+        this.$root.videoInterface.wheneverVideoIsLoaded(this.updateVideoFrontendData)
     },
     watch: {
     },
@@ -80,6 +86,24 @@ export default {
     },
     methods: {
         get,
+        async updateVideoFrontendData() {
+            const player = this.$root.videoInterface.player
+            const videoId = this.$root.videoInterface.videoId
+            const newVideoInfo = { videoId }
+            if (player.duration || this.$root.videoInterface.videoPath) {
+                if (player.duration) {
+                    newVideoInfo.durationInSeconds = player.duration
+                }
+                if (this.$root.videoInterface.videoPath) {
+                    newVideoInfo.path = this.$root.videoInterface.videoPath
+                }
+                await frontendDb.setVideos([newVideoInfo])
+            }
+            frontendDb.getVideoById(videoId).then(videoInfo=>{
+                console.debug(`videoInfo is:`,videoInfo)
+                this.videoInfo = { ...videoInfo, usersFinishedWatchingAt:{},usersFinishedLabelingAt:{},usersFinishedVerifyingAt:{}, ...videoInfo}
+            })
+        },
         aVideoIsSelected() {
             return this.$root.videoInterface.aVideoIsSelected
         },
@@ -165,5 +189,14 @@ export default {
     
     .fade-enter, .fade-leave-to
         opacity: 0
+
+::v-deep .json-tree
+    min-width: 100%
+    max-width: 100%
+    background: transparent
+    color: gray
+    opacity: 0.7
     
+    .json-tree-sign
+        visibility: hidden    
 </style>

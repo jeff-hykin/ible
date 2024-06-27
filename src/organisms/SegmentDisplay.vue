@@ -77,7 +77,6 @@ import { frontendDb } from '../iilvd-api.js'
 const generalTimeoutFrequency = 50 // ms
 
 // TASKS:
-    // fix references to this.$root.selectedVideo
     // fix observation editor adding new observations to this.$root.videoInterface.keySegments
 let untracked = {
     lastSeekFinished: deferredPromise(),

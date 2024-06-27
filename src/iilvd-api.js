@@ -153,13 +153,16 @@ const indexDb = {
                             })).then(({result})=>{
                                 // enforce is object
                                 let existingValue = result?.v instanceof Object ? result.v : {}
-                                
                                 // 
                                 // for each assignment
                                 // 
                                 for (const [subAddress, value] of innerAddressPairs) {
                                     if (subAddress.length == 0) {
-                                        existingValue = value
+                                        if (value instanceof Object) {
+                                            existingValue = {...existingValue, ...value}
+                                        } else {
+                                            existingValue = value
+                                        }
                                     } else {
                                         set({ keyList: subAddress, to: value, on: existingValue })
                                     }
@@ -168,7 +171,7 @@ const indexDb = {
                                 return new Promise(
                                     (resolve, reject)=>
                                         Object.assign(
-                                            objectStore.put({id:id, k: key, t: tableName, v:existingValue,}), 
+                                            objectStore.put({id:id, k: key, t: tableName, v:existingValue,}),
                                             {
                                                 onsuccess:resolve,
                                                 onerror:reject,
@@ -208,16 +211,21 @@ const indexDb = {
                 }
                 const [ tableName, key, ...subAddress ] = address
                 const id = JSON.stringify([tableName, key])
+                console.debug(`id is:`,id)
                 let requestPromise
                 const request = objectStore.get(id)
                 Object.assign(request, {
                     onsuccess: (thingy)=>{
+                        console.debug(`thingy is:`,thingy)
+                        console.debug(`request.result is:`,request.result)
+                        console.debug(`request.result?.v is:`,request.result?.v)
                         if (subAddress.length == 0) {
                             requestPromise.resolve(
                                 [ address, request.result?.v ]
                             )
                         } else {
                             const value = get({ keyList: subAddress, from: request.result?.v, failValue: undefined })
+                            console.debug(`request.result is:`,request.result)
                             requestPromise.resolve(
                                 [ address, value ],
                             )
@@ -252,14 +260,16 @@ const indexDb = {
                 }
                 const [ tableName, key, ...subAddress ] = address
                 const id = JSON.stringify([tableName, key])
+                console.debug(`id is:`,id)
                 // 
                 // delete whole object
                 // 
                 if (subAddress.length == 0) {
                     const request = objectStore.delete(id)
+                    console.debug(`delete request is:`,request)
                     const requestPromise = deferredPromise()
                     Object.assign(request, {
-                        onsuccess: ()=>requestPromise.resolve(),
+                        onsuccess: (...args)=>requestPromise.resolve(request, args),
                         onerror: (err)=>requestPromise.reject(err),
                     })
                     return requestPromise
@@ -620,55 +630,55 @@ const managers = {
             return existingTables
         },
     },
-    videos: {
-        async regenerate(existingVideos, {addressesToIgnore=[], entriesToAssume=[]}={}) {
-            const videos = {...existingVideos}
-            // reset computed values
-            for (const [key, value] of Object.entries(videos)) {
-                value.observationCount = 0
-                value.observationsPerLabel = {}
-            }
-            const observationKeysToSkip = addressesToIgnore.filter(
-                    each=>each instanceof Array && each[0] == "observations"
-                ).map(
-                    each=>each[1]
-                )
-            const addEntry = (observationEntry)=>{
-                if (observationEntry.videoId) {
-                    const videoId = observationEntry.videoId
-                    const label = observationEntry.label
-                    videos[videoId] = videos[videoId]||{}
-                    videos[videoId].count = (videos[videoId].count||0)+1
-                    videos[videoId].observationsPerLabel = videos[videoId].observationsPerLabel||{}
-                    videos[videoId].observationsPerLabel[label] = (videos[videoId].observationsPerLabel[label]||0)+1
-                }
-            }
-            for (const each of entriesToAssume) {
-                addEntry(each)
-            }
-            for await (const [ key,observationEntry ] of indexDb.iter.observations) {
-                if (observationKeysToSkip.includes(key)) {
-                    continue
-                }
-                addEntry(observationEntry)
-            }
-            return videos
-        },
-        async whenEditObservations({oldObservationEntries, newObservationEntries, existingValues}) {
-            // NOTE: this isn't very efficient.
-                // We would need to change the data structure of the video to include the ID's of the observations
-                // in order to maintain correctness and have ~O(1) operations for editing a observation.
-                // Large bulk edits should still use this method, but for small edits we it would be better to use a
-                // the incremental approach
-            return managers.labels.regenerate(
-                existingValues,
-                {
-                    addressesToIgnore:oldObservationEntries.map(each=>["observations", each.observationId]),
-                    entriesToAssume: newObservationEntries,
-                },
-            )
-        },
-    },
+    // videos: {
+    //     async regenerate(existingVideos, {addressesToIgnore=[], entriesToAssume=[]}={}) {
+    //         const videos = {...existingVideos}
+    //         // reset computed values
+    //         for (const [key, value] of Object.entries(videos)) {
+    //             value.observationCount = 0
+    //             value.observationsPerLabel = {}
+    //         }
+    //         const observationKeysToSkip = addressesToIgnore.filter(
+    //                 each=>each instanceof Array && each[0] == "observations"
+    //             ).map(
+    //                 each=>each[1]
+    //             )
+    //         const addEntry = (observationEntry)=>{
+    //             if (observationEntry.videoId) {
+    //                 const videoId = observationEntry.videoId
+    //                 const label = observationEntry.label
+    //                 videos[videoId] = videos[videoId]||{}
+    //                 videos[videoId].count = (videos[videoId].count||0)+1
+    //                 videos[videoId].observationsPerLabel = videos[videoId].observationsPerLabel||{}
+    //                 videos[videoId].observationsPerLabel[label] = (videos[videoId].observationsPerLabel[label]||0)+1
+    //             }
+    //         }
+    //         for (const each of entriesToAssume) {
+    //             addEntry(each)
+    //         }
+    //         for await (const [ key,observationEntry ] of indexDb.iter.observations) {
+    //             if (observationKeysToSkip.includes(key)) {
+    //                 continue
+    //             }
+    //             addEntry(observationEntry)
+    //         }
+    //         return videos
+    //     },
+    //     async whenEditObservations({oldObservationEntries, newObservationEntries, existingValues}) {
+    //         // NOTE: this isn't very efficient.
+    //             // We would need to change the data structure of the video to include the ID's of the observations
+    //             // in order to maintain correctness and have ~O(1) operations for editing a observation.
+    //             // Large bulk edits should still use this method, but for small edits we it would be better to use a
+    //             // the incremental approach
+    //         return managers.labels.regenerate(
+    //             existingValues,
+    //             {
+    //                 addressesToIgnore:oldObservationEntries.map(each=>["observations", each.observationId]),
+    //                 entriesToAssume: newObservationEntries,
+    //             },
+    //         )
+    //     },
+    // },
 }
 
 const frontendDb = {
@@ -704,7 +714,7 @@ const frontendDb = {
         
         const newLabels    = managers.labels.regenerate(    {},{addressesToIgnore: entryIds, entriesToAssume: observationEntries,},)
         const newObservers = managers.observers.regenerate( {},{addressesToIgnore: entryIds, entriesToAssume: observationEntries,},)
-        const newVideos    = managers.videos.regenerate(    {},{addressesToIgnore: entryIds, entriesToAssume: observationEntries,},)
+        // const newVideos    = managers.videos.regenerate(    {},{addressesToIgnore: entryIds, entriesToAssume: observationEntries,},)
     
         // 
         // bulk set
@@ -715,7 +725,7 @@ const frontendDb = {
             ]),
             ...Object.entries(newLabels   ).map(([key, value])=>[   ["labels",    key],   value,   ]),
             ...Object.entries(newObservers).map(([key, value])=>[   ["observers", key],   value,   ]),
-            ...Object.entries(newVideos   ).map(([key, value])=>[   ["videos",    key],   value,   ]),
+            // ...Object.entries(newVideos   ).map(([key, value])=>[   ["videos",    key],   value,   ]),
         ])
     },
     setObservation(observationEntry, {withCoersion=false}={}) {
@@ -751,6 +761,7 @@ const frontendDb = {
             if (typeof video.videoId != 'string') {
                 throw Error(`Tried to use frontendDb.setVideos() but one of the videos videoId wasn't a string`)
             }
+            console.debug(`[setVideos] video is:`,video)
             addressValuePairs.push([
                 ["videos", video.videoId],
                 video,
@@ -761,6 +772,13 @@ const frontendDb = {
     async getVideos(videoIds) {
         let values = []
         for await (const [ address, value ] of indexDb.gets(videoIds.map(each=>["videos", each]))) {
+            values.push(value)
+        }
+        return values
+    },
+    async getAllVideos() {
+        const values = []
+        for await (const [ key, value ] of indexDb.iter.videos) {
             values.push(value)
         }
         return values

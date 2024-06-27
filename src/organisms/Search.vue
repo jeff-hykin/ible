@@ -15,7 +15,7 @@
                 icon="delete"
                 color="black"
                 tooltipPosition="top"
-                :tooltip="`Delete all ${numberOfSearchResults||$root.searchResults.counts.total} search results`"
+                :tooltip="`Delete all ${numberOfSearchResults||$root.searchResults.counts.total} observations`"
             )
                 | Delete All
             VideoIdSearch(@submit='searchWasSubmitted')
@@ -24,7 +24,7 @@
                 icon="download"
                 color="primary"
                 tooltipPosition="top"
-                :tooltip="`Download all ${numberOfSearchResults||$root.searchResults.counts.total} results as CSV's`"
+                :tooltip="`Download all ${numberOfSearchResults||$root.searchResults.counts.total} observations as CSV's`"
             )
                 | Download
         row.search-summary(
@@ -150,7 +150,7 @@ export default {
     computed: {
         emailIsInvalid() {
             return utils.isInvalidEmail(this.$root.email)
-        }
+        },
     },
     methods: {
         searchWasSubmitted(data) {
@@ -162,8 +162,13 @@ export default {
             if (entries?.length==0) {
                 entries = await frontendDb.getObservations({where: [], returnObject: false})
             }
-            const videoIds = [...new Set(entries.map(each=>each.videoId))]
-            const videos = await frontendDb.getVideos(videoIds)
+            let videos = []
+            if (this.$root.noSearch) {
+                videos = await frontendDb.getAllVideos()
+            } else {
+                const videoIds = [...new Set(entries.map(each=>each.videoId))]
+                videos = await frontendDb.getVideos(videoIds)
+            }
             
             download(
                 "data.ible.zip",
