@@ -7,7 +7,6 @@ import * as basics from './tooling/basics.bundle.js'
 import {
     localVideoPrefix,
     isLocalVideo,
-    getLocalVideoName,
     minSizeOfUnixTimestamp,
     currentFixedSizeOfYouTubeVideoId,
     minSizeOfLocalVideoId,
@@ -16,7 +15,6 @@ import {
 export {
     localVideoPrefix,
     isLocalVideo,
-    getLocalVideoName,
     minSizeOfUnixTimestamp,
     currentFixedSizeOfYouTubeVideoId,
     minSizeOfLocalVideoId,

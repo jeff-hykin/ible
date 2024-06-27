@@ -17,11 +17,8 @@
 <script>
 import { frontendDb } from '../iilvd-api.js'
 import { set } from '../object.js'
-import { isLocalVideo, getLocalVideoName } from '../observation_tooling.js'
+import { isLocalVideo,} from '../observation_tooling.js'
 import * as videoTools from "../tooling/video_tooling.js"
-// TASKS:
-    // test clicking on video in video list
-    // fix getLocalVideoName
 
 export default {
     data: ()=>({

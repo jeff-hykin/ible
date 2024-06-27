@@ -91,7 +91,7 @@ export const searchTermToVideoInfo = (searchTerm)=>{
         return {
             isYoutubeUrl: false,
             videoId: localVideoId,
-            path: `/videos/${searchTerm}`,
+            path: searchTerm,
         }
     }
 }

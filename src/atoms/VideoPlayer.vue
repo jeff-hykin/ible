@@ -24,8 +24,6 @@ import { extractYoutubeVideoId, isLocalVideo } from "../tooling/video_tooling.js
 import { deferredPromise } from "../utils.js"
 import { get, set } from "../object.js"
 
-// TASKS:
-    // figure out why sometimes the \/videos\/ is missing and sometimes it isn't
 export default {
     // emits:
         // :videoStartedLoading
