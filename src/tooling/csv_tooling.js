@@ -12,12 +12,12 @@ const matchesReservedPattern = (string)=>{
     return (
         // to allow comma-separated lists of strings/numbers/dates that dont have commas in them
         string.includes(",") ||
-        // to allow durations and times
-        string.includes(/^\d+:/) ||
         // to allow computed items / equations
-        string.includes(/^=/) ||
+        string.startsWith("=") ||
         // to allow regex (yeah yeah i know i know)
         (string.startsWith("/") && string.endsWith("/")) ||
+        // to allow durations and times
+        string.match(/^\d+:/) ||
         // to allow dates (no times) either YYYY-MM-DD and DD/MM/YYYY (probably only want to support YYYY-MM-DD, but will reserve both)
         string.match(/^\d{4}-\d{1,2}-\d{1,2}($| |\t)/) || string.match(/^\d{1,2}\/\d{1,2}\/\d{1,2}($| |\t)/) ||
         // ISO date
