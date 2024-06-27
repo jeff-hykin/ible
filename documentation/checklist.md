@@ -33,8 +33,12 @@ Major Chonological Changes:
     - had to fix "gets"
 
 - DONE: get zip.js working
-- get csv conversion working
-- verify that everything still works
+- DONE: get csv conversion working
+
+- DONE: add duration to the video whenever its loaded (set on frontendDb)
+- DONE: Figure out why the frontendDb just doesn't work (delete doesnt delete despite saying success)
+- DONE: render the videoInfo below the video
+- DONE: add the observation comment field
 
 - change "confirmed by one human"
     - make "Confirm" "Reject" buttons in non-editing mode
