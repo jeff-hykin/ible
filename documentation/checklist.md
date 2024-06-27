@@ -59,11 +59,15 @@ Major Chonological Changes:
     - display video speficic data
     - remove/update the format demonstration
 
+- remove upload help
+- check all FIXME's TODO's etc
+- check that video data on download is nulled-out for empty strings
 - save "latest video action"
 - add toggles for the video watched/verified etc
 - change the CSV export of confirmed/rejected to be comma-separated
 - test test test
 
+- add a readme to the downloaded zip explaining the different fields and available uploadActions
 - get cli working on windows
     - maybe use walkUpUntil to find node_modules
 
