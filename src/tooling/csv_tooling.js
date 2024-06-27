@@ -1,8 +1,29 @@
 import * as csv from "csv/dist/esm/index.js"
 import * as yaml from "yaml"
 
-window.yaml = yaml
-window.csv = csv
+window.yaml = yaml // debugging only
+window.csv = csv // debugging only
+
+// TODO: make this a formal format standard in its own repo, with a javascript and python API
+const w3schoolsIsoDateRegex = /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))/
+const extraIsoDateRegex = /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+)|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d)|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d)/
+const matchesIso8601Date = (string)=>string.match(w3schoolsIsoDateRegex) || string.match(extraIsoDateRegex)
+const matchesReservedPattern = (string)=>{
+    return (
+        // to allow comma-separated lists of strings/numbers/dates that dont have commas in them
+        string.includes(",") ||
+        // to allow durations and times
+        string.includes(/^\d+:/) ||
+        // to allow computed items / equations
+        string.includes(/^=/) ||
+        // to allow regex (yeah yeah i know i know)
+        (string.startsWith("/") && string.endsWith("/")) ||
+        // to allow dates (no times) either YYYY-MM-DD and DD/MM/YYYY (probably only want to support YYYY-MM-DD, but will reserve both)
+        string.match(/^\d{4}-\d{1,2}-\d{1,2}($| |\t)/) || string.match(/^\d{1,2}\/\d{1,2}\/\d{1,2}($| |\t)/) ||
+        // ISO date
+        matchesIso8601Date(string)
+    )
+}
 
 export const rowify = (data, { defaultHeaders=[], delimiter="\t" }={}) => {
     let rows = data
@@ -40,14 +61,18 @@ export function convertToCsv(data, { defaultHeaders=[], delimiter="\t" }={}) {
         let index = -1
         for (const each of eachRow) {
             index++
-            if (each === "") {
-                eachRow[index] =  '""'
-                continue
-            }
+            // null/undefined become empty Excel cell
             if (each == null) {
                 eachRow[index] =  ""
                 continue
             }
+            // empty strings become Excel cell containing two quotes
+            if (each === "") {
+                eachRow[index] =  '""'
+                continue
+            }
+            // non-strings just get yamlified
+            // (TODO: consider having strings-with-commas getting quoted, and then some lists of strings/numbers getting converted to a comma-separated string)
             if (typeof each != "string") {
                 let newString = yaml.stringify(each)
                 if (newString[newString.length-1] == "\n") {
@@ -56,7 +81,12 @@ export function convertToCsv(data, { defaultHeaders=[], delimiter="\t" }={}) {
                 eachRow[index] = newString
                 continue
             }
-            const asString = yaml.stringify(each)
+            // if its a string that wouldn't be quoted by yaml, but should be reserved for special things (like date), then quote it manually
+            if (matchesReservedPattern(each)) {
+                eachRow[index] = JSON.stringify(each)
+                continue
+            }
+            const asString = yaml.stringify(each) 
             if (asString.startsWith('"') && asString.endsWith('"\n')) {
                 eachRow[index] = asString.slice(0,-1)
             } else {
@@ -92,7 +122,7 @@ export async function parseCsv(csvString, { delimiter="\t" }={}) {
         for (const each of eachRow) {
             index++
             try {
-                if (each.match(/^\d{1,4}-\d{1,2}-\d{1,2}T\d{1,2}:\d{1,2}:\d{1,2}(\.\d+)?(Z|[+-]\d{1,2}(:\d{1,2})?)$/)) {
+                if (matchesIso8601Date(each)) {
                     eachRow[index] = new Date(each)
                 } else {
                     eachRow[index] = yaml.parse(each)
