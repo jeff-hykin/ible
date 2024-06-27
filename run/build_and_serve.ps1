@@ -22,7 +22,7 @@ const watcher = Deno.watchFs([
 if (!(await run(`${projectFolder}/run/compile`).success)) {
     Deno.exit(1)
 }
-const serverProcess = run(`${projectFolder}/run/serve`)
+const serverProcess = run(`${projectFolder}/run/serve`, ...Deno.args)
 
 let shouldCompile = true
 
