@@ -74,7 +74,7 @@
 import { set } from '../object.js'
 import { wrapIndex, checkIf, deferredPromise, dynamicSort } from "../utils.js"
 import { frontendDb } from '../iilvd-api.js'
-import { Event, trigger, everyTime, once, globalEvents } from "./tooling/events.js"
+import { Event, trigger, everyTime, once, globalEvents } from "../tooling/events.js"
 
 const generalTimeoutFrequency = 50 // ms
 

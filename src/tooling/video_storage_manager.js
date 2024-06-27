@@ -3,6 +3,7 @@ import { Event, trigger, everyTime, once, globalEvents } from "./events.js"
 
 // listens to:
 //     globalEvents.updateVideoPathsRequest
+//     globalEvents.requestVideosToList
 // triggers:
 //     globalEvents.videoStorageUpated
 
@@ -20,4 +21,12 @@ everyTime(globalEvents.updateVideoPathsRequest).then(async (who, newVideoData)=>
     }
     await indexDb.puts(addressValuePairs)
     trigger(globalEvents.videoStorageUpated, name, newVideoData)
+})
+
+everyTime(globalEvents.requestVideosToList).then(async (who)=>{
+    let videos = []
+    for await (const [ key, each ] of indexDb.iter.videos) {
+        videos.push(each)
+    }
+    return videos
 })

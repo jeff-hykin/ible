@@ -18,12 +18,14 @@
 import { frontendDb } from '../iilvd-api.js'
 import { set } from '../object.js'
 import { isLocalVideo,} from '../observation_tooling.js'
+import { trigger, globalEvents } from '../tooling/events.js'
 import * as videoTools from "../tooling/video_tooling.js"
 
 export default {
     data: ()=>({
         videoNames: {},
         videoPaths: {},
+        videoIds: [],
     }),
     watch: {
         '$root.searchResults.videos': {
@@ -43,20 +45,26 @@ export default {
     },
     computed: {
         videoResults() {
-            let videos = this.$root.searchResults.videos || this.$root.videoInterface.getvideoPaths()
             let selectedId = this.$root.videoInterface.videoId
-            let filtered = Object.keys(videos).filter(each=>each!==selectedId)
+            let filtered = this.videoIds.filter(each=>each!==selectedId)
             return filtered
         },
     },
     methods: {
         isLocalVideo,
         async getVideoExtraInfo() {
-            const videoIds = Object.keys(this.$root.searchResults.videos)
-            const videos = await frontendDb.getVideos(videoIds)
+            let videoIds = Object.keys(this.$root.searchResults.videos)
+            let videos
+            if (this.$root.noSearch) {
+                videos = (await trigger(globalEvents.requestVideosToList, "VideoLister"))[0]
+            } else {
+                videos = await frontendDb.getVideos(videoIds)
+            }
             const videoNames = {}
             const videoPaths = {}
+            videoIds = []
             for (const each of videos) {
+                videoIds.push(each.videoId)
                 if (each?.videoId) {
                     videoPaths[each.videoId] = `/videos/${each.path}`
                     videoNames[each.videoId]  = videoTools.extractLocalVideoNameFromPath(each.path)
@@ -64,6 +72,7 @@ export default {
             }
             this.videoNames = videoNames
             this.videoPaths = videoPaths
+            this.videoIds = videoIds
         },
     }
 }

@@ -30,6 +30,7 @@ import * as zipTools from "./tooling/zip_tooling.js"
 import { Event, trigger, everyTime, once, globalEvents } from "./tooling/events.js"
 
 import "./tooling/video_storage_manager.js"
+import "./tooling/observation_storage_manager.js"
 
 window.zipJs = zipJs
 window.zipTools = zipTools
@@ -287,7 +288,7 @@ export default RootComponent = {
                     }
                     $root.videoInterface._videoLoadedPermanentCallbacks.add(callback)
                 },
-                getvideoPaths() {
+                getVideoPaths() {
                     return window.storageObject.videoPaths
                 },
                 getVideoInfos() {

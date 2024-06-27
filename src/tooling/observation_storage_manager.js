@@ -11,6 +11,7 @@ import { Event, trigger, everyTime, once, globalEvents } from "./events.js"
 //     globalEvents.rootRetriveLabelsRequest
 
 // TASKS:
+    // check that these are being triggered
     // make the upload system use globalEvents.updateObservationRequest
     // make the observation editor use globalEvents.updateObservationRequest
 

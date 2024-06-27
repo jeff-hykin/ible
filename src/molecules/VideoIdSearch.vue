@@ -27,7 +27,7 @@ export default {
         // janky, but so is trying to pass them down all the way through the component tree
         // the issue is that $root.videoInterface is not reactive (the suggestions update, but the update wouldn't trigger a re-render)
         this.interval = setInterval(()=>{
-            this.suggestions = (this.$root.videoInterface.getvideoPaths()||[]).filter(each=>each)
+            this.suggestions = (this.$root.videoInterface.getVideoPaths()||[]).filter(each=>each)
         }, 1000)
     },
     // unmount

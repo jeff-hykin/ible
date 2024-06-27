@@ -225,9 +225,11 @@ import { getColor, isValidName, storageObject } from "../utils"
 import { trigger, globalEvents, everyTime } from '../tooling/events.js'
 
 // triggers:
+//    globalEvents.updateObservationRequest
 //    globalEvents.addLabelRequest
 //    globalEvents.rootDeSelectObservationRequest
 //    globalEvents.rootRetriveLabelsRequest
+//    globalEvents.deleteObservationRequest
 
 export default {
     props: [
