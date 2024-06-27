@@ -218,6 +218,7 @@
 </template>
 
 <script>
+import Vue from "vue"
 import { toKebabCase, toRepresentation } from '../string.js'
 import * as observationTooling from '../observation_tooling.js'
 import { frontendDb } from '../iilvd-api.js'
@@ -379,17 +380,23 @@ export default {
                 return
             }
             
-            const { success, errorMessage } = (await trigger(globalEvents.updateObservationRequest, "ObservationEditor", this.observationData))[0]
-            if (!success) {
-                if (errorMessage) {
-                    this.$toasted.show(errorMessage).goAway(2500)
+            try {
+                const { success, errorMessage } = (await trigger(globalEvents.updateObservationRequest, "ObservationEditor", this.observationData))[0]
+                if (!success) {
+                    if (errorMessage) {
+                        this.$toasted.show(errorMessage).goAway(2500)
+                    }
+                    return
                 }
-                return
+            } catch (error) {
+                this.$toasted.show(errorMessage)
+                console.log(error)
+                console.log(error.stack)
             }
             // on success
             this.editing = false
             Vue.toasted.show(`Changes saved`).goAway(2500)
-            trigger(globalEvents.addLabelRequest, "ObservationEditor", observationEntry.label, observationEntry.videoId)
+            trigger(globalEvents.addLabelRequest, "ObservationEditor", this.observationData.label, this.observationData.videoId)
             trigger(globalEvents.rootDeSelectObservationRequest, "ObservationEditor")
             trigger(globalEvents.rootRetriveLabelsRequest, "ObservationEditor")
         },

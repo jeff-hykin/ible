@@ -42,6 +42,7 @@ window.basics = basics // debugging
 //     globalEvents.rootDeSelectObservationRequest
 // triggers:
 //     globalEvents.updateVideoPathsRequest
+//     globalEvents.addedLabel
 
 //
 // Routing Init
@@ -383,9 +384,10 @@ export default RootComponent = {
         // 
         const name = "root"
         everyTime(globalEvents.requestRootData).then((who, newLabel)=>this.$root.$data)
-        everyTime(globalEvents.addLabelRequest).then((who, newLabels, ...args)=>{
-            console.log(`${name} saw [requestSetRootLabels] from ${who}`)
+        everyTime(globalEvents.addLabelRequest).then((who, ...args)=>{
+            console.log(`${name} saw [addLabelRequest] from ${who}`)
             this.$root.addLabel(...args)
+            trigger(globalEvents.addedLabel, "root")
         })
         everyTime(globalEvents.rootDeSelectObservationRequest).then((who)=>{
             console.log(`${name} saw [rootDeSelectObservationRequest] from ${who}`)
@@ -550,19 +552,32 @@ export default RootComponent = {
             this.labels = newLabels
         },
         addLabel(labelName, videoId) {
+            const noneAreSelected = Object.values(this.$root.labels).every(each=>!each.selected)
+            console.debug(`labelName is:`,labelName)
             if (!this.$root.labels[labelName]) {
                 // if the label doesnt exist
                 this.$toasted.show(`Note: Thats a new label name`).goAway(3500)
+                // then add it
+                this.$root.labels[labelName] = {
+                    color: getColor(labelName),
+                    segmentCount: 1,
+                    videoCount: 1,
+                    videos: [ videoId ],
+                    selected: !noneAreSelected, // if nothing is selected, keep it that way
+                }
+            } else {
+                let label = this.$root.labels[labelName]
+                const videos = [...new Set([...(label.videos||[]), videoId])]
+                this.$root.labels[labelName] = {
+                    color: getColor(labelName),
+                    segmentCount: (label.segmentCount||0)+1,
+                    videos: videos,
+                    videoCount: videos.length,
+                    selected: !noneAreSelected, // if nothing is selected, keep it that way
+                }
             }
-            const noneAreSelected = Object.values(this.$root.labels).every(each=>!each.selected)
-            // then add it
-            this.$root.labels[labelName] = {
-                color: getColor(labelName),
-                segmentCount: 1,
-                videoCount: 1,
-                videos: [ videoId ],
-                selected: !noneAreSelected, // if nothing is selected, keep it that way
-            }
+            this.$root.labels = {...this.$root.labels}
+            console.debug(`this.$root.labels is:`,this.$root.labels)
         },
         selectAllLabels() {
             const newLabelValues = {}

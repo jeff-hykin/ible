@@ -82,6 +82,7 @@ const generalTimeoutFrequency = 50 // ms
 // listens to:
 //     globalEvents.observationStorageUpdatedEntries
 //     globalEvents.observationStorageDeletedEntries
+//     globalEvents.addedLabel
 
 let untracked = {
     lastSeekFinished: deferredPromise(),
@@ -112,11 +113,13 @@ export default {
         everyTime(globalEvents.observationStorageUpdatedEntries).then((who, updatedObservationEntries)=>{
             console.log(`${name} saw [observationStorageUpdatedEntries] from ${who}`)
             const updatedObservationEntriesIds = updatedObservationEntries.map(each=>each.observationId)
+            console.debug(`updatedObservationEntries is:`,updatedObservationEntries)
             // this should cause the segment display to update
             this.$root.videoInterface.keySegments = [
                 ...this.$root.videoInterface.keySegments.filter(each=>!updatedObservationEntriesIds.includes(each.observationId)),
                 ...updatedObservationEntries,
             ]
+            this.updateSegments()
         })
         everyTime(globalEvents.observationStorageDeletedEntries).then((who, deletedObservationIds)=>{
             console.log(`${name} saw [observationStorageDeletedEntries] from ${who}`)
@@ -124,6 +127,11 @@ export default {
             this.$root.videoInterface.keySegments = [
                 ...this.$root.videoInterface.keySegments.filter(each=>!deletedObservationIds.includes(each.observationId)),
             ]
+            this.updateSegments()
+        })
+        everyTime(globalEvents.addedLabel).then((who)=>{
+            console.log(`${name} saw [addedLabel] from ${who}`)
+            this.updateSegments()
         })
     },
     watch: {

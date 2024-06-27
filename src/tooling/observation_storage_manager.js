@@ -1,5 +1,7 @@
 import { frontendDb } from "../iilvd-api.js"
 import { Event, trigger, everyTime, once, globalEvents } from "./events.js"
+import * as observationTooling from "../observation_tooling.js"
+import Vue from "vue"
 
 // listens to:
 //     globalEvents.updateObservationRequest
