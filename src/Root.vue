@@ -314,7 +314,7 @@ export default RootComponent = {
                                 })
                             }
                         }
-                        trigger(globalEvents.updateVideoPaths, "root", videos)
+                        trigger(globalEvents.updateVideoPathsRequest, "root", videos)
                         window.storageObject.videoPaths = videoPaths
                     } catch (error) {
                         console.warn(`Error getting videoPaths: ${error}`)
