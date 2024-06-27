@@ -59,8 +59,9 @@ Major Chonological Changes:
     - display video speficic data
     - remove/update the format demonstration
 
-- remove upload help
+- DONE: change upload help button
 - fix the download of `observers#videos`
+- consider custom observer#video interactions
 - check all FIXME's TODO's etc
 - check that video data on download is nulled-out for empty strings
 - save "latest video action"

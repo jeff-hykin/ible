@@ -9,6 +9,15 @@
             @click="showHelp"
         )
         
+        ui-fab.help-button(
+            color="gray"
+            icon="download"
+            raised
+            tooltip="Download All Data"
+            tooltipPosition="left"
+            @click="downloadAllData"
+        )
+        
         //- ui-fab(color="primary" icon="add" :size="size")
         ui-fab.upload-button(
             color="blue"
@@ -23,46 +32,12 @@
         //- help message
         portal(to="modal-popups")
             ui-modal.modal(fj20485gh93oi53g ref="helpModal" title="Example Upload" transition="scale-up")
-                row(align-h="space-evenly" align-v="top")
-                    column(align-v="top")
-                        br 
-                        | Try editing them! Then look at the code →
-                        row(align-h="space-between" padding="2rem 1rem" align-v="top")
-                            column
-                                h5
-                                    | Observation 1
-                                container(height="1rem")
-                                DummyObservation(:observationData="dummyData1")
-                            container(min-width="3rem")
-                            column
-                                h5
-                                    | Observation 2
-                                container(height="1rem")
-                                DummyObservation(:observationData="dummyData2")
-                    
-                    container(width="2rem")
-                    
-                    column(flex-basis="50%" max-width="31rem" align-v="top")
-                        span
-                            br
-                            | To upload these observations
-                            br
-                            br
-                            | 1. Create a file ending with
-                            code
-                                |  .json 
-                            br
-                            br
-                            | 2. Then add the following text to that file.
-                            br
-                            br
-                        JsonTree.json-tree(:data="[dummyData1, dummyData2]")
-                        span
-                            br
-                            | 3. Then simply use the upload button to upload the file.
-                            br
-                            br
-                            | The JSON file is just a list of each observation represented as a kind of dictionary.
+                | If you're unsure about what to upload, try downloading the data first.
+                br
+                | The download is a a zip file with bunch of .yaml.tsv files that you can edit in Excel
+                br
+                | To upload new data, modify those .yaml.tsv, and then select all of them for upload.
+                
         //- error message
         //- portal(to="modal-popups")
         //-     ui-modal.modal(fj20485gh93oi53g ref="errorModal" :title="errorPreview" transition="scale-up")
@@ -148,6 +123,19 @@ export default {
         },
     },
     methods: {
+        async downloadAllData() {
+            const entries = await frontendDb.getObservations({where: [], returnObject: false})
+            const videos = await frontendDb.getAllVideos()
+            
+            download(
+                "data.ible.zip",
+                await zipTools.createZipOfTextFiles({
+                    "observations.yaml.tsv": await observationTooling.observationsToCsv(entries),
+                    "videos.yaml.tsv": await videoTooling.videosToCsv(videos),
+                    "observers#videos.yaml.tsv": await videoTooling.videoObserverTableToCsv(videos),
+                })
+            )
+        },
         latestUploadErrors() {
             return yaml.stringify(this.latestUploadErrorsObject)
         },
