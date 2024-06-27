@@ -294,10 +294,6 @@ export default RootComponent = {
                     }
                     return videoInfos
                 },
-                getLocalVideoName(videoId) {
-                    const videoPath = videoInterface.videoIdToPath(videoId)
-                    return videoTools.extractLocalVideoNameFromPath(videoPath)
-                },
                 videoIdToPath(videoId) {
                     if (videoTools.isLocalVideo(videoId)) {
                         return untrackedData.videoIdToPath[videoId]
