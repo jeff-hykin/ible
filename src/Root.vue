@@ -35,6 +35,13 @@ window.zipJs = zipJs
 window.zipTools = zipTools
 window.basics = basics // debugging
 
+// listens to:
+//     globalEvents.requestRootData
+//     globalEvents.addLabelRequest
+//     globalEvents.rootDeSelectObservationRequest
+// triggers:
+//     globalEvents.updateVideoPathsRequest
+
 //
 // Routing Init
 //
@@ -368,6 +375,20 @@ export default RootComponent = {
         }, 100)
         frontendDb.getUsernames().then(usernames=>{
             untrackedData.usernameList = untrackedData.usernameList.concat(usernames)
+        })
+        
+        // 
+        // listening
+        // 
+        const name = "root"
+        everyTime(globalEvents.requestRootData).then((who, newLabel)=>this.$root.$data)
+        everyTime(globalEvents.addLabelRequest).then((who, newLabels, ...args)=>{
+            console.log(`${name} saw [requestSetRootLabels] from ${who}`)
+            this.$root.addLabel(...args)
+        })
+        everyTime(globalEvents.rootDeSelectObservationRequest).then((who)=>{
+            console.log(`${name} saw [rootDeSelectObservationRequest] from ${who}`)
+            this.$root.selectedSegment = null
         })
     },
     watch: {

@@ -74,10 +74,15 @@
 import { set } from '../object.js'
 import { wrapIndex, checkIf, deferredPromise, dynamicSort } from "../utils.js"
 import { frontendDb } from '../iilvd-api.js'
+import { Event, trigger, everyTime, once, globalEvents } from "./tooling/events.js"
+
 const generalTimeoutFrequency = 50 // ms
 
-// TASKS:
-    // fix observation editor adding new observations to this.$root.videoInterface.keySegments
+// triggers:
+// listens to:
+//     globalEvents.observationStorageUpdatedEntries
+//     globalEvents.observationStorageDeletedEntries
+
 let untracked = {
     lastSeekFinished: deferredPromise(),
     singleActionAfterVideoLoaded: {},
@@ -102,6 +107,24 @@ export default {
         window.SegmentDisplay = this
         this.$root.videoInterface.wheneverVideoIsLoaded(this.resetSelectedSegment)
         this.$root.videoInterface.onceVideoIsLoaded(()=>{untracked.caller = "initalLoad"; this.updateSegments()})
+        
+        const name = "SegmentDisplay"
+        everyTime(globalEvents.observationStorageUpdatedEntries).then((who, updatedObservationEntries)=>{
+            console.log(`${name} saw [observationStorageUpdatedEntries] from ${who}`)
+            const updatedObservationEntriesIds = updatedObservationEntries.map(each=>each.observationId)
+            // this should cause the segment display to update
+            this.$root.videoInterface.keySegments = [
+                ...this.$root.videoInterface.keySegments.filter(each=>!updatedObservationEntriesIds.includes(each.observationId)),
+                ...updatedObservationEntries,
+            ]
+        })
+        everyTime(globalEvents.observationStorageDeletedEntries).then((who, deletedObservationIds)=>{
+            console.log(`${name} saw [observationStorageDeletedEntries] from ${who}`)
+            // this should cause the segment display to update
+            this.$root.videoInterface.keySegments = [
+                ...this.$root.videoInterface.keySegments.filter(each=>!deletedObservationIds.includes(each.observationId)),
+            ]
+        })
     },
     watch: {
     },

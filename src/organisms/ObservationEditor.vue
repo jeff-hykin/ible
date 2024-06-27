@@ -222,6 +222,12 @@ import { toKebabCase, toRepresentation } from '../string.js'
 import * as observationTooling from '../observation_tooling.js'
 import { frontendDb } from '../iilvd-api.js'
 import { getColor, isValidName, storageObject } from "../utils"
+import { trigger, globalEvents, everyTime } from '../tooling/events.js'
+
+// triggers:
+//    globalEvents.addLabelRequest
+//    globalEvents.rootDeSelectObservationRequest
+//    globalEvents.rootRetriveLabelsRequest
 
 export default {
     props: [
@@ -371,45 +377,19 @@ export default {
                 return
             }
             
-            const observationEntry = this.observationData = observationTooling.coerceObservation(this.observationData)
-            
-            // 
-            // update external things
-            // 
-            this.$root.addLabel(observationEntry.label, observationEntry.videoId)
-            
-            // 
-            // send request to database
-            // 
-            try {
-                await frontendDb.setObservation(observationEntry, {withCoersion:true})
-                
-                // on success
-                this.editing = false
-                this.$toasted.show(`Changes saved`).goAway(2500)
-                this.deSelectSegment()
-                this.$root.retrieveLabels()
-                
-                // this should cause the segment display to update
-                this.$root.videoInterface.keySegments = [
-                    ...this.$root.videoInterface.keySegments.filter(each=>each.observationId != observationEntry.observationId),
-                    observationEntry,
-                ]
-            } catch (error) {
-                this.$toasted.show(`There was an error on the database`).goAway(5500)
-                console.error("# ")
-                console.error("# Database ERROR")
-                console.error("# ")
-                console.error(error.stack)
-                console.error(error)
-                console.error("# ")
-                this.$toasted.show(error.message.slice(0,65), {
-                    closeOnSwipe: false,
-                    action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },
-                })
-                this.$toasted.show(`(Full error log in the console)`).goAway(6500)
-                // throw error
+            const { success, errorMessage } = (await trigger(globalEvents.updateObservationRequest, "ObservationEditor", this.observationData))[0]
+            if (!success) {
+                if (errorMessage) {
+                    this.$toasted.show(errorMessage).goAway(2500)
+                }
+                return
             }
+            // on success
+            this.editing = false
+            Vue.toasted.show(`Changes saved`).goAway(2500)
+            trigger(globalEvents.addLabelRequest, "ObservationEditor", observationEntry.label, observationEntry.videoId)
+            trigger(globalEvents.rootDeSelectObservationRequest, "ObservationEditor")
+            trigger(globalEvents.rootRetriveLabelsRequest, "ObservationEditor")
         },
         async onDelete() {
             console.log(`onDelete called`)
@@ -417,14 +397,8 @@ export default {
             let index = this.$root.selectedSegment.$displayIndex
             const observationId = this.observationData.observationId
             if (observationId) {
-                await frontendDb.deleteObservation({uuidOfSelectedSegment: observationId })
+                await trigger(globalEvents.deleteObservationRequest, "ObservationEditor", observationId)
                 this.resetData()
-                // this should cause the segment display to update
-                this.$root.videoInterface.keySegments = [
-                    ...this.$root.videoInterface.keySegments.filter(each=>
-                        each.observationId != observationId
-                    ),
-                ]
                 this.$toasted.show(`Data has been deleted`).goAway(2500)
             }
             this.$root.selectedSegment = {}
