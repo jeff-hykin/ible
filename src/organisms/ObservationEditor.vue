@@ -225,7 +225,7 @@
                                         style="margin-top: -0.4rem"
                                         :disabled="true"
                                         floating-label
-                                        label="Id"
+                                        label="Observation Id"
                                         tooltip="This is based on 'Created At'"
                                         v-model="observationData.observationId"
                                     )

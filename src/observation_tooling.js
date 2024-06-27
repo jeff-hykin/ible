@@ -150,8 +150,8 @@ export const createDefaultObservationEntry = (currentTime)=>({
             isHuman:            observationEntry?.isHuman,
             confirmedBySomeone: observationEntry?.confirmedBySomeone,
             rejectedBySomeone:  observationEntry?.rejectedBySomeone,
-            confirmedBy:        observationEntry?.confirmedBy,
-            rejectedBy:         observationEntry?.rejectedBy,
+            confirmedBy:        observationEntry?.confirmedBy||[],
+            rejectedBy:         observationEntry?.rejectedBy||[],
             label:              observationEntry?.label,
             labelConfidence:    observationEntry?.labelConfidence,
             comment:            observationEntry?.comment,
@@ -292,6 +292,14 @@ export const createDefaultObservationEntry = (currentTime)=>({
         const observations = []
         for (const each of entries) {
             // TODO: do coersion of correctness on download
+            let confirmedBy = (each?.confirmedBy||[]).join(",")
+            if (confirmedBy == "") {
+                confirmedBy = null
+            }
+            let rejectedBy = (each?.rejectedBy||[]).join(",")
+            if (rejectedBy == "") {
+                rejectedBy = null
+            }
             observations.push({
                 "uploadAction": "update",
                 "observationId": each.observationId,
@@ -303,12 +311,12 @@ export const createDefaultObservationEntry = (currentTime)=>({
                 "isHuman": each.isHuman,
                 "=confirmedBySomeone": each.confirmedBy instanceof Array && each.confirmedBy.length > 0,
                 "=rejectedBySomeone": each.rejectedBy instanceof Array && each.rejectedBy.length > 0,
-                "confirmedBy": each.confirmedBy,
-                "rejectedBy": each.rejectedBy,
+                confirmedBy,
+                rejectedBy,
                 "label": each.label,
                 "labelConfidence": each.labelConfidence,
-                "comment": each.comment,
-                "spacialInfo": each.spacialInfo,
+                "comment": each.comment||null,
+                "spacialInfo": Object.keys(each.spacialInfo).length > 0 ? each.spacialInfo : null,
             })
             // flatten out video
             for (const [key, value] of Object.entries(each.video||{})) {
@@ -372,6 +380,8 @@ export const createDefaultObservationEntry = (currentTime)=>({
                     observationObject[detectedKey] = eachEntry[detectedKey]
                 }
             }
+            eachEntry.confirmedBy = `${eachEntry.confirmedBy}`.split(",")
+            eachEntry.rejectedBy  = `${eachEntry.rejectedBy}`.split(",")
             
             observationActions.push([ uploadAction, [observationId], observationObject ])
         }
