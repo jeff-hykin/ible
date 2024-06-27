@@ -53,6 +53,7 @@ export const createDefaultObservationEntry = (currentTime)=>({
     rejectedBySomeone:  false,
     label:           window.storageObject.recentLabel || "example-label",
     labelConfidence: 0.95,
+    comment:         "",
     spacialInfo:     {},
 })
 
@@ -151,6 +152,7 @@ export const createDefaultObservationEntry = (currentTime)=>({
             rejectedBySomeone:  observationEntry?.rejectedBySomeone,
             label:              observationEntry?.label,
             labelConfidence:    observationEntry?.labelConfidence,
+            comment:            observationEntry?.comment,
             spacialInfo:        observationEntry?.spacialInfo,
             customInfo:         observationEntry?.customInfo,
         }
@@ -199,7 +201,7 @@ export const createDefaultObservationEntry = (currentTime)=>({
                 // videoId
                 // 
                 if (!videoIdIsValid(observationEntry.videoId)) {
-                    errorMessages.push(`observationEntry.videoId: ${toRepresentation(observationEntry.videoId)}\nAn observationEntry must have a "videoId" property\n- it needs to be a string\n- the string needs to not be empty\n- it needs to either start with "/videos/" for local videos or be exactly 11 characters long for YouTube video ids`)
+                    errorMessages.push(`observationEntry.videoId: ${toRepresentation(observationEntry.videoId)}\nAn observationEntry must have a "videoId" property\n- it needs to be a string\n- the string needs to not be empty\n- it should be at least 11 charcters long `)
                 }
 
                 // 
@@ -293,7 +295,7 @@ export const createDefaultObservationEntry = (currentTime)=>({
                 "=rejectedBySomeone": each.rejectedBySomeone,
                 "label": each.label,
                 "labelConfidence": each.labelConfidence,
-                "comment": each.comment||"",
+                "comment": each.comment,
                 "spacialInfo": each.spacialInfo,
             })
             // flatten out video

@@ -142,12 +142,20 @@
                                 :invalid="!isValid.labelConfidence"
                                 v-model="observationData.labelConfidence"
                             )
-                        UiSwitch(:disabled="!editing" v-model="observationData.isHuman" tabindex="6")
-                            | Observer Is Human
-                        UiSwitch(:disabled="!editing" v-model="observationData.confirmedBySomeone" v-if="!observationData.isHuman" tabindex="7")
-                            | Confirmed By ≥1 Human
-                        UiSwitch(:disabled="!editing" v-model="observationData.rejectedBySomeone" v-if="!observationData.isHuman" tabindex="8")
-                            | Rejected By ≥1 Human
+                        div(tabindex="-1")
+                            ui-textbox(
+                                tabindex="5"
+                                :disabled="!editing"
+                                floating-label
+                                label="Comment"
+                                v-model="observationData.comment"
+                            )
+                        //- UiSwitch(:disabled="!editing" v-model="observationData.isHuman" tabindex="6")
+                        //-     | Observer Is Human
+                        //- UiSwitch(:disabled="!editing" v-model="observationData.confirmedBySomeone" v-if="!observationData.isHuman" tabindex="7")
+                        //-     | Confirmed By ≥1 Human
+                        //- UiSwitch(:disabled="!editing" v-model="observationData.rejectedBySomeone" v-if="!observationData.isHuman" tabindex="8")
+                        //-     | Rejected By ≥1 Human
                             
                         div(style="min-height: 4rem")
                         column(
@@ -426,9 +434,7 @@ export default {
         resetData() {
             this.editing = false
             this.dataCopy = {}
-            this.observationData = this.observationEntryToData(
-                observationTooling.createDefaultObservationEntry(this.currentTime)
-            )
+            this.observationData = observationTooling.createDefaultObservationEntry(this.currentTime)
             this.observationData.videoId = this.$root.videoInterface.videoId
         },
         setStartToCurrentTime() {
@@ -437,23 +443,6 @@ export default {
         setEndToCurrentTime() {
             this.observationData.endTime = (this.currentTime||0).toFixed(3)
         },
-        observationEntryToData(observationEntry) {
-            observationEntry = observationTooling.coerceObservation(observationEntry)
-            return {
-                observationId:      observationEntry.observationId,
-                videoId:            observationEntry.videoId,
-                startTime:          observationEntry.startTime,
-                endTime:            observationEntry.endTime,
-                observer:           observationEntry.observer,
-                isHuman:            observationEntry.isHuman,
-                confirmedBySomeone: observationEntry.confirmedBySomeone,
-                rejectedBySomeone:  observationEntry.rejectedBySomeone,
-                customInfo:         observationEntry.customInfo,
-                label:              observationEntry.label,
-                labelConfidence:    observationEntry.labelConfidence,
-                spacialInfo:        observationEntry.spacialInfo||{},
-            }
-        }
     },
 }
 </script>
