@@ -60,10 +60,10 @@ Major Chonological Changes:
     - remove/update the format demonstration
 
 - remove upload help
+- fix the download of `observers#videos`
 - check all FIXME's TODO's etc
 - check that video data on download is nulled-out for empty strings
 - save "latest video action"
-- add toggles for the video watched/verified etc
 - change the CSV export of confirmed/rejected to be comma-separated
 - test test test
 

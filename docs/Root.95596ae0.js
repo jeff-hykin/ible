@@ -8571,7 +8571,13 @@ Object.defineProperty(Vue.prototype, "$child", {
   }
 
 });
-},{"vue":"NtAQ"}],"YsuP":[function(require,module,exports) {
+},{"vue":"NtAQ"}],"jJO6":[function(require,module,exports) {
+
+},{}],"xmsx":[function(require,module,exports) {
+"use strict";
+
+require("css-baseline/css/3.css");
+},{"css-baseline/css/3.css":"jJO6"}],"YsuP":[function(require,module,exports) {
 /*!
  * good-vue v1.3.1
  * (c) 
@@ -25363,8 +25369,6 @@ if (typeof window !== 'undefined' && window.Vue) {
 /***/ })
 /******/ ]);
 });
-},{}],"yuYy":[function(require,module,exports) {
-
 },{}],"FJCK":[function(require,module,exports) {
 "use strict";
 
@@ -25377,11 +25381,7 @@ require("keen-ui/dist/keen-ui.css");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_keenUi.default);
-},{"vue":"NtAQ","keen-ui":"R6w2","keen-ui/dist/keen-ui.css":"yuYy"}],"xmsx":[function(require,module,exports) {
-"use strict";
-
-require("css-baseline/css/3.css");
-},{"css-baseline/css/3.css":"yuYy"}],"yMH8":[function(require,module,exports) {
+},{"vue":"NtAQ","keen-ui":"R6w2","keen-ui/dist/keen-ui.css":"jJO6"}],"yMH8":[function(require,module,exports) {
 
  /*! 
   * portal-vue © Thorsten Lünborg, 2019 
@@ -37444,12 +37444,12 @@ _vue.default.use(_vuePlyr.default, {
     invertTime: false
   }
 });
-},{"vue":"NtAQ","vue-plyr":"fgJi","vue-plyr/dist/vue-plyr.css":"yuYy"}],"Xeh1":[function(require,module,exports) {
+},{"vue":"NtAQ","vue-plyr":"fgJi","vue-plyr/dist/vue-plyr.css":"jJO6"}],"Xeh1":[function(require,module,exports) {
 module.exports = {
   "child": require("./child.js"),
+  "css-baseline-plugin": require("./css-baseline-plugin.js"),
   "good-vue-plugin": require("./good-vue-plugin.js"),
   "keen-ui-plugin": require("./keen-ui-plugin.js"),
-  "css-baseline-plugin": require("./css-baseline-plugin.js"),
   "portal-plugin": require("./portal-plugin.js"),
   "resolvables-plugin": require("./resolvables-plugin.js"),
   "root-hooks-plugin": require("./root-hooks-plugin.js"),
@@ -37460,7 +37460,7 @@ module.exports = {
   "workers-plugin": require("./workers-plugin.js"),
   "youtube-player-plugin": require("./youtube-player-plugin.js")
 };
-},{"./child.js":"HT0w","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./css-baseline-plugin.js":"xmsx","./portal-plugin.js":"HMJZ","./resolvables-plugin.js":"mVwj","./root-hooks-plugin.js":"T1YL","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./window-listeners-plugin.js":"XpWL","./without-watchers.js":"aLvM","./workers-plugin.js":"Y7uC","./youtube-player-plugin.js":"mQXc"}],"jqRt":[function(require,module,exports) {
+},{"./child.js":"HT0w","./css-baseline-plugin.js":"xmsx","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./portal-plugin.js":"HMJZ","./resolvables-plugin.js":"mVwj","./root-hooks-plugin.js":"T1YL","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./window-listeners-plugin.js":"XpWL","./without-watchers.js":"aLvM","./workers-plugin.js":"Y7uC","./youtube-player-plugin.js":"mQXc"}],"jqRt":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -86380,7 +86380,260 @@ window.backend = {
 module.exports = {
   frontendDb
 };
-},{"./utils.js":"K0yk","./object.js":"qwrU","./string.js":"V8WW","./observation_tooling.js":"LPi2"}],"CzpK":[function(require,module,exports) {
+},{"./utils.js":"K0yk","./object.js":"qwrU","./string.js":"V8WW","./observation_tooling.js":"LPi2"}],"kB7J":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.globalEvents = exports.once = exports.everyTime = exports.trigger = exports.Event = void 0;
+
+class Event extends Set {}
+
+exports.Event = Event;
+
+const trigger = async (event, ...args) => Promise.all([...event].map(each => each(...args)));
+
+exports.trigger = trigger;
+
+const everyTime = event => ({
+  then: action => event.add(action)
+});
+
+exports.everyTime = everyTime;
+
+const once = event => {
+  let selfRemovingRanFirst = false;
+  let output;
+  let resolve;
+
+  const selfRemoving = async (...args) => {
+    event.delete(selfRemoving);
+    output = args;
+    selfRemovingRanFirst = true; // if promise ran before it had access to output
+    // (and therefore couldnt handle the return)
+    // then this function needs to handle the return
+
+    if (resolve) {
+      resolve(output);
+    }
+  };
+
+  event.add(selfRemoving);
+  return new Promise(res => {
+    resolve = res; // if selfRemoving finished before it had access to resolve/reject
+    // then the promise needs to handle the return
+
+    if (selfRemovingRanFirst) {
+      resolve(output);
+    }
+  });
+};
+
+exports.once = once;
+const globalEvents = new Proxy({}, {
+  // Object.keys
+  ownKeys(target, ...args) {
+    return Reflect.ownKeys(target, ...args);
+  },
+
+  // function call (original value needs to be a function)
+  apply(original, context, ...args) {
+    console.log(args);
+  },
+
+  // new operator (original value needs to be a class)
+  construct(original, args, originalConstructor) {},
+
+  get(original, key, ...args) {
+    if (!Object.hasOwn(original, key)) {
+      original[key] = new Event();
+    }
+
+    return Reflect.get(original, key, ...args);
+  },
+
+  set(original, key, ...args) {},
+
+  has: Reflect.has,
+  deleteProperty: Reflect.deleteProperty,
+  isExtensible: Reflect.isExtensible,
+  preventExtensions: Reflect.preventExtensions,
+  setPrototypeOf: Reflect.setPrototypeOf,
+  defineProperty: Reflect.defineProperty,
+  getPrototypeOf: Reflect.getPrototypeOf,
+  getOwnPropertyDescriptor: Reflect.getOwnPropertyDescriptor
+});
+exports.globalEvents = globalEvents;
+},{}],"iTmx":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+function isObject(obj) {
+  return obj !== null && typeof obj === 'object';
+}
+
+function looseEqual(a, b) {
+  // eslint-disable-next-line eqeqeq
+  return a == b || (isObject(a) && isObject(b) ? JSON.stringify(a) === JSON.stringify(b) : false);
+}
+
+var _default = {
+  name: 'ui-switch',
+  props: {
+    name: String,
+    label: String,
+    tabindex: [String, Number],
+    value: {
+      required: true
+    },
+    trueValue: {
+      default: true
+    },
+    falseValue: {
+      default: false
+    },
+    submittedValue: {
+      type: String,
+      default: 'on' // HTML default
+
+    },
+    checked: {
+      type: Boolean,
+      default: false
+    },
+    color: {
+      type: String,
+      default: 'primary' // 'primary' or 'accent'
+
+    },
+    switchPosition: {
+      type: String,
+      default: 'left' // 'left' or 'right'
+
+    },
+    disabled: {
+      type: Boolean,
+      default: false
+    }
+  },
+
+  data() {
+    return {
+      isActive: false,
+      isChecked: looseEqual(this.value, this.trueValue) || this.checked,
+      initialValue: this.value
+    };
+  },
+
+  computed: {
+    classes() {
+      return [`ui-switch--color-${this.color}`, `ui-switch--switch-position-${this.switchPosition}`, {
+        'is-active': this.isActive
+      }, {
+        'is-checked': this.isChecked
+      }, {
+        'is-disabled': this.disabled
+      }];
+    }
+
+  },
+  watch: {
+    value() {
+      this.isChecked = looseEqual(this.value, this.trueValue);
+    }
+
+  },
+
+  created() {
+    this.$emit('input', this.isChecked ? this.trueValue : this.falseValue);
+  },
+
+  methods: {
+    focus() {
+      this.$refs.input.focus();
+    },
+
+    onClick(e) {
+      const isCheckedPrevious = this.isChecked;
+      const isChecked = e.target.checked;
+      this.$emit('input', isChecked ? this.trueValue : this.falseValue, e);
+
+      if (isCheckedPrevious !== isChecked) {
+        this.$emit('change', isChecked ? this.trueValue : this.falseValue, e);
+      }
+    },
+
+    onFocus(e) {
+      this.isActive = true;
+      this.$emit('focus', e);
+    },
+
+    onBlur(e) {
+      this.isActive = false;
+      this.$emit('blur', e);
+    }
+
+  }
+};
+exports.default = _default;
+        var $3fbd37 = exports.default || module.exports;
+      
+      if (typeof $3fbd37 === 'function') {
+        $3fbd37 = $3fbd37.options;
+      }
+    
+        /* template */
+        Object.assign($3fbd37, (function () {
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('label',{staticClass:"ui-switch",class:_vm.classes},[_c('div',{staticClass:"ui-switch__input-wrapper"},[_c('input',{ref:"input",staticClass:"ui-switch__input",attrs:{"type":"checkbox","disabled":_vm.disabled,"name":_vm.name,"tabindex":_vm.tabindex},domProps:{"checked":_vm.isChecked,"value":_vm.submittedValue},on:{"blur":_vm.onBlur,"click":_vm.onClick,"focus":_vm.onFocus}}),_vm._v(" "),_c('div',{staticClass:"ui-switch__track"}),_vm._v(" "),_vm._m(0)]),_vm._v(" "),(_vm.label || _vm.$slots.default)?_c('div',{staticClass:"ui-switch__label-text"},[_vm._t("default",[_vm._v(_vm._s(_vm.label))])],2):_vm._e()])}
+var staticRenderFns = [function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"ui-switch__thumb"},[_c('div',{staticClass:"ui-switch__focus-ring"})])}]
+
+          return {
+            render: render,
+            staticRenderFns: staticRenderFns,
+            _compiled: true,
+            _scopeId: "data-v-3fbd37",
+            functional: undefined
+          };
+        })());
+      
+},{}],"CzpK":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -86792,91 +87045,6 @@ var staticRenderFns = []
           };
         })());
       
-},{}],"kB7J":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.globalEvents = exports.once = exports.everyTime = exports.trigger = exports.Event = void 0;
-
-class Event extends Set {}
-
-exports.Event = Event;
-
-const trigger = async (event, ...args) => Promise.all([...event].map(each => each(...args)));
-
-exports.trigger = trigger;
-
-const everyTime = event => ({
-  then: action => event.add(action)
-});
-
-exports.everyTime = everyTime;
-
-const once = event => {
-  let selfRemovingRanFirst = false;
-  let output;
-  let resolve;
-
-  const selfRemoving = async (...args) => {
-    event.delete(selfRemoving);
-    output = args;
-    selfRemovingRanFirst = true; // if promise ran before it had access to output
-    // (and therefore couldnt handle the return)
-    // then this function needs to handle the return
-
-    if (resolve) {
-      resolve(output);
-    }
-  };
-
-  event.add(selfRemoving);
-  return new Promise(res => {
-    resolve = res; // if selfRemoving finished before it had access to resolve/reject
-    // then the promise needs to handle the return
-
-    if (selfRemovingRanFirst) {
-      resolve(output);
-    }
-  });
-};
-
-exports.once = once;
-const globalEvents = new Proxy({}, {
-  // Object.keys
-  ownKeys(target, ...args) {
-    return Reflect.ownKeys(target, ...args);
-  },
-
-  // function call (original value needs to be a function)
-  apply(original, context, ...args) {
-    console.log(args);
-  },
-
-  // new operator (original value needs to be a class)
-  construct(original, args, originalConstructor) {},
-
-  get(original, key, ...args) {
-    if (!Object.hasOwn(original, key)) {
-      original[key] = new Event();
-    }
-
-    return Reflect.get(original, key, ...args);
-  },
-
-  set(original, key, ...args) {},
-
-  has: Reflect.has,
-  deleteProperty: Reflect.deleteProperty,
-  isExtensible: Reflect.isExtensible,
-  preventExtensions: Reflect.preventExtensions,
-  setPrototypeOf: Reflect.setPrototypeOf,
-  defineProperty: Reflect.defineProperty,
-  getPrototypeOf: Reflect.getPrototypeOf,
-  getOwnPropertyDescriptor: Reflect.getOwnPropertyDescriptor
-});
-exports.globalEvents = globalEvents;
 },{}],"vQbQ":[function(require,module,exports) {
 "use strict";
 
@@ -87042,174 +87210,6 @@ var staticRenderFns = []
             staticRenderFns: staticRenderFns,
             _compiled: true,
             _scopeId: null,
-            functional: undefined
-          };
-        })());
-      
-},{}],"iTmx":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-function isObject(obj) {
-  return obj !== null && typeof obj === 'object';
-}
-
-function looseEqual(a, b) {
-  // eslint-disable-next-line eqeqeq
-  return a == b || (isObject(a) && isObject(b) ? JSON.stringify(a) === JSON.stringify(b) : false);
-}
-
-var _default = {
-  name: 'ui-switch',
-  props: {
-    name: String,
-    label: String,
-    tabindex: [String, Number],
-    value: {
-      required: true
-    },
-    trueValue: {
-      default: true
-    },
-    falseValue: {
-      default: false
-    },
-    submittedValue: {
-      type: String,
-      default: 'on' // HTML default
-
-    },
-    checked: {
-      type: Boolean,
-      default: false
-    },
-    color: {
-      type: String,
-      default: 'primary' // 'primary' or 'accent'
-
-    },
-    switchPosition: {
-      type: String,
-      default: 'left' // 'left' or 'right'
-
-    },
-    disabled: {
-      type: Boolean,
-      default: false
-    }
-  },
-
-  data() {
-    return {
-      isActive: false,
-      isChecked: looseEqual(this.value, this.trueValue) || this.checked,
-      initialValue: this.value
-    };
-  },
-
-  computed: {
-    classes() {
-      return [`ui-switch--color-${this.color}`, `ui-switch--switch-position-${this.switchPosition}`, {
-        'is-active': this.isActive
-      }, {
-        'is-checked': this.isChecked
-      }, {
-        'is-disabled': this.disabled
-      }];
-    }
-
-  },
-  watch: {
-    value() {
-      this.isChecked = looseEqual(this.value, this.trueValue);
-    }
-
-  },
-
-  created() {
-    this.$emit('input', this.isChecked ? this.trueValue : this.falseValue);
-  },
-
-  methods: {
-    focus() {
-      this.$refs.input.focus();
-    },
-
-    onClick(e) {
-      const isCheckedPrevious = this.isChecked;
-      const isChecked = e.target.checked;
-      this.$emit('input', isChecked ? this.trueValue : this.falseValue, e);
-
-      if (isCheckedPrevious !== isChecked) {
-        this.$emit('change', isChecked ? this.trueValue : this.falseValue, e);
-      }
-    },
-
-    onFocus(e) {
-      this.isActive = true;
-      this.$emit('focus', e);
-    },
-
-    onBlur(e) {
-      this.isActive = false;
-      this.$emit('blur', e);
-    }
-
-  }
-};
-exports.default = _default;
-        var $3fbd37 = exports.default || module.exports;
-      
-      if (typeof $3fbd37 === 'function') {
-        $3fbd37 = $3fbd37.options;
-      }
-    
-        /* template */
-        Object.assign($3fbd37, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('label',{staticClass:"ui-switch",class:_vm.classes},[_c('div',{staticClass:"ui-switch__input-wrapper"},[_c('input',{ref:"input",staticClass:"ui-switch__input",attrs:{"type":"checkbox","disabled":_vm.disabled,"name":_vm.name,"tabindex":_vm.tabindex},domProps:{"checked":_vm.isChecked,"value":_vm.submittedValue},on:{"blur":_vm.onBlur,"click":_vm.onClick,"focus":_vm.onFocus}}),_vm._v(" "),_c('div',{staticClass:"ui-switch__track"}),_vm._v(" "),_vm._m(0)]),_vm._v(" "),(_vm.label || _vm.$slots.default)?_c('div',{staticClass:"ui-switch__label-text"},[_vm._t("default",[_vm._v(_vm._s(_vm.label))])],2):_vm._e()])}
-var staticRenderFns = [function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"ui-switch__thumb"},[_c('div',{staticClass:"ui-switch__focus-ring"})])}]
-
-          return {
-            render: render,
-            staticRenderFns: staticRenderFns,
-            _compiled: true,
-            _scopeId: "data-v-3fbd37",
             functional: undefined
           };
         })());
@@ -87583,9 +87583,9 @@ var _default = {
     },
 
     toggleConfirm() {
-      const shouldUnReject = this.hasConfirmed();
+      const shouldUnConfirm = this.hasConfirmed();
 
-      if (shouldUnReject) {
+      if (shouldUnConfirm) {
         this.observationData.confirmedBy = this.observationData.confirmedBy.filter(each => each != this.$root.email);
       } else {
         this.observationData.confirmedBy.push(this.$root.email);
@@ -87593,6 +87593,7 @@ var _default = {
       }
 
       (0, _events.trigger)(_events.globalEvents.updateObservationRequest, "ObservationEditor", this.observationData);
+      this.$forceUpdate();
     },
 
     toggleReject() {
@@ -87606,6 +87607,7 @@ var _default = {
       }
 
       (0, _events.trigger)(_events.globalEvents.updateObservationRequest, "ObservationEditor", this.observationData);
+      this.$forceUpdate();
     },
 
     wheneverVideoChanges() {
@@ -87948,7 +87950,7 @@ var _default = {
   },
   windowListeners: {
     keydown(eventObject) {
-      if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get({
+      if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || (0, _object.get)({
         keyList: ["path"],
         from: eventObject,
         failValue: []
@@ -103337,8 +103339,21 @@ var _iilvdApi = require("../iilvd-api.js");
 
 var _object = require("../object.js");
 
+var _events = require("../tooling/events.js");
+
 var _utils = require("../utils.js");
 
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //
 //
 //
@@ -103388,6 +103403,7 @@ var _utils = require("../utils.js");
 var _default = {
   props: [],
   components: {
+    UiSwitch: require("../atoms/UiSwitch").default,
     SideButton: require("../atoms/SideButton").default,
     VideoPlayer: require("../atoms/VideoPlayer").default,
     InfoSection: require("../molecules/InfoSection").default,
@@ -103407,14 +103423,58 @@ var _default = {
     // so even if we updated it (@currentTimeChanged)
     // it wouldn't cause a re-render in downstream components
     currentTime: null,
-    videoInfo: {}
+    videoInfo: {},
+    hasWatchedVideo: false,
+    hasLabeledVideo: false,
+    hasVerifiedVideo: false
   }),
 
   mounted() {
     this.$root.videoInterface.wheneverVideoIsLoaded(this.updateVideoFrontendData);
   },
 
-  watch: {},
+  watch: {
+    videoInfo() {
+      this.hasWatchedVideo = this.videoInfo.usersFinishedWatchingAt[this.$root.email] != null;
+      this.hasLabeledVideo = this.videoInfo.usersFinishedLabelingAt[this.$root.email] != null;
+      this.hasVerifiedVideo = this.videoInfo.usersFinishedVerifyingAt[this.$root.email] != null;
+      (0, _events.trigger)(_events.globalEvents.updateVideoRequest, "CenterStage", this.videoInfo);
+    },
+
+    hasWatchedVideo() {
+      if (this.hasWatchedVideo) {
+        this.videoInfo.usersFinishedWatchingAt[this.$root.email] = new Date().getTime();
+      } else {
+        delete this.videoInfo.usersFinishedWatchingAt[this.$root.email];
+      }
+
+      this.videoInfo = { ...this.videoInfo
+      };
+    },
+
+    hasLabeledVideo() {
+      if (this.hasLabeledVideo) {
+        this.videoInfo.usersFinishedLabelingAt[this.$root.email] = new Date().getTime();
+      } else {
+        delete this.videoInfo.usersFinishedLabelingAt[this.$root.email];
+      }
+
+      this.videoInfo = { ...this.videoInfo
+      };
+    },
+
+    hasVerifiedVideo() {
+      if (this.hasVerifiedVideo) {
+        this.videoInfo.usersFinishedVerifyingAt[this.$root.email] = new Date().getTime();
+      } else {
+        delete this.videoInfo.usersFinishedVerifyingAt[this.$root.email];
+      }
+
+      this.videoInfo = { ...this.videoInfo
+      };
+    }
+
+  },
   rootHooks: {},
   windowListeners: {},
   computed: {},
@@ -103441,7 +103501,6 @@ var _default = {
       }
 
       _iilvdApi.frontendDb.getVideoById(videoId).then(videoInfo => {
-        console.debug(`videoInfo is:`, videoInfo);
         this.videoInfo = { ...videoInfo,
           usersFinishedWatchingAt: {},
           usersFinishedLabelingAt: {},
@@ -103495,7 +103554,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($aaa267, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"width":"100%","height":"100vh","align-h":"center","align-v":"top","overflow":"auto","overflow-x":"hidden"}},[_c('WrappedTopSearch'),(!_vm.aVideoIsSelected())?_c('column',{attrs:{"width":"100%","height":"100vh","flex-shrink":"1","color":"gray"}},[_c('h5',[_vm._v("No Video Selected")])]):_vm._e(),_c('transition',{attrs:{"name":"fade"}},[_c('row',{directives:[{name:"show",rawName:"v-show",value:(_vm.aVideoIsSelected()),expression:"aVideoIsSelected()"}],staticClass:"center-stage",attrs:{"align-v":"top","align-h":"center","padding-top":"8rem"}},[_c('column',{staticClass:"main-container",attrs:{"flex-grow":"1","align-v":"top"}},[_c('row',{staticClass:"below-video-search",attrs:{"flex-basis":"100%","padding-top":"1rem","align-v":"top","opacity":_vm.aVideoIsSelected()? 1 : 0}},[_c('column',{staticClass:"video-width-sizer",attrs:{"align-v":"top"}},[_c('row',{attrs:{"width":"96%","position":"relative"}},[_c('VideoPlayer',{ref:"videoPlayer",attrs:{"videoPathOrUrl":_vm.$root.videoInterface.videoPath},on:{"videoLoaded":_vm.$root.videoInterface.tellRootTheVideoHasLoaded,"currentTimeChanged":_vm.updateCurrentTime}})],1),(_vm.$root.videoInterface.videoId)?_c('container',{staticClass:"below-video"},[_c('SideButton',{staticClass:"left-side-button",attrs:{"left":"left"},on:{"click":_vm.wrapperForSelectPreviousSegment}}),_c('SegmentDisplay',{ref:"segmentDisplay",attrs:{"currentTime":_vm.currentTime}}),_c('SideButton',{staticClass:"right-side-button",attrs:{"right":"right"},on:{"click":_vm.wrapperForSelectNextSegment}})],1):_vm._e(),_c('JsonTree',{staticClass:"json-tree",attrs:{"data":_vm.videoInfo||{}}})],1)],1)],1),(_vm.$root.videoInterface.videoId)?_c('column',{staticClass:"side-container",attrs:{"align-v":"top","overflow":"visible","min-height":"50rem","width":"fit-content"}},[_c('ObservationEditor',{attrs:{"jumpSegment":_vm.wrapperForJumpSegment,"currentTime":_vm.currentTime}}),_c('InfoSection',{staticClass:"info-section",attrs:{"labelName":_vm.activeData().labelName,"videoId":_vm.activeData().videoId,"currentTime":_vm.currentTime}})],1):_vm._e()],1)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"width":"100%","height":"100vh","align-h":"center","align-v":"top","overflow":"auto","overflow-x":"hidden"}},[_c('WrappedTopSearch'),(!_vm.aVideoIsSelected())?_c('column',{attrs:{"width":"100%","height":"100vh","flex-shrink":"1","color":"gray"}},[_c('h5',[_vm._v("No Video Selected")])]):_vm._e(),_c('transition',{attrs:{"name":"fade"}},[_c('row',{directives:[{name:"show",rawName:"v-show",value:(_vm.aVideoIsSelected()),expression:"aVideoIsSelected()"}],staticClass:"center-stage",attrs:{"align-v":"top","align-h":"center","padding-top":"8rem"}},[_c('column',{staticClass:"main-container",attrs:{"flex-grow":"1","align-v":"top"}},[_c('row',{staticClass:"below-video-search",attrs:{"flex-basis":"100%","padding-top":"1rem","align-v":"top","opacity":_vm.aVideoIsSelected()? 1 : 0}},[_c('column',{staticClass:"video-width-sizer",attrs:{"align-v":"top"}},[_c('row',{attrs:{"width":"96%","position":"relative"}},[_c('VideoPlayer',{ref:"videoPlayer",attrs:{"videoPathOrUrl":_vm.$root.videoInterface.videoPath},on:{"videoLoaded":_vm.$root.videoInterface.tellRootTheVideoHasLoaded,"currentTimeChanged":_vm.updateCurrentTime}})],1),(_vm.$root.videoInterface.videoId)?_c('container',{staticClass:"below-video"},[_c('SideButton',{staticClass:"left-side-button",attrs:{"left":"left"},on:{"click":_vm.wrapperForSelectPreviousSegment}}),_c('SegmentDisplay',{ref:"segmentDisplay",attrs:{"currentTime":_vm.currentTime}}),_c('SideButton',{staticClass:"right-side-button",attrs:{"right":"right"},on:{"click":_vm.wrapperForSelectNextSegment}})],1):_vm._e(),_c('row',{attrs:{"width":"100%","padding":"2rem","align-v":"top"}},[_c('JsonTree',{staticClass:"json-tree",attrs:{"data":_vm.videoInfo||{}}}),_c('column',{attrs:{"flex-basis":"40%","width":"100%"}},[_c('UiSwitch',{model:{value:(_vm.hasWatchedVideo),callback:function ($$v) {_vm.hasWatchedVideo=$$v},expression:"hasWatchedVideo"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Watched Video")])]),_c('UiSwitch',{model:{value:(_vm.hasLabeledVideo),callback:function ($$v) {_vm.hasLabeledVideo=$$v},expression:"hasLabeledVideo"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Labeled Video")])]),_c('UiSwitch',{model:{value:(_vm.hasVerifiedVideo),callback:function ($$v) {_vm.hasVerifiedVideo=$$v},expression:"hasVerifiedVideo"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Verified Labels")])])],1)],1)],1)],1)],1),(_vm.$root.videoInterface.videoId)?_c('column',{staticClass:"side-container",attrs:{"align-v":"top","overflow":"visible","min-height":"50rem","width":"fit-content"}},[_c('ObservationEditor',{attrs:{"jumpSegment":_vm.wrapperForJumpSegment,"currentTime":_vm.currentTime}}),_c('InfoSection',{staticClass:"info-section",attrs:{"labelName":_vm.activeData().labelName,"videoId":_vm.activeData().videoId,"currentTime":_vm.currentTime}})],1):_vm._e()],1)],1)],1)}
 var staticRenderFns = []
 
           return {
@@ -103507,7 +103566,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"../iilvd-api.js":"AC5t","../object.js":"qwrU","../utils.js":"K0yk","../atoms/SideButton":"CzpK","../atoms/VideoPlayer":"ALCG","../molecules/InfoSection":"tPI3","../organisms/ObservationEditor":"ICy3","../organisms/SegmentDisplay":"RG1B","../organisms/WrappedTopSearch":"F49y","../molecules/Card":"OSGx","../organisms/VideoLister":"mlHE","vue-json-tree":"vQbQ"}],"bZ7G":[function(require,module,exports) {
+},{"../iilvd-api.js":"AC5t","../object.js":"qwrU","../tooling/events.js":"kB7J","../utils.js":"K0yk","../atoms/UiSwitch":"iTmx","../atoms/SideButton":"CzpK","../atoms/VideoPlayer":"ALCG","../molecules/InfoSection":"tPI3","../organisms/ObservationEditor":"ICy3","../organisms/SegmentDisplay":"RG1B","../organisms/WrappedTopSearch":"F49y","../molecules/Card":"OSGx","../organisms/VideoLister":"mlHE","vue-json-tree":"vQbQ"}],"bZ7G":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -104388,6 +104447,7 @@ var _events = require("./events.js");
 // listens to:
 //     globalEvents.updateVideoPathsRequest
 //     globalEvents.requestVideosToList
+//     globalEvents.updateVideoRequest
 // triggers:
 //     globalEvents.videoStorageUpated
 const name = "videoStorageManager";
@@ -104415,6 +104475,11 @@ const name = "videoStorageManager";
   }
 
   return videos;
+});
+(0, _events.everyTime)(_events.globalEvents.updateVideoRequest).then(async (who, newVideoData) => {
+  console.log(`${name} saw [updateVideoRequest] from ${who}`);
+  await indexDb.puts([[["videos", newVideoData.videoId], newVideoData]]);
+  (0, _events.trigger)(_events.globalEvents.videoStorageUpated, name, newVideoData);
 });
 },{"../iilvd-api.js":"AC5t","./events.js":"kB7J"}],"k6OT":[function(require,module,exports) {
 "use strict";
@@ -104591,7 +104656,8 @@ let untrackedData = {
   usernameList: [],
   videoIdToPath: {},
   videoPaths: [],
-  previousVideoInfoString: null
+  previousVideoInfoString: null,
+  previousVideoPaths: null
 };
 
 var _default = RootComponent = {
@@ -104903,20 +104969,24 @@ var _default = RootComponent = {
       async refreshLocalVideoData() {
         try {
           const videoPaths = await window.backend.getLocalVideoPaths();
-          const videoIds = videoPaths.map(videoTools.extractLocalVideoId);
-          let videos = [];
 
-          for (const [path, id] of basics.zip(videoPaths, videoIds)) {
-            if (id) {
-              videos.push({
-                videoId: id,
-                path: path
-              });
+          if (untrackedData.previousVideoPaths != videoPaths) {
+            untrackedData.previousVideoPaths = videoPaths;
+            const videoIds = videoPaths.map(videoTools.extractLocalVideoId);
+            let videos = [];
+
+            for (const [path, id] of basics.zip(videoPaths, videoIds)) {
+              if (id) {
+                videos.push({
+                  videoId: id,
+                  path: path
+                });
+              }
             }
-          }
 
-          (0, _events.trigger)(_events.globalEvents.updateVideoPathsRequest, "root", videos);
-          window.storageObject.videoPaths = videoPaths;
+            (0, _events.trigger)(_events.globalEvents.updateVideoPathsRequest, "root", videos);
+            window.storageObject.videoPaths = videoPaths;
+          }
         } catch (error) {
           console.warn(`Error getting videoPaths: ${error}`);
         }
