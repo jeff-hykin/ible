@@ -53,7 +53,6 @@ export const extractLocalVideoNameFromPath = (videoPath) => {
 export function videoIdIsValid(videoId) {
     // FIXME: 
     if (typeof videoId == "string") {
-        console.debug(`isLocalVideo(${videoId}) is:`,isLocalVideo(videoId))
         if (isLocalVideo(videoId) || videoId.length == currentFixedSizeOfYouTubeVideoId) {
             return true
         }

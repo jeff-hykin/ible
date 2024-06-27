@@ -32,6 +32,7 @@ npm run start
 And then open then url in the browser ([http://localhost:1234](http://localhost:1234))
 
 If you get a syntax in the browser error about "<", re-run the build command.
+If you get an "Unknown error" error, check the single quotes in html attributes. Ex: this is invalid: `<div class="ui"thing"-button">`
 
 To annotate local videos (beta), put them under the `dist/videos/` folder and then, in the search textbox, type `/videos/name_of_your_video.mp4` and press enter. It should pull up your video and allow for annotations. When annotations are downloaded the video id will be `/videos/name_of_your_video.mp4` (in comparison to the Youtube video id).
 

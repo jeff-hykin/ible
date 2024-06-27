@@ -40,12 +40,12 @@ Major Chonological Changes:
 - DONE: render the videoInfo below the video
 - DONE: add the observation comment field
 
-- change "confirmed by one human"
+- DONE: change "confirmed by one human"
     - make "Confirm" "Reject" buttons in non-editing mode
     - make a list of who has confirm/rejected
     - update all the validation stuff for it
 
-- video centric data format
+- DONE: video centric data format
     - remove the generated-video manager in iilvd.js
     - add video entries to frontend DB
     - on download
@@ -58,6 +58,11 @@ Major Chonological Changes:
         - 
     - display video speficic data
     - remove/update the format demonstration
+
+- save "latest video action"
+- add toggles for the video watched/verified etc
+- change the CSV export of confirmed/rejected to be comma-separated
+- test test test
 
 - get cli working on windows
     - maybe use walkUpUntil to find node_modules

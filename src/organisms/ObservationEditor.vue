@@ -30,23 +30,40 @@
                     | No Observation Selected
                 column(v-if="!noSegment()" align-h="center" width="100%")
                     transition(name="fade")        
-                        row.button-row(v-if="!noSegment() || editing" align-h="space-evenly" width="100%" margin-bottom="0.7rem" margin-top="0.5rem")
-                            ui-button.save-button(
-                                :style="`opacity: ${editing?1:0}`"
-                                @click="onSaveEdit"
-                                icon="save"
-                                color="primary"
-                            )
-                                | Save
-                            //- spacer
-                            container(flex-basis="10%" width="10%")
-                            ui-button.delete-button(
-                                :style="`opacity: ${editing?1:0}`"
-                                @click="onDelete"
-                                icon="delete"
-                                color="red"
-                            )
-                                | Delete
+                        column(width="100%")
+                            row.button-row(v-if="!noSegment() || editing" align-h="space-evenly" width="100%" margin-bottom="0.7rem" margin-top="0.5rem" :display="editing?'flex':'none'")
+                                ui-button.save-button(
+                                    :style="`opacity: ${editing?1:0}`"
+                                    @click="onSaveEdit"
+                                    icon="save"
+                                    color="primary"
+                                )
+                                    | Save
+                                //- spacer
+                                container(flex-basis="10%" width="10%")
+                                ui-button.delete-button(
+                                    :style="`opacity: ${editing?1:0}`"
+                                    @click="onDelete"
+                                    icon="delete"
+                                    color="red"
+                                )
+                                    | Delete
+                            row.button-row(v-if="!noSegment() && !editing" align-h="space-evenly" width="100%" margin-bottom="0.7rem" margin-top="0.5rem" :display="(!noSegment() && !editing)?'flex':'none'")
+                                ui-button.confirm-button(
+                                    :style="`opacity: ${(editing) && $root.selectedSegment?0:1}; --button-color: ${hasRejected()? 'darkgray' : 'var(--soft-green)'}; min-width: 7rem; font-size: 0.7em;` "
+                                    @click="toggleConfirm"
+                                    icon="check"
+                                )
+                                    | {{hasConfirmed()? "Confirmed" : "Confirm"}}
+                                //- spacer
+                                container(flex-basis="10%" width="10%")
+                                ui-button.reject-button(
+                                    :style="`opacity: ${(editing) && $root.selectedSegment?0:1}; --button-color: ${hasConfirmed()? 'darkgray' : 'var(--red)'}; min-width: 7rem; font-size: 0.7em;` "
+                                    @click="toggleReject"
+                                    icon="cancel"
+                                )
+                                    | {{hasRejected()? "Rejected" : "Reject"}}
+                        
                 container(height="10px")
                 transition(name="fade")
                     row(v-if="!noSegment()" align-h="space-between" width="100%")
@@ -317,6 +334,32 @@ export default {
         }
     },
     methods: {
+        hasConfirmed() {
+            return (this.observationData.confirmedBy||[]).includes(this.$root.email)
+        },
+        hasRejected() {
+            return (this.observationData.rejectedBy||[]).includes(this.$root.email)
+        },
+        toggleConfirm() {
+            const shouldUnReject = this.hasConfirmed()
+            if (shouldUnReject) {
+                this.observationData.confirmedBy = this.observationData.confirmedBy.filter(each=>each!=this.$root.email)
+            } else {
+                this.observationData.confirmedBy.push(this.$root.email)
+                this.observationData.rejectedBy = this.observationData.rejectedBy.filter(each=>each!=this.$root.email)
+            }
+            trigger(globalEvents.updateObservationRequest, "ObservationEditor", this.observationData)
+        },
+        toggleReject() {
+            const shouldUnReject = this.hasRejected()
+            if (shouldUnReject) {
+                this.observationData.rejectedBy = this.observationData.rejectedBy.filter(each=>each!=this.$root.email)
+            } else {
+                this.observationData.rejectedBy.push(this.$root.email)
+                this.observationData.confirmedBy = this.observationData.confirmedBy.filter(each=>each!=this.$root.email)
+            }
+            trigger(globalEvents.updateObservationRequest, "ObservationEditor", this.observationData)
+        },
         wheneverVideoChanges() {
             if (this.editing) {
                 this.resetData()
@@ -505,6 +548,14 @@ div[data-fjio3y598t3hi2]
             flex-basis: 45%
 
         .delete-button
+            --button-color: var(--red)
+            flex-basis: 45%
+        
+        .confirm-button
+            --button-color: var(--soft-green)
+            flex-basis: 45%
+        
+        .reject-button
             --button-color: var(--red)
             flex-basis: 45%
         

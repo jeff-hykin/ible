@@ -2,7 +2,7 @@
     span.info-section
         | Pause Time: {{(currentTime||0).toFixed(2)}} sec
         br
-        | Selected Label: {{labelName}}
+        | {{labelName&&"Selected Label:"}} {{labelName}}
 </template>
 <script>
 export default {

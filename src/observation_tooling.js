@@ -49,6 +49,8 @@ export const createDefaultObservationEntry = (currentTime)=>({
     isHuman:            true,
     confirmedBySomeone: false,
     rejectedBySomeone:  false,
+    confirmedBy:        [],
+    rejectedBy:         [],
     label:           window.storageObject.recentLabel || "example-label",
     labelConfidence: 0.95,
     comment:         "",
@@ -148,6 +150,8 @@ export const createDefaultObservationEntry = (currentTime)=>({
             isHuman:            observationEntry?.isHuman,
             confirmedBySomeone: observationEntry?.confirmedBySomeone,
             rejectedBySomeone:  observationEntry?.rejectedBySomeone,
+            confirmedBy:        observationEntry?.confirmedBy,
+            rejectedBy:         observationEntry?.rejectedBy,
             label:              observationEntry?.label,
             labelConfidence:    observationEntry?.labelConfidence,
             comment:            observationEntry?.comment,
@@ -252,6 +256,12 @@ export const createDefaultObservationEntry = (currentTime)=>({
                 if (observationEntry.rejectedBySomeone != null && observationEntry.rejectedBySomeone !== true && observationEntry.rejectedBySomeone !== false) {
                     errorMessages.push(`observationEntry.rejectedBySomeone: ${toRepresentation(observationEntry.rejectedBySomeone)}\nAn observationEntry needs to be a boolean or null`)
                 }
+                if (observationEntry.confirmedBy != null && !(observationEntry.confirmedBy instanceof Array)) {
+                    errorMessages.push(`observationEntry.confirmedBy: ${toRepresentation(observationEntry.confirmedBy)}\nAn observationEntry "confirmedBy" property needs to be an array of strings`)
+                }
+                if (observationEntry.rejectedBy != null && !(observationEntry.rejectedBy instanceof Array)) {
+                    errorMessages.push(`observationEntry.rejectedBy: ${toRepresentation(observationEntry.rejectedBy)}\nAn observationEntry "rejectedBy" property needs to be an array of strings`)
+                }
             }
             errorMessagesPerObservation.push(errorMessages)
         }
@@ -271,6 +281,8 @@ export const createDefaultObservationEntry = (currentTime)=>({
         "isHuman",
         "=confirmedBySomeone",
         "=rejectedBySomeone",
+        "confirmedBy",
+        "rejectedBy",
         "label",
         "labelConfidence",
         "comment",
@@ -289,8 +301,10 @@ export const createDefaultObservationEntry = (currentTime)=>({
                 "endTime": each.endTime,
                 "observer": each.observer,
                 "isHuman": each.isHuman,
-                "=confirmedBySomeone": each.confirmedBySomeone,
-                "=rejectedBySomeone": each.rejectedBySomeone,
+                "=confirmedBySomeone": each.confirmedBy instanceof Array && each.confirmedBy.length > 0,
+                "=rejectedBySomeone": each.rejectedBy instanceof Array && each.rejectedBy.length > 0,
+                "confirmedBy": each.confirmedBy,
+                "rejectedBy": each.rejectedBy,
                 "label": each.label,
                 "labelConfidence": each.labelConfidence,
                 "comment": each.comment,
