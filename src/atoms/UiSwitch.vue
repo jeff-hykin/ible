@@ -117,6 +117,7 @@ export default {
         },
 
         onClick(e) {
+            this.$emit('click', e);
             const isCheckedPrevious = this.isChecked;
             const isChecked = e.target.checked;
 

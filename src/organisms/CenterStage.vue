@@ -35,13 +35,13 @@
                             row(width="100%" padding="2rem" align-v="top")
                                 JsonTree.json-tree(:data="videoInfo||{}")
                                 column(v-if="videoInfo&&videoInfo.videoId" flex-basis="40%" width="100%")
-                                    UiSwitch(v-model="watchedSwitch" @input="clickedHasWatchedVideo")
+                                    UiSwitch(v-model="watchedSwitch" @click="clickedHasWatchedVideo")
                                         div(style="width: 10rem")
                                             | Watched Video
-                                    UiSwitch(v-model="labeledSwitch" @input="clickedHasLabeledVideo")
+                                    UiSwitch(v-model="labeledSwitch" @click="clickedHasLabeledVideo")
                                         div(style="width: 10rem")
                                             | Labeled Video
-                                    UiSwitch(v-model="verifiedSwitch" @input="clickedHasVerifiedVideo")
+                                    UiSwitch(v-model="verifiedSwitch" @click="clickedHasVerifiedVideo")
                                         div(style="width: 10rem")
                                             | Verified Labels
                 column.side-container(v-if="$root.videoInterface.videoId" align-v="top" overflow="visible" min-height="50rem" width="fit-content")
@@ -81,7 +81,6 @@ export default {
         JsonTree: require('vue-json-tree').default,
     },
     data: ()=>({
-        console,
         // it is annoying to have a `this.currentTime` when
         // the video core is inside of VideoPlayer
         // and the videoInterface is $root.videoInterface
@@ -121,8 +120,8 @@ export default {
     watch: {
         videoInfo() {
             if (videoInfoTracker.changedSinceLastCheck(this.videoInfo) && this.videoInfo != null) {
-                console.debug(`[CenterStage] this.videoInfo changed to new:`,this.videoInfo)
-                globalEvents.updateVideoRequest.from("videoInfo").triggerWith(this.videoInfo)
+                // console.debug(`[CenterStage] this.videoInfo changed to new:`,JSON.stringify(this.videoInfo))
+                globalEvents.updateVideoRequest.from("videoInfo").triggerWith(JSON.parse(JSON.stringify(this.videoInfo)))
             }
             this.watchedSwitch = !!(this.videoInfo?.usersFinishedWatchingAt||{})[this.$root.email]
             this.labeledSwitch = !!(this.videoInfo?.usersFinishedLabelingAt||{})[this.$root.email]
@@ -137,11 +136,7 @@ export default {
     },
     methods: {
         hasWatchedVideo() {
-            let hasWatchedVideo = !!this.videoInfo?.usersFinishedWatchingAt[this.$root.email]
-            console.debug(`this.videoInfo?.usersFinishedWatchingAt is:`,JSON.stringify(this.videoInfo?.usersFinishedWatchingAt))
-            console.debug(`this.videoInfo?.usersFinishedWatchingAt[this.$root.email] is:`,this.videoInfo?.usersFinishedWatchingAt[this.$root.email])
-            console.debug(`hasWatchedVideo is:`,hasWatchedVideo)
-            return hasWatchedVideo
+            return !!(this.videoInfo?.usersFinishedWatchingAt||{})[this.$root.email]
         },
         hasLabeledVideo() {
             return !!(this.videoInfo?.usersFinishedLabelingAt||{})[this.$root.email]
@@ -150,6 +145,7 @@ export default {
             return !!(this.videoInfo?.usersFinishedVerifyingAt||{})[this.$root.email]
         },
         clickedHasWatchedVideo() {
+            console.log(`clickedHasWatchedVideo`)
             if (this.hasWatchedVideo()) {
                 this.videoInfo.usersFinishedWatchingAt[this.$root.email] = null
             } else {
@@ -158,6 +154,7 @@ export default {
             this.videoInfo = { ...this.videoInfo }
         },
         clickedHasLabeledVideo() {
+            console.log(`clickedHasLabeledVideo`)
             if (this.hasLabeledVideo()) {
                 this.videoInfo.usersFinishedLabelingAt[this.$root.email] = null
             } else {

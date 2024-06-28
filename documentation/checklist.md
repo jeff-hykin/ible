@@ -62,6 +62,7 @@ Major Chonological Changes:
 - DONE: change upload help button
 - DONE: fix the download of `observers#videos`
 - DONE: check all FIXME's
+- figure out why video switches get flipped on reload
 - figure out why video.usersFinishedWatchingAt is not preserved on reload (or why not loaded in first place)
 - consider custom observer#video interactions
 - check upload handling of comma-separated lists
