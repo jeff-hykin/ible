@@ -56,11 +56,14 @@
                     )
 </template>
 <script>
-import { frontendDb } from '../iilvd-api.js'
+import { frontendDb } from '../database.js'
 import { get } from "../object.js"
 import { trigger, globalEvents, everyTime } from '../tooling/events.js'
 import { deferredPromise } from '../utils.js'
+import * as videoTooling from '../tooling/video_tooling.js'
+import * as basics from "../tooling/basics.bundle.js"
 
+let untracked = { previousVideoInfoString: "null" }
 export default {
     props: [],
     components: {
@@ -91,13 +94,27 @@ export default {
     }),
     mounted() {
         this.$root.videoInterface.wheneverVideoIsLoaded(this.updateVideoFrontendData)
+        
+        const name = "CenterStage"
+        everyTime(globalEvents.videoStorageEntriesUpated).then(async (who, updatedVideos)=>{
+            let newInfoForThisVideo = updatedVideos.find(each=>each.videoId == this.$root.videoInterface.videoId)
+            console.log(`${name} saw [videoStorageEntriesUpated] from ${who}: ${JSON.stringify(newInfoForThisVideo)}`)
+            if (newInfoForThisVideo) {
+                this.videoInfo = videoTooling.enforceStandardVideoFormat(newInfoForThisVideo)
+            }
+        })
     },
     watch: {
         videoInfo() {
-            this.hasWatchedVideo  = this.videoInfo.usersFinishedWatchingAt[this.$root.email] != null
-            this.hasLabeledVideo  = this.videoInfo.usersFinishedLabelingAt[this.$root.email] != null
-            this.hasVerifiedVideo = this.videoInfo.usersFinishedVerifyingAt[this.$root.email] != null
-            trigger(globalEvents.updateVideoRequest, "CenterStage", this.videoInfo)
+            const videoInfoAsString = JSON.stringify(this.videoInfo)
+            if (untracked.previousVideoInfoString != videoInfoAsString) {
+                untracked.previousVideoInfoString = videoInfoAsString
+                
+                this.hasWatchedVideo  = (this.videoInfo.usersFinishedWatchingAt||{})[this.$root.email] != null
+                this.hasLabeledVideo  = (this.videoInfo.usersFinishedLabelingAt||{})[this.$root.email] != null
+                this.hasVerifiedVideo = (this.videoInfo.usersFinishedVerifyingAt||{})[this.$root.email] != null
+                trigger(globalEvents.updateVideoRequest, "CenterStage", this.videoInfo)
+            }
         },
         hasWatchedVideo() {
             if (this.hasWatchedVideo) {
@@ -143,11 +160,8 @@ export default {
                 if (this.$root.videoInterface.videoPath) {
                     newVideoInfo.path = this.$root.videoInterface.videoPath
                 }
-                await frontendDb.setVideos([newVideoInfo])
+                await trigger(globalEvents.updateVideoRequest, "CenterStage", newVideoInfo)
             }
-            frontendDb.getVideoById(videoId).then(videoInfo=>{
-                this.videoInfo = { ...videoInfo, usersFinishedWatchingAt:{},usersFinishedLabelingAt:{},usersFinishedVerifyingAt:{}, ...videoInfo }
-            })
         },
         aVideoIsSelected() {
             return this.$root.videoInterface.aVideoIsSelected

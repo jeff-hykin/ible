@@ -120,7 +120,7 @@
             
 </template>
 <script>
-import { frontendDb } from '../iilvd-api.js'
+import { frontendDb } from '../database.js'
 import { colors, debounce, download, } from "../utils.js"
 import * as utils from "../utils.js"
 import * as csvTools from "../tooling/csv_tooling.js"
@@ -173,9 +173,9 @@ export default {
             download(
                 "data.ible.zip",
                 await zipTools.createZipOfTextFiles({
-                    "observations.yaml.tsv": await observationTooling.observationsToCsv(entries),
-                    "videos.yaml.tsv": await videoTooling.videosToCsv(videos),
-                    "observers#videos.yaml.tsv": await videoTooling.videoObserverTableToCsv(videos),
+                    "observations.typed.tsv": await observationTooling.observationsToCsv(entries),
+                    "videos.typed.tsv": await videoTooling.videosToCsv(videos),
+                    "observers#videos.typed.tsv": await videoTooling.videoObserverTableToCsv(videos),
                 })
             )
         },

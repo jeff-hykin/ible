@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import { frontendDb } from '../iilvd-api.js'
+import { frontendDb } from '../database.js'
 import { set } from '../object.js'
 import { isLocalVideo,} from '../observation_tooling.js'
 import { trigger, globalEvents } from '../tooling/events.js'

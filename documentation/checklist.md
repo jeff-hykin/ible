@@ -60,12 +60,21 @@ Major Chonological Changes:
     - remove/update the format demonstration
 
 - DONE: change upload help button
-- fix the download of `observers#videos`
+- DONE: fix the download of `observers#videos`
+- DONE: check all FIXME's
+- figure out why video.usersFinishedWatchingAt is not preserved on reload (or why not loaded in first place)
 - consider custom observer#video interactions
-- check all FIXME's TODO's etc
+- check upload handling of comma-separated lists
+- CSV quoting and such
+    - stop converting some lists to comma-separated strings since those strings are now quoted
+    - instead make the csv tooling be smart enough to write list values out as unquoted comma-separated, and make the csv reader detect it and convert to a list
+    - change the =thing to (thing) for computed values
+- finish writing dev_notes.md
 - check that video data on download is nulled-out for empty strings
 - save "latest video action"
 - change the CSV export of confirmed/rejected to be comma-separated
+- ensure video ID's match a regex and dont include invalid-on-windows-filesystem characters
+- check all the TODO's etc
 - test test test
 
 - add a readme to the downloaded zip explaining the different fields and available uploadActions

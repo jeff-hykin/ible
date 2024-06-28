@@ -1,42 +1,41 @@
-import { frontendDb } from "../iilvd-api.js"
+import { frontendDb } from "../database.js"
 import { Event, trigger, everyTime, once, globalEvents } from "./events.js"
+import * as basics from "./basics.bundle.js"
 
 // listens to:
-//     globalEvents.updateVideoPathsRequest
-//     globalEvents.requestVideosToList
 //     globalEvents.updateVideoRequest
+//     globalEvents.requestVideosToList
 // triggers:
-//     globalEvents.videoStorageUpated
+//     globalEvents.videoStorageEntriesUpated
 
 const name = "videoStorageManager"
-everyTime(globalEvents.updateVideoPathsRequest).then(async (who, newVideoData)=>{
-    console.log(`${name} saw [updateVideoPathsRequest] from ${who}`)
-    let addressValuePairs = []
-    for (const {videoId, path} of newVideoData) {
-        if (path && videoId) {
-            addressValuePairs.push([
-            ["videos", videoId, "path"],
-                path,
-            ])
+everyTime(globalEvents.updateVideoRequest).then(async (who, updatedVideos)=>{
+    console.log(`${name} saw [updateVideoRequest] from ${who} with ${JSON.stringify(updatedVideos)}`)
+    if (!(updatedVideos instanceof Array)) {
+        updatedVideos = [updatedVideos]
+    }
+    const ids = updatedVideos.map(each=>each.videoId)
+    const oldData = await frontendDb.getVideos(ids)
+    // 
+    // detect what actually changed (if anything)
+    // 
+    const actuallyUpdatedVideos = []
+    for (const [eachOld, eachNew] of basics.zip(oldData, updatedVideos)) {
+        for (const [key, value] of Object.entries(eachNew)) {
+            if (!eachOld || JSON.stringify(eachOld[key]) != JSON.stringify(value)) {
+                const mergedData = basics.merge({oldData: eachOld, newData: eachNew})
+                actuallyUpdatedVideos.push(mergedData)
+                break
+            }
         }
     }
-    await indexDb.puts(addressValuePairs)
-    trigger(globalEvents.videoStorageUpated, name, newVideoData)
-})
-
-everyTime(globalEvents.requestVideosToList).then(async (who)=>{
-    let videos = []
-    for await (const [ key, each ] of indexDb.iter.videos) {
-        videos.push(each)
+    await frontendDb.updateVideos(actuallyUpdatedVideos)
+    if (actuallyUpdatedVideos.length > 0) {
+        return trigger(globalEvents.videoStorageEntriesUpated, name, actuallyUpdatedVideos)
     }
-    return videos
 })
 
-everyTime(globalEvents.updateVideoRequest).then(async (who, newVideoData)=>{
-    console.log(`${name} saw [updateVideoRequest] from ${who}`)
-    await indexDb.puts([[
-        ["videos", newVideoData.videoId],
-        newVideoData,
-    ]])
-    trigger(globalEvents.videoStorageUpated, name, newVideoData)
+// i know, seems like useless redirection/but having an event-log of who talks to who is nice
+everyTime(globalEvents.requestVideosToList).then((who)=>{
+    return frontendDb.getAllVideos()
 })

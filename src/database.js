@@ -2,6 +2,7 @@ let { deferredPromise, asyncIteratorToList, getColor, dynamicSort } = require(".
 let { get, set, remove } = require("./object.js")
 let { toKebabCase, toSnakeCase, toScreamingtoKebabCase, toScreamingtoSnakeCase } = require("./string.js")
 const observationTooling = require("./observation_tooling.js")
+import * as basics from "./tooling/basics.bundle.js"
  
 // 
 // indexDB solution
@@ -71,14 +72,48 @@ const makeIterator = (tableName)=>{
         }
     }
 }
+
+/**
+ * Wrapper for Indexed DB
+ *
+ * @note
+ *     This wrapper is designed to be treated like one big JavaScript object
+ *     - not only does get([tableName, id ]) return the item,
+ *       but also get([tableName, id, subKey ]) returns the value of the subKey
+ *       and get([tableName, id, subKey, subSubKey ]) returns the value of the subSubKey
+ *     - same for delete, you can delete an item or a subkey
+ *     - NOTE1: "puts" merges! and creates if it doesn't exist
+ *     - NOTE2: for sanity reasons, you can't do get([tableName,]) to get the entire table
+ *       or delete([tableName,]) to delete the entire table
+ *     - NOTE3: items don't store the id within themselves, there's no designated id attribute
+ *     
+ *     Implementation details:
+ *     - everything is stored in a single database in Indexed DB
+ *     - AKA every item for every "table" are all in the same array/database
+ *     - the "tables" are just the value of the "t" field
+ *     - there's an index ("t") on the table key to make looking them up faster
+ *     - every entry in the native database has a 
+ *       "t" (table) field
+ *       "k" (key) field, NOTE: not globally unique only per-table unique 
+ *       "id" (uuid), a combination of the table and key (fully unique)
+ *       "v" (value) field, should always be a JavaScript object, but not strictly enforced/checked
+ *
+ */
 const indexDb = {
     loaded: dbPromise,
     _tableNames: new Set(JSON.parse(localStorage.getItem("_tableNames")||"[]")),
+
     /**
+     * Shallow Merges with existing data (creates if doesn't exist)
+     *
      * @example
      * ```js
      * await indexDb.puts([  [["videos","a"],{a:10}], [["videos","b"],{b:20}] ])
      * ```
+     *
+     * @param {[[[String], Object]]} addressValuePairs - tableName, key
+     * @returns {Promise} - promise around native indexed DB transaction
+     *
      */
     async puts(addressValuePairs) {
         if (!db) {
@@ -159,12 +194,17 @@ const indexDb = {
                                 for (const [subAddress, value] of innerAddressPairs) {
                                     if (subAddress.length == 0) {
                                         if (value instanceof Object) {
-                                            existingValue = {...existingValue, ...value}
+                                            existingValue = basics.merge({oldData: existingValue, newData: value })
                                         } else {
                                             existingValue = value
                                         }
                                     } else {
-                                        set({ keyList: subAddress, to: value, on: existingValue })
+                                        const existingSubValue = get({ keyList: subAddress, failValue: undefined, from: existingValue })
+                                        let newValue = value
+                                        if (newValue instanceof Object) {
+                                            newValue = basics.merge({oldData: existingSubValue||{}, newData: newValue })
+                                        }
+                                        set({ keyList: subAddress, to: newValue, on: existingValue })
                                     }
                                 }
                                 
@@ -193,12 +233,34 @@ const indexDb = {
 
         return transactionPromise
     },
+    /**
+     * retrieve multiple key-values
+     *
+     * @example
+     * ```js
+     *     // NOTE the "await" in "for await", its required
+     *     for await (const [ id, value ] of indexDb.gets([
+     *         ["videos", "a"],
+     *         ["videos", "b"],
+     *         ["videos", "c"],
+     *     ])) {
+     *         console.log(id, value)
+     *     }
+     * ```
+     *
+     * @param {[[String]]} addresses - tableName, key
+     * @returns {AsyncIterator<>} output - description
+     *
+     */
     async *gets(addresses) {
         if (!db) {
             await dbPromise
         }
         addresses = [...addresses]
-        const next = await dbPromise.then(()=>new Promise((resolve, reject)=>{
+        // a little weird, but done so that the transaction.onerror would reject the promise
+        // TODO: there's still the possibility of transaction.onerror being called after the promise is resolved
+        //       should just rewrite this whole file to use dexie.js 
+        const next = await new Promise((resolve, reject)=>{
             const transaction = db.transaction([storeName], 'readwrite')
             const objectStore = transaction.objectStore(storeName)
             transaction.onerror = reject
@@ -211,14 +273,10 @@ const indexDb = {
                 }
                 const [ tableName, key, ...subAddress ] = address
                 const id = JSON.stringify([tableName, key])
-                console.debug(`id is:`,id)
                 let requestPromise
                 const request = objectStore.get(id)
                 Object.assign(request, {
                     onsuccess: (thingy)=>{
-                        console.debug(`thingy is:`,thingy)
-                        console.debug(`request.result is:`,request.result)
-                        console.debug(`request.result?.v is:`,request.result?.v)
                         if (subAddress.length == 0) {
                             requestPromise.resolve(
                                 [ address, request.result?.v ]
@@ -238,12 +296,21 @@ const indexDb = {
                 return requestPromise
             }
             resolve(next)
-        }))
+        })
         while (addresses.length > 0) {
             yield next()
         }
     },
-    // deletes
+    /**
+     * delete mutliple items
+     *
+     * @example
+     *     indexDb.deletes([
+     *         ["videos", "a"],
+     *         ["videos", "b"],
+     *         ["videos", "c"],
+     *     ])
+     */
     async deletes(addresses) {
         if (!db) {
             await dbPromise
@@ -260,7 +327,6 @@ const indexDb = {
                 }
                 const [ tableName, key, ...subAddress ] = address
                 const id = JSON.stringify([tableName, key])
-                console.debug(`id is:`,id)
                 // 
                 // delete whole object
                 // 
@@ -306,7 +372,7 @@ const indexDb = {
             })
         )
     },
-    async keys() {
+    async getTableNames() {
         if (!db) {
             await dbPromise
         }
@@ -731,9 +797,8 @@ const frontendDb = {
     setObservation(observationEntry, {withCoersion=false}={}) {
         return frontendDb.setObservations([observationEntry],{withCoersion})
     },
-    async collectionNames() {
-        // done (just used to load the db)
-        return indexDb.keys()
+    async tableNames() {
+        return indexDb.getTableNames()
     },
     async getUsernames() {
         let usernames = []
@@ -741,9 +806,6 @@ const frontendDb = {
             usernames.push(each.observer)
         }
         return [...new Set(usernames)]
-    },
-    async getVideoTitle(videoId) {
-        return indexDb.get([ "videos", videoId, "summary", "title"])
     },
     async getObservations({where=[], returnObject=false}) {
         return indexDb.select({from:"observations", where, returnObject})
@@ -755,13 +817,12 @@ const frontendDb = {
         // TODO: clean this up after changing data structure
         return indexDb.get(["videos", videoId, ])
     },
-    async setVideos(videos) {
+    async updateVideos(videos) {
         let addressValuePairs = []
         for (const video of videos) {
             if (typeof video.videoId != 'string') {
-                throw Error(`Tried to use frontendDb.setVideos() but one of the videos videoId wasn't a string`)
+                throw Error(`Tried to use frontendDb.updateVideos() but one of the videos videoId wasn't a string`)
             }
-            console.debug(`[setVideos] video is:`,video)
             addressValuePairs.push([
                 ["videos", video.videoId],
                 video,
@@ -771,7 +832,7 @@ const frontendDb = {
     },
     async getVideos(videoIds) {
         let values = []
-        for await (const [ address, value ] of indexDb.gets(videoIds.map(each=>["videos", each]))) {
+        for await (const [ address, value ] of indexDb.gets(videoIds.filter(each=>typeof each == "string").map(each=>["videos", each]))) {
             values.push(value)
         }
         return values

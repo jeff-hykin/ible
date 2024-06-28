@@ -23,7 +23,7 @@ import * as utils from "./utils.js"
 import * as basics from "./tooling/basics.bundle.js"
 import { get, set } from "./object.js"
 import * as videoTools from "./tooling/video_tooling.js"
-import { frontendDb } from "./iilvd-api.js"
+import { frontendDb } from "./database.js"
 import { Router } from './plugins/router-plugin.js'
 import * as zipJs from "@zip.js/zip.js"
 import * as zipTools from "./tooling/zip_tooling.js"
@@ -32,16 +32,14 @@ import { Event, trigger, everyTime, once, globalEvents } from "./tooling/events.
 import "./tooling/video_storage_manager.js"
 import "./tooling/observation_storage_manager.js"
 
-window.zipJs = zipJs
-window.zipTools = zipTools
-window.basics = basics // debugging
+window.basics = basics // for debugging
 
 // listens to:
 //     globalEvents.requestRootData
 //     globalEvents.addLabelRequest
 //     globalEvents.rootDeSelectObservationRequest
 // triggers:
-//     globalEvents.updateVideoPathsRequest
+//     globalEvents.updateVideoRequest
 //     globalEvents.addedLabel
 
 //
@@ -63,9 +61,9 @@ let untrackedData = {
     usernameList: [],
     videoIdToPath: {},
     videoPaths: [],
-    previousVideoInfoString: null,
-    previousVideoPaths: null,
 }
+const videoInfoChangeChecker = new utils.JsonValueChangeChecker()
+const videoPathsChangeChecker = new utils.JsonValueChangeChecker()
 export default RootComponent = {
     name: 'RootComponent',
     components: {
@@ -155,11 +153,9 @@ export default RootComponent = {
                 keySegmentsPromise: Promise.resolve([]),
                 // this gets triggered first/immediately
                 async _videoInRouteHasChanged() {
-                    const currentVideoInfoString = JSON.stringify($root.routeData$?.videoInfo)
-                    if (untrackedData.previousVideoInfoString == currentVideoInfoString) {
+                    if (!videoInfoChangeChecker.changedSinceLastCheck($root.routeData$?.videoInfo)) {
                         return
                     }
-                    untrackedData.previousVideoInfoString = currentVideoInfoString
                     
                     console.debug(`$root.routeData$.videoInfo is:`,{...$root.routeData$.videoInfo})
                     if ($root.routeData$?.videoInfo?.path && !$root.routeData$?.videoInfo?.videoId) {
@@ -314,8 +310,7 @@ export default RootComponent = {
                 async refreshLocalVideoData() {
                     try {
                         const videoPaths = await window.backend.getLocalVideoPaths()
-                        if (untrackedData.previousVideoPaths != videoPaths) {
-                            untrackedData.previousVideoPaths = videoPaths
+                        if (videoPathsChangeChecker.changedSinceLastCheck(videoPaths)) {
                             const videoIds = videoPaths.map(videoTools.extractLocalVideoId)
                             let videos = []
                             for (const [path,id] of basics.zip(videoPaths,videoIds)) {
@@ -326,7 +321,7 @@ export default RootComponent = {
                                     })
                                 }
                             }
-                            trigger(globalEvents.updateVideoPathsRequest, "root", videos)
+                            trigger(globalEvents.updateVideoRequest, "root", videos)
                             window.storageObject.videoPaths = videoPaths
                         }
                     } catch (error) {
@@ -341,8 +336,6 @@ export default RootComponent = {
         return {
             videoInterface,
             loadStart: (new Date()).getTime(),
-            needToLoad$: {
-            },
             routeData$: initialRouteData,
             filterAndSort: {
                 maxlabelConfidence: null,
@@ -352,7 +345,6 @@ export default RootComponent = {
                 validation: [ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement' ],
             },
             searchResults: {
-                finishedComputing: false,
                 videos: {},
                 uncheckedObservations: [0],
                 observers: {},
@@ -368,8 +360,6 @@ export default RootComponent = {
             selectedSegment: null,
             labels: {},
             videos: {},
-            needToLoad$: {
-            },
             email: window.storageObject.email,
             noSearch: true,
         }

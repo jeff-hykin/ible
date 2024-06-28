@@ -5,19 +5,15 @@ import * as csvTools from './tooling/csv_tooling.js'
 import * as basics from './tooling/basics.bundle.js'
 
 import {
-    localVideoPrefix,
     isLocalVideo,
     minSizeOfUnixTimestamp,
     currentFixedSizeOfYouTubeVideoId,
-    minSizeOfLocalVideoId,
     videoIdIsValid,
 } from './tooling/video_tooling.js'
 export {
-    localVideoPrefix,
     isLocalVideo,
     minSizeOfUnixTimestamp,
     currentFixedSizeOfYouTubeVideoId,
-    minSizeOfLocalVideoId,
     videoIdIsValid,
 } from './tooling/video_tooling.js'
 

@@ -1,4 +1,4 @@
-import { frontendDb } from "../iilvd-api.js"
+import { frontendDb } from "../database.js"
 import { Event, trigger, everyTime, once, globalEvents } from "./events.js"
 import * as observationTooling from "../observation_tooling.js"
 import Vue from "vue"

@@ -8571,13 +8571,7 @@ Object.defineProperty(Vue.prototype, "$child", {
   }
 
 });
-},{"vue":"NtAQ"}],"jJO6":[function(require,module,exports) {
-
-},{}],"xmsx":[function(require,module,exports) {
-"use strict";
-
-require("css-baseline/css/3.css");
-},{"css-baseline/css/3.css":"jJO6"}],"YsuP":[function(require,module,exports) {
+},{"vue":"NtAQ"}],"YsuP":[function(require,module,exports) {
 /*!
  * good-vue v1.3.1
  * (c) 
@@ -25369,6 +25363,8 @@ if (typeof window !== 'undefined' && window.Vue) {
 /***/ })
 /******/ ]);
 });
+},{}],"yuYy":[function(require,module,exports) {
+
 },{}],"FJCK":[function(require,module,exports) {
 "use strict";
 
@@ -25381,7 +25377,7 @@ require("keen-ui/dist/keen-ui.css");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_keenUi.default);
-},{"vue":"NtAQ","keen-ui":"R6w2","keen-ui/dist/keen-ui.css":"jJO6"}],"yMH8":[function(require,module,exports) {
+},{"vue":"NtAQ","keen-ui":"R6w2","keen-ui/dist/keen-ui.css":"yuYy"}],"yMH8":[function(require,module,exports) {
 
  /*! 
   * portal-vue © Thorsten Lünborg, 2019 
@@ -26009,7 +26005,76 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 let Vue = require("vue").default;
 
 Vue.use(_portalVue.default);
-},{"vue":"NtAQ","portal-vue":"yMH8"}],"mVwj":[function(require,module,exports) {
+},{"vue":"NtAQ","portal-vue":"yMH8"}],"T1YL":[function(require,module,exports) {
+// TODO: fix potential issue of the "this" somehow not refering to the active component (maybe hotreload/debugging issue)
+// api
+//     rootHooks
+let Vue = require("vue").default;
+
+let rootHooksSymbol = Symbol("$rootHooks");
+Object.defineProperty(Vue.prototype, "$rootHooks", {
+  get() {
+    if (this[rootHooksSymbol] == undefined) {
+      this[rootHooksSymbol] = {};
+    }
+
+    return this[rootHooksSymbol];
+  },
+
+  set(value) {
+    this[rootHooksSymbol] = value;
+  }
+
+});
+const unwatcherSymbol = Symbol("unwatchers");
+Vue.mixin(module.exports = {
+  beforeCreate() {
+    const newOption = this.$options.rootHooks;
+
+    if (!newOption) {
+      return;
+    }
+
+    const vueStaticDestination = this.$rootHooks || this;
+
+    if (vueStaticDestination instanceof Object) {
+      if (newOption instanceof Function) {
+        Object.assign(vueStaticDestination, newOption.apply(this));
+      } else if (typeof newOption === 'object') {
+        Object.assign(vueStaticDestination, newOption);
+      }
+    }
+
+    this[unwatcherSymbol] = []; // 
+    // watchers
+    // 
+
+    const thisComponent = this;
+
+    if (this.$rootHooks.watch instanceof Object) {
+      for (let [eachKey, eachValue] of Object.entries(this.$rootHooks.watch)) {
+        if (eachValue.bind instanceof Function) {
+          eachValue = this.$rootHooks.watch[eachKey] = eachValue.bind(thisComponent);
+        }
+
+        this[unwatcherSymbol].push(this.$root.$watch(eachKey, eachValue, {
+          deep: true
+        }));
+      }
+    }
+  },
+
+  beforeDestroy() {
+    // call all of the unwatchers
+    if (this[unwatcherSymbol] instanceof Array) {
+      for (let each of this[unwatcherSymbol]) {
+        each();
+      }
+    }
+  }
+
+});
+},{"vue":"NtAQ"}],"mVwj":[function(require,module,exports) {
 // api
 // resolvables:
 //     [resolvable].promise
@@ -26204,75 +26269,6 @@ Vue.mixin(module.exports = {
           }
 
         });
-      }
-    }
-  }
-
-});
-},{"vue":"NtAQ"}],"T1YL":[function(require,module,exports) {
-// TODO: fix potential issue of the "this" somehow not refering to the active component (maybe hotreload/debugging issue)
-// api
-//     rootHooks
-let Vue = require("vue").default;
-
-let rootHooksSymbol = Symbol("$rootHooks");
-Object.defineProperty(Vue.prototype, "$rootHooks", {
-  get() {
-    if (this[rootHooksSymbol] == undefined) {
-      this[rootHooksSymbol] = {};
-    }
-
-    return this[rootHooksSymbol];
-  },
-
-  set(value) {
-    this[rootHooksSymbol] = value;
-  }
-
-});
-const unwatcherSymbol = Symbol("unwatchers");
-Vue.mixin(module.exports = {
-  beforeCreate() {
-    const newOption = this.$options.rootHooks;
-
-    if (!newOption) {
-      return;
-    }
-
-    const vueStaticDestination = this.$rootHooks || this;
-
-    if (vueStaticDestination instanceof Object) {
-      if (newOption instanceof Function) {
-        Object.assign(vueStaticDestination, newOption.apply(this));
-      } else if (typeof newOption === 'object') {
-        Object.assign(vueStaticDestination, newOption);
-      }
-    }
-
-    this[unwatcherSymbol] = []; // 
-    // watchers
-    // 
-
-    const thisComponent = this;
-
-    if (this.$rootHooks.watch instanceof Object) {
-      for (let [eachKey, eachValue] of Object.entries(this.$rootHooks.watch)) {
-        if (eachValue.bind instanceof Function) {
-          eachValue = this.$rootHooks.watch[eachKey] = eachValue.bind(thisComponent);
-        }
-
-        this[unwatcherSymbol].push(this.$root.$watch(eachKey, eachValue, {
-          deep: true
-        }));
-      }
-    }
-  },
-
-  beforeDestroy() {
-    // call all of the unwatchers
-    if (this[unwatcherSymbol] instanceof Array) {
-      for (let each of this[unwatcherSymbol]) {
-        each();
       }
     }
   }
@@ -29271,7 +29267,49 @@ var _vueToasted = _interopRequireDefault(require("vue-toasted"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_vueToasted.default);
-},{"vue":"NtAQ","vue-toasted":"oSP9"}],"XpWL":[function(require,module,exports) {
+},{"vue":"NtAQ","vue-toasted":"oSP9"}],"aLvM":[function(require,module,exports) {
+// api
+//     this.withoutWatchers(source, callback)
+let Vue = require("vue").default; // TODO: potenial issue if a second source calls this before the first one ends (async)
+// TODO: issues with dynamically added watchers
+
+
+Vue.mixin(module.exports = {
+  methods: {
+    $withoutWatchers(source, callback) {
+      const watchers = this._watchers.map(watcher => ({
+        cb: watcher.cb,
+        sync: watcher.sync
+      })); // disable
+
+
+      for (let index in this._watchers) {
+        this._watchers[index] = Object.assign(this._watchers[index], {
+          cb: () => null,
+          sync: true
+        });
+      }
+
+      if (this.$withoutWatchers.showSource) {
+        console.group(`[${source}] suspended all watch functions`);
+      }
+
+      callback();
+
+      if (this.$withoutWatchers.showSource) {
+        console.groupEnd();
+        console.log(`[${source}] resumed all watch functions`);
+      } // enable
+
+
+      for (let index in this._watchers) {
+        this._watchers[index] = Object.assign(this._watchers[index], watchers[index]);
+      }
+    }
+
+  }
+});
+},{"vue":"NtAQ"}],"XpWL":[function(require,module,exports) {
 // api
 //     windowListeners:{}
 let Vue = require("vue").default;
@@ -29329,48 +29367,6 @@ Vue.mixin(module.exports = {
     }
   }
 
-});
-},{"vue":"NtAQ"}],"aLvM":[function(require,module,exports) {
-// api
-//     this.withoutWatchers(source, callback)
-let Vue = require("vue").default; // TODO: potenial issue if a second source calls this before the first one ends (async)
-// TODO: issues with dynamically added watchers
-
-
-Vue.mixin(module.exports = {
-  methods: {
-    $withoutWatchers(source, callback) {
-      const watchers = this._watchers.map(watcher => ({
-        cb: watcher.cb,
-        sync: watcher.sync
-      })); // disable
-
-
-      for (let index in this._watchers) {
-        this._watchers[index] = Object.assign(this._watchers[index], {
-          cb: () => null,
-          sync: true
-        });
-      }
-
-      if (this.$withoutWatchers.showSource) {
-        console.group(`[${source}] suspended all watch functions`);
-      }
-
-      callback();
-
-      if (this.$withoutWatchers.showSource) {
-        console.groupEnd();
-        console.log(`[${source}] resumed all watch functions`);
-      } // enable
-
-
-      for (let index in this._watchers) {
-        this._watchers[index] = Object.assign(this._watchers[index], watchers[index]);
-      }
-    }
-
-  }
 });
 },{"vue":"NtAQ"}],"Y7uC":[function(require,module,exports) {
 // api
@@ -37444,23 +37440,27 @@ _vue.default.use(_vuePlyr.default, {
     invertTime: false
   }
 });
-},{"vue":"NtAQ","vue-plyr":"fgJi","vue-plyr/dist/vue-plyr.css":"jJO6"}],"Xeh1":[function(require,module,exports) {
+},{"vue":"NtAQ","vue-plyr":"fgJi","vue-plyr/dist/vue-plyr.css":"yuYy"}],"xmsx":[function(require,module,exports) {
+"use strict";
+
+require("css-baseline/css/3.css");
+},{"css-baseline/css/3.css":"yuYy"}],"Xeh1":[function(require,module,exports) {
 module.exports = {
   "child": require("./child.js"),
-  "css-baseline-plugin": require("./css-baseline-plugin.js"),
   "good-vue-plugin": require("./good-vue-plugin.js"),
   "keen-ui-plugin": require("./keen-ui-plugin.js"),
   "portal-plugin": require("./portal-plugin.js"),
-  "resolvables-plugin": require("./resolvables-plugin.js"),
   "root-hooks-plugin": require("./root-hooks-plugin.js"),
+  "resolvables-plugin": require("./resolvables-plugin.js"),
   "router-plugin": require("./router-plugin.js"),
   "vue-toasted-plugin": require("./vue-toasted-plugin.js"),
-  "window-listeners-plugin": require("./window-listeners-plugin.js"),
   "without-watchers": require("./without-watchers.js"),
+  "window-listeners-plugin": require("./window-listeners-plugin.js"),
   "workers-plugin": require("./workers-plugin.js"),
-  "youtube-player-plugin": require("./youtube-player-plugin.js")
+  "youtube-player-plugin": require("./youtube-player-plugin.js"),
+  "css-baseline-plugin": require("./css-baseline-plugin.js")
 };
-},{"./child.js":"HT0w","./css-baseline-plugin.js":"xmsx","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./portal-plugin.js":"HMJZ","./resolvables-plugin.js":"mVwj","./root-hooks-plugin.js":"T1YL","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./window-listeners-plugin.js":"XpWL","./without-watchers.js":"aLvM","./workers-plugin.js":"Y7uC","./youtube-player-plugin.js":"mQXc"}],"jqRt":[function(require,module,exports) {
+},{"./child.js":"HT0w","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./portal-plugin.js":"HMJZ","./root-hooks-plugin.js":"T1YL","./resolvables-plugin.js":"mVwj","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./without-watchers.js":"aLvM","./window-listeners-plugin.js":"XpWL","./workers-plugin.js":"Y7uC","./youtube-player-plugin.js":"mQXc","./css-baseline-plugin.js":"xmsx"}],"jqRt":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -59882,7 +59882,7 @@ exports.humandReadableTime = humandReadableTime;
 exports.deferredPromise = deferredPromise;
 exports.asyncIteratorToList = asyncIteratorToList;
 exports.wrapIndex = wrapIndex;
-exports.DynamicInterval = exports.escapeHtml = exports.isInvalidEmail = exports.checkIf = exports.dynamicSort = exports.quickHash = exports.valueKey = exports.colors = exports.storageObject = exports.EventEmitter = exports.createVideoId = exports.videoIdLength = exports.videoExtensions = exports.mimeTypes = void 0;
+exports.JsonValueChangeChecker = exports.DynamicInterval = exports.escapeHtml = exports.isInvalidEmail = exports.checkIf = exports.dynamicSort = exports.quickHash = exports.valueKey = exports.colors = exports.storageObject = exports.EventEmitter = exports.createVideoId = exports.videoIdLength = exports.videoExtensions = exports.mimeTypes = void 0;
 
 var _object = require("./object.js");
 
@@ -60551,6 +60551,27 @@ class DynamicInterval {
 }
 
 exports.DynamicInterval = DynamicInterval;
+const init = Symbol("init");
+
+class JsonValueChangeChecker {
+  constructor() {
+    this.value = init;
+  }
+
+  changedSinceLastCheck(value) {
+    const newValue = JSON.stringify(value);
+
+    if (this.value !== newValue) {
+      this.value = newValue;
+      return true;
+    }
+
+    return false;
+  }
+
+}
+
+exports.JsonValueChangeChecker = JsonValueChangeChecker;
 },{"./object.js":"qwrU"}],"V8WW":[function(require,module,exports) {
 "use strict";
 
@@ -79058,8 +79079,26 @@ function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return 
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
-window.yaml = yaml;
-window.csv = csv;
+window.yaml = yaml; // debugging only
+
+window.csv = csv; // debugging only
+// TODO: make this a formal format standard in its own repo, with a javascript and python API
+
+const w3schoolsIsoDateRegex = /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))/;
+const extraIsoDateRegex = /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+)|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d)|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d)/;
+
+const matchesIso8601Date = string => string.match(w3schoolsIsoDateRegex) || string.match(extraIsoDateRegex);
+
+const matchesReservedPattern = string => {
+  return (// to allow comma-separated lists of strings/numbers/dates that dont have commas in them
+    string.includes(",") || // to allow computed items / equations
+    string.startsWith("=") || // to allow regex (yeah yeah i know i know)
+    string.startsWith("/") && string.endsWith("/") || // to allow durations and times
+    string.match(/^\d+:/) || // to allow dates (no times) either YYYY-MM-DD and DD/MM/YYYY (probably only want to support YYYY-MM-DD, but will reserve both)
+    string.match(/^\d{4}-\d{1,2}-\d{1,2}($| |\t)/) || string.match(/^\d{1,2}\/\d{1,2}\/\d{1,2}($| |\t)/) || // ISO date
+    matchesIso8601Date(string)
+  );
+};
 
 const rowify = (data, {
   defaultHeaders = [],
@@ -79110,17 +79149,20 @@ function convertToCsv(data, {
     let index = -1;
 
     for (const each of eachRow) {
-      index++;
-
-      if (each === "") {
-        eachRow[index] = '""';
-        continue;
-      }
+      index++; // null/undefined become empty Excel cell
 
       if (each == null) {
         eachRow[index] = "";
         continue;
-      }
+      } // empty strings become Excel cell containing two quotes
+
+
+      if (each === "") {
+        eachRow[index] = '""';
+        continue;
+      } // non-strings just get yamlified
+      // (TODO: consider having strings-with-commas getting quoted, and then some lists of strings/numbers getting converted to a comma-separated string)
+
 
       if (typeof each != "string") {
         let newString = yaml.stringify(each);
@@ -79130,6 +79172,12 @@ function convertToCsv(data, {
         }
 
         eachRow[index] = newString;
+        continue;
+      } // if its a string that wouldn't be quoted by yaml, but should be reserved for special things (like date), then quote it manually
+
+
+      if (matchesReservedPattern(each)) {
+        eachRow[index] = JSON.stringify(each);
         continue;
       }
 
@@ -79182,7 +79230,7 @@ async function parseCsv(csvString, {
       index++;
 
       try {
-        if (each.match(/^\d{1,4}-\d{1,2}-\d{1,2}T\d{1,2}:\d{1,2}:\d{1,2}(\.\d+)?(Z|[+-]\d{1,2}(:\d{1,2})?)$/)) {
+        if (matchesIso8601Date(each)) {
           eachRow[index] = new Date(each);
         } else {
           eachRow[index] = yaml.parse(each);
@@ -84357,7 +84405,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.videoIdIsValid = videoIdIsValid;
-exports.videoObserverTableCsvToActions = exports.videoObserverTableToCsv = exports.videosCsvToActions = exports.videosToCsv = exports.searchTermToVideoInfo = exports.extractLocalVideoNameFromPath = exports.extractLocalVideoId = exports.extractYoutubeVideoId = exports.endsWithVideoExtension = exports.minSizeOfLocalVideoId = exports.currentFixedSizeOfYouTubeVideoId = exports.minSizeOfUnixTimestamp = exports.isLocalVideo = exports.localVideoPrefix = void 0;
+exports.videoObserverTableCsvToActions = exports.videoObserverTableToCsv = exports.videosCsvToActions = exports.videosToCsv = exports.searchTermToVideoInfo = exports.extractLocalVideoNameFromPath = exports.extractLocalVideoId = exports.extractYoutubeVideoId = exports.endsWithVideoExtension = exports.isLocalVideo = exports.isYoutubeVideoUrl = exports.enforceStandardVideoFormat = exports.currentFixedSizeOfYouTubeVideoId = exports.minSizeOfUnixTimestamp = exports.minimumLocalIdSize = exports.localVideoPrefix = void 0;
 
 var _basicsBundle = require("./basics.bundle.js");
 
@@ -84371,17 +84419,61 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 const localVideoPrefix = "/videos/";
 exports.localVideoPrefix = localVideoPrefix;
-
-const isLocalVideo = videoId => videoId && !(videoId.match(/.*www\.youtube\.com/) && videoId.match(/.+(?:\?|&)v=(.{11})/) || videoId.match(/.*youtu\.be\//) && videoId.match(/.*youtu.be\/(.{11})/)); // toString(videoId).replace(/\\videos\\/g, "/videos/").startsWith(localVideoPrefix)
-
-
-exports.isLocalVideo = isLocalVideo;
+const minimumLocalIdSize = 7;
+exports.minimumLocalIdSize = minimumLocalIdSize;
 const minSizeOfUnixTimestamp = 10;
 exports.minSizeOfUnixTimestamp = minSizeOfUnixTimestamp;
-const currentFixedSizeOfYouTubeVideoId = 11;
+const currentFixedSizeOfYouTubeVideoId = 11; // 
+// Video Data Structures (As of right now, June 27 2024)
+// 
+// (conceptually/ideally) its this:
+// {
+//     videoId: String,
+//     durationInSeconds: Number,
+//     path: String,
+//     comment: String or null,
+//     customInfo: {
+//         [key]: String,
+//     },
+//     usersFinishedWatchingAt: {
+//         [username]: unix timestamp in milliseconds as Number,
+//     },
+//     usersFinishedLabelingAt: {
+//         [username]: unix timestamp in milliseconds as Number,
+//     },
+//     usersFinishedVerifyingAt: {
+//         [username]: unix timestamp in milliseconds as Number,
+//     },
+// }
+// 
+// simple helpers/validation
+// 
+
 exports.currentFixedSizeOfYouTubeVideoId = currentFixedSizeOfYouTubeVideoId;
-const minSizeOfLocalVideoId = localVideoPrefix.length;
-exports.minSizeOfLocalVideoId = minSizeOfLocalVideoId;
+
+const enforceStandardVideoFormat = videoInfo => {
+  videoInfo = videoInfo || {};
+  return {
+    videoId: videoInfo.videoId,
+    durationInSeconds: videoInfo.durationInSeconds,
+    path: videoInfo.path,
+    comment: videoInfo.comment,
+    customInfo: videoInfo.customInfo,
+    usersFinishedWatchingAt: videoInfo.usersFinishedWatchingAt || {},
+    usersFinishedLabelingAt: videoInfo.usersFinishedLabelingAt || {},
+    usersFinishedVerifyingAt: videoInfo.usersFinishedVerifyingAt || {}
+  };
+};
+
+exports.enforceStandardVideoFormat = enforceStandardVideoFormat;
+
+const isYoutubeVideoUrl = videoId => typeof videoId == "string" && (videoId.match(/.*www\.youtube\.com/) && videoId.match(/.+(?:\?|&)v=(.{11})/) || videoId.match(/.*youtu\.be\//) && videoId.match(/.*youtu.be\/(.{11})/));
+
+exports.isYoutubeVideoUrl = isYoutubeVideoUrl;
+
+const isLocalVideo = videoId => videoId && !isYoutubeVideoUrl(videoId);
+
+exports.isLocalVideo = isLocalVideo;
 
 const endsWithVideoExtension = videoPath => {
   const ending = (0, _basicsBundle.toString)(videoPath).split(".").slice(-1)[0];
@@ -84403,7 +84495,6 @@ const extractYoutubeVideoId = newVideoId => {
 };
 
 exports.extractYoutubeVideoId = extractYoutubeVideoId;
-const minimumLocalIdSize = 7;
 
 const extractLocalVideoId = path => {
   let fileName = _basicsBundle.Path.basename((0, _basicsBundle.toString)(path));
@@ -84436,15 +84527,19 @@ const extractLocalVideoNameFromPath = videoPath => {
 exports.extractLocalVideoNameFromPath = extractLocalVideoNameFromPath;
 
 function videoIdIsValid(videoId) {
-  // FIXME: 
   if (typeof videoId == "string") {
-    if (isLocalVideo(videoId) || videoId.length == currentFixedSizeOfYouTubeVideoId) {
+    if (isYoutubeVideoUrl(videoId) && videoId.length == currentFixedSizeOfYouTubeVideoId) {
+      return true;
+    } else if (isLocalVideo(videoId) && videoId.trim().length >= minimumLocalIdSize) {
       return true;
     }
   }
 
   return false;
-}
+} // 
+// complicated one-off helpers
+// 
+
 /**
  * searchTermToVideoInfo
  *
@@ -84482,7 +84577,10 @@ const searchTermToVideoInfo = searchTerm => {
       path: searchTerm
     };
   }
-};
+}; // 
+// csv operations
+// 
+
 
 exports.searchTermToVideoInfo = searchTermToVideoInfo;
 
@@ -84580,11 +84678,11 @@ const videoObserverTableToCsv = async videos => {
   let videoObserverRows = [];
 
   for (const each of videos) {
-    const usersWhoFinishedWatching = Object.keys(each.usersFinishedWatchingAt || {});
-    const usersWhoFinishedLabeling = Object.keys(each.usersFinishedLabelingAt || {});
-    const usersWhoFinishedVerifying = Object.keys(each.usersFinishedVerifyingAt || {});
+    const usersFinishedWatching = each.usersFinishedWatchingAt || {};
+    const usersFinishedLabeling = each.usersFinishedLabelingAt || {};
+    const usersFinishedVerifying = each.usersFinishedVerifyingAt || {};
 
-    for (const [username, timeFinished] of Object.entries(usersWhoFinishedWatching)) {
+    for (const [username, timeFinished] of Object.entries(usersFinishedWatching)) {
       videoObserverRows.push({
         "uploadAction": "update",
         "videoId": each.videoId,
@@ -84594,7 +84692,7 @@ const videoObserverTableToCsv = async videos => {
       });
     }
 
-    for (const [username, timeFinished] of Object.entries(usersWhoFinishedLabeling)) {
+    for (const [username, timeFinished] of Object.entries(usersFinishedLabeling)) {
       videoObserverRows.push({
         "uploadAction": "update",
         "videoId": each.videoId,
@@ -84604,7 +84702,7 @@ const videoObserverTableToCsv = async videos => {
       });
     }
 
-    for (const [username, timeFinished] of Object.entries(usersWhoFinishedVerifying)) {
+    for (const [username, timeFinished] of Object.entries(usersFinishedVerifying)) {
       videoObserverRows.push({
         "uploadAction": "update",
         "videoId": each.videoId,
@@ -84634,7 +84732,8 @@ const videoObserverTableCsvToActions = async csvString => {
       videoId,
       observer,
       observerAction,
-      timeFinished
+      timeFinished,
+      ...other
     } = Object.fromEntries(basics.zip(headers, eachRow));
 
     if (uploadAction == "ignore") {
@@ -84709,12 +84808,6 @@ exports.quickLocalValidationCheck = quickLocalValidationCheck;
 exports.coerceObservation = coerceObservation;
 exports.validateObservations = validateObservations;
 exports.observationsToCsv = observationsToCsv;
-Object.defineProperty(exports, "localVideoPrefix", {
-  enumerable: true,
-  get: function () {
-    return _video_tooling.localVideoPrefix;
-  }
-});
 Object.defineProperty(exports, "isLocalVideo", {
   enumerable: true,
   get: function () {
@@ -84731,12 +84824,6 @@ Object.defineProperty(exports, "currentFixedSizeOfYouTubeVideoId", {
   enumerable: true,
   get: function () {
     return _video_tooling.currentFixedSizeOfYouTubeVideoId;
-  }
-});
-Object.defineProperty(exports, "minSizeOfLocalVideoId", {
-  enumerable: true,
-  get: function () {
-    return _video_tooling.minSizeOfLocalVideoId;
   }
 });
 Object.defineProperty(exports, "videoIdIsValid", {
@@ -85148,7 +85235,15 @@ const observationsCsvToActions = async csvString => {
 };
 
 exports.observationsCsvToActions = observationsCsvToActions;
-},{"./string.js":"V8WW","yaml":"m6gW","./utils.js":"K0yk","./tooling/csv_tooling.js":"RN9L","./tooling/basics.bundle.js":"WnUT","./tooling/video_tooling.js":"u92t"}],"AC5t":[function(require,module,exports) {
+},{"./string.js":"V8WW","yaml":"m6gW","./utils.js":"K0yk","./tooling/csv_tooling.js":"RN9L","./tooling/basics.bundle.js":"WnUT","./tooling/video_tooling.js":"u92t"}],"R5hg":[function(require,module,exports) {
+"use strict";
+
+var basics = _interopRequireWildcard(require("./tooling/basics.bundle.js"));
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
 let {
   deferredPromise,
   asyncIteratorToList,
@@ -85169,11 +85264,11 @@ let {
   toScreamingtoSnakeCase
 } = require("./string.js");
 
-const observationTooling = require("./observation_tooling.js"); // 
+const observationTooling = require("./observation_tooling.js");
+
+// 
 // indexDB solution
 // 
-
-
 let db;
 const dbPromise = deferredPromise();
 var dbName = "main";
@@ -85260,16 +85355,49 @@ const makeIterator = tableName => {
     }
   };
 };
+/**
+ * Wrapper for Indexed DB
+ *
+ * @note
+ *     This wrapper is designed to be treated like one big JavaScript object
+ *     - not only does get([tableName, id ]) return the item,
+ *       but also get([tableName, id, subKey ]) returns the value of the subKey
+ *       and get([tableName, id, subKey, subSubKey ]) returns the value of the subSubKey
+ *     - same for delete, you can delete an item or a subkey
+ *     - NOTE1: "puts" merges! and creates if it doesn't exist
+ *     - NOTE2: for sanity reasons, you can't do get([tableName,]) to get the entire table
+ *       or delete([tableName,]) to delete the entire table
+ *     - NOTE3: items don't store the id within themselves, there's no designated id attribute
+ *     
+ *     Implementation details:
+ *     - everything is stored in a single database in Indexed DB
+ *     - AKA every item for every "table" are all in the same array/database
+ *     - the "tables" are just the value of the "t" field
+ *     - there's an index ("t") on the table key to make looking them up faster
+ *     - every entry in the native database has a 
+ *       "t" (table) field
+ *       "k" (key) field, NOTE: not globally unique only per-table unique 
+ *       "id" (uuid), a combination of the table and key (fully unique)
+ *       "v" (value) field, should always be a JavaScript object, but not strictly enforced/checked
+ *
+ */
+
 
 const indexDb = {
   loaded: dbPromise,
   _tableNames: new Set(JSON.parse(localStorage.getItem("_tableNames") || "[]")),
 
   /**
+   * Shallow Merges with existing data (creates if doesn't exist)
+   *
    * @example
    * ```js
    * await indexDb.puts([  [["videos","a"],{a:10}], [["videos","b"],{b:20}] ])
    * ```
+   *
+   * @param {[[[String], Object]]} addressValuePairs - tableName, key
+   * @returns {Promise} - promise around native indexed DB transaction
+   *
    */
   async puts(addressValuePairs) {
     if (!db) {
@@ -85355,16 +85483,31 @@ const indexDb = {
           for (const [subAddress, value] of innerAddressPairs) {
             if (subAddress.length == 0) {
               if (value instanceof Object) {
-                existingValue = { ...existingValue,
-                  ...value
-                };
+                existingValue = basics.merge({
+                  oldData: existingValue,
+                  newData: value
+                });
               } else {
                 existingValue = value;
               }
             } else {
+              const existingSubValue = get({
+                keyList: subAddress,
+                failValue: undefined,
+                from: existingValue
+              });
+              let newValue = value;
+
+              if (newValue instanceof Object) {
+                newValue = basics.merge({
+                  oldData: existingSubValue || {},
+                  newData: newValue
+                });
+              }
+
               set({
                 keyList: subAddress,
-                to: value,
+                to: newValue,
                 on: existingValue
               });
             }
@@ -85390,13 +85533,35 @@ const indexDb = {
     return transactionPromise;
   },
 
+  /**
+   * retrieve multiple key-values
+   *
+   * @example
+   * ```js
+   *     // NOTE the "await" in "for await", its required
+   *     for await (const [ id, value ] of indexDb.gets([
+   *         ["videos", "a"],
+   *         ["videos", "b"],
+   *         ["videos", "c"],
+   *     ])) {
+   *         console.log(id, value)
+   *     }
+   * ```
+   *
+   * @param {[[String]]} addresses - tableName, key
+   * @returns {AsyncIterator<>} output - description
+   *
+   */
   async *gets(addresses) {
     if (!db) {
       await dbPromise;
     }
 
-    addresses = [...addresses];
-    const next = await dbPromise.then(() => new Promise((resolve, reject) => {
+    addresses = [...addresses]; // a little weird, but done so that the transaction.onerror would reject the promise
+    // TODO: there's still the possibility of transaction.onerror being called after the promise is resolved
+    //       should just rewrite this whole file to use dexie.js 
+
+    const next = await new Promise((resolve, reject) => {
       const transaction = db.transaction([storeName], 'readwrite');
       const objectStore = transaction.objectStore(storeName);
       transaction.onerror = reject;
@@ -85415,15 +85580,10 @@ const indexDb = {
 
         const [tableName, key, ...subAddress] = address;
         const id = JSON.stringify([tableName, key]);
-        console.debug(`id is:`, id);
         let requestPromise;
         const request = objectStore.get(id);
         Object.assign(request, {
           onsuccess: thingy => {
-            console.debug(`thingy is:`, thingy);
-            console.debug(`request.result is:`, request.result);
-            console.debug(`request.result?.v is:`, request.result?.v);
-
             if (subAddress.length == 0) {
               requestPromise.resolve([address, request.result?.v]);
             } else {
@@ -85445,14 +85605,23 @@ const indexDb = {
       };
 
       resolve(next);
-    }));
+    });
 
     while (addresses.length > 0) {
       yield next();
     }
   },
 
-  // deletes
+  /**
+   * delete mutliple items
+   *
+   * @example
+   *     indexDb.deletes([
+   *         ["videos", "a"],
+   *         ["videos", "b"],
+   *         ["videos", "c"],
+   *     ])
+   */
   async deletes(addresses) {
     if (!db) {
       await dbPromise;
@@ -85471,8 +85640,7 @@ const indexDb = {
       }
 
       const [tableName, key, ...subAddress] = address;
-      const id = JSON.stringify([tableName, key]);
-      console.debug(`id is:`, id); // 
+      const id = JSON.stringify([tableName, key]); // 
       // delete whole object
       // 
 
@@ -85517,7 +85685,7 @@ const indexDb = {
     }));
   },
 
-  async keys() {
+  async getTableNames() {
     if (!db) {
       await dbPromise;
     }
@@ -86054,9 +86222,8 @@ const frontendDb = {
     });
   },
 
-  async collectionNames() {
-    // done (just used to load the db)
-    return indexDb.keys();
+  async tableNames() {
+    return indexDb.getTableNames();
   },
 
   async getUsernames() {
@@ -86067,10 +86234,6 @@ const frontendDb = {
     }
 
     return [...new Set(usernames)];
-  },
-
-  async getVideoTitle(videoId) {
-    return indexDb.get(["videos", videoId, "summary", "title"]);
   },
 
   async getObservations({
@@ -86095,15 +86258,14 @@ const frontendDb = {
     return indexDb.get(["videos", videoId]);
   },
 
-  async setVideos(videos) {
+  async updateVideos(videos) {
     let addressValuePairs = [];
 
     for (const video of videos) {
       if (typeof video.videoId != 'string') {
-        throw Error(`Tried to use frontendDb.setVideos() but one of the videos videoId wasn't a string`);
+        throw Error(`Tried to use frontendDb.updateVideos() but one of the videos videoId wasn't a string`);
       }
 
-      console.debug(`[setVideos] video is:`, video);
       addressValuePairs.push([["videos", video.videoId], video]);
     }
 
@@ -86113,7 +86275,7 @@ const frontendDb = {
   async getVideos(videoIds) {
     let values = [];
 
-    for await (const [address, value] of indexDb.gets(videoIds.map(each => ["videos", each]))) {
+    for await (const [address, value] of indexDb.gets(videoIds.filter(each => typeof each == "string").map(each => ["videos", each]))) {
       values.push(value);
     }
 
@@ -86380,7 +86542,7 @@ window.backend = {
 module.exports = {
   frontendDb
 };
-},{"./utils.js":"K0yk","./object.js":"qwrU","./string.js":"V8WW","./observation_tooling.js":"LPi2"}],"kB7J":[function(require,module,exports) {
+},{"./utils.js":"K0yk","./object.js":"qwrU","./string.js":"V8WW","./observation_tooling.js":"LPi2","./tooling/basics.bundle.js":"WnUT"}],"kB7J":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -86685,7 +86847,6 @@ var _utils = require("../utils.js");
 
 var _object = require("../object.js");
 
-//
 //
 //
 //
@@ -87228,7 +87389,7 @@ var _string = require("../string.js");
 
 var observationTooling = _interopRequireWildcard(require("../observation_tooling.js"));
 
-var _iilvdApi = require("../iilvd-api.js");
+var _database = require("../database.js");
 
 var _utils = require("../utils");
 
@@ -87775,7 +87936,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"vue":"NtAQ","../string.js":"V8WW","../observation_tooling.js":"LPi2","../iilvd-api.js":"AC5t","../utils":"K0yk","../tooling/events.js":"kB7J","vue-json-tree":"vQbQ","../atoms/UiSwitch":"iTmx"}],"RG1B":[function(require,module,exports) {
+},{"vue":"NtAQ","../string.js":"V8WW","../observation_tooling.js":"LPi2","../database.js":"R5hg","../utils":"K0yk","../tooling/events.js":"kB7J","vue-json-tree":"vQbQ","../atoms/UiSwitch":"iTmx"}],"RG1B":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -87787,7 +87948,7 @@ var _object = require("../object.js");
 
 var _utils = require("../utils.js");
 
-var _iilvdApi = require("../iilvd-api.js");
+var _database = require("../database.js");
 
 var _events = require("../tooling/events.js");
 
@@ -88386,7 +88547,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"../object.js":"qwrU","../utils.js":"K0yk","../iilvd-api.js":"AC5t","../tooling/events.js":"kB7J","../atoms/SideButton":"CzpK"}],"OFzg":[function(require,module,exports) {
+},{"../object.js":"qwrU","../utils.js":"K0yk","../database.js":"R5hg","../tooling/events.js":"kB7J","../atoms/SideButton":"CzpK"}],"OFzg":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -102703,7 +102864,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _iilvdApi = require("../iilvd-api.js");
+var _database = require("../database.js");
 
 var utils = _interopRequireWildcard(require("../utils.js"));
 
@@ -102878,7 +103039,7 @@ var _default = {
       let entries = observationEntries;
 
       if (entries?.length == 0) {
-        entries = await _iilvdApi.frontendDb.getObservations({
+        entries = await _database.frontendDb.getObservations({
           where: [],
           returnObject: false
         });
@@ -102887,16 +103048,16 @@ var _default = {
       let videos = [];
 
       if (this.$root.noSearch) {
-        videos = await _iilvdApi.frontendDb.getAllVideos();
+        videos = await _database.frontendDb.getAllVideos();
       } else {
         const videoIds = [...new Set(entries.map(each => each.videoId))];
-        videos = await _iilvdApi.frontendDb.getVideos(videoIds);
+        videos = await _database.frontendDb.getVideos(videoIds);
       }
 
       (0, utils.download)("data.ible.zip", await zipTools.createZipOfTextFiles({
-        "observations.yaml.tsv": await observationTooling.observationsToCsv(entries),
-        "videos.yaml.tsv": await videoTooling.videosToCsv(videos),
-        "observers#videos.yaml.tsv": await videoTooling.videoObserverTableToCsv(videos)
+        "observations.typed.tsv": await observationTooling.observationsToCsv(entries),
+        "videos.typed.tsv": await videoTooling.videosToCsv(videos),
+        "observers#videos.typed.tsv": await videoTooling.videoObserverTableToCsv(videos)
       }));
     },
 
@@ -102904,7 +103065,7 @@ var _default = {
       let entries = observationEntries;
 
       if (entries?.length == 0) {
-        for await (const [key, value] of _iilvdApi.frontendDb.iter.observations) {
+        for await (const [key, value] of _database.frontendDb.iter.observations) {
           entries.push({
             observationId: key
           });
@@ -102928,7 +103089,7 @@ var _default = {
         let count = 0;
 
         for (const each of entries) {
-          await _iilvdApi.frontendDb.deleteObservation({
+          await _database.frontendDb.deleteObservation({
             uuidOfSelectedSegment: each.observationId
           });
           count++;
@@ -102964,7 +103125,7 @@ var _default = {
           labelName: this.$root.routeData$.labelName
         } : {})
       };
-      this.$root.searchResults = await _iilvdApi.frontendDb.summary.general(filterAndSort);
+      this.$root.searchResults = await _database.frontendDb.summary.general(filterAndSort);
       let where = []; // 
       // build the search query
       // 
@@ -103030,7 +103191,7 @@ var _default = {
       //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
 
 
-      observationEntries = await _iilvdApi.frontendDb.getObservations({
+      observationEntries = await _database.frontendDb.getObservations({
         where,
         returnObject: true
       }); // ensure the observationId is the ID
@@ -103103,7 +103264,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"../iilvd-api.js":"AC5t","../utils.js":"K0yk","../tooling/csv_tooling.js":"RN9L","../tooling/zip_tooling.js":"G3bZ","../tooling/basics.bundle.js":"WnUT","../tooling/video_tooling.js":"u92t","../observation_tooling.js":"LPi2","../atoms/UiSwitch":"iTmx","../molecules/PieChart":"Karj","../molecules/VideoIdSearch":"nPMh","../organisms/LabelLister":"vQfD"}],"F49y":[function(require,module,exports) {
+},{"../database.js":"R5hg","../utils.js":"K0yk","../tooling/csv_tooling.js":"RN9L","../tooling/zip_tooling.js":"G3bZ","../tooling/basics.bundle.js":"WnUT","../tooling/video_tooling.js":"u92t","../observation_tooling.js":"LPi2","../atoms/UiSwitch":"iTmx","../molecules/PieChart":"Karj","../molecules/VideoIdSearch":"nPMh","../organisms/LabelLister":"vQfD"}],"F49y":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -103209,7 +103370,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _iilvdApi = require("../iilvd-api.js");
+var _database = require("../database.js");
 
 var _object = require("../object.js");
 
@@ -103283,7 +103444,7 @@ var _default = {
       if (this.$root.noSearch) {
         videos = (await (0, _events.trigger)(_events.globalEvents.requestVideosToList, "VideoLister"))[0];
       } else {
-        videos = await _iilvdApi.frontendDb.getVideos(videoIds);
+        videos = await _database.frontendDb.getVideos(videoIds);
       }
 
       const videoNames = {};
@@ -103327,7 +103488,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"../iilvd-api.js":"AC5t","../object.js":"qwrU","../observation_tooling.js":"LPi2","../tooling/events.js":"kB7J","../tooling/video_tooling.js":"u92t"}],"hqcF":[function(require,module,exports) {
+},{"../database.js":"R5hg","../object.js":"qwrU","../observation_tooling.js":"LPi2","../tooling/events.js":"kB7J","../tooling/video_tooling.js":"u92t"}],"hqcF":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -103335,7 +103496,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _iilvdApi = require("../iilvd-api.js");
+var _database = require("../database.js");
 
 var _object = require("../object.js");
 
@@ -103343,6 +103504,14 @@ var _events = require("../tooling/events.js");
 
 var _utils = require("../utils.js");
 
+var videoTooling = _interopRequireWildcard(require("../tooling/video_tooling.js"));
+
+var basics = _interopRequireWildcard(require("../tooling/basics.bundle.js"));
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
 //
 //
 //
@@ -103400,6 +103569,9 @@ var _utils = require("../utils.js");
 //
 //
 //
+let untracked = {
+  previousVideoInfoString: "null"
+};
 var _default = {
   props: [],
   components: {
@@ -103431,14 +103603,28 @@ var _default = {
 
   mounted() {
     this.$root.videoInterface.wheneverVideoIsLoaded(this.updateVideoFrontendData);
+    const name = "CenterStage";
+    (0, _events.everyTime)(_events.globalEvents.videoStorageEntriesUpated).then(async (who, updatedVideos) => {
+      let newInfoForThisVideo = updatedVideos.find(each => each.videoId == this.$root.videoInterface.videoId);
+      console.log(`${name} saw [videoStorageEntriesUpated] from ${who}: ${JSON.stringify(newInfoForThisVideo)}`);
+
+      if (newInfoForThisVideo) {
+        this.videoInfo = videoTooling.enforceStandardVideoFormat(newInfoForThisVideo);
+      }
+    });
   },
 
   watch: {
     videoInfo() {
-      this.hasWatchedVideo = this.videoInfo.usersFinishedWatchingAt[this.$root.email] != null;
-      this.hasLabeledVideo = this.videoInfo.usersFinishedLabelingAt[this.$root.email] != null;
-      this.hasVerifiedVideo = this.videoInfo.usersFinishedVerifyingAt[this.$root.email] != null;
-      (0, _events.trigger)(_events.globalEvents.updateVideoRequest, "CenterStage", this.videoInfo);
+      const videoInfoAsString = JSON.stringify(this.videoInfo);
+
+      if (untracked.previousVideoInfoString != videoInfoAsString) {
+        untracked.previousVideoInfoString = videoInfoAsString;
+        this.hasWatchedVideo = (this.videoInfo.usersFinishedWatchingAt || {})[this.$root.email] != null;
+        this.hasLabeledVideo = (this.videoInfo.usersFinishedLabelingAt || {})[this.$root.email] != null;
+        this.hasVerifiedVideo = (this.videoInfo.usersFinishedVerifyingAt || {})[this.$root.email] != null;
+        (0, _events.trigger)(_events.globalEvents.updateVideoRequest, "CenterStage", this.videoInfo);
+      }
     },
 
     hasWatchedVideo() {
@@ -103497,17 +103683,8 @@ var _default = {
           newVideoInfo.path = this.$root.videoInterface.videoPath;
         }
 
-        await _iilvdApi.frontendDb.setVideos([newVideoInfo]);
+        await (0, _events.trigger)(_events.globalEvents.updateVideoRequest, "CenterStage", newVideoInfo);
       }
-
-      _iilvdApi.frontendDb.getVideoById(videoId).then(videoInfo => {
-        this.videoInfo = { ...videoInfo,
-          usersFinishedWatchingAt: {},
-          usersFinishedLabelingAt: {},
-          usersFinishedVerifyingAt: {},
-          ...videoInfo
-        };
-      });
     },
 
     aVideoIsSelected() {
@@ -103566,7 +103743,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"../iilvd-api.js":"AC5t","../object.js":"qwrU","../tooling/events.js":"kB7J","../utils.js":"K0yk","../atoms/UiSwitch":"iTmx","../atoms/SideButton":"CzpK","../atoms/VideoPlayer":"ALCG","../molecules/InfoSection":"tPI3","../organisms/ObservationEditor":"ICy3","../organisms/SegmentDisplay":"RG1B","../organisms/WrappedTopSearch":"F49y","../molecules/Card":"OSGx","../organisms/VideoLister":"mlHE","vue-json-tree":"vQbQ"}],"bZ7G":[function(require,module,exports) {
+},{"../database.js":"R5hg","../object.js":"qwrU","../tooling/events.js":"kB7J","../utils.js":"K0yk","../tooling/video_tooling.js":"u92t","../tooling/basics.bundle.js":"WnUT","../atoms/UiSwitch":"iTmx","../atoms/SideButton":"CzpK","../atoms/VideoPlayer":"ALCG","../molecules/InfoSection":"tPI3","../organisms/ObservationEditor":"ICy3","../organisms/SegmentDisplay":"RG1B","../organisms/WrappedTopSearch":"F49y","../molecules/Card":"OSGx","../organisms/VideoLister":"mlHE","vue-json-tree":"vQbQ"}],"bZ7G":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -103834,7 +104011,6 @@ var _default = {
   mixins: [require("../mixins/loader")],
   data: () => ({
     useLeftPanel: true,
-    needToLoad$: {},
     items: {},
     searchTerm: "",
     fuseSuggestor: null
@@ -104025,6 +104201,10 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
+var _utils = require("../utils.js");
+
+var _database = require("../database.js");
+
 var observationTooling = _interopRequireWildcard(require("../observation_tooling.js"));
 
 var yaml = _interopRequireWildcard(require("yaml"));
@@ -104100,40 +104280,6 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 //
 //
 //
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-const {
-  humandReadableTime,
-  download
-} = require("../utils.js");
-
-const {
-  frontendDb
-} = require("../iilvd-api.js");
-
 // TASKS:
 // add good error handling for uploads that are problematic
 var _default = {
@@ -104196,6 +104342,19 @@ var _default = {
     }
   },
   methods: {
+    async downloadAllData() {
+      const entries = await _database.frontendDb.getObservations({
+        where: [],
+        returnObject: false
+      });
+      const videos = await _database.frontendDb.getAllVideos();
+      (0, _utils.download)("data.ible.zip", await zipTools.createZipOfTextFiles({
+        "observations.typed.tsv": await observationTooling.observationsToCsv(entries),
+        "videos.typed.tsv": await videoTooling.videosToCsv(videos),
+        "observers#videos.typed.tsv": await videoTooling.videoObserverTableToCsv(videos)
+      }));
+    },
+
     latestUploadErrors() {
       return yaml.stringify(this.latestUploadErrorsObject);
     },
@@ -104212,7 +104371,7 @@ var _default = {
 
     downloadErrorLog() {
       const errorLogText = this.latestUploadErrors();
-      download("upload_error_log.txt", errorLogText);
+      (0, _utils.download)("upload_error_log.txt", errorLogText);
       this.latestUploadErrorsObject = {};
     },
 
@@ -104243,16 +104402,16 @@ var _default = {
         files[fileName] = fileText;
       }
 
-      if (files["videos.yaml.tsv"]) {
-        videoTooling.videosCsvToActions(files["videos.yaml.tsv"]).then(frontendDb.executeVideoActions);
+      if (files["videos.typed.tsv"]) {
+        videoTooling.videosCsvToActions(files["videos.typed.tsv"]).then(_database.frontendDb.executeVideoActions);
       }
 
-      if (files["observers#videos.yaml.tsv"]) {
-        videoTooling.videoObserverTableCsvToActions(files["observers#videos.yaml.tsv"]).then(frontendDb.executeVideoActions);
+      if (files["observers#videos.typed.tsv"]) {
+        videoTooling.videoObserverTableCsvToActions(files["observers#videos.typed.tsv"]).then(_database.frontendDb.executeVideoActions);
       }
 
-      if (files["observations.yaml.tsv"]) {
-        observationTooling.observationsCsvToActions(files["observations.yaml.tsv"]).then(frontendDb.executeObservationActions);
+      if (files["observations.typed.tsv"]) {
+        observationTooling.observationsCsvToActions(files["observations.typed.tsv"]).then(_database.frontendDb.executeObservationActions);
       } // 
       // start uploading all the observations
       // 
@@ -104349,7 +104508,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($2cbb07, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"upload-wrapper",attrs:{"akfdjguo3359gip":"akfdjguo3359gip"}},[_c('ui-fab',{staticClass:"help-button",attrs:{"color":"gray","icon":"live_help","raised":"raised","tooltip":"Upload Format Requirements","tooltipPosition":"left"},on:{"click":_vm.showHelp}}),_c('ui-fab',{staticClass:"upload-button",attrs:{"color":"blue","raised":"raised","tooltip":"upload multiple observations","tooltipPosition":"left"}},[_c('ui-icon',[_vm._v("cloud_upload")]),_c('ui-fileupload',{attrs:{"name":"file","type":"secondary","multiple":true},on:{"change":_vm.onUploadObservation}})],1),_c('portal',{attrs:{"to":"modal-popups"}},[_c('ui-modal',{ref:"helpModal",staticClass:"modal",attrs:{"fj20485gh93oi53g":"fj20485gh93oi53g","title":"Example Upload","transition":"scale-up"}},[_c('row',{attrs:{"align-h":"space-evenly","align-v":"top"}},[_c('column',{attrs:{"align-v":"top"}},[_c('br'),_vm._v("Try editing them! Then look at the code →"),_c('row',{attrs:{"align-h":"space-between","padding":"2rem 1rem","align-v":"top"}},[_c('column',[_c('h5',[_vm._v("Observation 1")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData1}})],1),_c('container',{attrs:{"min-width":"3rem"}}),_c('column',[_c('h5',[_vm._v("Observation 2")]),_c('container',{attrs:{"height":"1rem"}}),_c('DummyObservation',{attrs:{"observationData":_vm.dummyData2}})],1)],1)],1),_c('container',{attrs:{"width":"2rem"}}),_c('column',{attrs:{"flex-basis":"50%","max-width":"31rem","align-v":"top"}},[_c('span',[_c('br'),_vm._v("To upload these observations"),_c('br'),_c('br'),_vm._v("1. Create a file ending with"),_c('code',[_vm._v(" .json ")]),_c('br'),_c('br'),_vm._v("2. Then add the following text to that file."),_c('br'),_c('br')]),_c('JsonTree',{staticClass:"json-tree",attrs:{"data":[_vm.dummyData1, _vm.dummyData2]}}),_c('span',[_c('br'),_vm._v("3. Then simply use the upload button to upload the file."),_c('br'),_c('br'),_vm._v("The JSON file is just a list of each observation represented as a kind of dictionary.")])],1)],1)],1)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"upload-wrapper",attrs:{"akfdjguo3359gip":"akfdjguo3359gip"}},[_c('ui-fab',{staticClass:"help-button",attrs:{"color":"gray","icon":"live_help","raised":"raised","tooltip":"Upload Format Requirements","tooltipPosition":"left"},on:{"click":_vm.showHelp}}),_c('ui-fab',{staticClass:"help-button",attrs:{"color":"gray","icon":"download","raised":"raised","tooltip":"Download All Data","tooltipPosition":"left"},on:{"click":_vm.downloadAllData}}),_c('ui-fab',{staticClass:"upload-button",attrs:{"color":"blue","raised":"raised","tooltip":"upload multiple observations","tooltipPosition":"left"}},[_c('ui-icon',[_vm._v("cloud_upload")]),_c('ui-fileupload',{attrs:{"name":"file","type":"secondary","multiple":true},on:{"change":_vm.onUploadObservation}})],1),_c('portal',{attrs:{"to":"modal-popups"}},[_c('ui-modal',{ref:"helpModal",staticClass:"modal",attrs:{"fj20485gh93oi53g":"fj20485gh93oi53g","title":"Example Upload","transition":"scale-up"}},[_vm._v("If you're unsure about what to upload, try downloading the data first."),_c('br'),_vm._v("The download is a a zip file with bunch of .typed.tsv files that you can edit in Excel"),_c('br'),_vm._v("To upload new data, modify those .typed.tsv, and then select all of them for upload.")])],1)],1)}
 var staticRenderFns = []
 
           return {
@@ -104361,7 +104520,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"../utils.js":"K0yk","../iilvd-api.js":"AC5t","../observation_tooling.js":"LPi2","yaml":"m6gW","../tooling/zip_tooling.js":"G3bZ","../tooling/video_tooling.js":"u92t","../tooling/events.js":"kB7J","vue-json-tree":"vQbQ","../molecules/DummyObservation":"ygBg","../molecules/Card":"OSGx"}],"gi53":[function(require,module,exports) {
+},{"../utils.js":"K0yk","../database.js":"R5hg","../observation_tooling.js":"LPi2","yaml":"m6gW","../tooling/zip_tooling.js":"G3bZ","../tooling/video_tooling.js":"u92t","../tooling/events.js":"kB7J","vue-json-tree":"vQbQ","../molecules/DummyObservation":"ygBg","../molecules/Card":"OSGx"}],"gi53":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -104440,51 +104599,63 @@ module.exports = {
 },{"./Home.vue":"gi53"}],"wOUt":[function(require,module,exports) {
 "use strict";
 
-var _iilvdApi = require("../iilvd-api.js");
+var _database = require("../database.js");
 
 var _events = require("./events.js");
 
-// listens to:
-//     globalEvents.updateVideoPathsRequest
-//     globalEvents.requestVideosToList
-//     globalEvents.updateVideoRequest
-// triggers:
-//     globalEvents.videoStorageUpated
-const name = "videoStorageManager";
-(0, _events.everyTime)(_events.globalEvents.updateVideoPathsRequest).then(async (who, newVideoData) => {
-  console.log(`${name} saw [updateVideoPathsRequest] from ${who}`);
-  let addressValuePairs = [];
+var basics = _interopRequireWildcard(require("./basics.bundle.js"));
 
-  for (const {
-    videoId,
-    path
-  } of newVideoData) {
-    if (path && videoId) {
-      addressValuePairs.push([["videos", videoId, "path"], path]);
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+// listens to:
+//     globalEvents.updateVideoRequest
+//     globalEvents.requestVideosToList
+// triggers:
+//     globalEvents.videoStorageEntriesUpated
+const name = "videoStorageManager";
+(0, _events.everyTime)(_events.globalEvents.updateVideoRequest).then(async (who, updatedVideos) => {
+  console.log(`${name} saw [updateVideoRequest] from ${who} with ${JSON.stringify(updatedVideos)}`);
+
+  if (!(updatedVideos instanceof Array)) {
+    updatedVideos = [updatedVideos];
+  }
+
+  const ids = updatedVideos.map(each => each.videoId);
+  const oldData = await _database.frontendDb.getVideos(ids); // 
+  // detect what actually changed (if anything)
+  // 
+
+  const actuallyUpdatedVideos = [];
+
+  for (const [eachOld, eachNew] of basics.zip(oldData, updatedVideos)) {
+    for (const [key, value] of Object.entries(eachNew)) {
+      if (!eachOld || JSON.stringify(eachOld[key]) != JSON.stringify(value)) {
+        const mergedData = basics.merge({
+          oldData: eachOld,
+          newData: eachNew
+        });
+        actuallyUpdatedVideos.push(mergedData);
+        break;
+      }
     }
   }
 
-  await indexDb.puts(addressValuePairs);
-  (0, _events.trigger)(_events.globalEvents.videoStorageUpated, name, newVideoData);
-});
-(0, _events.everyTime)(_events.globalEvents.requestVideosToList).then(async who => {
-  let videos = [];
+  await _database.frontendDb.updateVideos(actuallyUpdatedVideos);
 
-  for await (const [key, each] of indexDb.iter.videos) {
-    videos.push(each);
+  if (actuallyUpdatedVideos.length > 0) {
+    return (0, _events.trigger)(_events.globalEvents.videoStorageEntriesUpated, name, actuallyUpdatedVideos);
   }
+}); // i know, seems like useless redirection/but having an event-log of who talks to who is nice
 
-  return videos;
+(0, _events.everyTime)(_events.globalEvents.requestVideosToList).then(who => {
+  return _database.frontendDb.getAllVideos();
 });
-(0, _events.everyTime)(_events.globalEvents.updateVideoRequest).then(async (who, newVideoData) => {
-  console.log(`${name} saw [updateVideoRequest] from ${who}`);
-  await indexDb.puts([[["videos", newVideoData.videoId], newVideoData]]);
-  (0, _events.trigger)(_events.globalEvents.videoStorageUpated, name, newVideoData);
-});
-},{"../iilvd-api.js":"AC5t","./events.js":"kB7J"}],"k6OT":[function(require,module,exports) {
+},{"../database.js":"R5hg","./events.js":"kB7J","./basics.bundle.js":"WnUT"}],"k6OT":[function(require,module,exports) {
 "use strict";
 
-var _iilvdApi = require("../iilvd-api.js");
+var _database = require("../database.js");
 
 var _events = require("./events.js");
 
@@ -104524,7 +104695,7 @@ const name = "observationStorageManager";
     // 
 
     try {
-      await _iilvdApi.frontendDb.setObservation(observationEntry, {
+      await _database.frontendDb.setObservation(observationEntry, {
         withCoersion: true
       });
     } catch (error) {
@@ -104564,12 +104735,12 @@ const name = "observationStorageManager";
   };
 });
 (0, _events.everyTime)(_events.globalEvents.deleteObservationRequest).then(async (who, observationId) => {
-  await _iilvdApi.frontendDb.deleteObservation({
+  await _database.frontendDb.deleteObservation({
     uuidOfSelectedSegment: observationId
   });
   (0, _events.trigger)(_events.globalEvents.observationStorageDeletedEntries, name, [observationId]);
 });
-},{"../iilvd-api.js":"AC5t","./events.js":"kB7J","../observation_tooling.js":"LPi2","vue":"NtAQ"}],"rUmP":[function(require,module,exports) {
+},{"../database.js":"R5hg","./events.js":"kB7J","../observation_tooling.js":"LPi2","vue":"NtAQ"}],"rUmP":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -104591,7 +104762,7 @@ var _object = require("./object.js");
 
 var videoTools = _interopRequireWildcard(require("./tooling/video_tooling.js"));
 
-var _iilvdApi = require("./iilvd-api.js");
+var _database = require("./database.js");
 
 var _routerPlugin = require("./plugins/router-plugin.js");
 
@@ -104626,15 +104797,13 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //
 //
 // libs and plugins
-window.zipJs = zipJs;
-window.zipTools = zipTools;
-window.basics = basics; // debugging
+window.basics = basics; // for debugging
 // listens to:
 //     globalEvents.requestRootData
 //     globalEvents.addLabelRequest
 //     globalEvents.rootDeSelectObservationRequest
 // triggers:
-//     globalEvents.updateVideoPathsRequest
+//     globalEvents.updateVideoRequest
 //     globalEvents.addedLabel
 //
 // Routing Init
@@ -104655,10 +104824,10 @@ let untrackedData = {
   firstSearchLoad: true,
   usernameList: [],
   videoIdToPath: {},
-  videoPaths: [],
-  previousVideoInfoString: null,
-  previousVideoPaths: null
+  videoPaths: []
 };
+const videoInfoChangeChecker = new utils.JsonValueChangeChecker();
+const videoPathsChangeChecker = new utils.JsonValueChangeChecker();
 
 var _default = RootComponent = {
   name: 'RootComponent',
@@ -104753,13 +104922,10 @@ var _default = RootComponent = {
 
       // this gets triggered first/immediately
       async _videoInRouteHasChanged() {
-        const currentVideoInfoString = JSON.stringify($root.routeData$?.videoInfo);
-
-        if (untrackedData.previousVideoInfoString == currentVideoInfoString) {
+        if (!videoInfoChangeChecker.changedSinceLastCheck($root.routeData$?.videoInfo)) {
           return;
         }
 
-        untrackedData.previousVideoInfoString = currentVideoInfoString;
         console.debug(`$root.routeData$.videoInfo is:`, { ...$root.routeData$.videoInfo
         });
 
@@ -104863,7 +105029,7 @@ var _default = RootComponent = {
 
       updateKeySegments() {
         const currentVideoId = $root.videoInterface.videoId;
-        $root.videoInterface.keySegmentsPromise = _iilvdApi.frontendDb.getObservations({
+        $root.videoInterface.keySegmentsPromise = _database.frontendDb.getObservations({
           where: [{
             valueOf: ['videoId'],
             is: currentVideoId
@@ -104890,7 +105056,7 @@ var _default = RootComponent = {
 
         if (!!videoInfo?.videoId && typeof videoInfo?.videoId == "string") {
           let videoPath = untrackedData.videoIdToPath[videoInfo.videoId];
-          const moreVideoInfo = await _iilvdApi.frontendDb.getVideoById(videoInfo.videoId);
+          const moreVideoInfo = await _database.frontendDb.getVideoById(videoInfo.videoId);
 
           if (moreVideoInfo) {
             videoInfo = {
@@ -104900,7 +105066,7 @@ var _default = RootComponent = {
             };
           }
         } else if (!!videoInfo?.path && typeof videoInfo?.path == "string") {
-          const moreVideoInfo = await _iilvdApi.frontendDb.getVideoByPath(videoInfo.path);
+          const moreVideoInfo = await _database.frontendDb.getVideoByPath(videoInfo.path);
 
           if (moreVideoInfo) {
             videoInfo = { ...moreVideoInfo,
@@ -104970,8 +105136,7 @@ var _default = RootComponent = {
         try {
           const videoPaths = await window.backend.getLocalVideoPaths();
 
-          if (untrackedData.previousVideoPaths != videoPaths) {
-            untrackedData.previousVideoPaths = videoPaths;
+          if (videoPathsChangeChecker.changedSinceLastCheck(videoPaths)) {
             const videoIds = videoPaths.map(videoTools.extractLocalVideoId);
             let videos = [];
 
@@ -104984,7 +105149,7 @@ var _default = RootComponent = {
               }
             }
 
-            (0, _events.trigger)(_events.globalEvents.updateVideoPathsRequest, "root", videos);
+            (0, _events.trigger)(_events.globalEvents.updateVideoRequest, "root", videos);
             window.storageObject.videoPaths = videoPaths;
           }
         } catch (error) {
@@ -104999,7 +105164,6 @@ var _default = RootComponent = {
     return {
       videoInterface,
       loadStart: new Date().getTime(),
-      needToLoad$: {},
       routeData$: initialRouteData,
       filterAndSort: {
         maxlabelConfidence: null,
@@ -105009,7 +105173,6 @@ var _default = RootComponent = {
         validation: ['Unchecked', 'Confirmed', 'Rejected', 'Disagreement']
       },
       searchResults: {
-        finishedComputing: false,
         videos: {},
         uncheckedObservations: [0],
         observers: {},
@@ -105025,7 +105188,6 @@ var _default = RootComponent = {
       selectedSegment: null,
       labels: {},
       videos: {},
-      needToLoad$: {},
       email: window.storageObject.email,
       noSearch: true
     };
@@ -105039,7 +105201,7 @@ var _default = RootComponent = {
       this.getAValidEmail();
     }, 100);
 
-    _iilvdApi.frontendDb.getUsernames().then(usernames => {
+    _database.frontendDb.getUsernames().then(usernames => {
       untrackedData.usernameList = untrackedData.usernameList.concat(usernames);
     }); // 
     // listening
@@ -105244,7 +105406,7 @@ var _default = RootComponent = {
       let newLabels;
 
       try {
-        newLabels = await _iilvdApi.frontendDb.summary.labels();
+        newLabels = await _database.frontendDb.summary.labels();
       } catch (error) {
         this.$toasted.show(`Unable to get summary.labels()`).goAway(3500);
         console.error(error.message);
@@ -105337,4 +105499,4 @@ var staticRenderFns = []
           };
         })());
       
-},{"vue":"NtAQ","./plugins/*.js":"Xeh1","./pages/*.vue":"Ka75","./utils.js":"K0yk","./tooling/basics.bundle.js":"WnUT","./object.js":"qwrU","./tooling/video_tooling.js":"u92t","./iilvd-api.js":"AC5t","./plugins/router-plugin.js":"yBli","@zip.js/zip.js":"zGbL","./tooling/zip_tooling.js":"G3bZ","./tooling/events.js":"kB7J","./tooling/video_storage_manager.js":"wOUt","./tooling/observation_storage_manager.js":"k6OT","./templates/LeftSidePanel":"SId6","./templates/RightSidePanel":"bZ7G","./molecules/Card":"OSGx","./mixins/loader":"UPxk"}]},{},["rUmP"], null)
+},{"vue":"NtAQ","./plugins/*.js":"Xeh1","./pages/*.vue":"Ka75","./utils.js":"K0yk","./tooling/basics.bundle.js":"WnUT","./object.js":"qwrU","./tooling/video_tooling.js":"u92t","./database.js":"R5hg","./plugins/router-plugin.js":"yBli","@zip.js/zip.js":"zGbL","./tooling/zip_tooling.js":"G3bZ","./tooling/events.js":"kB7J","./tooling/video_storage_manager.js":"wOUt","./tooling/observation_storage_manager.js":"k6OT","./templates/LeftSidePanel":"SId6","./templates/RightSidePanel":"bZ7G","./molecules/Card":"OSGx","./mixins/loader":"UPxk"}]},{},["rUmP"], null)

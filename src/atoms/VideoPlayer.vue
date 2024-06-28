@@ -7,7 +7,6 @@
             row.message(v-if='videoPathOrUrl && !player')
                 | Video Loading...
         video(v-if='isLocalVideo(videoPathOrUrl)' ref="nativePlayer" controls style="width: 100%; z-index: 7;")
-            //- FIXME: this replace is a temp hack that will be removed
             source(:src="localVideoSource" type="video/mp4")
         vue-plyr(v-if='!isLocalVideo(videoPathOrUrl)' ref="vuePlyr" :style="`transition: all ease 0.6s; opacity: ${videoPathOrUrl && player ? 1 : 0}`" :key="`${Math.random()}`.replace('.','')")
             div.plyr__video-embed(v-if='!isLocalVideo(videoPathOrUrl)')

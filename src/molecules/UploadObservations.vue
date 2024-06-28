@@ -34,9 +34,9 @@
             ui-modal.modal(fj20485gh93oi53g ref="helpModal" title="Example Upload" transition="scale-up")
                 | If you're unsure about what to upload, try downloading the data first.
                 br
-                | The download is a a zip file with bunch of .yaml.tsv files that you can edit in Excel
+                | The download is a a zip file with bunch of .typed.tsv files that you can edit in Excel
                 br
-                | To upload new data, modify those .yaml.tsv, and then select all of them for upload.
+                | To upload new data, modify those .typed.tsv, and then select all of them for upload.
                 
         //- error message
         //- portal(to="modal-popups")
@@ -60,8 +60,8 @@
     
 </template>
 <script>
-const { humandReadableTime, download } = require("../utils.js")
-const { frontendDb } = require("../iilvd-api.js")
+import { humandReadableTime, download } from "../utils.js"
+import { frontendDb } from "../database.js"
 import * as observationTooling from "../observation_tooling.js"
 import * as yaml from 'yaml'
 import * as zipTools from "../tooling/zip_tooling.js"
@@ -130,9 +130,9 @@ export default {
             download(
                 "data.ible.zip",
                 await zipTools.createZipOfTextFiles({
-                    "observations.yaml.tsv": await observationTooling.observationsToCsv(entries),
-                    "videos.yaml.tsv": await videoTooling.videosToCsv(videos),
-                    "observers#videos.yaml.tsv": await videoTooling.videoObserverTableToCsv(videos),
+                    "observations.typed.tsv": await observationTooling.observationsToCsv(entries),
+                    "videos.typed.tsv": await videoTooling.videosToCsv(videos),
+                    "observers#videos.typed.tsv": await videoTooling.videoObserverTableToCsv(videos),
                 })
             )
         },
@@ -176,16 +176,16 @@ export default {
                 files[fileName] = fileText
             }
             
-            if (files["videos.yaml.tsv"]) {
-                videoTooling.videosCsvToActions(files["videos.yaml.tsv"]).then(frontendDb.executeVideoActions)
+            if (files["videos.typed.tsv"]) {
+                videoTooling.videosCsvToActions(files["videos.typed.tsv"]).then(frontendDb.executeVideoActions)
             }
             
-            if (files["observers#videos.yaml.tsv"]) {
-                videoTooling.videoObserverTableCsvToActions(files["observers#videos.yaml.tsv"]).then(frontendDb.executeVideoActions)
+            if (files["observers#videos.typed.tsv"]) {
+                videoTooling.videoObserverTableCsvToActions(files["observers#videos.typed.tsv"]).then(frontendDb.executeVideoActions)
             }
             
-            if (files["observations.yaml.tsv"]) {
-                observationTooling.observationsCsvToActions(files["observations.yaml.tsv"]).then(frontendDb.executeObservationActions)
+            if (files["observations.typed.tsv"]) {
+                observationTooling.observationsCsvToActions(files["observations.typed.tsv"]).then(frontendDb.executeObservationActions)
             }
             
             // 

@@ -592,3 +592,19 @@ export class DynamicInterval {
         return this
     }
 }
+
+const init = Symbol("init")
+export class JsonValueChangeChecker {
+    constructor() {
+        this.value = init
+    }
+    
+    changedSinceLastCheck(value) {
+        const newValue = JSON.stringify(value)
+        if (this.value !== newValue) {
+            this.value = newValue
+            return true
+        }
+        return false
+    }
+}
