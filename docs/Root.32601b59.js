@@ -8571,7 +8571,13 @@ Object.defineProperty(Vue.prototype, "$child", {
   }
 
 });
-},{"vue":"NtAQ"}],"YsuP":[function(require,module,exports) {
+},{"vue":"NtAQ"}],"jJO6":[function(require,module,exports) {
+
+},{}],"xmsx":[function(require,module,exports) {
+"use strict";
+
+require("css-baseline/css/3.css");
+},{"css-baseline/css/3.css":"jJO6"}],"YsuP":[function(require,module,exports) {
 /*!
  * good-vue v1.3.1
  * (c) 
@@ -25363,8 +25369,6 @@ if (typeof window !== 'undefined' && window.Vue) {
 /***/ })
 /******/ ]);
 });
-},{}],"yuYy":[function(require,module,exports) {
-
 },{}],"FJCK":[function(require,module,exports) {
 "use strict";
 
@@ -25377,7 +25381,7 @@ require("keen-ui/dist/keen-ui.css");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_keenUi.default);
-},{"vue":"NtAQ","keen-ui":"R6w2","keen-ui/dist/keen-ui.css":"yuYy"}],"yMH8":[function(require,module,exports) {
+},{"vue":"NtAQ","keen-ui":"R6w2","keen-ui/dist/keen-ui.css":"jJO6"}],"yMH8":[function(require,module,exports) {
 
  /*! 
   * portal-vue © Thorsten Lünborg, 2019 
@@ -26005,76 +26009,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 let Vue = require("vue").default;
 
 Vue.use(_portalVue.default);
-},{"vue":"NtAQ","portal-vue":"yMH8"}],"T1YL":[function(require,module,exports) {
-// TODO: fix potential issue of the "this" somehow not refering to the active component (maybe hotreload/debugging issue)
-// api
-//     rootHooks
-let Vue = require("vue").default;
-
-let rootHooksSymbol = Symbol("$rootHooks");
-Object.defineProperty(Vue.prototype, "$rootHooks", {
-  get() {
-    if (this[rootHooksSymbol] == undefined) {
-      this[rootHooksSymbol] = {};
-    }
-
-    return this[rootHooksSymbol];
-  },
-
-  set(value) {
-    this[rootHooksSymbol] = value;
-  }
-
-});
-const unwatcherSymbol = Symbol("unwatchers");
-Vue.mixin(module.exports = {
-  beforeCreate() {
-    const newOption = this.$options.rootHooks;
-
-    if (!newOption) {
-      return;
-    }
-
-    const vueStaticDestination = this.$rootHooks || this;
-
-    if (vueStaticDestination instanceof Object) {
-      if (newOption instanceof Function) {
-        Object.assign(vueStaticDestination, newOption.apply(this));
-      } else if (typeof newOption === 'object') {
-        Object.assign(vueStaticDestination, newOption);
-      }
-    }
-
-    this[unwatcherSymbol] = []; // 
-    // watchers
-    // 
-
-    const thisComponent = this;
-
-    if (this.$rootHooks.watch instanceof Object) {
-      for (let [eachKey, eachValue] of Object.entries(this.$rootHooks.watch)) {
-        if (eachValue.bind instanceof Function) {
-          eachValue = this.$rootHooks.watch[eachKey] = eachValue.bind(thisComponent);
-        }
-
-        this[unwatcherSymbol].push(this.$root.$watch(eachKey, eachValue, {
-          deep: true
-        }));
-      }
-    }
-  },
-
-  beforeDestroy() {
-    // call all of the unwatchers
-    if (this[unwatcherSymbol] instanceof Array) {
-      for (let each of this[unwatcherSymbol]) {
-        each();
-      }
-    }
-  }
-
-});
-},{"vue":"NtAQ"}],"mVwj":[function(require,module,exports) {
+},{"vue":"NtAQ","portal-vue":"yMH8"}],"mVwj":[function(require,module,exports) {
 // api
 // resolvables:
 //     [resolvable].promise
@@ -26269,6 +26204,75 @@ Vue.mixin(module.exports = {
           }
 
         });
+      }
+    }
+  }
+
+});
+},{"vue":"NtAQ"}],"T1YL":[function(require,module,exports) {
+// TODO: fix potential issue of the "this" somehow not refering to the active component (maybe hotreload/debugging issue)
+// api
+//     rootHooks
+let Vue = require("vue").default;
+
+let rootHooksSymbol = Symbol("$rootHooks");
+Object.defineProperty(Vue.prototype, "$rootHooks", {
+  get() {
+    if (this[rootHooksSymbol] == undefined) {
+      this[rootHooksSymbol] = {};
+    }
+
+    return this[rootHooksSymbol];
+  },
+
+  set(value) {
+    this[rootHooksSymbol] = value;
+  }
+
+});
+const unwatcherSymbol = Symbol("unwatchers");
+Vue.mixin(module.exports = {
+  beforeCreate() {
+    const newOption = this.$options.rootHooks;
+
+    if (!newOption) {
+      return;
+    }
+
+    const vueStaticDestination = this.$rootHooks || this;
+
+    if (vueStaticDestination instanceof Object) {
+      if (newOption instanceof Function) {
+        Object.assign(vueStaticDestination, newOption.apply(this));
+      } else if (typeof newOption === 'object') {
+        Object.assign(vueStaticDestination, newOption);
+      }
+    }
+
+    this[unwatcherSymbol] = []; // 
+    // watchers
+    // 
+
+    const thisComponent = this;
+
+    if (this.$rootHooks.watch instanceof Object) {
+      for (let [eachKey, eachValue] of Object.entries(this.$rootHooks.watch)) {
+        if (eachValue.bind instanceof Function) {
+          eachValue = this.$rootHooks.watch[eachKey] = eachValue.bind(thisComponent);
+        }
+
+        this[unwatcherSymbol].push(this.$root.$watch(eachKey, eachValue, {
+          deep: true
+        }));
+      }
+    }
+  },
+
+  beforeDestroy() {
+    // call all of the unwatchers
+    if (this[unwatcherSymbol] instanceof Array) {
+      for (let each of this[unwatcherSymbol]) {
+        each();
       }
     }
   }
@@ -29267,49 +29271,7 @@ var _vueToasted = _interopRequireDefault(require("vue-toasted"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_vueToasted.default);
-},{"vue":"NtAQ","vue-toasted":"oSP9"}],"aLvM":[function(require,module,exports) {
-// api
-//     this.withoutWatchers(source, callback)
-let Vue = require("vue").default; // TODO: potenial issue if a second source calls this before the first one ends (async)
-// TODO: issues with dynamically added watchers
-
-
-Vue.mixin(module.exports = {
-  methods: {
-    $withoutWatchers(source, callback) {
-      const watchers = this._watchers.map(watcher => ({
-        cb: watcher.cb,
-        sync: watcher.sync
-      })); // disable
-
-
-      for (let index in this._watchers) {
-        this._watchers[index] = Object.assign(this._watchers[index], {
-          cb: () => null,
-          sync: true
-        });
-      }
-
-      if (this.$withoutWatchers.showSource) {
-        console.group(`[${source}] suspended all watch functions`);
-      }
-
-      callback();
-
-      if (this.$withoutWatchers.showSource) {
-        console.groupEnd();
-        console.log(`[${source}] resumed all watch functions`);
-      } // enable
-
-
-      for (let index in this._watchers) {
-        this._watchers[index] = Object.assign(this._watchers[index], watchers[index]);
-      }
-    }
-
-  }
-});
-},{"vue":"NtAQ"}],"XpWL":[function(require,module,exports) {
+},{"vue":"NtAQ","vue-toasted":"oSP9"}],"XpWL":[function(require,module,exports) {
 // api
 //     windowListeners:{}
 let Vue = require("vue").default;
@@ -29367,6 +29329,48 @@ Vue.mixin(module.exports = {
     }
   }
 
+});
+},{"vue":"NtAQ"}],"aLvM":[function(require,module,exports) {
+// api
+//     this.withoutWatchers(source, callback)
+let Vue = require("vue").default; // TODO: potenial issue if a second source calls this before the first one ends (async)
+// TODO: issues with dynamically added watchers
+
+
+Vue.mixin(module.exports = {
+  methods: {
+    $withoutWatchers(source, callback) {
+      const watchers = this._watchers.map(watcher => ({
+        cb: watcher.cb,
+        sync: watcher.sync
+      })); // disable
+
+
+      for (let index in this._watchers) {
+        this._watchers[index] = Object.assign(this._watchers[index], {
+          cb: () => null,
+          sync: true
+        });
+      }
+
+      if (this.$withoutWatchers.showSource) {
+        console.group(`[${source}] suspended all watch functions`);
+      }
+
+      callback();
+
+      if (this.$withoutWatchers.showSource) {
+        console.groupEnd();
+        console.log(`[${source}] resumed all watch functions`);
+      } // enable
+
+
+      for (let index in this._watchers) {
+        this._watchers[index] = Object.assign(this._watchers[index], watchers[index]);
+      }
+    }
+
+  }
 });
 },{"vue":"NtAQ"}],"Y7uC":[function(require,module,exports) {
 // api
@@ -37440,27 +37444,23 @@ _vue.default.use(_vuePlyr.default, {
     invertTime: false
   }
 });
-},{"vue":"NtAQ","vue-plyr":"fgJi","vue-plyr/dist/vue-plyr.css":"yuYy"}],"xmsx":[function(require,module,exports) {
-"use strict";
-
-require("css-baseline/css/3.css");
-},{"css-baseline/css/3.css":"yuYy"}],"Xeh1":[function(require,module,exports) {
+},{"vue":"NtAQ","vue-plyr":"fgJi","vue-plyr/dist/vue-plyr.css":"jJO6"}],"Xeh1":[function(require,module,exports) {
 module.exports = {
   "child": require("./child.js"),
+  "css-baseline-plugin": require("./css-baseline-plugin.js"),
   "good-vue-plugin": require("./good-vue-plugin.js"),
   "keen-ui-plugin": require("./keen-ui-plugin.js"),
   "portal-plugin": require("./portal-plugin.js"),
-  "root-hooks-plugin": require("./root-hooks-plugin.js"),
   "resolvables-plugin": require("./resolvables-plugin.js"),
+  "root-hooks-plugin": require("./root-hooks-plugin.js"),
   "router-plugin": require("./router-plugin.js"),
   "vue-toasted-plugin": require("./vue-toasted-plugin.js"),
-  "without-watchers": require("./without-watchers.js"),
   "window-listeners-plugin": require("./window-listeners-plugin.js"),
+  "without-watchers": require("./without-watchers.js"),
   "workers-plugin": require("./workers-plugin.js"),
-  "youtube-player-plugin": require("./youtube-player-plugin.js"),
-  "css-baseline-plugin": require("./css-baseline-plugin.js")
+  "youtube-player-plugin": require("./youtube-player-plugin.js")
 };
-},{"./child.js":"HT0w","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./portal-plugin.js":"HMJZ","./root-hooks-plugin.js":"T1YL","./resolvables-plugin.js":"mVwj","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./without-watchers.js":"aLvM","./window-listeners-plugin.js":"XpWL","./workers-plugin.js":"Y7uC","./youtube-player-plugin.js":"mQXc","./css-baseline-plugin.js":"xmsx"}],"jqRt":[function(require,module,exports) {
+},{"./child.js":"HT0w","./css-baseline-plugin.js":"xmsx","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./portal-plugin.js":"HMJZ","./resolvables-plugin.js":"mVwj","./root-hooks-plugin.js":"T1YL","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./window-listeners-plugin.js":"XpWL","./without-watchers.js":"aLvM","./workers-plugin.js":"Y7uC","./youtube-player-plugin.js":"mQXc"}],"jqRt":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -60559,7 +60559,7 @@ class JsonValueChangeChecker {
   }
 
   changedSinceLastCheck(value) {
-    const newValue = JSON.stringify(value);
+    const newValue = JSON.stringify(value || null);
 
     if (this.value !== newValue) {
       this.value = newValue;
@@ -86548,7 +86548,7 @@ module.exports = {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.globalEvents = exports.once = exports.everyTime = exports.trigger = exports.Event = void 0;
+exports.Perspective = exports.globalEvents = exports.once = exports.everyTime = exports.trigger = exports.Event = void 0;
 
 class Event extends Set {}
 
@@ -86627,6 +86627,25 @@ const globalEvents = new Proxy({}, {
   getOwnPropertyDescriptor: Reflect.getOwnPropertyDescriptor
 });
 exports.globalEvents = globalEvents;
+
+const Perspective = name => {
+  return new Proxy({}, {
+    get(original, key, ...args) {
+      const actualEvent = globalEvents[key];
+
+      actualEvent.from = location => ({
+        triggerWith: (...args) => Promise.all([...actualEvent].map(each => each(`${name}-${location}`, ...args)))
+      });
+
+      actualEvent.triggerWith = (...args) => Promise.all([...actualEvent].map(each => each(name, ...args)));
+
+      return actualEvent;
+    }
+
+  });
+};
+
+exports.Perspective = Perspective;
 },{}],"iTmx":[function(require,module,exports) {
 "use strict";
 
@@ -103502,7 +103521,7 @@ var _object = require("../object.js");
 
 var _events = require("../tooling/events.js");
 
-var _utils = require("../utils.js");
+var utils = _interopRequireWildcard(require("../utils.js"));
 
 var videoTooling = _interopRequireWildcard(require("../tooling/video_tooling.js"));
 
@@ -103569,9 +103588,8 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 //
 //
 //
-let untracked = {
-  previousVideoInfoString: "null"
-};
+const videoInfoTracker = new utils.JsonValueChangeChecker();
+const globalEvents = (0, _events.Perspective)("CenterStage");
 var _default = {
   props: [],
   components: {
@@ -103587,6 +103605,7 @@ var _default = {
     JsonTree: require('vue-json-tree').default
   },
   data: () => ({
+    console,
     // it is annoying to have a `this.currentTime` when
     // the video core is inside of VideoPlayer
     // and the videoInterface is $root.videoInterface
@@ -103594,17 +103613,31 @@ var _default = {
     // is because the videoInterface is not tracked by Vue
     // so even if we updated it (@currentTimeChanged)
     // it wouldn't cause a re-render in downstream components
+    watchedSwitch: false,
+    labeledSwitch: false,
+    verifiedSwitch: false,
     currentTime: null,
-    videoInfo: {},
-    hasWatchedVideo: false,
-    hasLabeledVideo: false,
-    hasVerifiedVideo: false
+    videoInfo: {}
   }),
 
   mounted() {
+    window.CenterState = this; // debugging only
+    // get video info ASAP
+
+    const videoId = this.$root.videoInterface.videoId;
+
+    if (videoId) {
+      globalEvents.requestVideos.from("mounted").triggerWith([videoId]).then(async responses => {
+        let videos = responses[0];
+        let videoInfo = videos.find(each => each.videoId == this.$root.videoInterface.videoId);
+        this.videoInfo = videoTooling.enforceStandardVideoFormat(videoInfo);
+      });
+    } // save the video duration whenever its known
+
+
     this.$root.videoInterface.wheneverVideoIsLoaded(this.updateVideoFrontendData);
     const name = "CenterStage";
-    (0, _events.everyTime)(_events.globalEvents.videoStorageEntriesUpated).then(async (who, updatedVideos) => {
+    (0, _events.everyTime)(globalEvents.videoStorageEntriesUpated).then(async (who, updatedVideos) => {
       let newInfoForThisVideo = updatedVideos.find(each => each.videoId == this.$root.videoInterface.videoId);
       console.log(`${name} saw [videoStorageEntriesUpated] from ${who}: ${JSON.stringify(newInfoForThisVideo)}`);
 
@@ -103616,48 +103649,14 @@ var _default = {
 
   watch: {
     videoInfo() {
-      const videoInfoAsString = JSON.stringify(this.videoInfo);
-
-      if (untracked.previousVideoInfoString != videoInfoAsString) {
-        untracked.previousVideoInfoString = videoInfoAsString;
-        this.hasWatchedVideo = (this.videoInfo.usersFinishedWatchingAt || {})[this.$root.email] != null;
-        this.hasLabeledVideo = (this.videoInfo.usersFinishedLabelingAt || {})[this.$root.email] != null;
-        this.hasVerifiedVideo = (this.videoInfo.usersFinishedVerifyingAt || {})[this.$root.email] != null;
-        (0, _events.trigger)(_events.globalEvents.updateVideoRequest, "CenterStage", this.videoInfo);
-      }
-    },
-
-    hasWatchedVideo() {
-      if (this.hasWatchedVideo) {
-        this.videoInfo.usersFinishedWatchingAt[this.$root.email] = new Date().getTime();
-      } else {
-        delete this.videoInfo.usersFinishedWatchingAt[this.$root.email];
+      if (videoInfoTracker.changedSinceLastCheck(this.videoInfo) && this.videoInfo != null) {
+        console.debug(`[CenterStage] this.videoInfo changed to new:`, this.videoInfo);
+        globalEvents.updateVideoRequest.from("videoInfo").triggerWith(this.videoInfo);
       }
 
-      this.videoInfo = { ...this.videoInfo
-      };
-    },
-
-    hasLabeledVideo() {
-      if (this.hasLabeledVideo) {
-        this.videoInfo.usersFinishedLabelingAt[this.$root.email] = new Date().getTime();
-      } else {
-        delete this.videoInfo.usersFinishedLabelingAt[this.$root.email];
-      }
-
-      this.videoInfo = { ...this.videoInfo
-      };
-    },
-
-    hasVerifiedVideo() {
-      if (this.hasVerifiedVideo) {
-        this.videoInfo.usersFinishedVerifyingAt[this.$root.email] = new Date().getTime();
-      } else {
-        delete this.videoInfo.usersFinishedVerifyingAt[this.$root.email];
-      }
-
-      this.videoInfo = { ...this.videoInfo
-      };
+      this.watchedSwitch = !!(this.videoInfo?.usersFinishedWatchingAt || {})[this.$root.email];
+      this.labeledSwitch = !!(this.videoInfo?.usersFinishedLabelingAt || {})[this.$root.email];
+      this.verifiedSwitch = !!(this.videoInfo?.usersFinishedVerifyingAt || {})[this.$root.email];
     }
 
   },
@@ -103665,6 +103664,55 @@ var _default = {
   windowListeners: {},
   computed: {},
   methods: {
+    hasWatchedVideo() {
+      let hasWatchedVideo = !!this.videoInfo?.usersFinishedWatchingAt[this.$root.email];
+      console.debug(`this.videoInfo?.usersFinishedWatchingAt is:`, JSON.stringify(this.videoInfo?.usersFinishedWatchingAt));
+      console.debug(`this.videoInfo?.usersFinishedWatchingAt[this.$root.email] is:`, this.videoInfo?.usersFinishedWatchingAt[this.$root.email]);
+      console.debug(`hasWatchedVideo is:`, hasWatchedVideo);
+      return hasWatchedVideo;
+    },
+
+    hasLabeledVideo() {
+      return !!(this.videoInfo?.usersFinishedLabelingAt || {})[this.$root.email];
+    },
+
+    hasVerifiedVideo() {
+      return !!(this.videoInfo?.usersFinishedVerifyingAt || {})[this.$root.email];
+    },
+
+    clickedHasWatchedVideo() {
+      if (this.hasWatchedVideo()) {
+        this.videoInfo.usersFinishedWatchingAt[this.$root.email] = null;
+      } else {
+        this.videoInfo.usersFinishedWatchingAt[this.$root.email] = new Date().getTime();
+      }
+
+      this.videoInfo = { ...this.videoInfo
+      };
+    },
+
+    clickedHasLabeledVideo() {
+      if (this.hasLabeledVideo()) {
+        this.videoInfo.usersFinishedLabelingAt[this.$root.email] = null;
+      } else {
+        this.videoInfo.usersFinishedLabelingAt[this.$root.email] = new Date().getTime();
+      }
+
+      this.videoInfo = { ...this.videoInfo
+      };
+    },
+
+    clickedHasVerifiedVideo() {
+      if (this.hasVerifiedVideo()) {
+        this.videoInfo.usersFinishedVerifyingAt[this.$root.email] = null;
+      } else {
+        this.videoInfo.usersFinishedVerifyingAt[this.$root.email] = new Date().getTime();
+      }
+
+      this.videoInfo = { ...this.videoInfo
+      };
+    },
+
     get: _object.get,
 
     async updateVideoFrontendData() {
@@ -103683,7 +103731,7 @@ var _default = {
           newVideoInfo.path = this.$root.videoInterface.videoPath;
         }
 
-        await (0, _events.trigger)(_events.globalEvents.updateVideoRequest, "CenterStage", newVideoInfo);
+        await globalEvents.updateVideoRequest.from("updateVideoFrontendData").triggerWith(newVideoInfo);
       }
     },
 
@@ -103731,7 +103779,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($aaa267, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"width":"100%","height":"100vh","align-h":"center","align-v":"top","overflow":"auto","overflow-x":"hidden"}},[_c('WrappedTopSearch'),(!_vm.aVideoIsSelected())?_c('column',{attrs:{"width":"100%","height":"100vh","flex-shrink":"1","color":"gray"}},[_c('h5',[_vm._v("No Video Selected")])]):_vm._e(),_c('transition',{attrs:{"name":"fade"}},[_c('row',{directives:[{name:"show",rawName:"v-show",value:(_vm.aVideoIsSelected()),expression:"aVideoIsSelected()"}],staticClass:"center-stage",attrs:{"align-v":"top","align-h":"center","padding-top":"8rem"}},[_c('column',{staticClass:"main-container",attrs:{"flex-grow":"1","align-v":"top"}},[_c('row',{staticClass:"below-video-search",attrs:{"flex-basis":"100%","padding-top":"1rem","align-v":"top","opacity":_vm.aVideoIsSelected()? 1 : 0}},[_c('column',{staticClass:"video-width-sizer",attrs:{"align-v":"top"}},[_c('row',{attrs:{"width":"96%","position":"relative"}},[_c('VideoPlayer',{ref:"videoPlayer",attrs:{"videoPathOrUrl":_vm.$root.videoInterface.videoPath},on:{"videoLoaded":_vm.$root.videoInterface.tellRootTheVideoHasLoaded,"currentTimeChanged":_vm.updateCurrentTime}})],1),(_vm.$root.videoInterface.videoId)?_c('container',{staticClass:"below-video"},[_c('SideButton',{staticClass:"left-side-button",attrs:{"left":"left"},on:{"click":_vm.wrapperForSelectPreviousSegment}}),_c('SegmentDisplay',{ref:"segmentDisplay",attrs:{"currentTime":_vm.currentTime}}),_c('SideButton',{staticClass:"right-side-button",attrs:{"right":"right"},on:{"click":_vm.wrapperForSelectNextSegment}})],1):_vm._e(),_c('row',{attrs:{"width":"100%","padding":"2rem","align-v":"top"}},[_c('JsonTree',{staticClass:"json-tree",attrs:{"data":_vm.videoInfo||{}}}),_c('column',{attrs:{"flex-basis":"40%","width":"100%"}},[_c('UiSwitch',{model:{value:(_vm.hasWatchedVideo),callback:function ($$v) {_vm.hasWatchedVideo=$$v},expression:"hasWatchedVideo"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Watched Video")])]),_c('UiSwitch',{model:{value:(_vm.hasLabeledVideo),callback:function ($$v) {_vm.hasLabeledVideo=$$v},expression:"hasLabeledVideo"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Labeled Video")])]),_c('UiSwitch',{model:{value:(_vm.hasVerifiedVideo),callback:function ($$v) {_vm.hasVerifiedVideo=$$v},expression:"hasVerifiedVideo"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Verified Labels")])])],1)],1)],1)],1)],1),(_vm.$root.videoInterface.videoId)?_c('column',{staticClass:"side-container",attrs:{"align-v":"top","overflow":"visible","min-height":"50rem","width":"fit-content"}},[_c('ObservationEditor',{attrs:{"jumpSegment":_vm.wrapperForJumpSegment,"currentTime":_vm.currentTime}}),_c('InfoSection',{staticClass:"info-section",attrs:{"labelName":_vm.activeData().labelName,"videoId":_vm.activeData().videoId,"currentTime":_vm.currentTime}})],1):_vm._e()],1)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"width":"100%","height":"100vh","align-h":"center","align-v":"top","overflow":"auto","overflow-x":"hidden"}},[_c('WrappedTopSearch'),(!_vm.aVideoIsSelected())?_c('column',{attrs:{"width":"100%","height":"100vh","flex-shrink":"1","color":"gray"}},[_c('h5',[_vm._v("No Video Selected")])]):_vm._e(),_c('transition',{attrs:{"name":"fade"}},[_c('row',{directives:[{name:"show",rawName:"v-show",value:(_vm.aVideoIsSelected()),expression:"aVideoIsSelected()"}],staticClass:"center-stage",attrs:{"align-v":"top","align-h":"center","padding-top":"8rem"}},[_c('column',{staticClass:"main-container",attrs:{"flex-grow":"1","align-v":"top"}},[_c('row',{staticClass:"below-video-search",attrs:{"flex-basis":"100%","padding-top":"1rem","align-v":"top","opacity":_vm.aVideoIsSelected()? 1 : 0}},[_c('column',{staticClass:"video-width-sizer",attrs:{"align-v":"top"}},[_c('row',{attrs:{"width":"96%","position":"relative"}},[_c('VideoPlayer',{ref:"videoPlayer",attrs:{"videoPathOrUrl":_vm.$root.videoInterface.videoPath},on:{"videoLoaded":_vm.$root.videoInterface.tellRootTheVideoHasLoaded,"currentTimeChanged":_vm.updateCurrentTime}})],1),(_vm.$root.videoInterface.videoId)?_c('container',{staticClass:"below-video"},[_c('SideButton',{staticClass:"left-side-button",attrs:{"left":"left"},on:{"click":_vm.wrapperForSelectPreviousSegment}}),_c('SegmentDisplay',{ref:"segmentDisplay",attrs:{"currentTime":_vm.currentTime}}),_c('SideButton',{staticClass:"right-side-button",attrs:{"right":"right"},on:{"click":_vm.wrapperForSelectNextSegment}})],1):_vm._e(),_c('row',{attrs:{"width":"100%","padding":"2rem","align-v":"top"}},[_c('JsonTree',{staticClass:"json-tree",attrs:{"data":_vm.videoInfo||{}}}),(_vm.videoInfo&&_vm.videoInfo.videoId)?_c('column',{attrs:{"flex-basis":"40%","width":"100%"}},[_c('UiSwitch',{on:{"input":_vm.clickedHasWatchedVideo},model:{value:(_vm.watchedSwitch),callback:function ($$v) {_vm.watchedSwitch=$$v},expression:"watchedSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Watched Video")])]),_c('UiSwitch',{on:{"input":_vm.clickedHasLabeledVideo},model:{value:(_vm.labeledSwitch),callback:function ($$v) {_vm.labeledSwitch=$$v},expression:"labeledSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Labeled Video")])]),_c('UiSwitch',{on:{"input":_vm.clickedHasVerifiedVideo},model:{value:(_vm.verifiedSwitch),callback:function ($$v) {_vm.verifiedSwitch=$$v},expression:"verifiedSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Verified Labels")])])],1):_vm._e()],1)],1)],1)],1),(_vm.$root.videoInterface.videoId)?_c('column',{staticClass:"side-container",attrs:{"align-v":"top","overflow":"visible","min-height":"50rem","width":"fit-content"}},[_c('ObservationEditor',{attrs:{"jumpSegment":_vm.wrapperForJumpSegment,"currentTime":_vm.currentTime}}),_c('InfoSection',{staticClass:"info-section",attrs:{"labelName":_vm.activeData().labelName,"videoId":_vm.activeData().videoId,"currentTime":_vm.currentTime}})],1):_vm._e()],1)],1)],1)}
 var staticRenderFns = []
 
           return {
@@ -104612,6 +104660,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 // listens to:
 //     globalEvents.updateVideoRequest
 //     globalEvents.requestVideosToList
+//     globalEvents.requestVideos
 // triggers:
 //     globalEvents.videoStorageEntriesUpated
 const name = "videoStorageManager";
@@ -104632,10 +104681,13 @@ const name = "videoStorageManager";
   for (const [eachOld, eachNew] of basics.zip(oldData, updatedVideos)) {
     for (const [key, value] of Object.entries(eachNew)) {
       if (!eachOld || JSON.stringify(eachOld[key]) != JSON.stringify(value)) {
+        console.debug(`oldData is:`, JSON.stringify(eachOld));
+        console.debug(`newData is:`, JSON.stringify(eachNew));
         const mergedData = basics.merge({
           oldData: eachOld,
           newData: eachNew
         });
+        console.debug(`mergedData is:`, JSON.stringify(mergedData));
         actuallyUpdatedVideos.push(mergedData);
         break;
       }
@@ -104651,6 +104703,9 @@ const name = "videoStorageManager";
 
 (0, _events.everyTime)(_events.globalEvents.requestVideosToList).then(who => {
   return _database.frontendDb.getAllVideos();
+});
+(0, _events.everyTime)(_events.globalEvents.requestVideos).then((who, videoIds) => {
+  return _database.frontendDb.getVideos(videoIds);
 });
 },{"../database.js":"R5hg","./events.js":"kB7J","./basics.bundle.js":"WnUT"}],"k6OT":[function(require,module,exports) {
 "use strict";

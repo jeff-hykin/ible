@@ -52,14 +52,15 @@ export const globalEvents = new Proxy({}, {
     getOwnPropertyDescriptor: Reflect.getOwnPropertyDescriptor,
 })
 
-// TODO: I need to rethink this helper:
-// export const Responder = (name, events)=>{
-//     const namedTrigger = async (event, ...args)=>Promise.all([...event].map(each=>each(name, ...args)))
-//     for (const [globalEventName, callback] of Object.entries(events)) {
-//         everyTime(globalEvents[globalEventName]).then((who, ...args)=>{
-//             console.log(`${name} saw [${globalEventName}] from ${who}`)
-//             return callback(...args)
-//         })
-//     }
-//     return { trigger }
-// }
+export const Perspective = (name)=>{
+    return new Proxy({}, {
+        get(original, key, ...args) {
+            const actualEvent = globalEvents[key]
+            actualEvent.from = (location)=>({
+                triggerWith: (...args)=>Promise.all([...actualEvent].map(each=>each(`${name}-${location}`, ...args)))
+            })
+            actualEvent.triggerWith = (...args)=>Promise.all([...actualEvent].map(each=>each(name, ...args)))
+            return actualEvent
+        },
+    })
+}

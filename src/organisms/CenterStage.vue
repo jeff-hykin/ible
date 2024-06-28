@@ -34,14 +34,14 @@
                                 SideButton.right-side-button(right @click='wrapperForSelectNextSegment')
                             row(width="100%" padding="2rem" align-v="top")
                                 JsonTree.json-tree(:data="videoInfo||{}")
-                                column(flex-basis="40%" width="100%")
-                                    UiSwitch(v-model="hasWatchedVideo")
+                                column(v-if="videoInfo&&videoInfo.videoId" flex-basis="40%" width="100%")
+                                    UiSwitch(v-model="watchedSwitch" @input="clickedHasWatchedVideo")
                                         div(style="width: 10rem")
                                             | Watched Video
-                                    UiSwitch(v-model="hasLabeledVideo")
+                                    UiSwitch(v-model="labeledSwitch" @input="clickedHasLabeledVideo")
                                         div(style="width: 10rem")
                                             | Labeled Video
-                                    UiSwitch(v-model="hasVerifiedVideo")
+                                    UiSwitch(v-model="verifiedSwitch" @input="clickedHasVerifiedVideo")
                                         div(style="width: 10rem")
                                             | Verified Labels
                 column.side-container(v-if="$root.videoInterface.videoId" align-v="top" overflow="visible" min-height="50rem" width="fit-content")
@@ -58,12 +58,14 @@
 <script>
 import { frontendDb } from '../database.js'
 import { get } from "../object.js"
-import { Responder } from '../tooling/events.js'
+import { Perspective, everyTime } from '../tooling/events.js'
 import { deferredPromise } from '../utils.js'
+import * as utils from '../utils.js'
 import * as videoTooling from '../tooling/video_tooling.js'
 import * as basics from "../tooling/basics.bundle.js"
 
 const videoInfoTracker = new utils.JsonValueChangeChecker()
+const globalEvents = Perspective("CenterStage")
 export default {
     props: [],
     components: {
@@ -79,6 +81,7 @@ export default {
         JsonTree: require('vue-json-tree').default,
     },
     data: ()=>({
+        console,
         // it is annoying to have a `this.currentTime` when
         // the video core is inside of VideoPlayer
         // and the videoInterface is $root.videoInterface
@@ -86,13 +89,24 @@ export default {
         // is because the videoInterface is not tracked by Vue
         // so even if we updated it (@currentTimeChanged)
         // it wouldn't cause a re-render in downstream components
+        watchedSwitch: false,
+        labeledSwitch: false,
+        verifiedSwitch: false,
         currentTime: null,
         videoInfo: {},
-        hasWatchedVideo: false,
-        hasLabeledVideo: false,
-        hasVerifiedVideo: false,
     }),
     mounted() {
+        window.CenterState = this // debugging only
+        // get video info ASAP
+        const videoId = this.$root.videoInterface.videoId
+        if (videoId) {
+            globalEvents.requestVideos.from("mounted").triggerWith([videoId]).then(async (responses)=>{
+                let videos = responses[0]
+                let videoInfo = videos.find(each=>each.videoId == this.$root.videoInterface.videoId)
+                this.videoInfo = videoTooling.enforceStandardVideoFormat(videoInfo)
+            })
+        }
+        // save the video duration whenever its known
         this.$root.videoInterface.wheneverVideoIsLoaded(this.updateVideoFrontendData)
         
         const name = "CenterStage"
@@ -106,36 +120,13 @@ export default {
     },
     watch: {
         videoInfo() {
-            if (videoInfoTracker.changedSinceLastCheck(this.videoInfo)) {
-                this.hasWatchedVideo  = (this.videoInfo.usersFinishedWatchingAt||{})[this.$root.email] != null
-                this.hasLabeledVideo  = (this.videoInfo.usersFinishedLabelingAt||{})[this.$root.email] != null
-                this.hasVerifiedVideo = (this.videoInfo.usersFinishedVerifyingAt||{})[this.$root.email] != null
-                trigger(globalEvents.updateVideoRequest, "CenterStage", this.videoInfo)
+            if (videoInfoTracker.changedSinceLastCheck(this.videoInfo) && this.videoInfo != null) {
+                console.debug(`[CenterStage] this.videoInfo changed to new:`,this.videoInfo)
+                globalEvents.updateVideoRequest.from("videoInfo").triggerWith(this.videoInfo)
             }
-        },
-        hasWatchedVideo() {
-            if (this.hasWatchedVideo) {
-                this.videoInfo.usersFinishedWatchingAt[this.$root.email] = new Date().getTime()
-            } else {
-                delete this.videoInfo.usersFinishedWatchingAt[this.$root.email]
-            }
-            this.videoInfo = { ...this.videoInfo }
-        },
-        hasLabeledVideo() {
-            if (this.hasLabeledVideo) {
-                this.videoInfo.usersFinishedLabelingAt[this.$root.email] = new Date().getTime()
-            } else {
-                delete this.videoInfo.usersFinishedLabelingAt[this.$root.email]
-            }
-            this.videoInfo = { ...this.videoInfo }
-        },
-        hasVerifiedVideo() {
-            if (this.hasVerifiedVideo) {
-                this.videoInfo.usersFinishedVerifyingAt[this.$root.email] = new Date().getTime()
-            } else {
-                delete this.videoInfo.usersFinishedVerifyingAt[this.$root.email]
-            }
-            this.videoInfo = { ...this.videoInfo }
+            this.watchedSwitch = !!(this.videoInfo?.usersFinishedWatchingAt||{})[this.$root.email]
+            this.labeledSwitch = !!(this.videoInfo?.usersFinishedLabelingAt||{})[this.$root.email]
+            this.verifiedSwitch =  !!(this.videoInfo?.usersFinishedVerifyingAt||{})[this.$root.email]
         },
     },
     rootHooks: {
@@ -145,6 +136,43 @@ export default {
     computed: {
     },
     methods: {
+        hasWatchedVideo() {
+            let hasWatchedVideo = !!this.videoInfo?.usersFinishedWatchingAt[this.$root.email]
+            console.debug(`this.videoInfo?.usersFinishedWatchingAt is:`,JSON.stringify(this.videoInfo?.usersFinishedWatchingAt))
+            console.debug(`this.videoInfo?.usersFinishedWatchingAt[this.$root.email] is:`,this.videoInfo?.usersFinishedWatchingAt[this.$root.email])
+            console.debug(`hasWatchedVideo is:`,hasWatchedVideo)
+            return hasWatchedVideo
+        },
+        hasLabeledVideo() {
+            return !!(this.videoInfo?.usersFinishedLabelingAt||{})[this.$root.email]
+        },
+        hasVerifiedVideo() {
+            return !!(this.videoInfo?.usersFinishedVerifyingAt||{})[this.$root.email]
+        },
+        clickedHasWatchedVideo() {
+            if (this.hasWatchedVideo()) {
+                this.videoInfo.usersFinishedWatchingAt[this.$root.email] = null
+            } else {
+                this.videoInfo.usersFinishedWatchingAt[this.$root.email] = new Date().getTime()
+            }
+            this.videoInfo = { ...this.videoInfo }
+        },
+        clickedHasLabeledVideo() {
+            if (this.hasLabeledVideo()) {
+                this.videoInfo.usersFinishedLabelingAt[this.$root.email] = null
+            } else {
+                this.videoInfo.usersFinishedLabelingAt[this.$root.email] = new Date().getTime()
+            }
+            this.videoInfo = { ...this.videoInfo }
+        },
+        clickedHasVerifiedVideo() {
+            if (this.hasVerifiedVideo()) {
+                this.videoInfo.usersFinishedVerifyingAt[this.$root.email] = null
+            } else {
+                this.videoInfo.usersFinishedVerifyingAt[this.$root.email] = new Date().getTime()
+            }
+            this.videoInfo = { ...this.videoInfo }
+        },
         get,
         async updateVideoFrontendData() {
             const player = this.$root.videoInterface.player
@@ -157,7 +185,7 @@ export default {
                 if (this.$root.videoInterface.videoPath) {
                     newVideoInfo.path = this.$root.videoInterface.videoPath
                 }
-                await trigger(globalEvents.updateVideoRequest, "CenterStage", newVideoInfo)
+                await globalEvents.updateVideoRequest.from("updateVideoFrontendData").triggerWith(newVideoInfo)
             }
         },
         aVideoIsSelected() {

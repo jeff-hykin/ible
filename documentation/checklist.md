@@ -70,6 +70,7 @@ Major Chonological Changes:
     - instead make the csv tooling be smart enough to write list values out as unquoted comma-separated, and make the csv reader detect it and convert to a list
     - change the =thing to (thing) for computed values
 - finish writing dev_notes.md
+- add a way to selectively delete video aspects (the problem with "watched")
 - check that video data on download is nulled-out for empty strings
 - save "latest video action"
 - change the CSV export of confirmed/rejected to be comma-separated

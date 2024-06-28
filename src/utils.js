@@ -600,7 +600,7 @@ export class JsonValueChangeChecker {
     }
     
     changedSinceLastCheck(value) {
-        const newValue = JSON.stringify(value)
+        const newValue = JSON.stringify(value||null)
         if (this.value !== newValue) {
             this.value = newValue
             return true
