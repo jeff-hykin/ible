@@ -58,12 +58,12 @@
 <script>
 import { frontendDb } from '../database.js'
 import { get } from "../object.js"
-import { trigger, globalEvents, everyTime } from '../tooling/events.js'
+import { Responder } from '../tooling/events.js'
 import { deferredPromise } from '../utils.js'
 import * as videoTooling from '../tooling/video_tooling.js'
 import * as basics from "../tooling/basics.bundle.js"
 
-let untracked = { previousVideoInfoString: "null" }
+const videoInfoTracker = new utils.JsonValueChangeChecker()
 export default {
     props: [],
     components: {
@@ -106,10 +106,7 @@ export default {
     },
     watch: {
         videoInfo() {
-            const videoInfoAsString = JSON.stringify(this.videoInfo)
-            if (untracked.previousVideoInfoString != videoInfoAsString) {
-                untracked.previousVideoInfoString = videoInfoAsString
-                
+            if (videoInfoTracker.changedSinceLastCheck(this.videoInfo)) {
                 this.hasWatchedVideo  = (this.videoInfo.usersFinishedWatchingAt||{})[this.$root.email] != null
                 this.hasLabeledVideo  = (this.videoInfo.usersFinishedLabelingAt||{})[this.$root.email] != null
                 this.hasVerifiedVideo = (this.videoInfo.usersFinishedVerifyingAt||{})[this.$root.email] != null
