@@ -331,10 +331,10 @@ export default {
             if (eventObj.key == "s" && this.editing) {
                 this.onSaveEdit()
             }
-            if (eventObj.key == "c" && !this.editing && !noSegment()) {
+            if (eventObj.key == "c" && !this.editing && !this.noSegment()) {
                 this.toggleConfirm()
             }
-            if ((eventObj.key == "x") && !this.editing && !noSegment()) {
+            if ((eventObj.key == "x") && !this.editing && !this.noSegment()) {
                 this.toggleReject()
             }
         }

@@ -62,14 +62,18 @@ Major Chonological Changes:
 - DONE: change upload help button
 - DONE: fix the download of `observers#videos`
 - DONE: check all FIXME's
-- figure out why video switches get flipped on reload
-- figure out why video.usersFinishedWatchingAt is not preserved on reload (or why not loaded in first place)
-- consider custom observer#video interactions
+- DONE: figure out why video switches get flipped on reload
+- DONE: figure out why video.usersFinishedWatchingAt is not preserved on reload (or why not loaded in first place)
 - check upload handling of comma-separated lists
+- add reject/confirm to extra data area
+- fix upload action of delete
+- fix upload action of overwrite
+- consider custom observer#video interactions
+- fix download of "(latestVideoAction)"
 - CSV quoting and such
-    - stop converting some lists to comma-separated strings since those strings are now quoted
-    - instead make the csv tooling be smart enough to write list values out as unquoted comma-separated, and make the csv reader detect it and convert to a list
-    - change the =thing to (thing) for computed values
+    - DONE: stop converting some lists to comma-separated strings since those strings are now quoted
+    - DONE: instead make the csv tooling be smart enough to write list values out as unquoted comma-separated, and make the csv reader detect it and convert to a list
+    - DONE: change the =thing to (thing) for computed values
 - finish writing dev_notes.md
 - add a way to selectively delete video aspects (the problem with "watched")
 - check that video data on download is nulled-out for empty strings

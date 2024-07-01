@@ -162,14 +162,14 @@ export const currentFixedSizeOfYouTubeVideoId = 11
                 "path": each.path,
                 "durationInSeconds": each.durationInSeconds,
                 "comment": each.comment,
-                "=latestVideoAction": latestVideoAction,
-                "=numberOfObservations": each.numberOfObservations,
-                "=numberOfWatchers": usersWhoFinishedWatching.length,
-                "=numberOfLabelers": usersWhoFinishedLabeling.length,
-                "=numberOfVerifiers": usersWhoFinishedVerifying.length,
-                "=usersWhoFinishedWatching": usersWhoFinishedWatching,
-                "=usersWhoFinishedLabeling": usersWhoFinishedLabeling,
-                "=usersWhoFinishedVerifying": usersWhoFinishedVerifying,
+                "(latestVideoAction)": latestVideoAction,
+                "(numberOfObservations)": each.numberOfObservations,
+                "(numberOfWatchers)": usersWhoFinishedWatching.length,
+                "(numberOfLabelers)": usersWhoFinishedLabeling.length,
+                "(numberOfVerifiers)": usersWhoFinishedVerifying.length,
+                "(usersWhoFinishedWatching)": usersWhoFinishedWatching,
+                "(usersWhoFinishedLabeling)": usersWhoFinishedLabeling,
+                "(usersWhoFinishedVerifying)": usersWhoFinishedVerifying,
             })
             // flatten out customInfo
             for (const [key, value] of Object.entries(each.customInfo||{})) {
@@ -243,31 +243,37 @@ export const currentFixedSizeOfYouTubeVideoId = 11
             const usersFinishedVerifying = each.usersFinishedVerifyingAt||{}
             
             for (const [username, timeFinished] of Object.entries(usersFinishedWatching)) {
-                videoObserverRows.push({
-                    "uploadAction": "update",
-                    "videoId": each.videoId,
-                    "observer": username,
-                    "observerAction": "watch",
-                    "timeFinished": new Date(timeFinished),
-                })
+                if (timeFinished != null) {
+                    videoObserverRows.push({
+                        "uploadAction": "update",
+                        "videoId": each.videoId,
+                        "observer": username,
+                        "observerAction": "watch",
+                        "timeFinished": new Date(timeFinished),
+                    })
+                }
             }
             for (const [username, timeFinished] of Object.entries(usersFinishedLabeling)) {
-                videoObserverRows.push({
-                    "uploadAction": "update",
-                    "videoId": each.videoId,
-                    "observer": username,
-                    "observerAction": "label",
-                    "timeFinished": new Date(timeFinished),
-                })
+                if (timeFinished != null) {
+                    videoObserverRows.push({
+                        "uploadAction": "update",
+                        "videoId": each.videoId,
+                        "observer": username,
+                        "observerAction": "label",
+                        "timeFinished": new Date(timeFinished),
+                    })
+                }
             }
             for (const [username, timeFinished] of Object.entries(usersFinishedVerifying)) {
-                videoObserverRows.push({
-                    "uploadAction": "update",
-                    "videoId": each.videoId,
-                    "observer": username,
-                    "observerAction": "verify",
-                    "timeFinished": new Date(timeFinished),
-                })
+                if (timeFinished != null) {
+                    videoObserverRows.push({
+                        "uploadAction": "update",
+                        "videoId": each.videoId,
+                        "observer": username,
+                        "observerAction": "verify",
+                        "timeFinished": new Date(timeFinished),
+                    })
+                }
             }
         }
         

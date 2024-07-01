@@ -5,7 +5,7 @@
             h5
                 | Observations
         transition(name="fade")
-            row.segment-container(align-h="space-between" position="relative" :height="`${segmentsInfo.maxLevel*2.2}rem`" :min-height="segmentsInfo.organizedSegments.length <= 0 ? '10rem' : 0")
+            row.segment-container(align-h="space-between" position="relative" :height="`${segmentsInfo.maxLevel*2.2}rem`" :min-height="segmentsInfo.organizedSegments.length <= 0 ? '13rem' : 0")
                 column(
                     v-if="segmentsInfo.organizedSegments.length <= 0"
                     font-size="14pt"
@@ -20,6 +20,7 @@
                 )
                     | No observations with given filters
                     br
+                    br
                     span(style="margin-bottom: -1rem;")
                         | (<u>press N</u> to create an observation at the current time)
                     br
@@ -30,10 +31,13 @@
                         | (<u>press ctrl+S</u> to save the observation)
                     br
                     br
+                    br
                     span(style="margin-bottom: -1rem;")
                         | (<u>press C</u> to confirm an observation)
+                    br
                     span(style="margin-bottom: -1rem;")
                         | (<u>press X</u> to reject an observation)
+                    br
                 row.segment(
                     v-if="segmentsInfo.organizedSegments.length > 0"
                     v-for="(eachSegment, index) in segmentsInfo.organizedSegments"

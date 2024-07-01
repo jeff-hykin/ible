@@ -54,6 +54,84 @@ export const rowify = (data, { defaultHeaders=[], delimiter="\t" }={}) => {
     return rows
 }
 
+const typeEscape = (each)=>{
+    // null/undefined become empty Excel cell
+    if (each == null) {
+        return ""
+    }
+    // empty strings become Excel cell containing two quotes
+    if (each === "") {
+        return '""'
+    }
+    if (each instanceof Array && each.length > 0) {
+        const yamledEach = each.map(typeEscape)
+        const noneHaveCommasOrQuotes = !yamledEach.some(each=>each.length>0&&each.includes(`,`)||each.includes(` `)||each.includes(`\n`)||each.includes(`\t`)||each.includes(`"`)||each.includes(`'`))
+        if (noneHaveCommasOrQuotes) {
+            return yamledEach.join(",")+"," // trailing comma is REQUIRED otherwise we don't know if its a  list with 1 item or just the item itself
+        }
+    }
+    
+    // non-strings just get yamlified
+    // (TODO: consider having strings-with-commas getting quoted, and then some lists of strings/numbers getting converted to a comma-separated string)
+    if (typeof each != "string") {
+        let newString = yaml.stringify(each)
+        if (newString[newString.length-1] == "\n") {
+            newString = newString.slice(0,-1)
+        }
+        return newString
+    }
+    // if its a string that wouldn't be quoted by yaml, but should be reserved for special things (like date), then quote it manually
+    if (matchesReservedPattern(each)) {
+        return JSON.stringify(each)
+    }
+    const asString = yaml.stringify(each)
+    if (asString.startsWith('"') && asString.endsWith('"\n') || asString.startsWith("'") && asString.endsWith("'\n")) {
+        return asString.slice(0,-1)
+    } else {
+        each = `${each}`
+        // some of these will convert to `[Object object]`
+        // however the check below still will handle it correctly
+        // even if the object somehow converts to something that is the same 
+        // length as `[Object object]`.length+1
+        if (each.length+1 == asString.length && asString.endsWith("\n") && !each.endsWith("\n")) {
+            return asString.slice(0,-1)
+        }
+        return asString
+    }
+}
+
+const typeResolve = (each)=>{
+    if (matchesIso8601Date(each)) {
+        return new Date(each)
+    }
+    if (!each.startsWith('[') && each.includes(',')) {
+        let shortHandListMaybe
+        try {
+            shortHandListMaybe = yaml.parse(`[${each}]`)
+        } catch (error) {
+        }
+    
+        if (shortHandListMaybe instanceof Array) {
+            const notActuallyWhatWeWant = shortHandListMaybe.length == 1 && shortHandListMaybe.includes(",")
+            if (!notActuallyWhatWeWant) {
+                return shortHandListMaybe.map(each=>{
+                    if (typeof each == 'string' && matchesIso8601Date(each)) {
+                        return new Date(each)
+                    } else {
+                        return each
+                    }
+                })
+            }
+        }
+    }
+    // if (each.match(/^([^'"\n\t]*,)+[^'"\n\t]*$/)) {
+    //     // on the way out, spaces are not allowed
+    //     // on the way in, spaces will get trimmed
+    //     return each.split(",").map(each=>each.trim()).map(typeResolve)
+    // }
+    return yaml.parse(each)
+}
+
 export function convertToCsv(data, { defaultHeaders=[], delimiter="\t" }={}) {
     let rows = rowify(data, { defaultHeaders })
     // this is a way of getting around that CSV treats null and undefined as empty strings
@@ -61,41 +139,7 @@ export function convertToCsv(data, { defaultHeaders=[], delimiter="\t" }={}) {
         let index = -1
         for (const each of eachRow) {
             index++
-            // null/undefined become empty Excel cell
-            if (each == null) {
-                eachRow[index] =  ""
-                continue
-            }
-            // empty strings become Excel cell containing two quotes
-            if (each === "") {
-                eachRow[index] =  '""'
-                continue
-            }
-            // non-strings just get yamlified
-            // (TODO: consider having strings-with-commas getting quoted, and then some lists of strings/numbers getting converted to a comma-separated string)
-            if (typeof each != "string") {
-                let newString = yaml.stringify(each)
-                if (newString[newString.length-1] == "\n") {
-                    newString = newString.slice(0,-1)
-                }
-                eachRow[index] = newString
-                continue
-            }
-            // if its a string that wouldn't be quoted by yaml, but should be reserved for special things (like date), then quote it manually
-            if (matchesReservedPattern(each)) {
-                eachRow[index] = JSON.stringify(each)
-                continue
-            }
-            const asString = yaml.stringify(each) 
-            if (asString.startsWith('"') && asString.endsWith('"\n')) {
-                eachRow[index] = asString.slice(0,-1)
-            } else {
-                eachRow[index] = asString
-                // don't have a trailing newline if its not needed (it IS needed for block-strings AFAIK)
-                if (eachRow[index].length-1 == each?.length && eachRow[index].slice(-1)[0] === "\n") {
-                    eachRow[index] = each
-                }
-            }
+            eachRow[index] = typeEscape(each)
         }
     }
     return new Promise((resolve, reject) => {
@@ -122,11 +166,7 @@ export async function parseCsv(csvString, { delimiter="\t" }={}) {
         for (const each of eachRow) {
             index++
             try {
-                if (matchesIso8601Date(each)) {
-                    eachRow[index] = new Date(each)
-                } else {
-                    eachRow[index] = yaml.parse(each)
-                }
+                eachRow[index] = typeResolve(each)
             } catch (error) {
                 eachRow[index] = each
             }
