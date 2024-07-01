@@ -177,13 +177,17 @@ export default {
             const newVideoInfo = { videoId }
             if (player.duration || this.$root.videoInterface.videoPath) {
                 if (player.duration) {
-                    newVideoInfo.durationInSeconds = player.duration
+                        newVideoInfo.durationInSeconds = player.duration
                 }
                 if (this.$root.videoInterface.videoPath) {
                     newVideoInfo.path = this.$root.videoInterface.videoPath
                 }
-                await globalEvents.updateVideoRequest.from("updateVideoFrontendData").triggerWith(newVideoInfo)
+                Object.assign(
+                    newVideoInfo,
+                    videoTooling.enforceStandardVideoFormat(newVideoInfo),
+                )
             }
+            this.videoInfo = newVideoInfo
         },
         aVideoIsSelected() {
             return this.$root.videoInterface.aVideoIsSelected
