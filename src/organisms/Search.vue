@@ -241,11 +241,6 @@ export default {
             if (!this.$root.filterAndSort.validation.includes("Confirmed")    ) { where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
             if (!this.$root.filterAndSort.validation.includes("Rejected")     ) { where.push({ valueOf: ['rejectedBySomeone'                ], isNot:                  true                          , }) }
             
-            // TODO: I don't remember why I commented these out
-            // if (!this.$root.filterAndSort.validation.includes("Unchecked")    ) { where.push({ valueOf: ['rejectedBySomeone'                ], is:                     false                         , }) 
-            //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], is:                     false                         , }) }
-            // if (!this.$root.filterAndSort.validation.includes("Disagreement") ) { where.push({ valueOf: ['rejectedBySomeone'                ], isNot:                  true                          , }) 
-            //                                                                       where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
             observationEntries = await frontendDb.getObservations({where, returnObject: true})
             
             // ensure the observationId is the ID

@@ -814,7 +814,6 @@ const frontendDb = {
         return indexDb.deletes([["observations", uuidOfSelectedSegment]])
     },
     async getVideoById(videoId) {
-        // TODO: clean this up after changing data structure
         return indexDb.get(["videos", videoId, ])
     },
     async updateVideos(videos) {

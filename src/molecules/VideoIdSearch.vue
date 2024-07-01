@@ -19,7 +19,6 @@ export default {
     },
     data: ()=>({
         searchTerm: null,
-        // TODO: remove or add back suggestions feature
         suggestions: [],
         notificationAlreadyShown: false,
     }),

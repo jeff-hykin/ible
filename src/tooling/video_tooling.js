@@ -162,7 +162,7 @@ export const currentFixedSizeOfYouTubeVideoId = 11
                 "path": each.path,
                 "durationInSeconds": each.durationInSeconds,
                 "comment": each.comment,
-                "(latestVideoAction)": latestVideoAction,
+                // "(latestVideoAction)": latestVideoAction,
                 "(numberOfObservations)": each.numberOfObservations,
                 "(numberOfWatchers)": usersWhoFinishedWatching.length,
                 "(numberOfLabelers)": usersWhoFinishedLabeling.length,

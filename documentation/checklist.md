@@ -64,24 +64,25 @@ Major Chonological Changes:
 - DONE: check all FIXME's
 - DONE: figure out why video switches get flipped on reload
 - DONE: figure out why video.usersFinishedWatchingAt is not preserved on reload (or why not loaded in first place)
-- check upload handling of comma-separated lists
-- add reject/confirm to extra data area
-- fix upload action of delete
-- fix upload action of overwrite
-- consider custom observer#video interactions
-- fix download of "(latestVideoAction)"
-- CSV quoting and such
+- DONE: check all the TODO's etc
+- DONE: CSV quoting and such
     - DONE: stop converting some lists to comma-separated strings since those strings are now quoted
     - DONE: instead make the csv tooling be smart enough to write list values out as unquoted comma-separated, and make the csv reader detect it and convert to a list
     - DONE: change the =thing to (thing) for computed values
-- finish writing dev_notes.md
-- add a way to selectively delete video aspects (the problem with "watched")
-- check that video data on download is nulled-out for empty strings
-- save "latest video action"
-- change the CSV export of confirmed/rejected to be comma-separated
+    - DONE:change the CSV export of confirmed/rejected to be comma-separated
+- upload checks:
+    - check upload handling of comma-separated lists
+    - add reject/confirm to extra data area
+    - fix upload action of delete
+        - add a way to selectively delete video aspects (the problem with "watched")
+    - fix upload action of overwrite
+- fixup NPM package, check on windows
+    - do something about the dependencies maybe just find a way to embed them if finding them is too hard
+- consider custom observer#video interactions
 - ensure video ID's match a regex and dont include invalid-on-windows-filesystem characters
-- check all the TODO's etc
 - test test test
+- finish writing dev_notes.md
+- check all the TODO's again
 
 - add a readme to the downloaded zip explaining the different fields and available uploadActions
 - get cli working on windows
