@@ -327,10 +327,16 @@ export default {
             if (eventObj.key == "m" && this.currentTime != null) {
                 this.observationData.endTime = this.currentTime.toFixed(3)
             }
+            // NOTE: ctrl+s save is handled in "preventBubbling"
             if (eventObj.key == "s" && this.editing) {
                 this.onSaveEdit()
             }
-            // NOTE: ctrl+s save is handled in "preventBubbling"
+            if (eventObj.key == "c" && !this.editing && !noSegment()) {
+                this.toggleConfirm()
+            }
+            if ((eventObj.key == "x") && !this.editing && !noSegment()) {
+                this.toggleReject()
+            }
         }
     },
     methods: {

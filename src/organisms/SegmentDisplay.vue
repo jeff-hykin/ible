@@ -28,6 +28,12 @@
                     br
                     span(style="margin-bottom: -1rem;")
                         | (<u>press ctrl+S</u> to save the observation)
+                    br
+                    br
+                    span(style="margin-bottom: -1rem;")
+                        | (<u>press C</u> to confirm an observation)
+                    span(style="margin-bottom: -1rem;")
+                        | (<u>press X</u> to reject an observation)
                 row.segment(
                     v-if="segmentsInfo.organizedSegments.length > 0"
                     v-for="(eachSegment, index) in segmentsInfo.organizedSegments"
