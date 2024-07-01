@@ -167,9 +167,9 @@ export const currentFixedSizeOfYouTubeVideoId = 11
                 "=numberOfWatchers": usersWhoFinishedWatching.length,
                 "=numberOfLabelers": usersWhoFinishedLabeling.length,
                 "=numberOfVerifiers": usersWhoFinishedVerifying.length,
-                "=usersWhoFinishedWatching": usersWhoFinishedWatching.join(","),
-                "=usersWhoFinishedLabeling": usersWhoFinishedLabeling.join(","),
-                "=usersWhoFinishedVerifying": usersWhoFinishedVerifying.join(","),
+                "=usersWhoFinishedWatching": usersWhoFinishedWatching,
+                "=usersWhoFinishedLabeling": usersWhoFinishedLabeling,
+                "=usersWhoFinishedVerifying": usersWhoFinishedVerifying,
             })
             // flatten out customInfo
             for (const [key, value] of Object.entries(each.customInfo||{})) {
@@ -193,7 +193,6 @@ export const currentFixedSizeOfYouTubeVideoId = 11
 
     export const videosCsvToActions = async (csvString) => {
         const videoEntries = await csvTools.parseCsv(csvString)
-        console.debug(`videoEntries is:`,videoEntries)
         const headers = videoEntries.shift()
         const videoActions = []
         for (const eachRow of videoEntries) {

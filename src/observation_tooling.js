@@ -288,12 +288,12 @@ export const createDefaultObservationEntry = (currentTime)=>({
         const observations = []
         for (const each of entries) {
             // TODO: do coersion of correctness on download
-            let confirmedBy = (each?.confirmedBy||[]).join(",")
-            if (confirmedBy == "") {
+            let confirmedBy = (each?.confirmedBy||[])
+            if (!confirmedBy||(confirmedBy instanceof Array&&confirmedBy.length==0)) {
                 confirmedBy = null
             }
-            let rejectedBy = (each?.rejectedBy||[]).join(",")
-            if (rejectedBy == "") {
+            let rejectedBy = (each?.rejectedBy||[])
+            if (!rejectedBy||(rejectedBy instanceof Array&&rejectedBy.length==0)) {
                 rejectedBy = null
             }
             observations.push({
