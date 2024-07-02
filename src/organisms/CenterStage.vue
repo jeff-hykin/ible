@@ -56,7 +56,7 @@
                     )
 </template>
 <script>
-import { frontendDb } from '../database.js'
+import { frontendDb } from '../tooling/database.js'
 import { get } from "../object.js"
 import { Perspective, everyTime } from '../tooling/events.js'
 import { deferredPromise } from '../utils.js'

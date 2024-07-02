@@ -23,7 +23,7 @@ import * as utils from "./utils.js"
 import * as basics from "./tooling/basics.bundle.js"
 import { get, set } from "./object.js"
 import * as videoTools from "./tooling/video_tooling.js"
-import { frontendDb } from "./database.js"
+import { frontendDb } from "./tooling/database.js"
 import { Router } from './plugins/router-plugin.js'
 import * as zipJs from "@zip.js/zip.js"
 import * as zipTools from "./tooling/zip_tooling.js"

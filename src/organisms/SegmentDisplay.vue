@@ -83,7 +83,7 @@
 <script>
 import { set, get } from '../object.js'
 import { wrapIndex, checkIf, deferredPromise, dynamicSort } from "../utils.js"
-import { frontendDb } from '../database.js'
+import { frontendDb } from '../tooling/database.js'
 import { Event, trigger, everyTime, once, globalEvents } from "../tooling/events.js"
 
 const generalTimeoutFrequency = 50 // ms

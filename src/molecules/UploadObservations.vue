@@ -61,7 +61,7 @@
 </template>
 <script>
 import { humandReadableTime, download } from "../utils.js"
-import { frontendDb } from "../database.js"
+import { frontendDb } from "../tooling/database.js"
 import * as observationTooling from "../observation_tooling.js"
 import * as yaml from 'yaml'
 import * as zipTools from "../tooling/zip_tooling.js"

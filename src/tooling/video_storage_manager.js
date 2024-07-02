@@ -1,4 +1,4 @@
-import { frontendDb } from "../database.js"
+import { frontendDb } from "./database.js"
 import { Event, trigger, everyTime, once, globalEvents } from "./events.js"
 import * as basics from "./basics.bundle.js"
 

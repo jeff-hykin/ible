@@ -120,7 +120,7 @@
             
 </template>
 <script>
-import { frontendDb } from '../database.js'
+import { frontendDb } from '../tooling/database.js'
 import { colors, debounce, download, } from "../utils.js"
 import * as utils from "../utils.js"
 import * as csvTools from "../tooling/csv_tooling.js"
