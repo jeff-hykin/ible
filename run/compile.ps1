@@ -17,8 +17,7 @@ const buildFolder = `${projectFolder}/docs/`
 
 await run(`${projectFolder}/run/clean`)
 
-// compile
-console.log(`Compiling...`)
+console.log(`Building...`)
 if (!(await run`npx parcel build index.html --out-dir docs --no-source-maps --no-minify --public-url ./`.success)) {
     Deno.exit(1)
 }

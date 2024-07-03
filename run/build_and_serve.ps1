@@ -19,19 +19,19 @@ const watcher = Deno.watchFs([
     `${projectFolder}/src/`,
 ], {recursive: true})
 
-if (!(await run(`${projectFolder}/run/compile`).success)) {
+if (!(await run(`${projectFolder}/run/build`).success)) {
     Deno.exit(1)
 }
 const serverProcess = run(`${projectFolder}/run/serve`, ...Deno.args)
 
-let shouldCompile = true
+let shouldBuild = true
 
-// effectively debounce the recompile
+// effectively debounce the rebuild
 let repeater = new DynamicInterval().setRate(100).onInterval(
     async ()=>{
-        if (shouldCompile) {
-            shouldCompile = false
-            await run(`${projectFolder}/run/compile`)
+        if (shouldBuild) {
+            shouldBuild = false
+            await run(`${projectFolder}/run/build`)
         }
     }
 ).onError(
@@ -40,7 +40,7 @@ let repeater = new DynamicInterval().setRate(100).onInterval(
 
 
 for await (const event of watcher) {
-    shouldCompile = true
+    shouldBuild = true
 }
 
 
