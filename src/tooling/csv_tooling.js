@@ -10,8 +10,6 @@ const extraIsoDateRegex = /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+)|(
 const matchesIso8601Date = (string)=>string.match(w3schoolsIsoDateRegex) || string.match(extraIsoDateRegex)
 const matchesReservedPattern = (string)=>{
     return (
-        // to allow comma-separated lists of strings/numbers/dates that dont have commas in them
-        string.includes(",") ||
         // to allow computed items / equations
         string.startsWith("=") ||
         // to allow regex (yeah yeah i know i know)
@@ -63,18 +61,10 @@ const typeEscape = (each)=>{
     if (each === "") {
         return '""'
     }
-    if (each instanceof Array && each.length > 0) {
-        const yamledEach = each.map(typeEscape)
-        const noneHaveCommasOrQuotes = !yamledEach.some(each=>each.length>0&&each.includes(`,`)||each.includes(` `)||each.includes(`\n`)||each.includes(`\t`)||each.includes(`"`)||each.includes(`'`))
-        if (noneHaveCommasOrQuotes) {
-            return yamledEach.join(",")+"," // trailing comma is REQUIRED otherwise we don't know if its a  list with 1 item or just the item itself
-        }
-    }
     
     // non-strings just get yamlified
-    // (TODO: consider having strings-with-commas getting quoted, and then some lists of strings/numbers getting converted to a comma-separated string)
     if (typeof each != "string") {
-        let newString = yaml.stringify(each)
+        let newString = yaml.stringify(each, { collectionStyle: 'flow'})
         if (newString[newString.length-1] == "\n") {
             newString = newString.slice(0,-1)
         }
@@ -104,31 +94,7 @@ const typeResolve = (each)=>{
     if (matchesIso8601Date(each)) {
         return new Date(each)
     }
-    if (!each.startsWith('[') && each.includes(',')) {
-        let shortHandListMaybe
-        try {
-            shortHandListMaybe = yaml.parse(`[${each}]`)
-        } catch (error) {
-        }
     
-        if (shortHandListMaybe instanceof Array) {
-            const notActuallyWhatWeWant = shortHandListMaybe.length == 1 && shortHandListMaybe.includes(",")
-            if (!notActuallyWhatWeWant) {
-                return shortHandListMaybe.map(each=>{
-                    if (typeof each == 'string' && matchesIso8601Date(each)) {
-                        return new Date(each)
-                    } else {
-                        return each
-                    }
-                })
-            }
-        }
-    }
-    // if (each.match(/^([^'"\n\t]*,)+[^'"\n\t]*$/)) {
-    //     // on the way out, spaces are not allowed
-    //     // on the way in, spaces will get trimmed
-    //     return each.split(",").map(each=>each.trim()).map(typeResolve)
-    // }
     return yaml.parse(each)
 }
 
