@@ -10,7 +10,6 @@
 </template>
 
 <script>
-import { set } from '../object.js'
 export default {
     props: ["labelName", "label"],
     methods: {

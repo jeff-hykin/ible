@@ -57,7 +57,6 @@
 </template>
 <script>
 import { frontendDb } from '../tooling/database.js'
-import { get } from "../object.js"
 import { Perspective, everyTime } from '../tooling/events.js'
 import { deferredPromise } from '../utils.js'
 import * as utils from '../utils.js'
@@ -170,7 +169,6 @@ export default {
             }
             this.videoInfo = { ...this.videoInfo }
         },
-        get,
         async updateVideoFrontendData() {
             const player = this.$root.videoInterface.player
             const videoId = this.$root.videoInterface.videoId

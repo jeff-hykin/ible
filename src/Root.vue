@@ -21,7 +21,6 @@ import pages from "./pages/*.vue"
 import {getColor, deferredPromise, createVideoId, videoIdLength} from "./utils.js"
 import * as utils from "./utils.js"
 import * as basics from "./tooling/basics.bundle.js"
-import { get, set } from "./object.js"
 import * as videoTools from "./tooling/video_tooling.js"
 import { frontendDb } from "./tooling/database.js"
 import { Router } from './plugins/router-plugin.js'
@@ -32,6 +31,7 @@ import { Event, trigger, everyTime, once, globalEvents } from "./tooling/events.
 import "./tooling/video_storage_manager.js"
 import "./tooling/observation_storage_manager.js"
 
+const { get, set } = basics
 window.basics = basics // for debugging
 
 // listens to:

@@ -20,8 +20,8 @@
 </template>
 <script>
 import { extractYoutubeVideoId, isLocalVideo } from "../tooling/video_tooling.js"
-import { deferredPromise } from "../utils.js"
-import { get, set } from "../object.js"
+import * as basics from "../tooling/basics.bundle.js"
+const { get, set } = basics
 
 export default {
     // emits:

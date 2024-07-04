@@ -81,10 +81,11 @@
 
 </template>
 <script>
-import { set, get } from '../object.js'
 import { wrapIndex, checkIf, deferredPromise, dynamicSort } from "../utils.js"
 import { frontendDb } from '../tooling/database.js'
 import { Event, trigger, everyTime, once, globalEvents } from "../tooling/events.js"
+import * as basics from "../tooling/basics.bundle.js"
+const { get, set } = basics
 
 const generalTimeoutFrequency = 50 // ms
 
@@ -172,7 +173,7 @@ export default {
     },
     windowListeners: {
         keydown(eventObject) {
-            if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get({ keyList: ["path"], from: eventObject, failValue: [] }).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
+            if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || (eventObject?.path||[]).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
                 // 
                 // key controls
                 // 

@@ -1,4 +1,5 @@
-import { get, set } from "./object.js"
+import * as basics from "./tooling/basics.bundle.js"
+const { get, set } = basics
 
 export const mimeTypes = {
     ".html": "text/html",

@@ -1,5 +1,5 @@
 let { deferredPromise, asyncIteratorToList, getColor, dynamicSort } = require("../utils.js")
-let { get, set, remove } = require("../object.js")
+let { get, set, remove } = require("./basics.bundle.js")
 let { toKebabCase, toSnakeCase, toScreamingtoKebabCase, toScreamingtoSnakeCase } = require("../string.js")
 const observationTooling = require("../observation_tooling.js")
 import * as basics from "./basics.bundle.js"
