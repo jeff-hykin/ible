@@ -5,7 +5,7 @@
     "main": "src/Root.vue",
     "scripts": {
         "start": "npm run build && deno run -A ./main.js",
-        "build": "run/compile",
+        "build": "run/build",
         "clean": "run/clean",
         "bundle": "deno bundle main.js > main.bundle.js",
         "serve": "deno run -A ./main.js"

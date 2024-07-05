@@ -12,6 +12,8 @@ import minimist from "npm:minimist"
 
 import { FileSystem } from "https://deno.land/x/quickr@0.6.67/main/file_system.js"
 
+var indexHtmlBytes // DONT REMOVE: this comment is part of compiling this file sadly
+
 import { mimeTypes, videoExtensions } from "./src/utils.js"
 import * as utils from "./src/utils.js"
 
@@ -31,7 +33,8 @@ Options:
     --help            Show this help message
     --version         Show the version number
     --hostname, -h    The hostname to listen on (default: 127.0.0.1)
-    --port, -p        The port to listen on (default: 3000)
+    --port, -p        The port to listen on (default: 3001)
+    --videosFolder    The folder to look for videos in (default: ~/Videos)
 `)
     process.exit(0)
 } else if (realArgs[0] === "--version") {
@@ -41,7 +44,8 @@ Options:
 const args = minimist(realArgs, {
     default: {
         hostname: "127.0.0.1",
-        port: 3000,
+        port: 3001,
+        videosFolder: FileSystem.makeAbsolutePath(path.join(os.homedir(), "Videos")),
     },
     alias: {
         h: "hostname",
@@ -51,7 +55,7 @@ const args = minimist(realArgs, {
 const hostname = args.hostname
 const port = args.port
 const baseDirectory = path.join(thisFolder, "docs")
-const videoDirectory = FileSystem.makeAbsolutePath(path.join(os.homedir(), "videos"))
+const videoDirectory = FileSystem.normalize(args.videosFolder)
 const cache = {
     videoPathsString: "[]",
     localVideosHash: "",
@@ -149,6 +153,17 @@ Deno.serve({ port, hostname }, async (request) => {
 
     let extname = String(path.extname(filePath)).toLowerCase()
     let contentType = mimeTypes[extname] || "application/octet-stream"
+
+    // this is activated once this file is compiled
+    if (indexHtmlBytes && (urlPath == "/" || urlPath == "/index.html")) {
+        return new Response(
+            indexHtmlBytes, 
+            {
+                status: 200,
+                headers: new Headers({"content-type":contentType}),
+            }
+        )
+    }
     
     try {
         const fileContents = await Deno.readFile(filePath)
