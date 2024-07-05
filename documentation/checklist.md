@@ -76,6 +76,9 @@ Major Chonological Changes:
     - fix upload action of delete
         - add a way to selectively delete video aspects (the problem with "watched")
     - fix upload action of overwrite
+- clean up code
+    - move stuff into tools
+    - consolidate things into event files
 - fixup NPM package, check on windows
     - do something about the dependencies maybe just find a way to embed them if finding them is too hard
 - consider custom observer#video interactions
