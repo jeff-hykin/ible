@@ -70,6 +70,18 @@ Major Chonological Changes:
     - DONE: instead make the csv tooling be smart enough to write list values out as unquoted comma-separated, and make the csv reader detect it and convert to a list
     - DONE: change the =thing to (thing) for computed values
     - DONE:change the CSV export of confirmed/rejected to be comma-separated
+- check if filtering by disagreement still works
+- spacebar doesn't always play/pause
+- name the video#observer to be "annotation_status.csv" "who_has_done_what.csv"
+- probably want a label table:
+    - total number of observations
+    - total duration of all observations
+    - number of videos
+- check that filtering by selected label still works
+- videos can mention what labels they have
+- check the order when downloading:
+    - sort by start time
+    - then sort by video id
 - upload checks:
     - check upload handling of comma-separated lists
     - add reject/confirm to extra data area

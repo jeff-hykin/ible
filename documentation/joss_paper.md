@@ -161,7 +161,7 @@ Data can be both downloaded and uploaded in the same format; a collection of TSV
 
 Videos need a unique identifier, which is where Ible differs from other tools. Ible, upon request, will automatically generate an ID for each video, and store it as part of the video name on the host machine. This allows for videos to be renamed and moved without loosing the ID and corrupting the data. For public videos, Ible allows loading and using YouTube videos, each of which already has a unique ID.
 
-In order to achive the goal of minimal time investment, Ible opts for friendly interfaces and in-application instructions rather than a tutorial or user manual. In the limited testing that was possible, these changes seemed to significantly improve time required for a new user to complete their first labeling task.
+In order to achive the goal of minimal time investment, Ible, whenever possible, opts for intuitive interface design principles and in-application instructions rather than a tutorial or user manual. In the limited testing that was possible, these changes seemed to significantly improve time required for a new user to complete their first labeling task.
 
 [TODO: image]
 
