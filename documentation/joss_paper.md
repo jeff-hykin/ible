@@ -50,71 +50,24 @@ performing numerical orbit integration). -->
 
 # Statement of need
 
-There are many cases where users of all skill levels need to efficiently label confidential videos, in a way that can be validated by researchers that do not have programming backgrounds. To achieve this, we believe there are both minimal criteria that must be met, as well as higher performance across key aspects of a tool.
+There are many cases where users of all skill levels need to efficiently label confidential videos, in a way that can be validated by researchers that do not have programming backgrounds. A sufficient soulution to this problem would meet the following criteria:
 
-Criteria:
-- Maintained Privacy and Ownership of Data
-- Secure and Auditable
-- Capable of Arbitrary Verification Quality (the researcher can use the tool to acheive high, low, etc verification quality)
-- Accesible
-
-Aspects in need of improvement:
-- User Friction
-- Labeling Throughput
-- Ease of Collaboration
-- Standardization across multiple diciplines
-- Extensibility
-- Reliability
-
-We translate these high to more concrete requirements:
-- Open Source: To mainin privacy and ownership, be accessible, auditable, and improve extensibility we believe the tool must be open source. This means a license such as MIT, Apache, or GPL, with the code available on GitHub, GitLab, SourceForge, or similar platforms.
-- Cross Platform: Our definition of accessible means the tool must support the three largest platforms: Windows, Mac, and Linux.
-- Web Interface: For both collaboration and accessiblity, we believe its important that multiple users be able to label videos even if the videos are not stored on their personal machines.
-- Single Standardized CSV Data Format: In order to be accessible to those without programming backgrounds, we believe having a primary format of CSV is required. To avoid detracting from extensibility, collaboration, and standardization, the format must be cabable of having additional fields, be the same format for both uploads and downloads, and differentiate between data types such as strings, numbers, and dates.
-- Speed of use: To reduce the user friction, we set the goal of a new user's being capable of installation, video loading, and a first label to a video in under 15 minutes.
-- Data Transference: For the goal of collaboration, we beleive it should always be possible to download the all of the data from the tool, and upload it to another user's instance without any loss of fidelity.
-- Verification Structure: 
-- Throughput:
+- **Private**: A tool that works with private confidential videos. This tool should be capable of being audited, which effectively requires that it be open source.
+- **Minimal Investment**: Although difficult to measure, an inexperienced individual should realistically be able to expect to spend 15 minutes or less total in the process of installation, opening a video, recording two observations, and opening the results in their spreadsheet editor of choice.
+- **Throughput**: The tool should enable both observations to be recorded faster, and the results to be validated faster than a manual process.
+- **Error Prevention**: The tool should be able to prevent the common pitfalls of [ FIXME / TODO ] as outlined in [Priya's paper]
+- **Minimum Scalability**: The user interface needs to continue to function normally, even when presented with hundreds of videos.
+- **Consistently Accessible**: The tool should be cross-platform and consistent across platforms, with support for the largest three desktop operating systems.
+- **Arbitrary Validation Metric**: The validation should allow for any number of users to confirm or reject the labeled observations.
+- **Programming API**: There should be a means for a script or program to generate observations and confirmations. This format should be the same interface as download format, which should be the same format as the upload format.
+- **Extensible Design**: Finally, the tool should be extensible, also known as forward-compatible, with future variants of the tool. In particular, it should be capable of being extended (rather than rewritten) to handle the following:
+    - Synchronization between multiple data sources, such as shared databases.
+    - Mass renaming and error correction of labels.
+    - Collaboration for small scale teams (a hosted local-access server).
+    - Millions of videos and observations without the interface slowing.
+    - Distributed labeling (public facing server with data-access controls).
 
 
-
-<!-- For users of all skill levels to efficiently label confidential videos, in a way that can be validated by non-developers, we believe we need higher performance across the following criteria:
-
-We interpret these high level goals as a need for the following features:
-1. Lack of friction: This means minimizing the barrier to entry in terms of technial skill, avoiding time consuming processes such as uploading hundreds of hours of video, having a focused UI for new users, as well as an abunance of shortcuts for expert users to reduce duration of labeling.
-
-In order for experienced and inexperienced users to quickly generate labels for connfidental videos in a way that can be validated and processed by reseachers of various fields, we believe we need to meet the follow criteria:
-- Public Ownership: This includes both being able to run the code locally, also k known as self-histed code being able to validate that the source code does what it is claiming to do, but also includes that the tool be financially accessible to the reseach community.
-- 
-
-IBLE ("ible" as in "reproducible") is a tool allowing beginners and experts to label moments in videos quickly
-
-graphical interface designed with minimal barrier to entry to video labeling, verification, and analysis. In order to achieve this, we believe the following features are necessary:
-- Functions with both private and public videos
-    - Free
-    - Open source
-    - Offline
-- Easy to verify
-    - Confidence value
-    - Author email
-    - Standardized format
-- Collaborative
-    - Importing and exporting uses a standard human-readable format
-    - Mergeable data structures (id values, timestamps, etc.)
-- Time spent and cognitive load minimized for both novice and expert users
-    - Local videos
-    - No downloading of youtube videos
-    - Importing and exporting uses a standard human-readable format
-    - Renders videos of common formats (ex .avi, .mp4, .mov)
-    - Video demonstrations of common tasks
-    - The ability to jump to the next unverified label within a video
-    - The ability to upload bulk labels (from another person or machine)
-    - All actions capable through either mouse (accessible to novice) or keyboard (for optimal labeling speed)
-    - Minimal opportunity for errors:
-        - such as duplicate labels, misspellings, and accidential actions -->
-
-In order to facilitate verification and standaization, ILVL uses the same .yaml format for importing and exporting data, along with an interactive GUI interface. It is designed for both private and public videos. There is a single .json format for uploading and downloading video labels, and a highly interactive web interface to demonstrate the format to researchers who may be less familiar with coding.
-<!-- 1 -->
 <!-- Analyzing qualitative data has been proven to be labor intensive and time consuming task
 (Pope et al., 2000) due to its nature. Thematic analysis (Kiger & Varpio, 2020) is a powerful
 yet flexible method for performing such analysis. Analyzing textual data through this method
@@ -173,22 +126,55 @@ design, and support for Astropy functionality in `Gala` will enable exciting
 scientific explorations of forthcoming data releases from the *Gaia* mission
 [@gaia] by students and experts alike. -->
 
-# Mathematics
+# Existing Solutions
 
-Single dollars ($) are required for inline mathematics e.g. $f(x) = e^{\pi/x}$
+While there are many tools available for labeling videos, none meet the criteria above. However, there are categories of tools that miss the critera for different reasons that are worth discussing here.
 
-Double dollars make self-standing equations:
+1. Proprietary online labelling services. This includes such tools as as LabelBox, or Keylabs [TODO: citation needed]. While each of these provide a great deal of features, they also come with several limitations.
+- None are an option for studies with confidential videos, such as NIH human subject studies.
+- They are unable to label YouTube videos without first (manually) downloading them, and unable to label local videos without first uploading them. This adds a significant amount of time, and often makes them fail to meet the minimum time investment requirement.
+- While many of these services are designed around collaboration, they also usually limit the collaboration quanity for the free version of their service. This acts as a barrier for researchers who would like to scale their work over time.
+2. In contrast to proprietary solutions, CVAT [TODO: citation] is both open source and self-hostable. Similar to some of the proprietary tools, it also has limitations:
+- While the tool is self-hostable, it is not close to meeting the minimum time investment requirement escpecially for researchers that lack a programming background.
+- All videos need to be processed after uploading (can take hours for a 1080p 30min video)
+- Still unable to load youtube videos without first (manually) downloading them
+- Does not have native support for confidence values, individual label verification, or negative labels (there are workarounds some of these, but the workarounds make labelling slower)
+- CVAT has many wonderful features: projects, tasks, jobs, tags, labels, objects, masks, points, polylines, etc. However the features are often mandatory and consume the UI interface making simple use cases difficult
+- Import format is different from export format (multiple import/export formats)
+- No visual of timeline with labels on the timeline
+- No interactive explanation of import/export format(s)
+3. Manual recording
+- Would need to write down video id, timestamps, confidence value, observer, etc manually
+- Need to manually coordinate with ~20 people on:
+- data format / database
+- label names (uppercase/lowercase differences)
+- not accidentally using the same username/model name
+- Manually analyze/verify labels
 
-$$\Theta(x) = \left\{\begin{array}{l}
-0\textrm{ if } x < 0\cr
-1\textrm{ else}
-\end{array}\right.$$
+# Implementation and Design
 
-You can also use plain \LaTeX for equations
-\begin{equation}\label{eq:fourier}
-\hat f(\omega) = \int_{-\infty}^{\infty} f(x) e^{i\omega x} dx
-\end{equation}
-and refer to \autoref{eq:fourier} from text.
+Ible ("ible" as in "reproducible") was designed to meet these needs along with many quality of life improvements. In order to be cross platform and later capable of distributed labeling, is designed as a local first web application, distributed as an all-in-one executable. This allows for running the application on a local machine, and simplying using it as an app. However, it also enables sharing the application with a small team on the local network. All videos stored on the host machine, will be accessible to users on the network. Each user is able to locally save and edit their own observations.
+
+The data structure is centered around a table of observations and a table of videos videos. There is a standard pre-defined schema for both videos and observations. However, to be extensible, the tool supports adding arbitrary metadata to both tables.
+
+Data can be both downloaded and uploaded in the same format; a collection of TSV files (tab separated values). Beyond merely uploading new data, the format allows for editing and deleting data. This allows for someone familar with a spreadsheet program to perform bulk edits, and then upload the changes.
+
+Videos need a unique identifier, which is where Ible differs from other tools. Ible, upon request, will automatically generate an ID for each video, and store it as part of the video name on the host machine. This allows for videos to be renamed and moved without loosing the ID and corrupting the data. For public videos, Ible allows loading and using YouTube videos, each of which already has a unique ID.
+
+In order to achive the goal of minimal time investment, Ible opts for friendly interfaces and in-application instructions rather than a tutorial or user manual. In the limited testing that was possible, these changes seemed to significantly improve time required for a new user to complete their first labeling task.
+
+[TODO: image]
+
+
+# Emperical Evaluation
+
+Ible has been tested in two different scenarios. Ible was recently tested on a small dataset of confidential data as part of a research study at Texas A&M University. The study was designed to study human reactions in disaster response scenarios where a robotic support system is present. The dataset consisted of 30 videos (FIXME: check if more were added since last writing), each with four or more observations. For this study the alternative would be to perform manual labeling, which the researchers claimed would have taken significantly longer than with the use of Ible.
+
+The second scenario involved using a prototype of Ible for data submission and validation for a deep learning course at Texas A&M University. This included thousands of observations, hundreds of videos, submitted by 25 students. The data included both human and machine generated labels ranging from "fire" to "falling down". While recording manually would have been the fallback for this group, without the availablity of Ible, it is likely the project would have been cancelled due impracticalicty of the task.
+
+# Usage
+
+To use an Ible for your own research, you can download the latest release from the [releases page](https://github.com/ible/ible/releases). [FIXME: add the link to the release page]
 
 # Citations
 
