@@ -70,38 +70,34 @@ Major Chonological Changes:
     - DONE: instead make the csv tooling be smart enough to write list values out as unquoted comma-separated, and make the csv reader detect it and convert to a list
     - DONE: change the =thing to (thing) for computed values
     - DONE:change the CSV export of confirmed/rejected to be comma-separated
-- check if filtering by disagreement still works
 - spacebar doesn't always play/pause
-- name the video#observer to be "annotation_status.csv" "who_has_done_what.csv"
-- probably want a label table:
-    - total number of observations
-    - total duration of all observations
-    - number of videos
+- check the executable, get something working on windows (eval method or video method)
+- check if filtering by disagreement still works
 - check that filtering by selected label still works
-- videos can mention what labels they have
-- check the order when downloading:
-    - sort by start time
-    - then sort by video id
+- name the video#observer to be "annotation_status.csv" "who_has_done_what.csv"
+- change the `video#observer` format, make it videoId, observerId, and the all the fields for that combo
+- fix the delete-upload and overwrite-upload actions
 - upload checks:
     - check upload handling of comma-separated lists
     - add reject/confirm to extra data area
     - fix upload action of delete
         - add a way to selectively delete video aspects (the problem with "watched")
     - fix upload action of overwrite
+- FUTURE: probably want to download a label table:
+    - total number of observations
+    - total duration of all observations
+    - number of videos
+- NO: videos can mention what labels they have
+- FUTURE: add a readme to the downloaded zip explaining the different fields and available uploadActions
+- FUTURE: check the order when downloading:
+    - sort by start time
+    - then sort by video id
 - clean up code
     - move stuff into tools
     - consolidate things into event files
-- fixup NPM package, check on windows
-    - do something about the dependencies maybe just find a way to embed them if finding them is too hard
-- consider custom observer#video interactions
-- ensure video ID's match a regex and dont include invalid-on-windows-filesystem characters
-- test test test
+- FUTURE: ensure video ID's match a regex and dont include invalid-on-windows-filesystem characters
 - finish writing dev_notes.md
 - check all the TODO's again
-
-- add a readme to the downloaded zip explaining the different fields and available uploadActions
-- get cli working on windows
-    - maybe use walkUpUntil to find node_modules
 
 LATER:
 - add settings modal
