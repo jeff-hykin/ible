@@ -85837,7 +85837,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($890b00, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('row',{attrs:{"width":"100%"}},[_c('transition',{attrs:{"name":"fade"}},[(!_vm.videoPathOrUrl)?_c('row',{staticClass:"message"},[_vm._v("No Video Selected")]):_vm._e()],1),_c('transition',{attrs:{"name":"fade"}},[(_vm.videoPathOrUrl && !_vm.player)?_c('row',{staticClass:"message"},[_vm._v("Video Loading...")]):_vm._e()],1),(_vm.isLocalVideo(_vm.videoPathOrUrl))?_c('video',{ref:"nativePlayer",staticStyle:{"width":"100%","z-index":"7"},attrs:{"controls":"controls"}},[_c('source',{attrs:{"src":_vm.localVideoSource,"type":"video/mp4"}})]):_vm._e(),(!_vm.isLocalVideo(_vm.videoPathOrUrl))?_c('vue-plyr',{key:("" + (Math.random())).replace('.',''),ref:"vuePlyr",style:(("transition: all ease 0.6s; opacity: " + (_vm.videoPathOrUrl && _vm.player ? 1 : 0)))},[(!_vm.isLocalVideo(_vm.videoPathOrUrl))?_c('div',{staticClass:"plyr__video-embed"},[_c('iframe',{ref:"videoPlayer",attrs:{"src":("https://www.youtube.com/embed/" + (_vm.extractYoutubeVideoId(_vm.videoPathOrUrl)) + "?amp;iv_load_policy=3&amp;modestbranding=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1"),"allowtransparency":"allowtransparency","controls":"controls"}})]):_vm._e()]):_vm._e()],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('row',{attrs:{"width":"100%"}},[_c('transition',{attrs:{"name":"fade"}},[(!_vm.videoPathOrUrl)?_c('row',{staticClass:"message"},[_vm._v("no video selected")]):_vm._e()],1),_c('transition',{attrs:{"name":"fade"}},[(_vm.videoPathOrUrl && !_vm.player)?_c('row',{staticClass:"message"},[_vm._v("Video Loading...")]):_vm._e()],1),(_vm.isLocalVideo(_vm.videoPathOrUrl))?_c('video',{ref:"nativePlayer",staticStyle:{"width":"100%","z-index":"7"},attrs:{"controls":"controls"}},[_c('source',{attrs:{"src":_vm.localVideoSource,"type":"video/mp4"}})]):_vm._e(),(!_vm.isLocalVideo(_vm.videoPathOrUrl))?_c('vue-plyr',{key:("" + (Math.random())).replace('.',''),ref:"vuePlyr",style:(("transition: all ease 0.6s; opacity: " + (_vm.videoPathOrUrl && _vm.player ? 1 : 0)))},[(!_vm.isLocalVideo(_vm.videoPathOrUrl))?_c('div',{staticClass:"plyr__video-embed"},[_c('iframe',{ref:"videoPlayer",attrs:{"src":("https://www.youtube.com/embed/" + (_vm.extractYoutubeVideoId(_vm.videoPathOrUrl)) + "?amp;iv_load_policy=3&amp;modestbranding=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1"),"allowtransparency":"allowtransparency","controls":"controls"}})]):_vm._e()]):_vm._e()],1)}
 var staticRenderFns = []
 
           return {
@@ -102096,11 +102096,10 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 //
 //
 //
+//
 var _default = {
   data: () => ({
-    videoNames: {},
-    videoPaths: {},
-    videoIds: []
+    videos: []
   }),
   watch: {
     '$root.searchResults.videos': {
@@ -102125,40 +102124,82 @@ var _default = {
   computed: {
     videoResults() {
       let selectedId = this.$root.videoInterface.videoId;
-      let filtered = this.videoIds.filter(each => each !== selectedId);
-      return filtered;
+
+      if (!selectedId) {
+        return this.videos;
+      } else {
+        let filtered = this.videos.filter(each => each.videoId !== selectedId);
+        return filtered;
+      }
     }
 
   },
   methods: {
+    stringify: JSON.stringify,
     isLocalVideo: _observation_tooling.isLocalVideo,
 
     async getVideoExtraInfo() {
+      console.log(`await trigger(globalEvents.requestVideosToList`);
       let videoIds = Object.keys(this.$root.searchResults.videos);
       let videos;
 
       if (this.$root.noSearch) {
         videos = (await (0, _events.trigger)(_events.globalEvents.requestVideosToList, "VideoLister"))[0];
-      } else {
-        videos = await _database.frontendDb.getVideos(videoIds);
-      }
 
-      const videoNames = {};
-      const videoPaths = {};
-      videoIds = [];
+        try {
+          // add videos that don't have an ID yet
+          videos = videos.concat((await window.backend.getLocalVideoPaths()).map(each => ({
+            videoId: null,
+            path: each
+          })));
+          console.debug(`[window.backend.getLocalVideoPaths] videos is:`, videos);
+        } catch (error) {
+          console.warn(`[VideoLister] wasn't able to get list of videos from backend: ${error}`);
+        }
+      } else {
+        console.log(`frontendDb.getVideos(videoIds)`);
+        videos = await _database.frontendDb.getVideos(videoIds);
+      } // consolidate by path
+
+
+      const videoByPath = {};
+      videos = videos;
+      console.debug(`[VideoLister] videos is:`, JSON.parse(JSON.stringify(videos)));
 
       for (const each of videos) {
-        videoIds.push(each.videoId);
+        console.debug(`JSON.stringify(each) is:`, JSON.stringify(each));
 
-        if (each?.videoId) {
-          videoPaths[each.videoId] = `/videos/${each.path}`;
-          videoNames[each.videoId] = videoTools.extractLocalVideoNameFromPath(each.path);
+        if (each?.path) {
+          videoByPath[each.path] = { ...videoByPath[each.path],
+            ...each
+          };
+          videoByPath[each.path].name = videoTools.extractLocalVideoNameFromPath(each.path);
+        }
+
+        console.debug(`videoByPath[each.path] is:`, videoByPath[each.path]); // combine all information into each
+
+        Object.assign(each, videoByPath[each.path]);
+      }
+
+      console.debug(`[VideoLister] videos 2 is:`, JSON.parse(JSON.stringify(videos))); // remove duplicates
+
+      const pathList = [];
+      const nonDuplicateVideos = [];
+
+      for (const each of videos) {
+        if (!pathList.includes(each.path)) {
+          pathList.push(each.path);
+          nonDuplicateVideos.push(each); // transform the path for the thumbnail
+
+          each.isLocalVideo = this.isLocalVideo(each.videoId);
         }
       }
 
-      this.videoNames = videoNames;
-      this.videoPaths = videoPaths;
-      this.videoIds = videoIds;
+      console.debug(`[VideoLister] videos 3 is:`, JSON.parse(JSON.stringify(videos)));
+      this.videos = videos;
+      setTimeout(() => {
+        this.$forceUpdate();
+      }, 1000);
     }
 
   }
@@ -102172,7 +102213,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($2ae310, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"video-list-container",attrs:{"width":"100%","padding":"1rem","align-v":"top"}},[(_vm.videoResults.length == 0)?_c('span',[_vm._v("(No other videos matching this search)")]):_vm._e(),_vm._l((_vm.videoResults),function(eachVideoId){return _c('column',{staticClass:"video-list-element",on:{"click":function($event){return _vm.$root.videoInterface.goToThisVideo({videoId:eachVideoId})}}},[_c('row',{staticClass:"thumbnail",attrs:{"width":"100%","height":"100%","background-image":_vm.isLocalVideo(eachVideoId) ? "url(/icon.png)" : ("url(http://img.youtube.com/vi/" + eachVideoId + "/mqdefault.jpg)"),"position":"relative","border-radius":"0.5rem","overflow":"hidden"}},[(_vm.isLocalVideo(eachVideoId))?_c('video',{staticStyle:{"width":"100%","max-height":"16rem","pointer-events":"none"},attrs:{"src":_vm.videoPaths[eachVideoId]}}):_vm._e(),_c('span',{staticStyle:{"background-color":"rgba(0,0,0,0.45)","color":"white","position":"absolute","bottom":"0.1rem","left":"0.1rem","padding":"0.5rem","border-radius":"0.5rem"}},[_vm._v(_vm._s(!_vm.isLocalVideo(eachVideoId)?"":("" + (_vm.videoNames[eachVideoId]||""))))])])],1)})],2)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"video-list-container",attrs:{"width":"100%","padding":"1rem","align-v":"top"}},[(_vm.videoResults.length == 0)?_c('span',[_vm._v("(No other videos matching this search)")]):_vm._e(),_vm._l((_vm.videoResults),function(eachVideo){return _c('column',{staticClass:"video-list-element",on:{"click":function($event){return _vm.$root.videoInterface.goToThisVideo(eachVideo)}}},[_c('row',{staticClass:"thumbnail",attrs:{"width":"100%","height":"100%","background-image":eachVideo.isLocalVideo ? "url(/icon.png)" : ("url(http://img.youtube.com/vi/" + (eachVideo.videoId) + "/mqdefault.jpg)"),"position":"relative","border-radius":"0.5rem","overflow":"hidden"}},[(eachVideo.path)?_c('video',{staticStyle:{"width":"100%","max-height":"16rem","pointer-events":"none"},attrs:{"src":("/videos/" + (eachVideo.path))}}):_vm._e(),_c('span',{staticStyle:{"background-color":"rgba(0,0,0,0.45)","color":"white","position":"absolute","bottom":"0.1rem","left":"0.1rem","padding":"0.5rem","border-radius":"0.5rem"}},[_vm._v(_vm._s(("" + (eachVideo.name||""))))])])],1)})],2)}
 var staticRenderFns = []
 
           return {
@@ -102206,6 +102247,9 @@ function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return 
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
+//
+//
+//
 //
 //
 //
@@ -102453,7 +102497,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($aaa267, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"width":"100%","height":"100vh","align-h":"center","align-v":"top","overflow":"auto","overflow-x":"hidden"}},[_c('WrappedTopSearch'),(!_vm.aVideoIsSelected())?_c('column',{attrs:{"width":"100%","height":"100vh","flex-shrink":"1","color":"gray"}},[_c('h5',[_vm._v("No Video Selected")])]):_vm._e(),_c('transition',{attrs:{"name":"fade"}},[_c('row',{directives:[{name:"show",rawName:"v-show",value:(_vm.aVideoIsSelected()),expression:"aVideoIsSelected()"}],staticClass:"center-stage",attrs:{"align-v":"top","align-h":"center","padding-top":"8rem"}},[_c('column',{staticClass:"main-container",attrs:{"flex-grow":"1","align-v":"top"}},[_c('row',{staticClass:"below-video-search",attrs:{"flex-basis":"100%","padding-top":"1rem","align-v":"top","opacity":_vm.aVideoIsSelected()? 1 : 0}},[_c('column',{staticClass:"video-width-sizer",attrs:{"align-v":"top"}},[_c('row',{attrs:{"width":"96%","position":"relative"}},[_c('VideoPlayer',{ref:"videoPlayer",attrs:{"videoPathOrUrl":_vm.$root.videoInterface.videoPath},on:{"videoLoaded":_vm.$root.videoInterface.tellRootTheVideoHasLoaded,"currentTimeChanged":_vm.updateCurrentTime}})],1),(_vm.$root.videoInterface.videoId)?_c('container',{staticClass:"below-video"},[_c('SideButton',{staticClass:"left-side-button",attrs:{"left":"left"},on:{"click":_vm.wrapperForSelectPreviousSegment}}),_c('SegmentDisplay',{ref:"segmentDisplay",attrs:{"currentTime":_vm.currentTime}}),_c('SideButton',{staticClass:"right-side-button",attrs:{"right":"right"},on:{"click":_vm.wrapperForSelectNextSegment}})],1):_vm._e(),_c('row',{attrs:{"width":"100%","padding":"2rem","align-v":"top"}},[_c('JsonTree',{staticClass:"json-tree",attrs:{"data":_vm.videoInfo||{}}}),(_vm.videoInfo&&_vm.videoInfo.videoId)?_c('column',{attrs:{"flex-basis":"40%","width":"100%"}},[_c('UiSwitch',{on:{"click":_vm.clickedHasWatchedVideo},model:{value:(_vm.watchedSwitch),callback:function ($$v) {_vm.watchedSwitch=$$v},expression:"watchedSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Watched Video")])]),_c('UiSwitch',{on:{"click":_vm.clickedHasLabeledVideo},model:{value:(_vm.labeledSwitch),callback:function ($$v) {_vm.labeledSwitch=$$v},expression:"labeledSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Labeled Video")])]),_c('UiSwitch',{on:{"click":_vm.clickedHasVerifiedVideo},model:{value:(_vm.verifiedSwitch),callback:function ($$v) {_vm.verifiedSwitch=$$v},expression:"verifiedSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Verified Labels")])])],1):_vm._e()],1)],1)],1)],1),(_vm.$root.videoInterface.videoId)?_c('column',{staticClass:"side-container",attrs:{"align-v":"top","overflow":"visible","min-height":"50rem","width":"fit-content"}},[_c('ObservationEditor',{attrs:{"jumpSegment":_vm.wrapperForJumpSegment,"currentTime":_vm.currentTime}}),_c('InfoSection',{staticClass:"info-section",attrs:{"labelName":_vm.activeData().labelName,"videoId":_vm.activeData().videoId,"currentTime":_vm.currentTime}})],1):_vm._e()],1)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"width":"100%","height":"100vh","align-h":"center","align-v":"top","overflow":"auto","overflow-x":"hidden"}},[_c('WrappedTopSearch'),(!_vm.aVideoIsSelected())?_c('column',{attrs:{"width":"100%","height":"100vh","flex-shrink":"1","color":"gray"}},[_c('h5',[_vm._v(" Videos (up there ↗) will show  "),_c('br'),_vm._v("You video files from your HOME/Videos folder")])]):_vm._e(),_c('transition',{attrs:{"name":"fade"}},[_c('row',{directives:[{name:"show",rawName:"v-show",value:(_vm.aVideoIsSelected()),expression:"aVideoIsSelected()"}],staticClass:"center-stage",attrs:{"align-v":"top","align-h":"center","padding-top":"8rem"}},[_c('column',{staticClass:"main-container",attrs:{"flex-grow":"1","align-v":"top"}},[_c('row',{staticClass:"below-video-search",attrs:{"flex-basis":"100%","padding-top":"1rem","align-v":"top","opacity":_vm.aVideoIsSelected()? 1 : 0}},[_c('column',{staticClass:"video-width-sizer",attrs:{"align-v":"top"}},[_c('row',{attrs:{"width":"96%","position":"relative"}},[_c('VideoPlayer',{ref:"videoPlayer",attrs:{"videoPathOrUrl":_vm.$root.videoInterface.videoPath},on:{"videoLoaded":_vm.$root.videoInterface.tellRootTheVideoHasLoaded,"currentTimeChanged":_vm.updateCurrentTime}})],1),(_vm.$root.videoInterface.videoId)?_c('container',{staticClass:"below-video"},[_c('SideButton',{staticClass:"left-side-button",attrs:{"left":"left"},on:{"click":_vm.wrapperForSelectPreviousSegment}}),_c('SegmentDisplay',{ref:"segmentDisplay",attrs:{"currentTime":_vm.currentTime}}),_c('SideButton',{staticClass:"right-side-button",attrs:{"right":"right"},on:{"click":_vm.wrapperForSelectNextSegment}})],1):_vm._e(),_c('row',{attrs:{"width":"100%","padding":"2rem","align-v":"top"}},[(_vm.videoInfo&&_vm.videoInfo.videoId)?_c('JsonTree',{staticClass:"json-tree",attrs:{"data":_vm.videoInfo||{}}}):_vm._e(),(_vm.videoInfo&&_vm.videoInfo.videoId)?_c('column',{attrs:{"flex-basis":"40%","width":"100%"}},[_c('UiSwitch',{on:{"click":_vm.clickedHasWatchedVideo},model:{value:(_vm.watchedSwitch),callback:function ($$v) {_vm.watchedSwitch=$$v},expression:"watchedSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Watched Video")])]),_c('UiSwitch',{on:{"click":_vm.clickedHasLabeledVideo},model:{value:(_vm.labeledSwitch),callback:function ($$v) {_vm.labeledSwitch=$$v},expression:"labeledSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Labeled Video")])]),_c('UiSwitch',{on:{"click":_vm.clickedHasVerifiedVideo},model:{value:(_vm.verifiedSwitch),callback:function ($$v) {_vm.verifiedSwitch=$$v},expression:"verifiedSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Verified Labels")])])],1):_vm._e()],1)],1)],1)],1),(_vm.$root.videoInterface.videoId)?_c('column',{staticClass:"side-container",attrs:{"align-v":"top","overflow":"visible","min-height":"50rem","width":"fit-content"}},[_c('ObservationEditor',{attrs:{"jumpSegment":_vm.wrapperForJumpSegment,"currentTime":_vm.currentTime}}),_c('InfoSection',{staticClass:"info-section",attrs:{"labelName":_vm.activeData().labelName,"videoId":_vm.activeData().videoId,"currentTime":_vm.currentTime}})],1):_vm._e()],1)],1)],1)}
 var staticRenderFns = []
 
           return {
@@ -103362,7 +103406,11 @@ const name = "videoStorageManager";
           newData: eachNew
         });
         console.debug(`mergedData is:`, JSON.stringify(mergedData));
-        actuallyUpdatedVideos.push(mergedData);
+
+        if (mergedData.videoId) {
+          actuallyUpdatedVideos.push(mergedData);
+        }
+
         break;
       }
     }
@@ -103785,7 +103833,7 @@ var _default = RootComponent = {
         // add what we know to the videoInfo
         // 
 
-        if (!!videoInfo?.videoId && typeof videoInfo?.videoId == "string") {
+        if (videoInfo?.videoId && typeof videoInfo?.videoId == "string") {
           let videoPath = untrackedData.videoIdToPath[videoInfo.videoId];
           const moreVideoInfo = await _database.frontendDb.getVideoById(videoInfo.videoId);
 
@@ -103796,7 +103844,7 @@ var _default = RootComponent = {
               ...videoInfo
             };
           }
-        } else if (!!videoInfo?.path && typeof videoInfo?.path == "string") {
+        } else if (videoInfo?.path && typeof videoInfo?.path == "string") {
           const moreVideoInfo = await _database.frontendDb.getVideoByPath(videoInfo.path);
 
           if (moreVideoInfo) {
@@ -103806,10 +103854,18 @@ var _default = RootComponent = {
           }
         }
 
+        const newVideoInfo = { ...videoInfo,
+          ...originalVideoInfo
+        }; // this is a hack. The CenterStage detects changes based on the videoId (should be refacted a bit)
+
+        if (!newVideoInfo.videoId) {
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        }
+
         return $root.push({
-          videoInfo: { ...videoInfo,
-            ...originalVideoInfo
-          }
+          videoInfo: newVideoInfo
         });
       },
 
@@ -104018,8 +104074,9 @@ var _default = RootComponent = {
           if (routeDataNoNull[eachKey] == null) {
             delete routeDataNoNull[eachKey];
           }
-        } // prevent navigating to the same location
+        }
 
+        console.debug(`routeDataNoNull is:`, routeDataNoNull); // prevent navigating to the same location
 
         const previousRouteData = JSON.parse(prevRouteDataJson);
         const currentJson = JSON.stringify(routeDataNoNull);
