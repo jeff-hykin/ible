@@ -70,10 +70,10 @@ Major Chonological Changes:
     - DONE: instead make the csv tooling be smart enough to write list values out as unquoted comma-separated, and make the csv reader detect it and convert to a list
     - DONE: change the =thing to (thing) for computed values
     - DONE:change the CSV export of confirmed/rejected to be comma-separated
-- spacebar doesn't always play/pause
-- check the executable, get something working on windows (eval method or video method)
-- check if filtering by disagreement still works
-- check that filtering by selected label still works
+- DONE: spacebar doesn't always play/pause
+- DONE: check the executable, get something working on windows (eval method or video method)
+- FUTURE: check if filtering by disagreement still works
+- FUTURE: check that filtering by selected label still works
 - name the video#observer to be "annotation_status.csv" "who_has_done_what.csv"
 - change the `video#observer` format, make it videoId, observerId, and the all the fields for that combo
 - fix the delete-upload and overwrite-upload actions
