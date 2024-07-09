@@ -144,7 +144,7 @@ export default {
                         // 
                         // local player
                         //
-                        if (videoIsPath) {
+                        if (this.$refs.nativePlayer) {
                             let player = this.$refs.nativePlayer
                             player.addEventListener("keydown", this.keydownControls)
                             this.player = player
@@ -157,28 +157,36 @@ export default {
                             // 
                             // fix the scubber update issue
                             // 
-                            Object.defineProperty(Object.getPrototypeOf(player), "currentTime", {
-                                set(input) {
-                                    // Bail if media duration isn't available yet
-                                    if (!this.duration) { return }
-                                    // Validate input
-                                    input = input-0
-                                    if (input < 0) {
-                                        input = 0
+                            try {
+                                
+                                Object.defineProperty(Object.getPrototypeOf(player), "currentTime", {
+                                    set(input) {
+                                        // Bail if media duration isn't available yet
+                                        if (!this.duration) { return }
+                                        // Validate input
+                                        input = input-0
+                                        if (input < 0) {
+                                            input = 0
+                                        }
+                                        const inputIsValid = (input == input) && input >= 0
+                                        if (inputIsValid) {
+                                            // Set
+                                            this.media.currentTime = Math.min(input, this.duration)
+                                        }
+                                    },
+                                    get() {
+                                        return this.media.currentTime
                                     }
-                                    const inputIsValid = (input == input) && input >= 0
-                                    if (inputIsValid) {
-                                        // Set
-                                        this.media.currentTime = Math.min(input, this.duration)
-                                    }
-                                },
-                                get() {
-                                    return this.media.currentTime
-                                }
-                            })
+                                })
+                            } catch (error) {
+                                
+                            }
                             
                             // plyr
-                            player.elements.container.addEventListener("keydown", this.keydownControls)
+                            const container = player?.elements?.container
+                            if (container) {
+                                container.addEventListener("keydown", this.keydownControls)
+                            }
                             this.player = player
                         }
                     }
