@@ -103349,7 +103349,29 @@ var staticRenderFns = []
 module.exports = {
   "Home": require("./Home.vue")
 };
-},{"./Home.vue":"gi53"}],"wOUt":[function(require,module,exports) {
+},{"./Home.vue":"gi53"}],"HtCs":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.showLongMessage = showLongMessage;
+
+var _vue = _interopRequireDefault(require("vue"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function showLongMessage(message, actions = []) {
+  _vue.default.toasted.show(`
+        <div style="display: flex; flex-direction: column; with: 10rem;"> 
+            ${message}
+        </div> 
+    `, {
+    keepOnHover: true,
+    action: actions
+  });
+}
+},{"vue":"NtAQ"}],"wOUt":[function(require,module,exports) {
 "use strict";
 
 var _database = require("./database.js");
@@ -103533,6 +103555,8 @@ var zipTools = _interopRequireWildcard(require("./tooling/zip_tooling.js"));
 
 var _events = require("./tooling/events.js");
 
+var vueTooling = _interopRequireWildcard(require("./tooling/vue_tooling.js"));
+
 require("./tooling/video_storage_manager.js");
 
 require("./tooling/observation_storage_manager.js");
@@ -103696,55 +103720,51 @@ var _default = RootComponent = {
           const existingVideoPath = $root.routeData$?.videoInfo?.path;
           const videoBaseName = existingVideoPath.split(/\\|\//g).slice(-1)[0];
           const frontPart = videoBaseName.split('.').slice(0, -1).join('.');
+          vueTooling.showLongMessage(`<br>Hey! This video ("${utils.escapeHtml(videoBaseName)}") is missing a video ID<br>I can't record observations without an ID<br>Just rename the file to "${utils.escapeHtml(frontPart)}.${exampleId}.mp4"<br>Where "${exampleId}" is the video ID<br>`, [{
+            text: 'Rename It For Me',
+            onClick: async (eventData, toastObject) => {
+              try {
+                const {
+                  videoId,
+                  videoPath: path
+                } = await window.backend.giveVideoAnId(existingVideoPath);
 
-          _vue.default.toasted.show(`<br>Hey! This video ("${utils.escapeHtml(videoBaseName)}") is missing a video ID<br>I can't record observations without an ID<br>Just rename the file to "${utils.escapeHtml(frontPart)}.${exampleId}.mp4"<br>Where "${exampleId}" is the video ID<br>`, {
-            keepOnHover: true,
-            action: [{
-              text: 'Rename It For Me',
-              onClick: async (eventData, toastObject) => {
-                try {
-                  const {
-                    videoId,
-                    videoPath: path
-                  } = await window.backend.giveVideoAnId(existingVideoPath);
-
-                  _vue.default.toasted.show(`Video renamed to "${utils.escapeHtml(path)}"`, {
-                    closeOnSwipe: false,
-                    keepOnHover: true,
-                    action: {
-                      text: 'Close',
-                      onClick: (e, toastObject) => {
-                        toastObject.goAway(0);
-                      }
+                _vue.default.toasted.show(`Video renamed to "${utils.escapeHtml(path)}"`, {
+                  closeOnSwipe: false,
+                  keepOnHover: true,
+                  action: {
+                    text: 'Close',
+                    onClick: (e, toastObject) => {
+                      toastObject.goAway(0);
                     }
-                  });
+                  }
+                });
 
-                  await $root.videoInterface.goToThisVideo({
-                    videoId,
-                    path
-                  });
-                } catch (error) {
-                  _vue.default.toasted.show(`<br>Error<br>${utils.escapeHtml(error.message)}<br>`.replace(/\n/g, "<br>"), {
-                    closeOnSwipe: false,
-                    keepOnHover: true,
-                    action: {
-                      text: 'Close',
-                      onClick: (e, toastObject) => {
-                        toastObject.goAway(0);
-                      }
+                await $root.videoInterface.goToThisVideo({
+                  videoId,
+                  path
+                });
+              } catch (error) {
+                _vue.default.toasted.show(`<br>Error<br>${utils.escapeHtml(error.message)}<br>`.replace(/\n/g, "<br>"), {
+                  closeOnSwipe: false,
+                  keepOnHover: true,
+                  action: {
+                    text: 'Close',
+                    onClick: (e, toastObject) => {
+                      toastObject.goAway(0);
                     }
-                  });
-                }
+                  }
+                });
+              }
 
-                toastObject.goAway(1);
-              }
-            }, {
-              text: 'Close',
-              onClick: (eventData, toastObject) => {
-                toastObject.goAway(1);
-              }
-            }]
-          });
+              toastObject.goAway(1);
+            }
+          }, {
+            text: 'Close',
+            onClick: (eventData, toastObject) => {
+              toastObject.goAway(1);
+            }
+          }]);
         } // refresh the promise
 
 
@@ -104267,4 +104287,4 @@ var staticRenderFns = []
           };
         })());
       
-},{"vue":"NtAQ","./plugins/*.js":"Xeh1","./pages/*.vue":"Ka75","./utils.js":"K0yk","./tooling/basics.bundle.js":"WnUT","./tooling/video_tooling.js":"u92t","./tooling/database.js":"GPZG","./plugins/router-plugin.js":"yBli","@zip.js/zip.js":"zGbL","./tooling/zip_tooling.js":"G3bZ","./tooling/events.js":"kB7J","./tooling/video_storage_manager.js":"wOUt","./tooling/observation_storage_manager.js":"k6OT","./templates/LeftSidePanel":"SId6","./templates/RightSidePanel":"bZ7G","./molecules/Card":"OSGx","./mixins/loader":"UPxk"}]},{},["rUmP"], null)
+},{"vue":"NtAQ","./plugins/*.js":"Xeh1","./pages/*.vue":"Ka75","./utils.js":"K0yk","./tooling/basics.bundle.js":"WnUT","./tooling/video_tooling.js":"u92t","./tooling/database.js":"GPZG","./plugins/router-plugin.js":"yBli","@zip.js/zip.js":"zGbL","./tooling/zip_tooling.js":"G3bZ","./tooling/events.js":"kB7J","./tooling/vue_tooling.js":"HtCs","./tooling/video_storage_manager.js":"wOUt","./tooling/observation_storage_manager.js":"k6OT","./templates/LeftSidePanel":"SId6","./templates/RightSidePanel":"bZ7G","./molecules/Card":"OSGx","./mixins/loader":"UPxk"}]},{},["rUmP"], null)

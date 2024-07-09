@@ -27,6 +27,7 @@ import { Router } from './plugins/router-plugin.js'
 import * as zipJs from "@zip.js/zip.js"
 import * as zipTools from "./tooling/zip_tooling.js"
 import { Event, trigger, everyTime, once, globalEvents } from "./tooling/events.js"
+import * as vueTooling from "./tooling/vue_tooling.js"
 
 import "./tooling/video_storage_manager.js"
 import "./tooling/observation_storage_manager.js"
@@ -162,9 +163,9 @@ export default RootComponent = {
                         const existingVideoPath = $root.routeData$?.videoInfo?.path
                         const videoBaseName = existingVideoPath.split(/\\|\//g).slice(-1)[0]
                         const frontPart = videoBaseName.split('.').slice(0,-1).join('.')
-                        Vue.toasted.show(`<br>Hey! This video ("${utils.escapeHtml(videoBaseName)}") is missing a video ID<br>I can't record observations without an ID<br>Just rename the file to "${utils.escapeHtml(frontPart)}.${exampleId}.mp4"<br>Where "${exampleId}" is the video ID<br>`, {
-                            keepOnHover:true,
-                            action: [
+                        vueTooling.showLongMessage(
+                            `<br>Hey! This video ("${utils.escapeHtml(videoBaseName)}") is missing a video ID<br>I can't record observations without an ID<br>Just rename the file to "${utils.escapeHtml(frontPart)}.${exampleId}.mp4"<br>Where "${exampleId}" is the video ID<br>`, 
+                            [
                                 {
                                     text : 'Rename It For Me',
                                     onClick : async (eventData, toastObject) => {
@@ -193,7 +194,7 @@ export default RootComponent = {
                                     },
                                 },
                             ]
-                        })
+                        )
                     }
                     // refresh the promise
                     const promise = deferredPromise()
