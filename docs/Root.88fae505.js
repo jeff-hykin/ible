@@ -85693,42 +85693,39 @@ var _default = {
           if (this.$refs.nativePlayer) {
             let player = this.$refs.nativePlayer;
             player.addEventListener("keydown", this.keydownControls);
-            this.player = player; // enable scrubbing (really this is a fix for the scubber being broken on windows)
-
-            this.dragging = false;
-            this.$refs.nativePlayer.addEventListener("mousemove", eventObject => {
-              window.player = this.player;
-              this.dragging = eventObject.buttons === 1;
-
-              if (this.dragging && this.player.duration) {
-                const width = this.$refs.nativePlayer.clientWidth;
-                const directProportion = eventObject.layerX / width;
-                const maxProportion = 0.68;
-                const minProportion = 0.07;
-                let adjustedProportion = directProportion;
-
-                if (directProportion > maxProportion) {
-                  adjustedProportion = maxProportion;
-                } else if (directProportion < minProportion) {
-                  adjustedProportion = minProportion;
-                }
-
-                const durationProportion = (adjustedProportion - minProportion) / (maxProportion - minProportion);
-                this.player.currentTime = durationProportion * this.player.duration; // for some reason the player likes to un-pause when scrubbing 
-
-                let pauseCount = 4; // try it. I dare you. Try reducing this number and see if scrubbing also causes the player to un-pause
-                // this value should be 1 but its not because browser players are stupid
-
-                setTimeout(async () => {
-                  console.log(`pausing 1`);
-
-                  while (pauseCount--) {
-                    this.player.pause();
-                    await new Promise(r => setTimeout(r, 100));
-                  }
-                }, 0);
-              }
-            }); // 
+            this.player = player; // enable scrubbing 
+            // this was attempt at fixing the scubber on Chrome, but it seems to be unfixable
+            // as of 2024-07-01, the native VideoPlayer in Chrome seems very broken
+            // this.dragging = false
+            // this.$refs.nativePlayer.addEventListener("mousemove", (eventObject)=>{
+            //     window.player = this.player
+            //     this.dragging = eventObject.buttons === 1
+            //     if (this.dragging && this.player.duration) {
+            //         const width = this.$refs.nativePlayer.clientWidth
+            //         const directProportion = eventObject.layerX / width
+            //         const maxProportion = 0.68
+            //         const minProportion = 0.07
+            //         let adjustedProportion = directProportion
+            //         if (directProportion > maxProportion) {
+            //             adjustedProportion = maxProportion
+            //         } else if (directProportion < minProportion) {
+            //             adjustedProportion = minProportion
+            //         }
+            //         const durationProportion = (adjustedProportion-minProportion)/(maxProportion-minProportion)
+            //         this.player.currentTime = durationProportion * this.player.duration
+            //         // for some reason the player likes to un-pause when scrubbing 
+            //         let pauseCount = 4 // try it. I dare you. Try reducing this number and see if scrubbing also causes the player to un-pause
+            //                            // this value should be 1 but its not because browser players are stupid
+            //         setTimeout(async () => {
+            //             console.log(`pausing 1`)
+            //             while (pauseCount--) {
+            //                 this.player.pause()
+            //                 await new Promise(r=>setTimeout(r,100))
+            //             }
+            //         }, 0)
+            //     }
+            // })
+            // 
             // plyr player
             // 
           } else {
