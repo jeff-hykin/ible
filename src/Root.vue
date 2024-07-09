@@ -187,12 +187,6 @@ export default RootComponent = {
                                         toastObject.goAway(1)
                                     },
                                 },
-                                {
-                                    text : 'Close',
-                                    onClick : (eventData, toastObject) => {
-                                        toastObject.goAway(1)
-                                    },
-                                },
                             ]
                         )
                     }

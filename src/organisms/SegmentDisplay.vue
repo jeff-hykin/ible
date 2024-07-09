@@ -19,25 +19,25 @@
                     padding="0.7rem"
                 )
                     | No observations with given filters
-                    br
-                    br
+                    span(style="display: block; height: 1rem;")
+                    span(style="display: block; height: 1rem;")
                     span(style="margin-bottom: -1rem;")
                         | (<u>press N</u> to create an observation at the current time)
-                    br
+                    span(style="display: block; height: 1rem;")
                     span(style="margin-bottom: -1rem;")
                         | (<u>press M</u> to set the endTime)
-                    br
+                    span(style="display: block; height: 1rem;")
                     span(style="margin-bottom: -1rem;")
                         | (<u>press ctrl+S</u> to save the observation)
-                    br
-                    br
-                    br
+                    span(style="display: block; height: 1rem;")
+                    span(style="display: block; height: 1rem;")
+                    span(style="display: block; height: 1rem;")
                     span(style="margin-bottom: -1rem;")
                         | (<u>press C</u> to confirm an observation)
-                    br
+                    span(style="display: block; height: 1rem;")
                     span(style="margin-bottom: -1rem;")
                         | (<u>press X</u> to reject an observation)
-                    br
+                    span(style="display: block; height: 1rem;")
                 row.segment(
                     v-if="segmentsInfo.organizedSegments.length > 0"
                     v-for="(eachSegment, index) in segmentsInfo.organizedSegments"

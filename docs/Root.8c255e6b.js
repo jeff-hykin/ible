@@ -85512,7 +85512,34 @@ var staticRenderFns = []
           };
         })());
       
-},{}],"ALCG":[function(require,module,exports) {
+},{}],"HtCs":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.showLongMessage = showLongMessage;
+
+var _vue = _interopRequireDefault(require("vue"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function showLongMessage(message, actions = []) {
+  _vue.default.toasted.show(`
+        <div style="display: flex; flex-direction: column; padding: 1rem;"> 
+            ${message.replace(/<br>/g, "<span style='display: block; height: 1rem;'></span>")}
+        </div> 
+    `, {
+    keepOnHover: true,
+    action: [...actions, {
+      text: "Close",
+      onClick: (eventData, toastObject) => {
+        toastObject.goAway(1);
+      }
+    }]
+  });
+}
+},{"vue":"NtAQ"}],"ALCG":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -85523,6 +85550,8 @@ exports.default = void 0;
 var _video_tooling = require("../tooling/video_tooling.js");
 
 var basics = _interopRequireWildcard(require("../tooling/basics.bundle.js"));
+
+var vueTooling = _interopRequireWildcard(require("../tooling/vue_tooling.js"));
 
 function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
 
@@ -85588,6 +85617,10 @@ var _default = {
     window.VideoPlayer = this; // debugging
 
     this.internalLoadVideo();
+
+    if (window.chrome) {
+      vueTooling.showLongMessage(`<br><br>Warning: Looks like you're using Chrome-based Browser<br><br>(as of 2024) Chrome's native video player has a lot of bugs, to the point that its considered broken<br>You can try and use it anyways, but its recommended to use Firefox or Safari so the video player will work well<br><br>`);
+    }
   },
 
   // allow things to dynamically hook into the updated event
@@ -85893,7 +85926,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"../tooling/video_tooling.js":"u92t","../tooling/basics.bundle.js":"WnUT"}],"tPI3":[function(require,module,exports) {
+},{"../tooling/video_tooling.js":"u92t","../tooling/basics.bundle.js":"WnUT","../tooling/vue_tooling.js":"HtCs"}],"tPI3":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -87286,7 +87319,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($9e2fc6, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"segments",attrs:{"align-h":"left"}},[_c('transition',{attrs:{"name":"fade"}},[_c('h5',[_vm._v("Observations")])]),_c('transition',{attrs:{"name":"fade"}},[_c('row',{staticClass:"segment-container",attrs:{"align-h":"space-between","position":"relative","height":((_vm.segmentsInfo.maxLevel*2.2) + "rem"),"min-height":_vm.segmentsInfo.organizedSegments.length <= 0 ? '13rem' : 0}},[(_vm.segmentsInfo.organizedSegments.length <= 0)?_c('column',{attrs:{"font-size":"14pt","font-weight":"lighter","color":"gray","position":"absolute","min-height":"12rem","width":"100%","align-h":"center","text-align":"center","padding":"0.7rem"}},[_vm._v("No observations with given filters"),_c('br'),_c('br'),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press N")]),_vm._v(" to create an observation at the current time)")]),_c('br'),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press M")]),_vm._v(" to set the endTime)")]),_c('br'),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press ctrl+S")]),_vm._v(" to save the observation)")]),_c('br'),_c('br'),_c('br'),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press C")]),_vm._v(" to confirm an observation)")]),_c('br'),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press X")]),_vm._v(" to reject an observation)")]),_c('br')]):_vm._e(),_vm._l((_vm.segmentsInfo.organizedSegments),function(eachSegment,index){return (_vm.segmentsInfo.organizedSegments.length > 0)?_c('row',{key:eachSegment.observationId||eachSegment.observationId,staticClass:"segment",style:(("--color: " + (_vm.theColor(eachSegment)))),attrs:{"left":eachSegment.$renderData.leftPercent,"width":eachSegment.$renderData.widthPercent,"top":eachSegment.$renderData.topAmount,"isHuman":eachSegment.isHuman,"confirmedBySomeone":eachSegment.confirmedBySomeone,"rejectedBySomeone":eachSegment.rejectedBySomeone,"selected":eachSegment.observationId == (_vm.$root.selectedSegment&&_vm.$root.selectedSegment.observationId),"background-color":_vm.theColor(eachSegment),"border-color":_vm.theColor(eachSegment)},on:{"click":function($event){return _vm.jumpSegment(eachSegment.$displayIndex)}}},[_vm._v(_vm._s(_vm.computeSymbol(eachSegment.confirmedBySomeone, eachSegment.rejectedBySomeone))),_c('ui-tooltip',{attrs:{"position":"left","animation":"fade"}},[_c('column',{attrs:{"align-h":"left"}},[_c('span',[_vm._v("label: "+_vm._s(eachSegment.label))]),_c('span',[_vm._v("length: "+_vm._s((eachSegment.endTime - eachSegment.startTime).toFixed(2))+" sec")]),_c('span',[_vm._v("start: "+_vm._s(eachSegment.startTime.toFixed(3))+" sec")]),_c('span',[_vm._v("human?: "+_vm._s(eachSegment.isHuman))])])],1)],1):_vm._e()})],2)],1),_c('row',{attrs:{"position":"relative","align-h":"left","align-v":"top","width":"100%"}},[_c('h5',[_vm._v("Filter Observations by Label")]),_c('ui-button',{staticClass:"outline-button",staticStyle:{"position":"absolute","right":"1.5rem","top":"-0.3rem","--button-color":"darkgray"},on:{"click":_vm.toggleAllLabels}},[_vm._v("Toggle All")])],1),_c('container',{staticClass:"labels"},_vm._l((_vm.$root.labels),function(eachLevel,eachLabelName){return (eachLabelName != '(no segments)')?_c('container',{staticClass:"label-toggle",style:(("--label-color: " + (_vm.$root.labels[eachLabelName].selected ? _vm.$root.labels[eachLabelName].color : 'gray') + ";"))},[_c('ui-checkbox',{staticStyle:{"align-items":"flex-start","white-space":"nowrap"},on:{"change":function($event){return _vm.toggleLabel(eachLabelName)}},model:{value:(_vm.$root.labels[eachLabelName].selected),callback:function ($$v) {_vm.$set(_vm.$root.labels[eachLabelName], "selected", $$v)},expression:"$root.labels[eachLabelName].selected"}},[_vm._v(_vm._s(eachLabelName))])],1):_vm._e()}),1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"segments",attrs:{"align-h":"left"}},[_c('transition',{attrs:{"name":"fade"}},[_c('h5',[_vm._v("Observations")])]),_c('transition',{attrs:{"name":"fade"}},[_c('row',{staticClass:"segment-container",attrs:{"align-h":"space-between","position":"relative","height":((_vm.segmentsInfo.maxLevel*2.2) + "rem"),"min-height":_vm.segmentsInfo.organizedSegments.length <= 0 ? '13rem' : 0}},[(_vm.segmentsInfo.organizedSegments.length <= 0)?_c('column',{attrs:{"font-size":"14pt","font-weight":"lighter","color":"gray","position":"absolute","min-height":"12rem","width":"100%","align-h":"center","text-align":"center","padding":"0.7rem"}},[_vm._v("No observations with given filters"),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press N")]),_vm._v(" to create an observation at the current time)")]),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press M")]),_vm._v(" to set the endTime)")]),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press ctrl+S")]),_vm._v(" to save the observation)")]),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press C")]),_vm._v(" to confirm an observation)")]),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press X")]),_vm._v(" to reject an observation)")]),_c('span',{staticStyle:{"display":"block","height":"1rem"}})]):_vm._e(),_vm._l((_vm.segmentsInfo.organizedSegments),function(eachSegment,index){return (_vm.segmentsInfo.organizedSegments.length > 0)?_c('row',{key:eachSegment.observationId||eachSegment.observationId,staticClass:"segment",style:(("--color: " + (_vm.theColor(eachSegment)))),attrs:{"left":eachSegment.$renderData.leftPercent,"width":eachSegment.$renderData.widthPercent,"top":eachSegment.$renderData.topAmount,"isHuman":eachSegment.isHuman,"confirmedBySomeone":eachSegment.confirmedBySomeone,"rejectedBySomeone":eachSegment.rejectedBySomeone,"selected":eachSegment.observationId == (_vm.$root.selectedSegment&&_vm.$root.selectedSegment.observationId),"background-color":_vm.theColor(eachSegment),"border-color":_vm.theColor(eachSegment)},on:{"click":function($event){return _vm.jumpSegment(eachSegment.$displayIndex)}}},[_vm._v(_vm._s(_vm.computeSymbol(eachSegment.confirmedBySomeone, eachSegment.rejectedBySomeone))),_c('ui-tooltip',{attrs:{"position":"left","animation":"fade"}},[_c('column',{attrs:{"align-h":"left"}},[_c('span',[_vm._v("label: "+_vm._s(eachSegment.label))]),_c('span',[_vm._v("length: "+_vm._s((eachSegment.endTime - eachSegment.startTime).toFixed(2))+" sec")]),_c('span',[_vm._v("start: "+_vm._s(eachSegment.startTime.toFixed(3))+" sec")]),_c('span',[_vm._v("human?: "+_vm._s(eachSegment.isHuman))])])],1)],1):_vm._e()})],2)],1),_c('row',{attrs:{"position":"relative","align-h":"left","align-v":"top","width":"100%"}},[_c('h5',[_vm._v("Filter Observations by Label")]),_c('ui-button',{staticClass:"outline-button",staticStyle:{"position":"absolute","right":"1.5rem","top":"-0.3rem","--button-color":"darkgray"},on:{"click":_vm.toggleAllLabels}},[_vm._v("Toggle All")])],1),_c('container',{staticClass:"labels"},_vm._l((_vm.$root.labels),function(eachLevel,eachLabelName){return (eachLabelName != '(no segments)')?_c('container',{staticClass:"label-toggle",style:(("--label-color: " + (_vm.$root.labels[eachLabelName].selected ? _vm.$root.labels[eachLabelName].color : 'gray') + ";"))},[_c('ui-checkbox',{staticStyle:{"align-items":"flex-start","white-space":"nowrap"},on:{"change":function($event){return _vm.toggleLabel(eachLabelName)}},model:{value:(_vm.$root.labels[eachLabelName].selected),callback:function ($$v) {_vm.$set(_vm.$root.labels[eachLabelName], "selected", $$v)},expression:"$root.labels[eachLabelName].selected"}},[_vm._v(_vm._s(eachLabelName))])],1):_vm._e()}),1)],1)}
 var staticRenderFns = []
 
           return {
@@ -103393,29 +103426,7 @@ var staticRenderFns = []
 module.exports = {
   "Home": require("./Home.vue")
 };
-},{"./Home.vue":"gi53"}],"HtCs":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.showLongMessage = showLongMessage;
-
-var _vue = _interopRequireDefault(require("vue"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function showLongMessage(message, actions = []) {
-  _vue.default.toasted.show(`
-        <div style="display: flex; flex-direction: column; with: 10rem;"> 
-            ${message}
-        </div> 
-    `, {
-    keepOnHover: true,
-    action: actions
-  });
-}
-},{"vue":"NtAQ"}],"wOUt":[function(require,module,exports) {
+},{"./Home.vue":"gi53"}],"wOUt":[function(require,module,exports) {
 "use strict";
 
 var _database = require("./database.js");
@@ -103801,11 +103812,6 @@ var _default = RootComponent = {
                 });
               }
 
-              toastObject.goAway(1);
-            }
-          }, {
-            text: 'Close',
-            onClick: (eventData, toastObject) => {
               toastObject.goAway(1);
             }
           }]);

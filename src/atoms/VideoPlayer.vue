@@ -21,6 +21,7 @@
 <script>
 import { extractYoutubeVideoId, isLocalVideo } from "../tooling/video_tooling.js"
 import * as basics from "../tooling/basics.bundle.js"
+import * as vueTooling from "../tooling/vue_tooling.js"
 const { get, set } = basics
 
 export default {
@@ -57,6 +58,10 @@ export default {
         
         window.VideoPlayer = this // debugging
         this.internalLoadVideo()
+        
+        if (window.chrome) {
+            vueTooling.showLongMessage(`<br><br>Warning: Looks like you're using Chrome-based Browser<br><br>(as of 2024) Chrome's native video player has a lot of bugs, to the point that its considered broken<br>You can try and use it anyways, but its recommended to use Firefox or Safari so the video player will work well<br><br>`)
+        }
     },
     // allow things to dynamically hook into the updated event
     destroyed() {
