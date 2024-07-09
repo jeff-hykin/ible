@@ -4,7 +4,9 @@ echo "1.42.1"; : --% ' |out-null <#'; }; version="$(dv)"; deno="$HOME/.deno/$ver
 # */0}`;
 import "data:text/javascript;base64,ICBmdW5jdGlvbiBmcm9tRmlsZVVybCh1cmwpIHsKICAgIHVybCA9IHVybCBpbnN0YW5jZW9mIFVSTCA/IHVybCA6IG5ldyBVUkwodXJsKTsKICAgIGlmIChEZW5vLmJ1aWxkLm9zID09ICJ3aW5kb3dzIikgewogICAgICBpZiAodXJsLnByb3RvY29sICE9ICJmaWxlOiIpIHsKICAgICAgICB0aHJvdyBuZXcgVHlwZUVycm9yKCJNdXN0IGJlIGEgZmlsZSBVUkwuIik7CiAgICAgIH0KICAgICAgbGV0IHBhdGg3ID0gZGVjb2RlVVJJQ29tcG9uZW50KHVybC5wYXRobmFtZS5yZXBsYWNlKC9cLy9nLCAiXFwiKS5yZXBsYWNlKC8lKD8hWzAtOUEtRmEtZl17Mn0pL2csICIlMjUiKSkucmVwbGFjZSgvXlxcKihbQS1aYS16XTopKFxcfCQpLywgIiQxXFwiKTsKICAgICAgaWYgKHVybC5ob3N0bmFtZSAhPSAiIikgewogICAgICAgIHBhdGg3ID0gYFxcXFwke3VybC5ob3N0bmFtZX0ke3BhdGg3fWA7CiAgICAgIH0KICAgICAgcmV0dXJuIHBhdGg3OwogICAgfSBlbHNlIHsKICAgICAgaWYgKHVybC5wcm90b2NvbCAhPSAiZmlsZToiKSB7CiAgICAgICAgdGhyb3cgbmV3IFR5cGVFcnJvcigiTXVzdCBiZSBhIGZpbGUgVVJMLiIpOwogICAgICB9CiAgICAgIHJldHVybiBkZWNvZGVVUklDb21wb25lbnQodXJsLnBhdGhuYW1lLnJlcGxhY2UoLyUoPyFbMC05QS1GYS1mXXsyfSkvZywgIiUyNSIpKTsKICAgIH0KICB9CiAgT2JqZWN0LmRlZmluZVByb3BlcnR5KERlbm8sICJtYWluTW9kdWxlIiwgewogICAgZ2V0ICgpIHsKICAgICAgY29uc3QgZXJyID0gbmV3IEVycm9yKCk7CiAgICAgIGNvbnN0IGZpbGVQYXRocyA9IFsKICAgICAgICAuLi5lcnIuc3RhY2subWF0Y2hBbGwoL14uKz8oZmlsZTpcL1wvXC9bXHdcV10qPyk6L2dtKQogICAgICBdLm1hcCgoZWFjaCk9PmVhY2hbMV0pOwogICAgICBjb25zdCBsYXN0UGF0aCA9IGZpbGVQYXRocy5zbGljZSgtMSlbMF07CiAgICAgIGlmIChsYXN0UGF0aCkgewogICAgICAgIHRyeSB7CiAgICAgICAgICBpZiAoRGVuby5zdGF0U3luYyhmcm9tRmlsZVVybChsYXN0UGF0aCkpLmlzRmlsZSkgewogICAgICAgICAgICByZXR1cm4gbGFzdFBhdGg7CiAgICAgICAgICB9CiAgICAgICAgfSBjYXRjaCAoZXJyb3IpIHt9CiAgICAgIH0KICAgIH0KICB9KTs="
 // ^that is to fix this (compiling to windows): https://github.com/denoland/deno/issues/19905
-import { FileSystem } from "https://deno.land/x/quickr@0.6.67/main/file_system.js"
+import { FileSystem } from "https://deno.land/x/quickr@0.6.70/main/file_system.js"
+import { OperatingSystem } from "https://deno.land/x/quickr@0.6.70/main/operating_system.js"
+// import { OperatingSystem } from "/Users/jeffhykin/repos/quickr/main/operating_system.js"
 import { parseArgs, flag, required, initialValue } from "https://deno.land/x/good@1.7.1.0/flattened/parse_args.js"
 import { toCamelCase } from "https://deno.land/x/good@1.7.1.0/flattened/to_camel_case.js"
 import { didYouMean } from "https://deno.land/x/good@1.7.1.0/flattened/did_you_mean.js"
@@ -118,8 +120,9 @@ Options:
     //
     // setup the server
     //
+    const url = `http://${hostname}:${port}/`
     console.log(`# `)
-    console.log(`# Server running at http://${hostname}:${port}/`)
+    console.log(`# Server running at ${url}`)
     console.log(`# `)
     console.log()
     console.log(`Put your videos somewhere in here:\n${videoDirectory}`)
@@ -204,5 +207,7 @@ Options:
             return new Response(error.message, { status: 404 } )
         }
     })
+
+    OperatingSystem.openUrl(url).catch(console.error)
 
 // (this comment is part of deno-guillotine, dont remove) #>
