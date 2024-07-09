@@ -102139,7 +102139,6 @@ var _default = {
     isLocalVideo: _observation_tooling.isLocalVideo,
 
     async getVideoExtraInfo() {
-      console.log(`await trigger(globalEvents.requestVideosToList`);
       let videoIds = Object.keys(this.$root.searchResults.videos);
       let videos;
 
@@ -102152,36 +102151,29 @@ var _default = {
             videoId: null,
             path: each
           })));
-          console.debug(`[window.backend.getLocalVideoPaths] videos is:`, videos);
         } catch (error) {
           console.warn(`[VideoLister] wasn't able to get list of videos from backend: ${error}`);
         }
       } else {
-        console.log(`frontendDb.getVideos(videoIds)`);
         videos = await _database.frontendDb.getVideos(videoIds);
       } // consolidate by path
 
 
       const videoByPath = {};
-      videos = videos;
-      console.debug(`[VideoLister] videos is:`, JSON.parse(JSON.stringify(videos)));
+      videos = videos; // console.debug(`[VideoLister] videos is:`,JSON.parse(JSON.stringify(videos)))
 
       for (const each of videos) {
-        console.debug(`JSON.stringify(each) is:`, JSON.stringify(each));
-
         if (each?.path) {
           videoByPath[each.path] = { ...videoByPath[each.path],
             ...each
           };
           videoByPath[each.path].name = videoTools.extractLocalVideoNameFromPath(each.path);
-        }
+        } // combine all information into each
 
-        console.debug(`videoByPath[each.path] is:`, videoByPath[each.path]); // combine all information into each
 
         Object.assign(each, videoByPath[each.path]);
-      }
+      } // remove duplicates
 
-      console.debug(`[VideoLister] videos 2 is:`, JSON.parse(JSON.stringify(videos))); // remove duplicates
 
       const pathList = [];
       const nonDuplicateVideos = [];
@@ -102195,7 +102187,6 @@ var _default = {
         }
       }
 
-      console.debug(`[VideoLister] videos 3 is:`, JSON.parse(JSON.stringify(videos)));
       this.videos = videos;
       setTimeout(() => {
         this.$forceUpdate();
@@ -102395,8 +102386,6 @@ var _default = {
     },
 
     clickedHasWatchedVideo() {
-      console.log(`clickedHasWatchedVideo`);
-
       if (this.hasWatchedVideo()) {
         this.videoInfo.usersFinishedWatchingAt[this.$root.email] = null;
       } else {
@@ -102408,8 +102397,6 @@ var _default = {
     },
 
     clickedHasLabeledVideo() {
-      console.log(`clickedHasLabeledVideo`);
-
       if (this.hasLabeledVideo()) {
         this.videoInfo.usersFinishedLabelingAt[this.$root.email] = null;
       } else {
@@ -103399,13 +103386,12 @@ const name = "videoStorageManager";
   for (const [eachOld, eachNew] of basics.zip(oldData, updatedVideos)) {
     for (const [key, value] of Object.entries(eachNew)) {
       if (!eachOld || JSON.stringify(eachOld[key]) != JSON.stringify(value)) {
-        console.debug(`oldData is:`, JSON.stringify(eachOld));
-        console.debug(`newData is:`, JSON.stringify(eachNew));
+        // console.debug(`oldData is:`,   JSON.stringify(eachOld))
+        // console.debug(`newData is:`,   JSON.stringify(eachNew))
         const mergedData = basics.merge({
           oldData: eachOld,
           newData: eachNew
-        });
-        console.debug(`mergedData is:`, JSON.stringify(mergedData));
+        }); // console.debug(`mergedData is:`,JSON.stringify(mergedData))
 
         if (mergedData.videoId) {
           actuallyUpdatedVideos.push(mergedData);
@@ -103704,9 +103690,6 @@ var _default = RootComponent = {
         if (!videoInfoChangeChecker.changedSinceLastCheck($root.routeData$?.videoInfo)) {
           return;
         }
-
-        console.debug(`$root.routeData$.videoInfo is:`, { ...$root.routeData$.videoInfo
-        });
 
         if ($root.routeData$?.videoInfo?.path && !$root.routeData$?.videoInfo?.videoId) {
           const exampleId = (0, utils.createVideoId)();
@@ -104074,9 +104057,8 @@ var _default = RootComponent = {
           if (routeDataNoNull[eachKey] == null) {
             delete routeDataNoNull[eachKey];
           }
-        }
+        } // prevent navigating to the same location
 
-        console.debug(`routeDataNoNull is:`, routeDataNoNull); // prevent navigating to the same location
 
         const previousRouteData = JSON.parse(prevRouteDataJson);
         const currentJson = JSON.stringify(routeDataNoNull);
@@ -104219,7 +104201,6 @@ var _default = RootComponent = {
 
     addLabel(labelName, videoId) {
       const noneAreSelected = Object.values(this.$root.labels).every(each => !each.selected);
-      console.debug(`labelName is:`, labelName);
 
       if (!this.$root.labels[labelName]) {
         // if the label doesnt exist
@@ -104248,7 +104229,6 @@ var _default = RootComponent = {
 
       this.$root.labels = { ...this.$root.labels
       };
-      console.debug(`this.$root.labels is:`, this.$root.labels);
     },
 
     selectAllLabels() {
