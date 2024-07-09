@@ -85562,6 +85562,8 @@ var _default = {
 
   data() {
     return {
+      dragging: false,
+      isWindows: navigator.userAgent.indexOf('Win') !== -1,
       _previousCurrentTime: null,
       _previousVideoPathOrUrl: null,
       player: null
@@ -85626,15 +85628,17 @@ var _default = {
       }
     },
 
-    focusWatcher() {
+    focusWatcher(...args) {
       // 
       // don't let focus stay on plyr player (breaks keyboard controls)
       // 
-      // we don't want to focus on the iframe ever
-      if (document.activeElement.tagName === "IFRAME" || document.activeElement.tagName === "VIDEO") {
-        console.log(`[VideoPlayer] removing focus from video element`); // focusing on nothing to move the focus to the body
+      if (!this.dragging) {
+        // de-focus the video element so keyboard controls work
+        if (document.activeElement.tagName === "IFRAME" || document.activeElement.tagName === "VIDEO") {
+          console.log(`[VideoPlayer] removing focus from video element`); // focusing on nothing to move the focus to the body
 
-        document.activeElement.blur();
+          document.activeElement.blur();
+        }
       }
     },
 
@@ -85686,10 +85690,45 @@ var _default = {
           // 
           // local player
           //
-          if (videoIsPath) {
+          if (this.$refs.nativePlayer) {
             let player = this.$refs.nativePlayer;
             player.addEventListener("keydown", this.keydownControls);
-            this.player = player; // 
+            this.player = player; // enable scrubbing (really this is a fix for the scubber being broken on windows)
+
+            this.dragging = false;
+            this.$refs.nativePlayer.addEventListener("mousemove", eventObject => {
+              window.player = this.player;
+              this.dragging = eventObject.buttons === 1;
+
+              if (this.dragging && this.player.duration) {
+                const width = this.$refs.nativePlayer.clientWidth;
+                const directProportion = eventObject.layerX / width;
+                const maxProportion = 0.68;
+                const minProportion = 0.07;
+                let adjustedProportion = directProportion;
+
+                if (directProportion > maxProportion) {
+                  adjustedProportion = maxProportion;
+                } else if (directProportion < minProportion) {
+                  adjustedProportion = minProportion;
+                }
+
+                const durationProportion = (adjustedProportion - minProportion) / (maxProportion - minProportion);
+                this.player.currentTime = durationProportion * this.player.duration; // for some reason the player likes to un-pause when scrubbing 
+
+                let pauseCount = 4; // try it. I dare you. Try reducing this number and see if scrubbing also causes the player to un-pause
+                // this value should be 1 but its not because browser players are stupid
+
+                setTimeout(async () => {
+                  console.log(`pausing 1`);
+
+                  while (pauseCount--) {
+                    this.player.pause();
+                    await new Promise(r => setTimeout(r, 100));
+                  }
+                }, 0);
+              }
+            }); // 
             // plyr player
             // 
           } else {
@@ -85697,35 +85736,43 @@ var _default = {
             // fix the scubber update issue
             // 
 
-            Object.defineProperty(Object.getPrototypeOf(player), "currentTime", {
-              set(input) {
-                // Bail if media duration isn't available yet
-                if (!this.duration) {
-                  return;
-                } // Validate input
+            try {
+              Object.defineProperty(Object.getPrototypeOf(player), "currentTime", {
+                set(input) {
+                  // Bail if media duration isn't available yet
+                  if (!this.duration) {
+                    return;
+                  } // Validate input
 
 
-                input = input - 0;
+                  input = input - 0;
 
-                if (input < 0) {
-                  input = 0;
+                  if (input < 0) {
+                    input = 0;
+                  }
+
+                  const inputIsValid = input == input && input >= 0;
+
+                  if (inputIsValid) {
+                    // Set
+                    this.media.currentTime = Math.min(input, this.duration);
+                  }
+                },
+
+                get() {
+                  return this.media.currentTime;
                 }
 
-                const inputIsValid = input == input && input >= 0;
+              });
+            } catch (error) {} // plyr
 
-                if (inputIsValid) {
-                  // Set
-                  this.media.currentTime = Math.min(input, this.duration);
-                }
-              },
 
-              get() {
-                return this.media.currentTime;
-              }
+            const container = player?.elements?.container;
 
-            }); // plyr
+            if (container) {
+              container.addEventListener("keydown", this.keydownControls);
+            }
 
-            player.elements.container.addEventListener("keydown", this.keydownControls);
             this.player = player;
           }
         }
@@ -85837,7 +85884,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($890b00, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('row',{attrs:{"width":"100%"}},[_c('transition',{attrs:{"name":"fade"}},[(!_vm.videoPathOrUrl)?_c('row',{staticClass:"message"},[_vm._v("no video selected")]):_vm._e()],1),_c('transition',{attrs:{"name":"fade"}},[(_vm.videoPathOrUrl && !_vm.player)?_c('row',{staticClass:"message"},[_vm._v("Video Loading...")]):_vm._e()],1),(_vm.isLocalVideo(_vm.videoPathOrUrl))?_c('video',{ref:"nativePlayer",staticStyle:{"width":"100%","z-index":"7"},attrs:{"controls":"controls"}},[_c('source',{attrs:{"src":_vm.localVideoSource,"type":"video/mp4"}})]):_vm._e(),(!_vm.isLocalVideo(_vm.videoPathOrUrl))?_c('vue-plyr',{key:("" + (Math.random())).replace('.',''),ref:"vuePlyr",style:(("transition: all ease 0.6s; opacity: " + (_vm.videoPathOrUrl && _vm.player ? 1 : 0)))},[(!_vm.isLocalVideo(_vm.videoPathOrUrl))?_c('div',{staticClass:"plyr__video-embed"},[_c('iframe',{ref:"videoPlayer",attrs:{"src":("https://www.youtube.com/embed/" + (_vm.extractYoutubeVideoId(_vm.videoPathOrUrl)) + "?amp;iv_load_policy=3&amp;modestbranding=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1"),"allowtransparency":"allowtransparency","controls":"controls"}})]):_vm._e()]):_vm._e()],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('row',{attrs:{"width":"100%"}},[_c('transition',{attrs:{"name":"fade"}},[(!_vm.videoPathOrUrl)?_c('row',{staticClass:"message"},[_vm._v("no video selected")]):_vm._e()],1),_c('transition',{attrs:{"name":"fade"}},[(_vm.videoPathOrUrl && !_vm.player)?_c('row',{staticClass:"message"},[_vm._v("Video Loading...")]):_vm._e()],1),(_vm.isLocalVideo(_vm.videoPathOrUrl))?_c('video',{ref:"nativePlayer",staticStyle:{"width":"100%","z-index":"7"},attrs:{"controls":"controls"}},[_c('source',{attrs:{"src":_vm.localVideoSource}})]):_vm._e(),(!_vm.isLocalVideo(_vm.videoPathOrUrl))?_c('vue-plyr',{key:("" + (Math.random())).replace('.',''),ref:"vuePlyr",style:(("transition: all ease 0.6s; opacity: " + (_vm.videoPathOrUrl && _vm.player ? 1 : 0)))},[(!_vm.isLocalVideo(_vm.videoPathOrUrl))?_c('div',{staticClass:"plyr__video-embed"},[_c('iframe',{ref:"videoPlayer",attrs:{"src":("https://www.youtube.com/embed/" + (_vm.extractYoutubeVideoId(_vm.videoPathOrUrl)) + "?amp;iv_load_policy=3&amp;modestbranding=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1"),"allowtransparency":"allowtransparency","controls":"controls"}})]):_vm._e()]):_vm._e()],1)}
 var staticRenderFns = []
 
           return {
@@ -103860,12 +103907,11 @@ var _default = RootComponent = {
         const newVideoInfo = { ...videoInfo,
           ...originalVideoInfo
         }; // this is a hack. The CenterStage detects changes based on the videoId (should be refacted a bit)
+        // if (!newVideoInfo.videoId) {
 
-        if (!newVideoInfo.videoId) {
-          setTimeout(() => {
-            window.location.reload();
-          }, 500);
-        }
+        setTimeout(() => {
+          window.location.reload();
+        }, 500); // }
 
         return $root.push({
           videoInfo: newVideoInfo

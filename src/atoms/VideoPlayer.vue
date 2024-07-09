@@ -7,7 +7,7 @@
             row.message(v-if='videoPathOrUrl && !player')
                 | Video Loading...
         video(v-if='isLocalVideo(videoPathOrUrl)' ref="nativePlayer" controls style="width: 100%; z-index: 7;")
-            source(:src="localVideoSource" type="video/mp4")
+            source(:src="localVideoSource")
         vue-plyr(v-if='!isLocalVideo(videoPathOrUrl)' ref="vuePlyr" :style="`transition: all ease 0.6s; opacity: ${videoPathOrUrl && player ? 1 : 0}`" :key="`${Math.random()}`.replace('.','')")
             div.plyr__video-embed(v-if='!isLocalVideo(videoPathOrUrl)')
                 iframe(
@@ -35,6 +35,8 @@ export default {
     },
     data() {
         return {
+            dragging: false,
+            isWindows: navigator.userAgent.indexOf('Win') !== -1,
             _previousCurrentTime: null,
             _previousVideoPathOrUrl: null,
             player: null,
@@ -86,16 +88,18 @@ export default {
                 this.$emit("currentTimeChanged", currentTime)
             }
         },
-        focusWatcher() {
+        focusWatcher(...args) {
             // 
             // don't let focus stay on plyr player (breaks keyboard controls)
             // 
             
-            // we don't want to focus on the iframe ever
-            if (document.activeElement.tagName === "IFRAME" || document.activeElement.tagName === "VIDEO") {
-                console.log(`[VideoPlayer] removing focus from video element`)
-                // focusing on nothing to move the focus to the body
-                document.activeElement.blur()
+            if (!this.dragging) {
+                // de-focus the video element so keyboard controls work
+                if (document.activeElement.tagName === "IFRAME" || document.activeElement.tagName === "VIDEO") {
+                    console.log(`[VideoPlayer] removing focus from video element`)
+                    // focusing on nothing to move the focus to the body
+                    document.activeElement.blur()
+                }
             }
         },
         resetData() {
@@ -148,6 +152,36 @@ export default {
                             let player = this.$refs.nativePlayer
                             player.addEventListener("keydown", this.keydownControls)
                             this.player = player
+                            // enable scrubbing (really this is a fix for the scubber being broken on windows)
+                            this.dragging = false
+                            this.$refs.nativePlayer.addEventListener("mousemove", (eventObject)=>{
+                                window.player = this.player
+                                this.dragging = eventObject.buttons === 1
+                                if (this.dragging && this.player.duration) {
+                                    const width = this.$refs.nativePlayer.clientWidth
+                                    const directProportion = eventObject.layerX / width
+                                    const maxProportion = 0.68
+                                    const minProportion = 0.07
+                                    let adjustedProportion = directProportion
+                                    if (directProportion > maxProportion) {
+                                        adjustedProportion = maxProportion
+                                    } else if (directProportion < minProportion) {
+                                        adjustedProportion = minProportion
+                                    }
+                                    const durationProportion = (adjustedProportion-minProportion)/(maxProportion-minProportion)
+                                    this.player.currentTime = durationProportion * this.player.duration
+                                    // for some reason the player likes to un-pause when scrubbing 
+                                    let pauseCount = 4 // try it. I dare you. Try reducing this number and see if scrubbing also causes the player to un-pause
+                                                       // this value should be 1 but its not because browser players are stupid
+                                    setTimeout(async () => {
+                                        console.log(`pausing 1`)
+                                        while (pauseCount--) {
+                                            this.player.pause()
+                                            await new Promise(r=>setTimeout(r,100))
+                                        }
+                                    }, 0)
+                                }
+                            })
                         // 
                         // plyr player
                         // 

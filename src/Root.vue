@@ -267,11 +267,11 @@ export default RootComponent = {
                     }
                     const newVideoInfo = {...videoInfo, ...originalVideoInfo}
                     // this is a hack. The CenterStage detects changes based on the videoId (should be refacted a bit)
-                    if (!newVideoInfo.videoId) {
+                    // if (!newVideoInfo.videoId) {
                         setTimeout(() => {
                             window.location.reload()
                         }, 500)
-                    }
+                    // }
                     return $root.push({ videoInfo: newVideoInfo })
                 },
                 onceVideoIsLoaded(callback=()=>{}) {
