@@ -2,8 +2,7 @@
     row(width="100%")
         transition(name="fade")
             row.message(v-if='!videoPathOrUrl')
-                | Videos (up there ↗) will show  
-                | You video files from your HOME/Videos folder  
+                | no video selected
         transition(name="fade")
             row.message(v-if='videoPathOrUrl && !player')
                 | Video Loading...

@@ -24,11 +24,13 @@ everyTime(globalEvents.updateVideoRequest).then(async (who, updatedVideos)=>{
     for (const [eachOld, eachNew] of basics.zip(oldData, updatedVideos)) {
         for (const [key, value] of Object.entries(eachNew)) {
             if (!eachOld || JSON.stringify(eachOld[key]) != JSON.stringify(value)) {
-                console.debug(`oldData is:`,   JSON.stringify(eachOld))
-                console.debug(`newData is:`,   JSON.stringify(eachNew))
+                // console.debug(`oldData is:`,   JSON.stringify(eachOld))
+                // console.debug(`newData is:`,   JSON.stringify(eachNew))
                 const mergedData = basics.merge({oldData: eachOld, newData: eachNew})
-                console.debug(`mergedData is:`,JSON.stringify(mergedData))
-                actuallyUpdatedVideos.push(mergedData)
+                // console.debug(`mergedData is:`,JSON.stringify(mergedData))
+                if (mergedData.videoId) {
+                    actuallyUpdatedVideos.push(mergedData)
+                }
                 break
             }
         }

@@ -10,7 +10,10 @@
         WrappedTopSearch
         
         column(v-if="!aVideoIsSelected()" width="100%" height="100vh" flex-shrink="1" color="gray")
-            h5 No Video Selected
+            h5 
+                | Videos (up there ↗) will show  
+                br
+                | You video files from your HOME/Videos folder
             
         transition(name="fade")
             row.center-stage(v-show="aVideoIsSelected()" align-v="top" align-h="center" padding-top="8rem")
@@ -33,7 +36,7 @@
                                 //- NEXT
                                 SideButton.right-side-button(right @click='wrapperForSelectNextSegment')
                             row(width="100%" padding="2rem" align-v="top")
-                                JsonTree.json-tree(:data="videoInfo||{}")
+                                JsonTree.json-tree(v-if="videoInfo&&videoInfo.videoId" :data="videoInfo||{}")
                                 column(v-if="videoInfo&&videoInfo.videoId" flex-basis="40%" width="100%")
                                     UiSwitch(v-model="watchedSwitch" @click="clickedHasWatchedVideo")
                                         div(style="width: 10rem")
@@ -97,6 +100,7 @@ export default {
         window.CenterState = this // debugging only
         // get video info ASAP
         const videoId = this.$root.videoInterface.videoId
+        
         if (videoId) {
             globalEvents.requestVideos.from("mounted").triggerWith([videoId]).then(async (responses)=>{
                 let videos = responses[0]
@@ -144,7 +148,6 @@ export default {
             return !!(this.videoInfo?.usersFinishedVerifyingAt||{})[this.$root.email]
         },
         clickedHasWatchedVideo() {
-            console.log(`clickedHasWatchedVideo`)
             if (this.hasWatchedVideo()) {
                 this.videoInfo.usersFinishedWatchingAt[this.$root.email] = null
             } else {
@@ -153,7 +156,6 @@ export default {
             this.videoInfo = { ...this.videoInfo }
         },
         clickedHasLabeledVideo() {
-            console.log(`clickedHasLabeledVideo`)
             if (this.hasLabeledVideo()) {
                 this.videoInfo.usersFinishedLabelingAt[this.$root.email] = null
             } else {

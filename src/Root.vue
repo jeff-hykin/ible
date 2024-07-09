@@ -157,7 +157,6 @@ export default RootComponent = {
                         return
                     }
                     
-                    console.debug(`$root.routeData$.videoInfo is:`,{...$root.routeData$.videoInfo})
                     if ($root.routeData$?.videoInfo?.path && !$root.routeData$?.videoInfo?.videoId) {
                         const exampleId = createVideoId()
                         const existingVideoPath = $root.routeData$?.videoInfo?.path
@@ -253,19 +252,26 @@ export default RootComponent = {
                     // 
                     // add what we know to the videoInfo
                     // 
-                    if (!!videoInfo?.videoId && typeof videoInfo?.videoId == "string") {
+                    if (videoInfo?.videoId && typeof videoInfo?.videoId == "string") {
                         let videoPath = untrackedData.videoIdToPath[videoInfo.videoId]
                         const moreVideoInfo = await frontendDb.getVideoById(videoInfo.videoId)
                         if (moreVideoInfo) {
                             videoInfo = { path: videoPath, ...moreVideoInfo, ...videoInfo}
                         }
-                    } else if (!!videoInfo?.path && typeof videoInfo?.path == "string") {
+                    } else if (videoInfo?.path && typeof videoInfo?.path == "string") {
                         const moreVideoInfo = await frontendDb.getVideoByPath(videoInfo.path)
                         if (moreVideoInfo) {
                             videoInfo = {...moreVideoInfo, ...videoInfo}
                         }
                     }
-                    return $root.push({ videoInfo: {...videoInfo, ...originalVideoInfo} })
+                    const newVideoInfo = {...videoInfo, ...originalVideoInfo}
+                    // this is a hack. The CenterStage detects changes based on the videoId (should be refacted a bit)
+                    if (!newVideoInfo.videoId) {
+                        setTimeout(() => {
+                            window.location.reload()
+                        }, 500)
+                    }
+                    return $root.push({ videoInfo: newVideoInfo })
                 },
                 onceVideoIsLoaded(callback=()=>{}) {
                     if ($root.videoInterface._videoLoadedPromise.state != "pending") {
@@ -547,7 +553,6 @@ export default RootComponent = {
         },
         addLabel(labelName, videoId) {
             const noneAreSelected = Object.values(this.$root.labels).every(each=>!each.selected)
-            console.debug(`labelName is:`,labelName)
             if (!this.$root.labels[labelName]) {
                 // if the label doesnt exist
                 this.$toasted.show(`Note: Thats a new label name`).goAway(3500)
@@ -571,7 +576,6 @@ export default RootComponent = {
                 }
             }
             this.$root.labels = {...this.$root.labels}
-            console.debug(`this.$root.labels is:`,this.$root.labels)
         },
         selectAllLabels() {
             const newLabelValues = {}
