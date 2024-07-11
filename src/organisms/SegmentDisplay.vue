@@ -28,7 +28,7 @@
                         | (<u>press M</u> to set the endTime)
                     span(style="display: block; height: 1rem;")
                     span(style="margin-bottom: -1rem;")
-                        | (<u>press ctrl+S</u> to save the observation)
+                        | (<u>press alt+S</u> to save the observation)
                     span(style="display: block; height: 1rem;")
                     span(style="display: block; height: 1rem;")
                     span(style="display: block; height: 1rem;")

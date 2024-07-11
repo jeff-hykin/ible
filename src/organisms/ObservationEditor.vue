@@ -390,7 +390,7 @@ export default {
             this.$refs.observerElement.$el.querySelector("input").value = this.observationData.observer
         },
         preventBubbling(eventObject) {
-            if (eventObject.ctrlKey && eventObject.key == "s") {
+            if (eventObject.altKey && eventObject.key == "s") {
                 this.onSaveEdit()
             }
             eventObject.stopPropagation()
