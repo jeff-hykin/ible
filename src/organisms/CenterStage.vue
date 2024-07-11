@@ -9,11 +9,11 @@
     )
         WrappedTopSearch
         
-        column(v-if="!aVideoIsSelected()" width="100%" height="100vh" flex-shrink="1" color="gray")
-            h5 
-                | Videos (up there ↗) will show  
+        column(v-if="!aVideoIsSelected()" width="100%" height="100vh" flex-shrink="1" color="gray" align-h="center")
+            h5(style="text-align: center")
+                | Videos (up there ↗) shows
                 br
-                | You video files from your HOME/Videos folder
+                | videos from your HOME/Videos folder
             
         transition(name="fade")
             row.center-stage(v-show="aVideoIsSelected()" align-v="top" align-h="center" padding-top="8rem")

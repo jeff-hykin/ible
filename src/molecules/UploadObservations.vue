@@ -132,7 +132,7 @@ export default {
                 await zipTools.createZipOfTextFiles({
                     "observations.typed.tsv": await observationTooling.observationsToCsv(entries),
                     "videos.typed.tsv": await videoTooling.videosToCsv(videos),
-                    "observers#videos.typed.tsv": await videoTooling.videoObserverTableToCsv(videos),
+                    "video_review_status.typed.tsv": await videoTooling.videoObserverTableToCsv(videos),
                 })
             )
         },
@@ -180,8 +180,8 @@ export default {
                 videoTooling.videosCsvToActions(files["videos.typed.tsv"]).then(frontendDb.executeVideoActions)
             }
             
-            if (files["observers#videos.typed.tsv"]) {
-                videoTooling.videoObserverTableCsvToActions(files["observers#videos.typed.tsv"]).then(frontendDb.executeVideoActions)
+            if (files["video_review_status.typed.tsv"]) {
+                videoTooling.videoObserverTableCsvToActions(files["video_review_status.typed.tsv"]).then(frontendDb.executeVideoActions)
             }
             
             if (files["observations.typed.tsv"]) {
