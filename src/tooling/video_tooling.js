@@ -236,56 +236,57 @@ export const currentFixedSizeOfYouTubeVideoId = 11
     }
 
     export const videoObserverTableToCsv = async (videos) => {
-        let videoObserverRows = []
+        const videoObservers = {}
         for (const each of videos) {
+            if (!each.videoId) {
+                continue
+            }
             const usersFinishedWatching  = each.usersFinishedWatchingAt||{}
             const usersFinishedLabeling  = each.usersFinishedLabelingAt||{}
             const usersFinishedVerifying = each.usersFinishedVerifyingAt||{}
+            const initEntry = (observer)=>{
+                const id = JSON.stringify([observer, each.videoId])
+                videoObservers[id] = videoObservers[id] || {
+                    uploadAction: "update",
+                    videoId: each.videoId,
+                    observer: observer,
+                    watchedVideoAt: null,
+                    labeledVideoAt: null,
+                    verifiedVideoAt: null,
+                }
+                return videoObservers[id]
+            }
             
             for (const [username, timeFinished] of Object.entries(usersFinishedWatching)) {
+                const entry = initEntry(username)
                 if (timeFinished != null) {
-                    videoObserverRows.push({
-                        "uploadAction": "update",
-                        "videoId": each.videoId,
-                        "observer": username,
-                        "observerAction": "watch",
-                        "timeFinished": new Date(timeFinished),
-                    })
+                    entry.watchedVideoAt = new Date(timeFinished)
                 }
             }
             for (const [username, timeFinished] of Object.entries(usersFinishedLabeling)) {
+                const entry = initEntry(username)
                 if (timeFinished != null) {
-                    videoObserverRows.push({
-                        "uploadAction": "update",
-                        "videoId": each.videoId,
-                        "observer": username,
-                        "observerAction": "label",
-                        "timeFinished": new Date(timeFinished),
-                    })
+                    entry.labeledVideoAt = new Date(timeFinished)
                 }
             }
             for (const [username, timeFinished] of Object.entries(usersFinishedVerifying)) {
-                if (timeFinished != null) {
-                    videoObserverRows.push({
-                        "uploadAction": "update",
-                        "videoId": each.videoId,
-                        "observer": username,
-                        "observerAction": "verify",
-                        "timeFinished": new Date(timeFinished),
-                    })
+                const entry = initEntry(username)
+                if (timeFinished != null) { 
+                    entry.verifiedVideoAt = new Date(timeFinished)
                 }
             }
         }
         
         return csvTools.convertToCsv(
-            videoObserverRows, 
+            Object.values(videoObservers), 
             {
                 defaultHeaders: [
                     "uploadAction",
                     "videoId",
                     "observer",
-                    "observerAction",
-                    "timeFinished",
+                    "watchedVideoAt",
+                    "labeledVideoAt",
+                    "verifiedVideoAt",
                 ],
             }
         )
@@ -297,7 +298,7 @@ export const currentFixedSizeOfYouTubeVideoId = 11
         const videos = {}
         const videoActions = []
         for (const eachRow of videoObserverRows) {
-            const { uploadAction, videoId, observer, observerAction, timeFinished, ...other } = Object.fromEntries(basics.zip(headers, eachRow))
+            let { uploadAction, videoId, observer, watchedVideoAt, labeledVideoAt, verifiedVideoAt, ...other } = Object.fromEntries(basics.zip(headers, eachRow))
             if (uploadAction == "ignore") {
                 continue
             }
@@ -307,34 +308,31 @@ export const currentFixedSizeOfYouTubeVideoId = 11
             if (typeof observer != "string") {
                 continue
             }
-            if (uploadAction == "delete") {
-                const keyList = [ "videoId", ]
-                if (observerAction == "watch") {
-                    keyList.push("usersFinishedWatchingAt")
-                    keyList.push(observer)
-                } else if (observerAction == "label") {
-                    keyList.push("usersFinishedLabelingAt")
-                    keyList.push(observer)
-                } else if (observerAction == "verify") {
-                    keyList.push("usersFinishedVerifyingAt")
-                    keyList.push(observer)
-                }
-                videoActions.push([ uploadAction, keyList ])
-                continue
-            }
 
             videos[videoId] = videos[videoId] || {videoId}
             const videoObject = videos[videoId]
-            if (observerAction == "watch") {
-                videoObject.usersFinishedWatchingAt = videoObject.usersFinishedWatchingAt || {}
-                videoObject.usersFinishedWatchingAt[observer] = timeFinished-0
-            } else if (observerAction == "label") {
-                videoObject.usersFinishedLabelingAt = videoObject.usersFinishedLabelingAt || {}
-                videoObject.usersFinishedLabelingAt[observer] = timeFinished-0
-            } else if (observerAction == "verify") {
-                videoObject.usersFinishedVerifyingAt = videoObject.usersFinishedVerifyingAt || {}
-                videoObject.usersFinishedVerifyingAt[observer] = timeFinished-0
+            videoObject.usersFinishedWatchingAt = videoObject.usersFinishedWatchingAt || {}
+            videoObject.usersFinishedLabelingAt = videoObject.usersFinishedLabelingAt || {}
+            videoObject.usersFinishedVerifyingAt = videoObject.usersFinishedVerifyingAt || {}
+            
+            const videoMergeData = {videoId}
+            if (uploadAction == "delete") {
+                videoObject.usersFinishedWatchingAt[observer] = null
+                videoObject.usersFinishedWatchingAt[observer] = null
+                videoObject.usersFinishedLabelingAt[observer] = null
+                continue
             }
+            
+            // TODO: if string, try to convert to date or unix timestamp
+
+            // convert to unix timestamp
+            if (watchedVideoAt instanceof Date) { watchedVideoAt = watchedVideoAt.getTime() }
+            if (labeledVideoAt instanceof Date) { labeledVideoAt = watchedVideoAt.getTime() }
+            if (verifiedVideoAt instanceof Date) { verifiedVideoAt = watchedVideoAt.getTime() }
+
+            videoObject.usersFinishedWatchingAt[observer]  = watchedVideoAt
+            videoObject.usersFinishedLabelingAt[observer]  = labeledVideoAt
+            videoObject.usersFinishedVerifyingAt[observer] = verifiedVideoAt
         }
         for (const [videoId, videoObject] of Object.entries(videos)) {
             videoActions.push([ "update", [videoId], videoObject ])
