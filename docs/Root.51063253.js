@@ -8542,7 +8542,13 @@ if (inBrowser) {
 
 var _default = Vue;
 exports.default = _default;
-},{}],"HT0w":[function(require,module,exports) {
+},{}],"jJO6":[function(require,module,exports) {
+
+},{}],"xmsx":[function(require,module,exports) {
+"use strict";
+
+require("css-baseline/css/3.css");
+},{"css-baseline/css/3.css":"jJO6"}],"HT0w":[function(require,module,exports) {
 // api
 //     $child(...args)
 let Vue = require("vue").default;
@@ -8571,514 +8577,7 @@ Object.defineProperty(Vue.prototype, "$child", {
   }
 
 });
-},{"vue":"NtAQ"}],"jJO6":[function(require,module,exports) {
-
-},{}],"xmsx":[function(require,module,exports) {
-"use strict";
-
-require("css-baseline/css/3.css");
-},{"css-baseline/css/3.css":"jJO6"}],"YsuP":[function(require,module,exports) {
-/*!
- * good-vue v1.3.1
- * (c) 
- * Released under the ISC License.
- */
-'use strict';
-
-const component = {
-  props: {
-    'wrap': {
-      type: [String, Boolean],
-      validator: value => [true, false, 'reverse'].includes(value)
-    },
-    'shadow': {
-      type: [Number, String]
-    }
-  },
-  computed: {
-    flexWrapStyle() {
-      let wrap = this.$props.wrap || this.$attrs["flex-wrap"];
-      let value = wrap;
-
-      if (wrap == true) {
-        value = 'wrap';
-      } else if (wrap == 'reverse') {
-        value = 'wrap-reverse';
-      } else if (wrap == false) {
-        value = 'nowrap';
-      }
-
-      return value != null && {
-        'flex-wrap': value
-      };
-    },
-
-    shadowStyle() {
-      let shadow = this.$props.shadow || this.$attrs["box-shadow"];
-      let value = shadow;
-
-      if (shadow == 0) {
-        value = 'none';
-      } else if (shadow == 1) {
-        value = '0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2)';
-      } else if (shadow == 2) {
-        value = '0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3)';
-      } else if (shadow == 3) {
-        value = '0 8px 17px 2px rgba(0,0,0,0.14), 0 3px 14px 2px rgba(0,0,0,0.12), 0 5px 5px -3px rgba(0,0,0,0.2)';
-      } else if (shadow == 4) {
-        value = '0 16px 24px 2px rgba(0,0,0,0.14), 0 6px 30px 5px rgba(0,0,0,0.12), 0 8px 10px -7px rgba(0,0,0,0.2)';
-      } else if (shadow == 5) {
-        value = '0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.2)';
-      }
-
-      return shadow && {
-        'box-shadow': value,
-        '-webkit-box-shadow': value
-      };
-    }
-
-  }
-};
-
-//
-var script = {
-  props: { ...component.props,
-    'align-h': {
-      type: String,
-      validator: value => ['left', 'right', 'center', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
-    },
-    'align-v': {
-      type: String,
-      validator: value => ['top', 'bottom', 'center', 'space-around', 'space-between', 'space-evenly', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
-    }
-  },
-  computed: { ...component.computed,
-
-    justifyContentStyle() {
-      let arrangement = this.$props.alignV || this.$attrs["justify-content"];
-      let value = arrangement;
-
-      if (arrangement == 'top') {
-        value = 'flex-start';
-      } else if (arrangement == 'bottom') {
-        value = 'flex-end';
-      }
-
-      return value != null && {
-        'justify-content': value
-      };
-    },
-
-    alignItemsStyle() {
-      let alignment = this.$props.alignH || this.$attrs["align-items"];
-      let value = alignment;
-      let additionalValues = {};
-
-      if (alignment == 'left') {
-        value = 'flex-start';
-        additionalValues = {
-          'text-align': 'left'
-        };
-      } else if (alignment == 'right') {
-        value = 'flex-end';
-        additionalValues = {
-          'text-align': 'right'
-        };
-      }
-
-      return value != null && {
-        'align-items': value,
-        ...additionalValues
-      };
-    }
-
-  }
-};
-
-function normalizeComponent(template, style, script, scopeId, isFunctionalTemplate, moduleIdentifier
-/* server only */
-, shadowMode, createInjector, createInjectorSSR, createInjectorShadow) {
-  if (typeof shadowMode !== 'boolean') {
-    createInjectorSSR = createInjector;
-    createInjector = shadowMode;
-    shadowMode = false;
-  } // Vue.extend constructor export interop.
-
-
-  var options = typeof script === 'function' ? script.options : script; // render functions
-
-  if (template && template.render) {
-    options.render = template.render;
-    options.staticRenderFns = template.staticRenderFns;
-    options._compiled = true; // functional template
-
-    if (isFunctionalTemplate) {
-      options.functional = true;
-    }
-  } // scopedId
-
-
-  if (scopeId) {
-    options._scopeId = scopeId;
-  }
-
-  var hook;
-
-  if (moduleIdentifier) {
-    // server build
-    hook = function hook(context) {
-      // 2.3 injection
-      context = context || // cached call
-      this.$vnode && this.$vnode.ssrContext || // stateful
-      this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext; // functional
-      // 2.2 with runInNewContext: true
-
-      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
-        context = __VUE_SSR_CONTEXT__;
-      } // inject component styles
-
-
-      if (style) {
-        style.call(this, createInjectorSSR(context));
-      } // register component module identifier for async chunk inference
-
-
-      if (context && context._registeredComponents) {
-        context._registeredComponents.add(moduleIdentifier);
-      }
-    }; // used by ssr in case component is cached and beforeCreate
-    // never gets called
-
-
-    options._ssrRegister = hook;
-  } else if (style) {
-    hook = shadowMode ? function () {
-      style.call(this, createInjectorShadow(this.$root.$options.shadowRoot));
-    } : function (context) {
-      style.call(this, createInjector(context));
-    };
-  }
-
-  if (hook) {
-    if (options.functional) {
-      // register for functional component in vue file
-      var originalRender = options.render;
-
-      options.render = function renderWithStyleInjection(h, context) {
-        hook.call(context);
-        return originalRender(h, context);
-      };
-    } else {
-      // inject component registration as beforeCreate hook
-      var existing = options.beforeCreate;
-      options.beforeCreate = existing ? [].concat(existing, hook) : [hook];
-    }
-  }
-
-  return script;
-}
-
-var normalizeComponent_1 = normalizeComponent;
-
-var isOldIE = typeof navigator !== 'undefined' && /msie [6-9]\\b/.test(navigator.userAgent.toLowerCase());
-function createInjector(context) {
-  return function (id, style) {
-    return addStyle(id, style);
-  };
-}
-var HEAD;
-var styles = {};
-
-function addStyle(id, css) {
-  var group = isOldIE ? css.media || 'default' : id;
-  var style = styles[group] || (styles[group] = {
-    ids: new Set(),
-    styles: []
-  });
-
-  if (!style.ids.has(id)) {
-    style.ids.add(id);
-    var code = css.source;
-
-    if (css.map) {
-      // https://developer.chrome.com/devtools/docs/javascript-debugging
-      // this makes source maps inside style tags work properly in Chrome
-      code += '\n/*# sourceURL=' + css.map.sources[0] + ' */'; // http://stackoverflow.com/a/26603875
-
-      code += '\n/*# sourceMappingURL=data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(css.map)))) + ' */';
-    }
-
-    if (!style.element) {
-      style.element = document.createElement('style');
-      style.element.type = 'text/css';
-      if (css.media) style.element.setAttribute('media', css.media);
-
-      if (HEAD === undefined) {
-        HEAD = document.head || document.getElementsByTagName('head')[0];
-      }
-
-      HEAD.appendChild(style.element);
-    }
-
-    if ('styleSheet' in style.element) {
-      style.styles.push(code);
-      style.element.styleSheet.cssText = style.styles.filter(Boolean).join('\n');
-    } else {
-      var index = style.ids.size - 1;
-      var textNode = document.createTextNode(code);
-      var nodes = style.element.childNodes;
-      if (nodes[index]) style.element.removeChild(nodes[index]);
-      if (nodes.length) style.element.insertBefore(textNode, nodes[index]);else style.element.appendChild(textNode);
-    }
-  }
-}
-
-var browser = createInjector;
-
-/* script */
-const __vue_script__ = script;
-/* template */
-
-var __vue_render__ = function () {
-  var _vm = this;
-
-  var _h = _vm.$createElement;
-
-  var _c = _vm._self._c || _h;
-
-  return _c('div', _vm._g({
-    staticClass: "good-column",
-    style: Object.assign({}, _vm.$attrs, _vm.justifyContentStyle, _vm.alignItemsStyle, _vm.flexWrapStyle, _vm.shadowStyle),
-    attrs: {
-      "unique-add1e7fe": ""
-    }
-  }, this.$listeners), [_vm._t("default")], 2);
-};
-
-var __vue_staticRenderFns__ = [];
-/* style */
-
-const __vue_inject_styles__ = function (inject) {
-  if (!inject) return;
-  inject("data-v-46e06dd6_0", {
-    source: ".good-column[unique-add1e7fe]{flex-direction:column}[unique-add1e7fe]{display:flex;flex-direction:column;align-items:center;justify-content:center;flex-wrap:nowrap;margin:0}",
-    map: undefined,
-    media: undefined
-  });
-};
-/* scoped */
-
-
-const __vue_scope_id__ = undefined;
-/* module identifier */
-
-const __vue_module_identifier__ = undefined;
-/* functional template */
-
-const __vue_is_functional_template__ = false;
-/* style inject SSR */
-
-var Column = normalizeComponent_1({
-  render: __vue_render__,
-  staticRenderFns: __vue_staticRenderFns__
-}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, browser, undefined);
-
-//
-var script$1 = {
-  props: { ...component.props,
-    'align-v': {
-      type: String,
-      validator: value => ['top', 'bottom', 'center', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
-    },
-    'align-h': {
-      type: String,
-      validator: value => ['left', 'right', 'center', 'space-around', 'space-between', 'space-evenly', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
-    }
-  },
-  computed: { ...component.computed,
-
-    justifyContentStyle() {
-      let arrangement = this.$props.alignH || this.$attrs["justify-content"];
-      let value = arrangement;
-      let additionalValues = {};
-
-      if (arrangement == 'left') {
-        value = 'flex-start';
-        additionalValues = {
-          'text-align': 'left'
-        };
-      } else if (arrangement == 'right') {
-        value = 'flex-end';
-        additionalValues = {
-          'text-align': 'right'
-        };
-      }
-
-      return value != null && {
-        'justify-content': value,
-        ...additionalValues
-      };
-    },
-
-    alignItemsStyle() {
-      let alignment = this.$props.alignV || this.$attrs["align-items"];
-      let value = alignment;
-
-      if (alignment == 'top') {
-        value = 'flex-start';
-      } else if (alignment == 'bottom') {
-        value = 'flex-end';
-      }
-
-      return value != null && {
-        'align-items': value
-      };
-    }
-
-  }
-};
-
-/* script */
-const __vue_script__$1 = script$1;
-/* template */
-
-var __vue_render__$1 = function () {
-  var _vm = this;
-
-  var _h = _vm.$createElement;
-
-  var _c = _vm._self._c || _h;
-
-  return _c('div', _vm._g({
-    staticClass: "good-row",
-    style: Object.assign({}, _vm.$attrs, _vm.justifyContentStyle, _vm.alignItemsStyle, _vm.flexWrapStyle, _vm.shadowStyle),
-    attrs: {
-      "unique-add1e7fa": ""
-    }
-  }, this.$listeners), [_vm._t("default")], 2);
-};
-
-var __vue_staticRenderFns__$1 = [];
-/* style */
-
-const __vue_inject_styles__$1 = function (inject) {
-  if (!inject) return;
-  inject("data-v-7148b7bc_0", {
-    source: ".good-row[unique-add1e7fa]{flex-direction:row}[unique-add1e7fa]{display:flex;flex-direction:row;justify-content:center;align-items:center;flex-wrap:nowrap;margin:0}",
-    map: undefined,
-    media: undefined
-  });
-};
-/* scoped */
-
-
-const __vue_scope_id__$1 = undefined;
-/* module identifier */
-
-const __vue_module_identifier__$1 = undefined;
-/* functional template */
-
-const __vue_is_functional_template__$1 = false;
-/* style inject SSR */
-
-var Row = normalizeComponent_1({
-  render: __vue_render__$1,
-  staticRenderFns: __vue_staticRenderFns__$1
-}, __vue_inject_styles__$1, __vue_script__$1, __vue_scope_id__$1, __vue_is_functional_template__$1, __vue_module_identifier__$1, browser, undefined);
-
-//
-var script$2 = {
-  props: { ...component.props
-  },
-  computed: { ...component.computed
-  }
-};
-
-/* script */
-const __vue_script__$2 = script$2;
-/* template */
-
-var __vue_render__$2 = function () {
-  var _vm = this;
-
-  var _h = _vm.$createElement;
-
-  var _c = _vm._self._c || _h;
-
-  return _c('div', _vm._g({
-    staticClass: "good-container",
-    style: Object.assign({}, _vm.shadowStyle, _vm.$attrs),
-    attrs: {
-      "unique-a23421e7a": ""
-    }
-  }, this.$listeners), [_vm._t("default")], 2);
-};
-
-var __vue_staticRenderFns__$2 = [];
-/* style */
-
-const __vue_inject_styles__$2 = function (inject) {
-  if (!inject) return;
-  inject("data-v-1d9d60fa_0", {
-    source: ".good-container[unique-a23421e7a]{flex-direction:column}[unique-a23421e7a]{display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;flex-wrap:nowrap;margin:0}",
-    map: undefined,
-    media: undefined
-  });
-};
-/* scoped */
-
-
-const __vue_scope_id__$2 = undefined;
-/* module identifier */
-
-const __vue_module_identifier__$2 = undefined;
-/* functional template */
-
-const __vue_is_functional_template__$2 = false;
-/* style inject SSR */
-
-var Container = normalizeComponent_1({
-  render: __vue_render__$2,
-  staticRenderFns: __vue_staticRenderFns__$2
-}, __vue_inject_styles__$2, __vue_script__$2, __vue_scope_id__$2, __vue_is_functional_template__$2, __vue_module_identifier__$2, browser, undefined);
-
-let globalData;
-let setupGlobalData = (Vue, data) => {
-  globalData = data; // connect the data to every child component
-
-  Vue.mixin({
-    data: () => ({
-      $global: globalData
-    })
-  });
-};
-
-var index = {
-  setupGlobalData,
-
-  install(Vue, options) {
-    // Let's register our component globally
-    // https://vuejs.org/v2/guide/components-registration.html
-    Vue.component("column", Column);
-    Vue.component("row", Row);
-    Vue.component("container", Container);
-  }
-
-};
-
-module.exports = index;
-
-},{}],"plSt":[function(require,module,exports) {
-"use strict";
-
-var _vue = _interopRequireDefault(require("vue"));
-
-var _goodVue = _interopRequireDefault(require("good-vue"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-_vue.default.use(_goodVue.default);
-},{"vue":"NtAQ","good-vue":"YsuP"}],"R6w2":[function(require,module,exports) {
+},{"vue":"NtAQ"}],"R6w2":[function(require,module,exports) {
 var define;
 var global = arguments[3];
 /*!
@@ -29330,7 +28829,508 @@ Vue.mixin(module.exports = {
   }
 
 });
-},{"vue":"NtAQ"}],"aLvM":[function(require,module,exports) {
+},{"vue":"NtAQ"}],"YsuP":[function(require,module,exports) {
+/*!
+ * good-vue v1.3.1
+ * (c) 
+ * Released under the ISC License.
+ */
+'use strict';
+
+const component = {
+  props: {
+    'wrap': {
+      type: [String, Boolean],
+      validator: value => [true, false, 'reverse'].includes(value)
+    },
+    'shadow': {
+      type: [Number, String]
+    }
+  },
+  computed: {
+    flexWrapStyle() {
+      let wrap = this.$props.wrap || this.$attrs["flex-wrap"];
+      let value = wrap;
+
+      if (wrap == true) {
+        value = 'wrap';
+      } else if (wrap == 'reverse') {
+        value = 'wrap-reverse';
+      } else if (wrap == false) {
+        value = 'nowrap';
+      }
+
+      return value != null && {
+        'flex-wrap': value
+      };
+    },
+
+    shadowStyle() {
+      let shadow = this.$props.shadow || this.$attrs["box-shadow"];
+      let value = shadow;
+
+      if (shadow == 0) {
+        value = 'none';
+      } else if (shadow == 1) {
+        value = '0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2)';
+      } else if (shadow == 2) {
+        value = '0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3)';
+      } else if (shadow == 3) {
+        value = '0 8px 17px 2px rgba(0,0,0,0.14), 0 3px 14px 2px rgba(0,0,0,0.12), 0 5px 5px -3px rgba(0,0,0,0.2)';
+      } else if (shadow == 4) {
+        value = '0 16px 24px 2px rgba(0,0,0,0.14), 0 6px 30px 5px rgba(0,0,0,0.12), 0 8px 10px -7px rgba(0,0,0,0.2)';
+      } else if (shadow == 5) {
+        value = '0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.2)';
+      }
+
+      return shadow && {
+        'box-shadow': value,
+        '-webkit-box-shadow': value
+      };
+    }
+
+  }
+};
+
+//
+var script = {
+  props: { ...component.props,
+    'align-h': {
+      type: String,
+      validator: value => ['left', 'right', 'center', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
+    },
+    'align-v': {
+      type: String,
+      validator: value => ['top', 'bottom', 'center', 'space-around', 'space-between', 'space-evenly', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
+    }
+  },
+  computed: { ...component.computed,
+
+    justifyContentStyle() {
+      let arrangement = this.$props.alignV || this.$attrs["justify-content"];
+      let value = arrangement;
+
+      if (arrangement == 'top') {
+        value = 'flex-start';
+      } else if (arrangement == 'bottom') {
+        value = 'flex-end';
+      }
+
+      return value != null && {
+        'justify-content': value
+      };
+    },
+
+    alignItemsStyle() {
+      let alignment = this.$props.alignH || this.$attrs["align-items"];
+      let value = alignment;
+      let additionalValues = {};
+
+      if (alignment == 'left') {
+        value = 'flex-start';
+        additionalValues = {
+          'text-align': 'left'
+        };
+      } else if (alignment == 'right') {
+        value = 'flex-end';
+        additionalValues = {
+          'text-align': 'right'
+        };
+      }
+
+      return value != null && {
+        'align-items': value,
+        ...additionalValues
+      };
+    }
+
+  }
+};
+
+function normalizeComponent(template, style, script, scopeId, isFunctionalTemplate, moduleIdentifier
+/* server only */
+, shadowMode, createInjector, createInjectorSSR, createInjectorShadow) {
+  if (typeof shadowMode !== 'boolean') {
+    createInjectorSSR = createInjector;
+    createInjector = shadowMode;
+    shadowMode = false;
+  } // Vue.extend constructor export interop.
+
+
+  var options = typeof script === 'function' ? script.options : script; // render functions
+
+  if (template && template.render) {
+    options.render = template.render;
+    options.staticRenderFns = template.staticRenderFns;
+    options._compiled = true; // functional template
+
+    if (isFunctionalTemplate) {
+      options.functional = true;
+    }
+  } // scopedId
+
+
+  if (scopeId) {
+    options._scopeId = scopeId;
+  }
+
+  var hook;
+
+  if (moduleIdentifier) {
+    // server build
+    hook = function hook(context) {
+      // 2.3 injection
+      context = context || // cached call
+      this.$vnode && this.$vnode.ssrContext || // stateful
+      this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext; // functional
+      // 2.2 with runInNewContext: true
+
+      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
+        context = __VUE_SSR_CONTEXT__;
+      } // inject component styles
+
+
+      if (style) {
+        style.call(this, createInjectorSSR(context));
+      } // register component module identifier for async chunk inference
+
+
+      if (context && context._registeredComponents) {
+        context._registeredComponents.add(moduleIdentifier);
+      }
+    }; // used by ssr in case component is cached and beforeCreate
+    // never gets called
+
+
+    options._ssrRegister = hook;
+  } else if (style) {
+    hook = shadowMode ? function () {
+      style.call(this, createInjectorShadow(this.$root.$options.shadowRoot));
+    } : function (context) {
+      style.call(this, createInjector(context));
+    };
+  }
+
+  if (hook) {
+    if (options.functional) {
+      // register for functional component in vue file
+      var originalRender = options.render;
+
+      options.render = function renderWithStyleInjection(h, context) {
+        hook.call(context);
+        return originalRender(h, context);
+      };
+    } else {
+      // inject component registration as beforeCreate hook
+      var existing = options.beforeCreate;
+      options.beforeCreate = existing ? [].concat(existing, hook) : [hook];
+    }
+  }
+
+  return script;
+}
+
+var normalizeComponent_1 = normalizeComponent;
+
+var isOldIE = typeof navigator !== 'undefined' && /msie [6-9]\\b/.test(navigator.userAgent.toLowerCase());
+function createInjector(context) {
+  return function (id, style) {
+    return addStyle(id, style);
+  };
+}
+var HEAD;
+var styles = {};
+
+function addStyle(id, css) {
+  var group = isOldIE ? css.media || 'default' : id;
+  var style = styles[group] || (styles[group] = {
+    ids: new Set(),
+    styles: []
+  });
+
+  if (!style.ids.has(id)) {
+    style.ids.add(id);
+    var code = css.source;
+
+    if (css.map) {
+      // https://developer.chrome.com/devtools/docs/javascript-debugging
+      // this makes source maps inside style tags work properly in Chrome
+      code += '\n/*# sourceURL=' + css.map.sources[0] + ' */'; // http://stackoverflow.com/a/26603875
+
+      code += '\n/*# sourceMappingURL=data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(css.map)))) + ' */';
+    }
+
+    if (!style.element) {
+      style.element = document.createElement('style');
+      style.element.type = 'text/css';
+      if (css.media) style.element.setAttribute('media', css.media);
+
+      if (HEAD === undefined) {
+        HEAD = document.head || document.getElementsByTagName('head')[0];
+      }
+
+      HEAD.appendChild(style.element);
+    }
+
+    if ('styleSheet' in style.element) {
+      style.styles.push(code);
+      style.element.styleSheet.cssText = style.styles.filter(Boolean).join('\n');
+    } else {
+      var index = style.ids.size - 1;
+      var textNode = document.createTextNode(code);
+      var nodes = style.element.childNodes;
+      if (nodes[index]) style.element.removeChild(nodes[index]);
+      if (nodes.length) style.element.insertBefore(textNode, nodes[index]);else style.element.appendChild(textNode);
+    }
+  }
+}
+
+var browser = createInjector;
+
+/* script */
+const __vue_script__ = script;
+/* template */
+
+var __vue_render__ = function () {
+  var _vm = this;
+
+  var _h = _vm.$createElement;
+
+  var _c = _vm._self._c || _h;
+
+  return _c('div', _vm._g({
+    staticClass: "good-column",
+    style: Object.assign({}, _vm.$attrs, _vm.justifyContentStyle, _vm.alignItemsStyle, _vm.flexWrapStyle, _vm.shadowStyle),
+    attrs: {
+      "unique-add1e7fe": ""
+    }
+  }, this.$listeners), [_vm._t("default")], 2);
+};
+
+var __vue_staticRenderFns__ = [];
+/* style */
+
+const __vue_inject_styles__ = function (inject) {
+  if (!inject) return;
+  inject("data-v-46e06dd6_0", {
+    source: ".good-column[unique-add1e7fe]{flex-direction:column}[unique-add1e7fe]{display:flex;flex-direction:column;align-items:center;justify-content:center;flex-wrap:nowrap;margin:0}",
+    map: undefined,
+    media: undefined
+  });
+};
+/* scoped */
+
+
+const __vue_scope_id__ = undefined;
+/* module identifier */
+
+const __vue_module_identifier__ = undefined;
+/* functional template */
+
+const __vue_is_functional_template__ = false;
+/* style inject SSR */
+
+var Column = normalizeComponent_1({
+  render: __vue_render__,
+  staticRenderFns: __vue_staticRenderFns__
+}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, browser, undefined);
+
+//
+var script$1 = {
+  props: { ...component.props,
+    'align-v': {
+      type: String,
+      validator: value => ['top', 'bottom', 'center', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
+    },
+    'align-h': {
+      type: String,
+      validator: value => ['left', 'right', 'center', 'space-around', 'space-between', 'space-evenly', 'stretch', 'baseline', 'inherit', 'normal'].includes(value)
+    }
+  },
+  computed: { ...component.computed,
+
+    justifyContentStyle() {
+      let arrangement = this.$props.alignH || this.$attrs["justify-content"];
+      let value = arrangement;
+      let additionalValues = {};
+
+      if (arrangement == 'left') {
+        value = 'flex-start';
+        additionalValues = {
+          'text-align': 'left'
+        };
+      } else if (arrangement == 'right') {
+        value = 'flex-end';
+        additionalValues = {
+          'text-align': 'right'
+        };
+      }
+
+      return value != null && {
+        'justify-content': value,
+        ...additionalValues
+      };
+    },
+
+    alignItemsStyle() {
+      let alignment = this.$props.alignV || this.$attrs["align-items"];
+      let value = alignment;
+
+      if (alignment == 'top') {
+        value = 'flex-start';
+      } else if (alignment == 'bottom') {
+        value = 'flex-end';
+      }
+
+      return value != null && {
+        'align-items': value
+      };
+    }
+
+  }
+};
+
+/* script */
+const __vue_script__$1 = script$1;
+/* template */
+
+var __vue_render__$1 = function () {
+  var _vm = this;
+
+  var _h = _vm.$createElement;
+
+  var _c = _vm._self._c || _h;
+
+  return _c('div', _vm._g({
+    staticClass: "good-row",
+    style: Object.assign({}, _vm.$attrs, _vm.justifyContentStyle, _vm.alignItemsStyle, _vm.flexWrapStyle, _vm.shadowStyle),
+    attrs: {
+      "unique-add1e7fa": ""
+    }
+  }, this.$listeners), [_vm._t("default")], 2);
+};
+
+var __vue_staticRenderFns__$1 = [];
+/* style */
+
+const __vue_inject_styles__$1 = function (inject) {
+  if (!inject) return;
+  inject("data-v-7148b7bc_0", {
+    source: ".good-row[unique-add1e7fa]{flex-direction:row}[unique-add1e7fa]{display:flex;flex-direction:row;justify-content:center;align-items:center;flex-wrap:nowrap;margin:0}",
+    map: undefined,
+    media: undefined
+  });
+};
+/* scoped */
+
+
+const __vue_scope_id__$1 = undefined;
+/* module identifier */
+
+const __vue_module_identifier__$1 = undefined;
+/* functional template */
+
+const __vue_is_functional_template__$1 = false;
+/* style inject SSR */
+
+var Row = normalizeComponent_1({
+  render: __vue_render__$1,
+  staticRenderFns: __vue_staticRenderFns__$1
+}, __vue_inject_styles__$1, __vue_script__$1, __vue_scope_id__$1, __vue_is_functional_template__$1, __vue_module_identifier__$1, browser, undefined);
+
+//
+var script$2 = {
+  props: { ...component.props
+  },
+  computed: { ...component.computed
+  }
+};
+
+/* script */
+const __vue_script__$2 = script$2;
+/* template */
+
+var __vue_render__$2 = function () {
+  var _vm = this;
+
+  var _h = _vm.$createElement;
+
+  var _c = _vm._self._c || _h;
+
+  return _c('div', _vm._g({
+    staticClass: "good-container",
+    style: Object.assign({}, _vm.shadowStyle, _vm.$attrs),
+    attrs: {
+      "unique-a23421e7a": ""
+    }
+  }, this.$listeners), [_vm._t("default")], 2);
+};
+
+var __vue_staticRenderFns__$2 = [];
+/* style */
+
+const __vue_inject_styles__$2 = function (inject) {
+  if (!inject) return;
+  inject("data-v-1d9d60fa_0", {
+    source: ".good-container[unique-a23421e7a]{flex-direction:column}[unique-a23421e7a]{display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;flex-wrap:nowrap;margin:0}",
+    map: undefined,
+    media: undefined
+  });
+};
+/* scoped */
+
+
+const __vue_scope_id__$2 = undefined;
+/* module identifier */
+
+const __vue_module_identifier__$2 = undefined;
+/* functional template */
+
+const __vue_is_functional_template__$2 = false;
+/* style inject SSR */
+
+var Container = normalizeComponent_1({
+  render: __vue_render__$2,
+  staticRenderFns: __vue_staticRenderFns__$2
+}, __vue_inject_styles__$2, __vue_script__$2, __vue_scope_id__$2, __vue_is_functional_template__$2, __vue_module_identifier__$2, browser, undefined);
+
+let globalData;
+let setupGlobalData = (Vue, data) => {
+  globalData = data; // connect the data to every child component
+
+  Vue.mixin({
+    data: () => ({
+      $global: globalData
+    })
+  });
+};
+
+var index = {
+  setupGlobalData,
+
+  install(Vue, options) {
+    // Let's register our component globally
+    // https://vuejs.org/v2/guide/components-registration.html
+    Vue.component("column", Column);
+    Vue.component("row", Row);
+    Vue.component("container", Container);
+  }
+
+};
+
+module.exports = index;
+
+},{}],"plSt":[function(require,module,exports) {
+"use strict";
+
+var _vue = _interopRequireDefault(require("vue"));
+
+var _goodVue = _interopRequireDefault(require("good-vue"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+_vue.default.use(_goodVue.default);
+},{"vue":"NtAQ","good-vue":"YsuP"}],"aLvM":[function(require,module,exports) {
 // api
 //     this.withoutWatchers(source, callback)
 let Vue = require("vue").default; // TODO: potenial issue if a second source calls this before the first one ends (async)
@@ -37446,9 +37446,8 @@ _vue.default.use(_vuePlyr.default, {
 });
 },{"vue":"NtAQ","vue-plyr":"fgJi","vue-plyr/dist/vue-plyr.css":"jJO6"}],"Xeh1":[function(require,module,exports) {
 module.exports = {
-  "child": require("./child.js"),
   "css-baseline-plugin": require("./css-baseline-plugin.js"),
-  "good-vue-plugin": require("./good-vue-plugin.js"),
+  "child": require("./child.js"),
   "keen-ui-plugin": require("./keen-ui-plugin.js"),
   "portal-plugin": require("./portal-plugin.js"),
   "resolvables-plugin": require("./resolvables-plugin.js"),
@@ -37456,11 +37455,12 @@ module.exports = {
   "router-plugin": require("./router-plugin.js"),
   "vue-toasted-plugin": require("./vue-toasted-plugin.js"),
   "window-listeners-plugin": require("./window-listeners-plugin.js"),
+  "good-vue-plugin": require("./good-vue-plugin.js"),
   "without-watchers": require("./without-watchers.js"),
   "workers-plugin": require("./workers-plugin.js"),
   "youtube-player-plugin": require("./youtube-player-plugin.js")
 };
-},{"./child.js":"HT0w","./css-baseline-plugin.js":"xmsx","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./portal-plugin.js":"HMJZ","./resolvables-plugin.js":"mVwj","./root-hooks-plugin.js":"T1YL","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./window-listeners-plugin.js":"XpWL","./without-watchers.js":"aLvM","./workers-plugin.js":"Y7uC","./youtube-player-plugin.js":"mQXc"}],"jqRt":[function(require,module,exports) {
+},{"./css-baseline-plugin.js":"xmsx","./child.js":"HT0w","./keen-ui-plugin.js":"FJCK","./portal-plugin.js":"HMJZ","./resolvables-plugin.js":"mVwj","./root-hooks-plugin.js":"T1YL","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./window-listeners-plugin.js":"XpWL","./good-vue-plugin.js":"plSt","./without-watchers.js":"aLvM","./workers-plugin.js":"Y7uC","./youtube-player-plugin.js":"mQXc"}],"jqRt":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -83329,52 +83329,57 @@ const videosCsvToActions = async csvString => {
 exports.videosCsvToActions = videosCsvToActions;
 
 const videoObserverTableToCsv = async videos => {
-  let videoObserverRows = [];
+  const videoObservers = {};
 
   for (const each of videos) {
+    if (!each.videoId) {
+      continue;
+    }
+
     const usersFinishedWatching = each.usersFinishedWatchingAt || {};
     const usersFinishedLabeling = each.usersFinishedLabelingAt || {};
     const usersFinishedVerifying = each.usersFinishedVerifyingAt || {};
 
+    const initEntry = observer => {
+      const id = JSON.stringify([observer, each.videoId]);
+      videoObservers[id] = videoObservers[id] || {
+        uploadAction: "update",
+        videoId: each.videoId,
+        observer: observer,
+        watchedVideoAt: null,
+        labeledVideoAt: null,
+        verifiedVideoAt: null
+      };
+      return videoObservers[id];
+    };
+
     for (const [username, timeFinished] of Object.entries(usersFinishedWatching)) {
+      const entry = initEntry(username);
+
       if (timeFinished != null) {
-        videoObserverRows.push({
-          "uploadAction": "update",
-          "videoId": each.videoId,
-          "observer": username,
-          "observerAction": "watch",
-          "timeFinished": new Date(timeFinished)
-        });
+        entry.watchedVideoAt = new Date(timeFinished);
       }
     }
 
     for (const [username, timeFinished] of Object.entries(usersFinishedLabeling)) {
+      const entry = initEntry(username);
+
       if (timeFinished != null) {
-        videoObserverRows.push({
-          "uploadAction": "update",
-          "videoId": each.videoId,
-          "observer": username,
-          "observerAction": "label",
-          "timeFinished": new Date(timeFinished)
-        });
+        entry.labeledVideoAt = new Date(timeFinished);
       }
     }
 
     for (const [username, timeFinished] of Object.entries(usersFinishedVerifying)) {
+      const entry = initEntry(username);
+
       if (timeFinished != null) {
-        videoObserverRows.push({
-          "uploadAction": "update",
-          "videoId": each.videoId,
-          "observer": username,
-          "observerAction": "verify",
-          "timeFinished": new Date(timeFinished)
-        });
+        entry.verifiedVideoAt = new Date(timeFinished);
       }
     }
   }
 
-  return csvTools.convertToCsv(videoObserverRows, {
-    defaultHeaders: ["uploadAction", "videoId", "observer", "observerAction", "timeFinished"]
+  return csvTools.convertToCsv(Object.values(videoObservers), {
+    defaultHeaders: ["uploadAction", "videoId", "observer", "watchedVideoAt", "labeledVideoAt", "verifiedVideoAt"]
   });
 };
 
@@ -83387,12 +83392,13 @@ const videoObserverTableCsvToActions = async csvString => {
   const videoActions = [];
 
   for (const eachRow of videoObserverRows) {
-    const {
+    let {
       uploadAction,
       videoId,
       observer,
-      observerAction,
-      timeFinished,
+      watchedVideoAt,
+      labeledVideoAt,
+      verifiedVideoAt,
       ...other
     } = Object.fromEntries(basics.zip(headers, eachRow));
 
@@ -83408,39 +83414,41 @@ const videoObserverTableCsvToActions = async csvString => {
       continue;
     }
 
-    if (uploadAction == "delete") {
-      const keyList = ["videoId"];
-
-      if (observerAction == "watch") {
-        keyList.push("usersFinishedWatchingAt");
-        keyList.push(observer);
-      } else if (observerAction == "label") {
-        keyList.push("usersFinishedLabelingAt");
-        keyList.push(observer);
-      } else if (observerAction == "verify") {
-        keyList.push("usersFinishedVerifyingAt");
-        keyList.push(observer);
-      }
-
-      videoActions.push([uploadAction, keyList]);
-      continue;
-    }
-
     videos[videoId] = videos[videoId] || {
       videoId
     };
     const videoObject = videos[videoId];
+    videoObject.usersFinishedWatchingAt = videoObject.usersFinishedWatchingAt || {};
+    videoObject.usersFinishedLabelingAt = videoObject.usersFinishedLabelingAt || {};
+    videoObject.usersFinishedVerifyingAt = videoObject.usersFinishedVerifyingAt || {};
+    const videoMergeData = {
+      videoId
+    };
 
-    if (observerAction == "watch") {
-      videoObject.usersFinishedWatchingAt = videoObject.usersFinishedWatchingAt || {};
-      videoObject.usersFinishedWatchingAt[observer] = timeFinished - 0;
-    } else if (observerAction == "label") {
-      videoObject.usersFinishedLabelingAt = videoObject.usersFinishedLabelingAt || {};
-      videoObject.usersFinishedLabelingAt[observer] = timeFinished - 0;
-    } else if (observerAction == "verify") {
-      videoObject.usersFinishedVerifyingAt = videoObject.usersFinishedVerifyingAt || {};
-      videoObject.usersFinishedVerifyingAt[observer] = timeFinished - 0;
+    if (uploadAction == "delete") {
+      videoObject.usersFinishedWatchingAt[observer] = null;
+      videoObject.usersFinishedWatchingAt[observer] = null;
+      videoObject.usersFinishedLabelingAt[observer] = null;
+      continue;
+    } // TODO: if string, try to convert to date or unix timestamp
+    // convert to unix timestamp
+
+
+    if (watchedVideoAt instanceof Date) {
+      watchedVideoAt = watchedVideoAt.getTime();
     }
+
+    if (labeledVideoAt instanceof Date) {
+      labeledVideoAt = watchedVideoAt.getTime();
+    }
+
+    if (verifiedVideoAt instanceof Date) {
+      verifiedVideoAt = watchedVideoAt.getTime();
+    }
+
+    videoObject.usersFinishedWatchingAt[observer] = watchedVideoAt;
+    videoObject.usersFinishedLabelingAt[observer] = labeledVideoAt;
+    videoObject.usersFinishedVerifyingAt[observer] = verifiedVideoAt;
   }
 
   for (const [videoId, videoObject] of Object.entries(videos)) {
@@ -86568,7 +86576,7 @@ var _default = {
     },
 
     preventBubbling(eventObject) {
-      if (eventObject.ctrlKey && eventObject.key == "s") {
+      if (eventObject.altKey && eventObject.key == "s") {
         this.onSaveEdit();
       }
 
@@ -87319,7 +87327,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($9e2fc6, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"segments",attrs:{"align-h":"left"}},[_c('transition',{attrs:{"name":"fade"}},[_c('h5',[_vm._v("Observations")])]),_c('transition',{attrs:{"name":"fade"}},[_c('row',{staticClass:"segment-container",attrs:{"align-h":"space-between","position":"relative","height":((_vm.segmentsInfo.maxLevel*2.2) + "rem"),"min-height":_vm.segmentsInfo.organizedSegments.length <= 0 ? '13rem' : 0}},[(_vm.segmentsInfo.organizedSegments.length <= 0)?_c('column',{attrs:{"font-size":"14pt","font-weight":"lighter","color":"gray","position":"absolute","min-height":"12rem","width":"100%","align-h":"center","text-align":"center","padding":"0.7rem"}},[_vm._v("No observations with given filters"),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press N")]),_vm._v(" to create an observation at the current time)")]),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press M")]),_vm._v(" to set the endTime)")]),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press ctrl+S")]),_vm._v(" to save the observation)")]),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press C")]),_vm._v(" to confirm an observation)")]),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press X")]),_vm._v(" to reject an observation)")]),_c('span',{staticStyle:{"display":"block","height":"1rem"}})]):_vm._e(),_vm._l((_vm.segmentsInfo.organizedSegments),function(eachSegment,index){return (_vm.segmentsInfo.organizedSegments.length > 0)?_c('row',{key:eachSegment.observationId||eachSegment.observationId,staticClass:"segment",style:(("--color: " + (_vm.theColor(eachSegment)))),attrs:{"left":eachSegment.$renderData.leftPercent,"width":eachSegment.$renderData.widthPercent,"top":eachSegment.$renderData.topAmount,"isHuman":eachSegment.isHuman,"confirmedBySomeone":eachSegment.confirmedBySomeone,"rejectedBySomeone":eachSegment.rejectedBySomeone,"selected":eachSegment.observationId == (_vm.$root.selectedSegment&&_vm.$root.selectedSegment.observationId),"background-color":_vm.theColor(eachSegment),"border-color":_vm.theColor(eachSegment)},on:{"click":function($event){return _vm.jumpSegment(eachSegment.$displayIndex)}}},[_vm._v(_vm._s(_vm.computeSymbol(eachSegment.confirmedBySomeone, eachSegment.rejectedBySomeone))),_c('ui-tooltip',{attrs:{"position":"left","animation":"fade"}},[_c('column',{attrs:{"align-h":"left"}},[_c('span',[_vm._v("label: "+_vm._s(eachSegment.label))]),_c('span',[_vm._v("length: "+_vm._s((eachSegment.endTime - eachSegment.startTime).toFixed(2))+" sec")]),_c('span',[_vm._v("start: "+_vm._s(eachSegment.startTime.toFixed(3))+" sec")]),_c('span',[_vm._v("human?: "+_vm._s(eachSegment.isHuman))])])],1)],1):_vm._e()})],2)],1),_c('row',{attrs:{"position":"relative","align-h":"left","align-v":"top","width":"100%"}},[_c('h5',[_vm._v("Filter Observations by Label")]),_c('ui-button',{staticClass:"outline-button",staticStyle:{"position":"absolute","right":"1.5rem","top":"-0.3rem","--button-color":"darkgray"},on:{"click":_vm.toggleAllLabels}},[_vm._v("Toggle All")])],1),_c('container',{staticClass:"labels"},_vm._l((_vm.$root.labels),function(eachLevel,eachLabelName){return (eachLabelName != '(no segments)')?_c('container',{staticClass:"label-toggle",style:(("--label-color: " + (_vm.$root.labels[eachLabelName].selected ? _vm.$root.labels[eachLabelName].color : 'gray') + ";"))},[_c('ui-checkbox',{staticStyle:{"align-items":"flex-start","white-space":"nowrap"},on:{"change":function($event){return _vm.toggleLabel(eachLabelName)}},model:{value:(_vm.$root.labels[eachLabelName].selected),callback:function ($$v) {_vm.$set(_vm.$root.labels[eachLabelName], "selected", $$v)},expression:"$root.labels[eachLabelName].selected"}},[_vm._v(_vm._s(eachLabelName))])],1):_vm._e()}),1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{staticClass:"segments",attrs:{"align-h":"left"}},[_c('transition',{attrs:{"name":"fade"}},[_c('h5',[_vm._v("Observations")])]),_c('transition',{attrs:{"name":"fade"}},[_c('row',{staticClass:"segment-container",attrs:{"align-h":"space-between","position":"relative","height":((_vm.segmentsInfo.maxLevel*2.2) + "rem"),"min-height":_vm.segmentsInfo.organizedSegments.length <= 0 ? '13rem' : 0}},[(_vm.segmentsInfo.organizedSegments.length <= 0)?_c('column',{attrs:{"font-size":"14pt","font-weight":"lighter","color":"gray","position":"absolute","min-height":"12rem","width":"100%","align-h":"center","text-align":"center","padding":"0.7rem"}},[_vm._v("No observations with given filters"),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press N")]),_vm._v(" to create an observation at the current time)")]),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press M")]),_vm._v(" to set the endTime)")]),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press alt+S")]),_vm._v(" to save the observation)")]),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press C")]),_vm._v(" to confirm an observation)")]),_c('span',{staticStyle:{"display":"block","height":"1rem"}}),_c('span',{staticStyle:{"margin-bottom":"-1rem"}},[_vm._v("("),_c('u',[_vm._v("press X")]),_vm._v(" to reject an observation)")]),_c('span',{staticStyle:{"display":"block","height":"1rem"}})]):_vm._e(),_vm._l((_vm.segmentsInfo.organizedSegments),function(eachSegment,index){return (_vm.segmentsInfo.organizedSegments.length > 0)?_c('row',{key:eachSegment.observationId||eachSegment.observationId,staticClass:"segment",style:(("--color: " + (_vm.theColor(eachSegment)))),attrs:{"left":eachSegment.$renderData.leftPercent,"width":eachSegment.$renderData.widthPercent,"top":eachSegment.$renderData.topAmount,"isHuman":eachSegment.isHuman,"confirmedBySomeone":eachSegment.confirmedBySomeone,"rejectedBySomeone":eachSegment.rejectedBySomeone,"selected":eachSegment.observationId == (_vm.$root.selectedSegment&&_vm.$root.selectedSegment.observationId),"background-color":_vm.theColor(eachSegment),"border-color":_vm.theColor(eachSegment)},on:{"click":function($event){return _vm.jumpSegment(eachSegment.$displayIndex)}}},[_vm._v(_vm._s(_vm.computeSymbol(eachSegment.confirmedBySomeone, eachSegment.rejectedBySomeone))),_c('ui-tooltip',{attrs:{"position":"left","animation":"fade"}},[_c('column',{attrs:{"align-h":"left"}},[_c('span',[_vm._v("label: "+_vm._s(eachSegment.label))]),_c('span',[_vm._v("length: "+_vm._s((eachSegment.endTime - eachSegment.startTime).toFixed(2))+" sec")]),_c('span',[_vm._v("start: "+_vm._s(eachSegment.startTime.toFixed(3))+" sec")]),_c('span',[_vm._v("human?: "+_vm._s(eachSegment.isHuman))])])],1)],1):_vm._e()})],2)],1),_c('row',{attrs:{"position":"relative","align-h":"left","align-v":"top","width":"100%"}},[_c('h5',[_vm._v("Filter Observations by Label")]),_c('ui-button',{staticClass:"outline-button",staticStyle:{"position":"absolute","right":"1.5rem","top":"-0.3rem","--button-color":"darkgray"},on:{"click":_vm.toggleAllLabels}},[_vm._v("Toggle All")])],1),_c('container',{staticClass:"labels"},_vm._l((_vm.$root.labels),function(eachLevel,eachLabelName){return (eachLabelName != '(no segments)')?_c('container',{staticClass:"label-toggle",style:(("--label-color: " + (_vm.$root.labels[eachLabelName].selected ? _vm.$root.labels[eachLabelName].color : 'gray') + ";"))},[_c('ui-checkbox',{staticStyle:{"align-items":"flex-start","white-space":"nowrap"},on:{"change":function($event){return _vm.toggleLabel(eachLabelName)}},model:{value:(_vm.$root.labels[eachLabelName].selected),callback:function ($$v) {_vm.$set(_vm.$root.labels[eachLabelName], "selected", $$v)},expression:"$root.labels[eachLabelName].selected"}},[_vm._v(_vm._s(eachLabelName))])],1):_vm._e()}),1)],1)}
 var staticRenderFns = []
 
           return {
@@ -101837,7 +101845,7 @@ var _default = {
       (0, utils.download)("data.ible.zip", await zipTools.createZipOfTextFiles({
         "observations.typed.tsv": await observationTooling.observationsToCsv(entries),
         "videos.typed.tsv": await videoTooling.videosToCsv(videos),
-        "observers#videos.typed.tsv": await videoTooling.videoObserverTableToCsv(videos)
+        "video_review_status.typed.tsv": await videoTooling.videoObserverTableToCsv(videos)
       }));
     },
 
@@ -102561,7 +102569,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($aaa267, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"width":"100%","height":"100vh","align-h":"center","align-v":"top","overflow":"auto","overflow-x":"hidden"}},[_c('WrappedTopSearch'),(!_vm.aVideoIsSelected())?_c('column',{attrs:{"width":"100%","height":"100vh","flex-shrink":"1","color":"gray"}},[_c('h5',[_vm._v(" Videos (up there ↗) will show  "),_c('br'),_vm._v("You video files from your HOME/Videos folder")])]):_vm._e(),_c('transition',{attrs:{"name":"fade"}},[_c('row',{directives:[{name:"show",rawName:"v-show",value:(_vm.aVideoIsSelected()),expression:"aVideoIsSelected()"}],staticClass:"center-stage",attrs:{"align-v":"top","align-h":"center","padding-top":"8rem"}},[_c('column',{staticClass:"main-container",attrs:{"flex-grow":"1","align-v":"top"}},[_c('row',{staticClass:"below-video-search",attrs:{"flex-basis":"100%","padding-top":"1rem","align-v":"top","opacity":_vm.aVideoIsSelected()? 1 : 0}},[_c('column',{staticClass:"video-width-sizer",attrs:{"align-v":"top"}},[_c('row',{attrs:{"width":"96%","position":"relative"}},[_c('VideoPlayer',{ref:"videoPlayer",attrs:{"videoPathOrUrl":_vm.$root.videoInterface.videoPath},on:{"videoLoaded":_vm.$root.videoInterface.tellRootTheVideoHasLoaded,"currentTimeChanged":_vm.updateCurrentTime}})],1),(_vm.$root.videoInterface.videoId)?_c('container',{staticClass:"below-video"},[_c('SideButton',{staticClass:"left-side-button",attrs:{"left":"left"},on:{"click":_vm.wrapperForSelectPreviousSegment}}),_c('SegmentDisplay',{ref:"segmentDisplay",attrs:{"currentTime":_vm.currentTime}}),_c('SideButton',{staticClass:"right-side-button",attrs:{"right":"right"},on:{"click":_vm.wrapperForSelectNextSegment}})],1):_vm._e(),_c('row',{attrs:{"width":"100%","padding":"2rem","align-v":"top"}},[(_vm.videoInfo&&_vm.videoInfo.videoId)?_c('JsonTree',{staticClass:"json-tree",attrs:{"data":_vm.videoInfo||{}}}):_vm._e(),(_vm.videoInfo&&_vm.videoInfo.videoId)?_c('column',{attrs:{"flex-basis":"40%","width":"100%"}},[_c('UiSwitch',{on:{"click":_vm.clickedHasWatchedVideo},model:{value:(_vm.watchedSwitch),callback:function ($$v) {_vm.watchedSwitch=$$v},expression:"watchedSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Watched Video")])]),_c('UiSwitch',{on:{"click":_vm.clickedHasLabeledVideo},model:{value:(_vm.labeledSwitch),callback:function ($$v) {_vm.labeledSwitch=$$v},expression:"labeledSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Labeled Video")])]),_c('UiSwitch',{on:{"click":_vm.clickedHasVerifiedVideo},model:{value:(_vm.verifiedSwitch),callback:function ($$v) {_vm.verifiedSwitch=$$v},expression:"verifiedSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Verified Labels")])])],1):_vm._e()],1)],1)],1)],1),(_vm.$root.videoInterface.videoId)?_c('column',{staticClass:"side-container",attrs:{"align-v":"top","overflow":"visible","min-height":"50rem","width":"fit-content"}},[_c('ObservationEditor',{attrs:{"jumpSegment":_vm.wrapperForJumpSegment,"currentTime":_vm.currentTime}}),_c('InfoSection',{staticClass:"info-section",attrs:{"labelName":_vm.activeData().labelName,"videoId":_vm.activeData().videoId,"currentTime":_vm.currentTime}})],1):_vm._e()],1)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"width":"100%","height":"100vh","align-h":"center","align-v":"top","overflow":"auto","overflow-x":"hidden"}},[_c('WrappedTopSearch'),(!_vm.aVideoIsSelected())?_c('column',{attrs:{"width":"100%","height":"100vh","flex-shrink":"1","color":"gray"}},[_c('h5',{staticStyle:{"text-align":"center"}},[_vm._v("Once you have videos in your HOME/Videos folder"),_c('span',{staticStyle:{"height":"1rem","width":"100%","display":"block"}}),_vm._v("check the Videos tab up there ↗")])]):_vm._e(),_c('transition',{attrs:{"name":"fade"}},[_c('row',{directives:[{name:"show",rawName:"v-show",value:(_vm.aVideoIsSelected()),expression:"aVideoIsSelected()"}],staticClass:"center-stage",attrs:{"align-v":"top","align-h":"center","padding-top":"8rem"}},[_c('column',{staticClass:"main-container",attrs:{"flex-grow":"1","align-v":"top"}},[_c('row',{staticClass:"below-video-search",attrs:{"flex-basis":"100%","padding-top":"1rem","align-v":"top","opacity":_vm.aVideoIsSelected()? 1 : 0}},[_c('column',{staticClass:"video-width-sizer",attrs:{"align-v":"top"}},[_c('row',{attrs:{"width":"96%","position":"relative"}},[_c('VideoPlayer',{ref:"videoPlayer",attrs:{"videoPathOrUrl":_vm.$root.videoInterface.videoPath},on:{"videoLoaded":_vm.$root.videoInterface.tellRootTheVideoHasLoaded,"currentTimeChanged":_vm.updateCurrentTime}})],1),(_vm.$root.videoInterface.videoId)?_c('container',{staticClass:"below-video"},[_c('SideButton',{staticClass:"left-side-button",attrs:{"left":"left"},on:{"click":_vm.wrapperForSelectPreviousSegment}}),_c('SegmentDisplay',{ref:"segmentDisplay",attrs:{"currentTime":_vm.currentTime}}),_c('SideButton',{staticClass:"right-side-button",attrs:{"right":"right"},on:{"click":_vm.wrapperForSelectNextSegment}})],1):_vm._e(),_c('row',{attrs:{"width":"100%","padding":"2rem","align-v":"top"}},[(_vm.videoInfo&&_vm.videoInfo.videoId)?_c('JsonTree',{staticClass:"json-tree",attrs:{"data":_vm.videoInfo||{}}}):_vm._e(),(_vm.videoInfo&&_vm.videoInfo.videoId)?_c('column',{attrs:{"flex-basis":"40%","width":"100%"}},[_c('UiSwitch',{on:{"click":_vm.clickedHasWatchedVideo},model:{value:(_vm.watchedSwitch),callback:function ($$v) {_vm.watchedSwitch=$$v},expression:"watchedSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Watched Video")])]),_c('UiSwitch',{on:{"click":_vm.clickedHasLabeledVideo},model:{value:(_vm.labeledSwitch),callback:function ($$v) {_vm.labeledSwitch=$$v},expression:"labeledSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Labeled Video")])]),_c('UiSwitch',{on:{"click":_vm.clickedHasVerifiedVideo},model:{value:(_vm.verifiedSwitch),callback:function ($$v) {_vm.verifiedSwitch=$$v},expression:"verifiedSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Verified Labels")])])],1):_vm._e()],1)],1)],1)],1),(_vm.$root.videoInterface.videoId)?_c('column',{staticClass:"side-container",attrs:{"align-v":"top","overflow":"visible","min-height":"50rem","width":"fit-content"}},[_c('ObservationEditor',{attrs:{"jumpSegment":_vm.wrapperForJumpSegment,"currentTime":_vm.currentTime}}),_c('InfoSection',{staticClass:"info-section",attrs:{"labelName":_vm.activeData().labelName,"videoId":_vm.activeData().videoId,"currentTime":_vm.currentTime}})],1):_vm._e()],1)],1)],1)}
 var staticRenderFns = []
 
           return {
@@ -103181,7 +103189,7 @@ var _default = {
       (0, _utils.download)("data.ible.zip", await zipTools.createZipOfTextFiles({
         "observations.typed.tsv": await observationTooling.observationsToCsv(entries),
         "videos.typed.tsv": await videoTooling.videosToCsv(videos),
-        "observers#videos.typed.tsv": await videoTooling.videoObserverTableToCsv(videos)
+        "video_review_status.typed.tsv": await videoTooling.videoObserverTableToCsv(videos)
       }));
     },
 
@@ -103236,8 +103244,8 @@ var _default = {
         videoTooling.videosCsvToActions(files["videos.typed.tsv"]).then(_database.frontendDb.executeVideoActions);
       }
 
-      if (files["observers#videos.typed.tsv"]) {
-        videoTooling.videoObserverTableCsvToActions(files["observers#videos.typed.tsv"]).then(_database.frontendDb.executeVideoActions);
+      if (files["video_review_status.typed.tsv"]) {
+        videoTooling.videoObserverTableCsvToActions(files["video_review_status.typed.tsv"]).then(_database.frontendDb.executeVideoActions);
       }
 
       if (files["observations.typed.tsv"]) {

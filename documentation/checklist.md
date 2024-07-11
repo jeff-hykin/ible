@@ -74,8 +74,8 @@ Major Chonological Changes:
 - DONE: check the executable, get something working on windows (eval method or video method)
 - FUTURE: check if filtering by disagreement still works
 - FUTURE: check that filtering by selected label still works
-- name the video#observer to be "annotation_status.csv" "who_has_done_what.csv"
-- change the `video#observer` format, make it videoId, observerId, and the all the fields for that combo
+- DONE: name the video#observer to be "annotation_status.csv" "who_has_done_what.csv"
+- DONE: change the `video#observer` format, make it videoId, observerId, and the all the fields for that combo
 - fix the delete-upload and overwrite-upload actions
 - upload checks:
     - check upload handling of comma-separated lists
