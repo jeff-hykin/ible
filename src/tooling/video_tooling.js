@@ -149,7 +149,6 @@ export const currentFixedSizeOfYouTubeVideoId = 11
             const usersWhoFinishedLabeling  = Object.keys(each.usersFinishedLabelingAt||{})
             const usersWhoFinishedVerifying = Object.keys(each.usersFinishedVerifyingAt||{})
             
-            // NOTE: 
             const latestVideoAction = Math.max([
                 ...Object.values(each.usersFinishedWatchingAt||{}),
                 ...Object.values(each.usersFinishedLabelingAt||{}),
