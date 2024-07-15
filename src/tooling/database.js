@@ -1,8 +1,8 @@
-let { deferredPromise, asyncIteratorToList, getColor, dynamicSort } = require("../utils.js")
-let { get, set, remove } = require("./basics.bundle.js")
-let { toKebabCase, toSnakeCase, toScreamingtoKebabCase, toScreamingtoSnakeCase } = require("../string.js")
-const observationTooling = require("../observation_tooling.js")
+import { deferredPromise, asyncIteratorToList, getColor, dynamicSort } from "../utils.js"
+import { get, set, remove } from "./basics.bundle.js"
+import observationTooling from "../observation_tooling.js"
 import * as basics from "./basics.bundle.js"
+import { toKebabCase, toSnakeCase } from "../tooling/basics.bundle.js"
  
 // 
 // indexDB solution

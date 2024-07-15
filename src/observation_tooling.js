@@ -1,8 +1,8 @@
-import { toString, toRepresentation } from "./string.js"
 import * as yaml from 'yaml'
 import * as utils from './utils.js'
 import * as csvTools from './tooling/csv_tooling.js'
 import * as basics from './tooling/basics.bundle.js'
+import { toString, toRepresentation } from './tooling/basics.bundle.js'
 
 import {
     isLocalVideo,

@@ -236,9 +236,9 @@
 
 <script>
 import Vue from "vue"
-import { toKebabCase, toRepresentation } from '../string.js'
 import * as observationTooling from '../observation_tooling.js'
 import { frontendDb } from '../tooling/database.js'
+import { toKebabCase, toRepresentation } from '../tooling/basics.bundle.js'
 import { getColor, isValidName, storageObject } from "../utils"
 import { trigger, globalEvents, everyTime } from '../tooling/events.js'
 
