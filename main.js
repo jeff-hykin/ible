@@ -10,8 +10,8 @@ import { OperatingSystem } from "https://deno.land/x/quickr@0.6.70/main/operatin
 import { parseArgs, flag, required, initialValue } from "https://deno.land/x/good@1.7.1.0/flattened/parse_args.js"
 import { toCamelCase } from "https://deno.land/x/good@1.7.1.0/flattened/to_camel_case.js"
 import { didYouMean } from "https://deno.land/x/good@1.7.1.0/flattened/did_you_mean.js"
-import { mimeTypes, videoExtensions } from "./src/utils.js"
-import * as utils from "./src/utils.js"
+import { mimeTypes, videoExtensions } from "./src/tooling/pure_tools.js"
+import * as utils from "./src/tooling/pure_tools.js"
 
 var indexHtmlBytes // DONT REMOVE: this comment is part of compiling this file sadly
 

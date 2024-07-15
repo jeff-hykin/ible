@@ -7,7 +7,7 @@
 <script>
 import VueApexCharts from 'vue-apexcharts'
 import Vue from 'vue'
-import { colors } from "../tooling/utils.js"
+import { colors } from "../tooling/pure_tools.js"
 Vue.use(VueApexCharts)
 Vue.component('apexchart', VueApexCharts)
 

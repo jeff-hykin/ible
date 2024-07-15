@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import { checkIf } from "../tooling/utils.js"
+import { checkIf } from "../tooling/pure_tools.js"
 import { openPanel, takeover } from "../templates/LeftSidePanel"
 let Fuse = require("fuse.js").default
 

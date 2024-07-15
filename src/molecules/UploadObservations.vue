@@ -60,7 +60,7 @@
     
 </template>
 <script>
-import { humandReadableTime, download } from "../tooling/utils.js"
+import { humandReadableTime, download } from "../tooling/pure_tools.js"
 import { frontendDb } from "../tooling/database.js"
 import * as observationTooling from "../tooling/observation_tooling.js"
 import * as yaml from 'yaml'

@@ -1,3 +1,6 @@
+// 
+// this is imported by both the backend and the browser. So it shouldn't contain (AKA DONT ADD) any browser-specific/backend-specific code
+// 
 import * as basics from "./basics.bundle.js"
 const { get, set } = basics
 
