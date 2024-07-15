@@ -18,7 +18,7 @@
 import Vue from "vue"
 import plugins from "./plugins/*.js"
 import pages from "./pages/*.vue"
-import {getColor, deferredPromise, createVideoId, videoIdLength} from "./utils.js"
+import {getColor, deferredPromise, createVideoId} from "./utils.js"
 import * as utils from "./utils.js"
 import * as basics from "./tooling/basics.bundle.js"
 import * as videoTools from "./tooling/video_tooling.js"

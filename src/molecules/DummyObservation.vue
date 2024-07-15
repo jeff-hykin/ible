@@ -46,7 +46,7 @@
         )
 </template>
 <script>
-const { isValidName } = require("../utils")
+import { isValidName } from "../utils.js"
 
 export default {
     props: [

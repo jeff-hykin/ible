@@ -7,10 +7,10 @@
 <script>
 import VueApexCharts from 'vue-apexcharts'
 import Vue from 'vue'
+import { colors } from "../utils.js"
 Vue.use(VueApexCharts)
 Vue.component('apexchart', VueApexCharts)
 
-let { colors } = require("../utils")
 let fontSize = 1
 export default {
     components: {

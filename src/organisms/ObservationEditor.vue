@@ -239,7 +239,7 @@ import Vue from "vue"
 import * as observationTooling from '../tooling/observation_tooling.js'
 import { frontendDb } from '../tooling/database.js'
 import { toKebabCase, toRepresentation } from '../tooling/basics.bundle.js'
-import { getColor, isValidName, storageObject } from "../utils"
+import { getColor, isValidName, storageObject } from "../utils.js"
 import { trigger, globalEvents, everyTime } from '../tooling/events.js'
 
 // triggers:
