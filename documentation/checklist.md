@@ -76,13 +76,6 @@ Major Chonological Changes:
 - FUTURE: check that filtering by selected label still works
 - DONE: name the video#observer to be "annotation_status.csv" "who_has_done_what.csv"
 - DONE: change the `video#observer` format, make it videoId, observerId, and the all the fields for that combo
-- fix the delete-upload and overwrite-upload actions
-- upload checks:
-    - check upload handling of comma-separated lists
-    - add reject/confirm to extra data area
-    - fix upload action of delete
-        - add a way to selectively delete video aspects (the problem with "watched")
-    - fix upload action of overwrite
 - FUTURE: probably want to download a label table:
     - total number of observations
     - total duration of all observations
@@ -92,10 +85,19 @@ Major Chonological Changes:
 - FUTURE: check the order when downloading:
     - sort by start time
     - then sort by video id
+- FUTURE: ensure video ID's match a regex and dont include invalid-on-windows-filesystem characters
+- check overwrite-upload, and delete-upload
+    - make setter for db
+- add documentation to download
+    - upload actions explained
+    - paraentheses explained
+    - delete deletes whole thing
+- upload checks:
+    - fix upload action of overwrite
 - clean up code
     - move stuff into tools
     - consolidate things into event files
-- FUTURE: ensure video ID's match a regex and dont include invalid-on-windows-filesystem characters
+
 - finish writing dev_notes.md
 - check all the TODO's again
 
