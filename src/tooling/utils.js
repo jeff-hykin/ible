@@ -1,4 +1,4 @@
-import * as basics from "./tooling/basics.bundle.js"
+import * as basics from "./basics.bundle.js"
 const { get, set } = basics
 
 export const mimeTypes = {

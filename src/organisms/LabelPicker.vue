@@ -24,8 +24,8 @@
 </template>
 
 <script>
-const { checkIf } = require("../utils.js")
-const { openPanel, takeover } = require("../templates/LeftSidePanel")
+import { checkIf } from "../tooling/utils.js"
+import { openPanel, takeover } from "../templates/LeftSidePanel"
 let Fuse = require("fuse.js").default
 
 export default {

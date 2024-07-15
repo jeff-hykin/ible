@@ -61,8 +61,8 @@
 <script>
 import { frontendDb } from '../tooling/database.js'
 import { Perspective, everyTime } from '../tooling/events.js'
-import { deferredPromise } from '../utils.js'
-import * as utils from '../utils.js'
+import { deferredPromise } from '../tooling/utils.js'
+import * as utils from '../tooling/utils.js'
 import * as videoTooling from '../tooling/video_tooling.js'
 import * as basics from "../tooling/basics.bundle.js"
 

@@ -121,8 +121,8 @@
 </template>
 <script>
 import { frontendDb } from '../tooling/database.js'
-import { colors, debounce, download, } from "../utils.js"
-import * as utils from "../utils.js"
+import { colors, debounce, download, } from "../tooling/utils.js"
+import * as utils from "../tooling/utils.js"
 import * as csvTools from "../tooling/csv_tooling.js"
 import * as zipTools from "../tooling/zip_tooling.js"
 import * as basics from "../tooling/basics.bundle.js"

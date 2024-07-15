@@ -1,4 +1,4 @@
-import { deferredPromise, asyncIteratorToList, getColor, dynamicSort } from "../utils.js"
+import { deferredPromise, asyncIteratorToList, getColor, dynamicSort } from "./utils.js"
 import { get, set, remove } from "./basics.bundle.js"
 import observationTooling from "./observation_tooling.js"
 import * as basics from "./basics.bundle.js"

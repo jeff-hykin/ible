@@ -81,7 +81,7 @@
 
 </template>
 <script>
-import { wrapIndex, checkIf, deferredPromise, dynamicSort } from "../utils.js"
+import { wrapIndex, checkIf, deferredPromise, dynamicSort } from "../tooling/utils.js"
 import { frontendDb } from '../tooling/database.js'
 import { Event, trigger, everyTime, once, globalEvents } from "../tooling/events.js"
 import * as basics from "../tooling/basics.bundle.js"

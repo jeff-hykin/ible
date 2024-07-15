@@ -1,5 +1,5 @@
 import { Path, toString } from "./basics.bundle.js"
-import { videoExtensions } from "../utils.js"
+import { videoExtensions } from "./utils.js"
 import * as csvTools from "./csv_tooling.js"
 export const localVideoPrefix = "/videos/"
 

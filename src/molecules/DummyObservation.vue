@@ -46,7 +46,7 @@
         )
 </template>
 <script>
-import { isValidName } from "../utils.js"
+import { isValidName } from "../tooling/utils.js"
 
 export default {
     props: [
