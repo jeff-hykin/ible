@@ -1,21 +1,21 @@
 import * as yaml from 'yaml'
-import * as utils from './utils.js'
-import * as csvTools from './tooling/csv_tooling.js'
-import * as basics from './tooling/basics.bundle.js'
-import { toString, toRepresentation } from './tooling/basics.bundle.js'
+import * as utils from '../utils.js'
+import * as csvTools from './csv_tooling.js'
+import * as basics from './basics.bundle.js'
+import { toString, toRepresentation } from './basics.bundle.js'
 
 import {
     isLocalVideo,
     minSizeOfUnixTimestamp,
     currentFixedSizeOfYouTubeVideoId,
     videoIdIsValid,
-} from './tooling/video_tooling.js'
+} from './video_tooling.js'
 export {
     isLocalVideo,
     minSizeOfUnixTimestamp,
     currentFixedSizeOfYouTubeVideoId,
     videoIdIsValid,
-} from './tooling/video_tooling.js'
+} from './video_tooling.js'
 
 export const createUuid = ()=>new Date().getTime() + `${Math.random()}`.slice(1)
 

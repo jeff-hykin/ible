@@ -1,6 +1,6 @@
 import { frontendDb } from "./database.js"
 import { Event, trigger, everyTime, once, globalEvents } from "./events.js"
-import * as observationTooling from "../observation_tooling.js"
+import * as observationTooling from "./observation_tooling.js"
 import Vue from "vue"
 
 // listens to:

@@ -127,7 +127,7 @@ import * as csvTools from "../tooling/csv_tooling.js"
 import * as zipTools from "../tooling/zip_tooling.js"
 import * as basics from "../tooling/basics.bundle.js"
 import * as videoTooling from "../tooling/video_tooling.js"
-import * as observationTooling from "../observation_tooling.js"
+import * as observationTooling from "../tooling/observation_tooling.js"
 
 let observationEntries
 export default {

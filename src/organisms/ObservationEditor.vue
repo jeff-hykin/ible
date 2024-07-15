@@ -236,7 +236,7 @@
 
 <script>
 import Vue from "vue"
-import * as observationTooling from '../observation_tooling.js'
+import * as observationTooling from '../tooling/observation_tooling.js'
 import { frontendDb } from '../tooling/database.js'
 import { toKebabCase, toRepresentation } from '../tooling/basics.bundle.js'
 import { getColor, isValidName, storageObject } from "../utils"
