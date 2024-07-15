@@ -212,11 +212,15 @@ export default {
                                         const inputIsValid = (input == input) && input >= 0
                                         if (inputIsValid) {
                                             // Set
+                                            if (!this.media) {
+                                                this.media = {}
+                                            }
                                             this.media.currentTime = Math.min(input, this.duration)
+                                            this.player.currentTime = this.media.currentTime
                                         }
                                     },
                                     get() {
-                                        return this.media.currentTime
+                                        return this?.player?.currentTime || this?.media?.currentTime
                                     }
                                 })
                             } catch (error) {

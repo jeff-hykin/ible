@@ -4,6 +4,7 @@
         placeholder="Video name or YouTube URL"
         @focus="selectSearchText"
         @select="videoSelect"
+        @input="videoSelect"
         @paste="videoSelect"
         v-model="searchTerm"
         :suggestions="suggestions"
@@ -41,12 +42,16 @@ export default {
         },
         videoSelect() {
             let videoSearchTerm = this.searchTerm.trim()
-            if (!window.storageObject.videoPaths.includes(videoSearchTerm)) {
+            if (videoSearchTerm.length == 0) {
+                return
+            }
+            const videoInfo = videoTooling.searchTermToVideoInfo(videoSearchTerm)
+            if (!videoInfo.isYoutubeUrl && !window.storageObject.videoPaths.includes(videoSearchTerm)) {
                 if (!confirm("This doesn't seem to be one of the available videos, do you want me to try and load it anyways?")) {
                     return
                 }
             }
-            const videoInfo = videoTooling.searchTermToVideoInfo(videoSearchTerm)
+            
             if (!videoInfo) {
                 return
             }

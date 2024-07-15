@@ -233,8 +233,8 @@ export default {
             // build the search query
             // 
             if (this.$root.routeData$.labelName                               ) { where.push({ valueOf: ['label'                            ], is:                     this.$root.routeData$.labelName            , }) }
-            if (Number.isFinite(this.$root.filterAndSort.maxlabelConfidence)         ) { where.push({ valueOf: ['labelConfidence'                  ], isLessThanOrEqualTo:    this.$root.filterAndSort.maxlabelConfidence, }) }
-            if (Number.isFinite(this.$root.filterAndSort.minlabelConfidence)         ) { where.push({ valueOf: ['labelConfidence'                  ], isGreaterThanOrEqualTo: this.$root.filterAndSort.minlabelConfidence, }) }
+            if (Number.isFinite(this.$root.filterAndSort.maxlabelConfidence)  ) { where.push({ valueOf: ['labelConfidence'                  ], isLessThanOrEqualTo:    this.$root.filterAndSort.maxlabelConfidence, }) }
+            if (Number.isFinite(this.$root.filterAndSort.minlabelConfidence)  ) { where.push({ valueOf: ['labelConfidence'                  ], isGreaterThanOrEqualTo: this.$root.filterAndSort.minlabelConfidence, }) }
             if (this.$root.filterAndSort.observer                             ) { where.push({ valueOf: ['observer'                         ], is:                     this.$root.filterAndSort.observer          , }) }
             if (this.$root.filterAndSort.kindOfObserver == "Only Humans"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     true                          , }) }
             if (this.$root.filterAndSort.kindOfObserver == "Only Robots"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     false                         , }) }
@@ -251,7 +251,7 @@ export default {
             this.numberOfSearchResults = observationEntries.length
             
             // show the time of the first load
-            if (this.$root.loadStart) {
+            if (this.$root.loadStart && this.$root.email) {
                 let loadDuration = ((new Date()).getTime() - this.$root.loadStart)/1000
                 this.$root.loadStart = null
                 if (loadDuration > 5) {

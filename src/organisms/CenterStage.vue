@@ -104,7 +104,7 @@ export default {
         if (videoId) {
             globalEvents.requestVideos.from("mounted").triggerWith([videoId]).then(async (responses)=>{
                 let videos = responses[0]
-                let videoInfo = videos.find(each=>each.videoId == this.$root.videoInterface.videoId)
+                let videoInfo = videos.find(each=>each?.videoId == this.$root.videoInterface.videoId)
                 this.videoInfo = videoTooling.enforceStandardVideoFormat(videoInfo)
             })
         }
