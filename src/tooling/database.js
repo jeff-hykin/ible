@@ -104,7 +104,127 @@ const indexDb = {
     _tableNames: new Set(JSON.parse(localStorage.getItem("_tableNames")||"[]")),
 
     /**
-     * Shallow Merges with existing data (creates if doesn't exist)
+     * Overwrites with existing data (creates if doesn't exist)
+     *
+     * @example
+     * ```js
+     * ```
+     *
+     * @param {[[[String], Object]]} addressValuePairs - tableName, key
+     * @returns {Promise} - promise around native indexed DB transaction
+     *
+     */
+    async sets(addressValuePairs) {
+        if (!db) {
+            await dbPromise
+        }
+
+        // optimizations:
+        // - group by store
+        // - group by base key (do all object mutations in group)
+
+        const tableMapping = {}
+        for (const [address, value] of addressValuePairs) {
+            const table = address[0]
+            const key = address[1]
+            if (key) {
+                tableMapping[table] = tableMapping[table]||{}
+                tableMapping[table][key] = tableMapping[table][key]||[]
+                tableMapping[table][key].push([address.slice(2), value])
+            }
+        }
+
+        // ensure all tables exist
+        for (const eachTableName in tableMapping) {
+            if (!indexDb._tableNames.has(eachTableName)) {
+                indexDb._tableNames.add(eachTableName)
+                localStorage.setItem("_tableNames", JSON.stringify([...indexDb._tableNames]))
+            }
+        }
+        
+        const transaction = db.transaction([storeName], 'readwrite')
+        const objectStore = transaction.objectStore(storeName)
+        const transactionPromise = new Promise((resolve, reject) => {
+            transaction.oncomplete = resolve
+            transaction.onerror = reject
+        })
+        // 
+        // for each table
+        // 
+        await Promise.all(
+            Object.entries(tableMapping).map(
+                // 
+                // for each key
+                // 
+                async ([tableName, keyMapping])=>{
+                    
+                    // up to 40 things in parallel
+                    // higher can overload RAM usage with too many promises
+                    let limiter = 40
+                    const promises = []
+                    for (const [key, innerAddressPairs] of Object.entries(keyMapping)) {
+                        if (!key) {
+                            continue
+                        }
+                        const id = JSON.stringify([tableName, key])
+                        // 
+                        // one promise/request per key
+                        // 
+                        const request = objectStore.get(id)
+                        const index = promises.length
+                        const pending = promises.filter(each=>each!=null)
+                        if (pending.length >= limiter) {
+                            try {
+                                await Promise.any(pending)
+                            } catch (error) {
+                                reject(error)
+                            }
+                        }
+                        promises.push(
+                            (new Promise((resolve, reject)=>{
+                                request.onsuccess = ()=>resolve(request)
+                                request.onerror = reject
+                            })).then(({result})=>{
+                                // enforce is object
+                                let existingValue = result?.v instanceof Object ? result.v : {}
+                                // 
+                                // for each assignment
+                                // 
+                                for (const [subAddress, value] of innerAddressPairs) {
+                                    if (subAddress.length == 0) {
+                                        existingValue = value
+                                    } else {
+                                        set({ keyList: subAddress, to: value, on: existingValue })
+                                    }
+                                }
+                                
+                                return new Promise(
+                                    (resolve, reject)=>
+                                        Object.assign(
+                                            objectStore.put({id:id, k: key, t: tableName, v:existingValue,}),
+                                            {
+                                                onsuccess:resolve,
+                                                onerror:reject,
+                                            },
+                                        )
+                                )
+                            // mark self as done
+                            }).then(()=>{
+                                promises[index] = null // for the limiter
+                            })
+                        )
+                    }
+                    
+                    // await remaining in parallel
+                    await Promise.all(promises.filter(each=>each!=null))
+                }
+            )
+        )
+
+        return transactionPromise
+    },
+    /**
+     * Merges with existing data (creates if doesn't exist)
      *
      * @example
      * ```js
@@ -860,6 +980,10 @@ const frontendDb = {
             } else if (action == "delete") {
                 await indexDb.deletes([[
                     ["videos", ...keyList]
+                ]])
+            } else if (action == "overwrite") {
+                await indexDb.sets([[
+                    ["videos", ...keyList], value
                 ]])
             }
         }
