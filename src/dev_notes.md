@@ -3,7 +3,7 @@
 This document assumes you have downloaded/git-cloned this project, and are generally familiar with the command line.
 
 ### Overview
-- The codebase is a bit messy because there was a 4 year gap, and a change in direction
+- The codebase is a bit messy because there was a 4 year gap of no activity followed by a slight change in direction
 
 ### How do I run this project and make a new release?
 - If you want to hack something really small in:
@@ -12,16 +12,18 @@ This document assumes you have downloaded/git-cloned this project, and are gener
     - Then see the release process below
 - If you want to do more proper development:
     - If you're not going to hack the `docs/Root.SOMETHING.js` file, then we need to have the full build environment
-    - The build environment would be a pain (NodeJS v14.17.1, and Vue 2.6.12), EXCEPT that this project is build on top of Nix. Nix makes things extremely reproducable, like version numbers aren't even good enough, it installs dependencies that are identical, all the way down to the cryptographic hash of the source code. It was painful, but I've automated the setup with Nix. Executing `commands/start` will install Nix (if needed) and install the correct versions of all dependencies without affecting your system. No `npm install` or other steps necessary, it will put you in a special shell with access to the full build environment and project commands.
-    - Once inside the build environment, you can run `run/build_and_serve` to start the server and debug it in your browser. Note: the build environment uses a fake home folder to make sure that the project doesn't touch your real home folder.
-    - Once you've got the build environment, you can edit the `.vue` files and it will auto-update the docs folder.
+    - The build environment would be a pain (NodeJS v14.17.1, and Vue 2.6.12) because its old, EXCEPT that this project is build on top of Nix. Nix makes things extremely reproducable, like version numbers aren't even good enough, it installs dependencies that are identical, all the way down to the cryptographic hash of the source code. I've automated the setup with Nix. Executing `commands/start` will install Nix (if needed) and install the correct versions of all dependencies without affecting your system. No `npm install` or other steps necessary, it will put you in a special shell with access to the full build environment and project commands. See `documentation/setup.md` for more details.
+    - Once inside the build environment (after running `commands/start`), you can execute `run/build_and_serve` to start the server and debug it in your browser. Note: the build environment uses a fake home folder to make sure that the project doesn't touch your real home folder.
+    - Once you've got the build environment, you can edit the stuff inside of `src/` and it will compile/transpile the output to docs folder automatically.
     - After you're done editing, follow the release process below
 
 ### The release process
 Once you're ready to make a release, execute `run/compile` and it will generate a `temp.ignore/executables` folder that contains all the executables for all the different platforms. Those files are what go into a release.
-- NOTE: you might consider the release process kinda cursed.
-    - To make a self-contained executable, we need all the dependencies to be a javascript import.
-    - Well... one of the dependencies on the index.html. So we need to convert the index.html to javascript file.
+- If you ever want to bundle something in the executable, then you'll probably need to know how the compilation process works behind the scenes because its very custom, and maybe a tiny bit cursed.
+    - The executable is created using `deno compile`
+    - It automatically bundles all the javascript files into the executable
+    - If its not a javascript import (javascript and typescript are the only valid imports at time of writing) then it doens't get bundled
+    - Well... one of the dependencies is index.html which is the file thats served by the executable. So we need to convert the index.html to javascript file.
         - And there is a second problem. The index.html links to javascript and css files.
         - Well I wrote a tool that bundles JS and CSS into one html file ([html-bundle](https://github.com/jeff-hykin/html-bundle)).
         - That bundle step is part of the compile step, so it happens automatically.
@@ -32,36 +34,38 @@ Once you're ready to make a release, execute `run/compile` and it will generate 
         - As you might have guessed, that is where we add the javascript import of the html file.
     - The server (main.js) is what gets compiled, and it mostly just serves the html file.
 
-### What does this project uses
+### Key Project Design Notes
 - frontend:
-    - Vue 2
+    - `window.storageObject`` as a wrapper around localStorage (e.g. persistent storage)
+    - uses [Vue 2](https://v2.vuejs.org/)
         - [KeenUI component library](https://josephuspaye.github.io/Keen-UI/#/ui-alert)
-        - pug instead of html
-        - sass (not scss but sass) instead of css
-    - window.storageObject as a wrapper around localStorage (e.g. persistent storage)
-- backend/server is small
-    - uses Deno, but you can import/use NodeJS stuff
-    - mostly a static file server (videos, html/js/css)
-    - extra APIs for
+        - [pug](https://pugjs.org/api/getting-started.html) instead of html
+        - [sass](https://sass-lang.com/guide/) (NOT scss but sass) instead of css
+- `main.js` is a server, but the backend aspect only does a couple of things
+    - Written in Deno, but you can import/use NodeJS stuff
+    - mostly a static file server (index.html is the majority of the work, but also serves videos)
+    - there are backend APIs for:
         - listing paths to all video files
         - renaming a video file to have an id
-    - Note: the "listing paths to all video files" has some complications
-        - We don't compute the paths on-demand, but rather in a loop.
+    - Note: the "listing paths to all video files" has some complications worth mentioning
+        - We don't compute the paths on-demand, but rather in a loop
         - This means there won't be a computation spike if 50 clients ask for the list of video paths
-        - The client asks for the list video paths continuously (I could setup web sockets to push "new video path" events but whatever)
-        - There's a way to keep the list updated efficiently using Deno's built-in file watcher. I'm not doing that. I'd be good to do that in the future. Right now I'm effectively just looping and scanning the file system every X seconds. NOTE: its at least in a way that file-scans won't pile-up (e.g. doesn't use setInterval). It waits for the scan to finish before waiting for a set duration.
+        - The frontend asks for the list video paths continuously (I could setup web sockets and push "new video path" events when the backend finds a new video but that is future work)
+        - There's a way to keep the list updated efficiently using Deno's built-in file watcher instead of a loop. I'm not doing that. It'd be good to do that in the future. Right now I'm effectively just looping and scanning the file system every X seconds. NOTE: it is at least in a way that file-scans won't ever pile-up (e.g. doesn't use setInterval). It waits for the first scan to finish before waiting for a set duration, and only then starts the next scan. Energy efficiency was not a primary goal of this project.
 
 ### Where's the (important) Frontend Data
-- Other than the raw video files, all data is client side right now, either saved to Indexed DB (frontend database) or stored in `$root` from `Root.vue`
-    - Sadly some data is treats as "being"/existing in both the database and `$root` as a source of truth. 
-        - E.g. there is NOT a strict data flow of "UI edit => update the database, database response => updates $root"
-        - Its more like, UI changes $root, we detect changes in `$root`, update the database. Or: ask backend for info, update database, then update `$root`. Etc
-        - It'd be great to clean this up, but $root data is reactive and watched and edited by all different parts of the UI
-    - When downloading stuff
+- Other than the raw video files, all data is client side right now, either saved to Indexed DB (frontend database) or stored in ram on `$root` inside the `Root.vue` component
+    - Sadly some data has multiple "sources of truth", with the database and `$root` being the two sources
+        - Ideally there would be only one source of truth, but some things, such as username (aka `$root.email`), are not stored in the database. They just exist in localStorage (via the `window.storageObject` wrapper)
+        - This also, unforunately means there is NOT a strict data flow, like "UI edit => update the database, database response => updates $root"
+        - Instead it is more like, UI changes `$root`, we detect watch changes to `$root`, onChange we update the database. 
+        - Or another example: we ask backend for info, update database, then update `$root`. Etc
+        - It'd be great to clean this up, but $root data is reactive and watched and edited by all different parts of the UI because everything is (necessarily) very inter-connected. Ex: editing the search field will change what videos show up in the video list component, and editing an observation will change the elements in the SegmentDisplay component.
+    - When downloading data:
         - it comes from
                - either `$root.searchResults`
                - or (if no search filters) it pulls all observations/videos from frontendDb 
-        - Data format is heavily converted. In other words database tables ≠ downloaded tables
+        - Data format is heavily converted, its not merely a download operation
             - The database is, conceptually, a big JSON object, with "videos" and "observations" as top level keys
             - The download format, in contrast, is more SQL style; multiple tables, tables-of-relationships instead of nested values
             - NOTE: a hack on CSV datatypes
@@ -115,3 +119,11 @@ Once you're ready to make a release, execute `run/compile` and it will generate 
 - Similar to video-stuff, the observation-stuff has a `observation_tooling.js` as a source-of-truth and `observation_storage_manager.js`
 - Unlike video stuff, observation stuff isn't quite as messy. The main thing is it does have to wait on a video duration to be known.
 - Their are quite a few moving parts because of ObservationEditor and SegmentDisplay need to talk to each other even though they are in different parts of the heirarchy.
+
+### Why is ___?
+- The `tooling/basics.bundle.js` comes from https://github.com/jeff-hykin/good-js
+- The `atoms`, `molecules`, `organisms`, `templates`, and  `pages` all had specific defintions at one time (generally are increasing in complexity in the order listed).
+- `plugins` are kind of where Vue black-magic happens
+- `tooling` is just various groups of helper functions
+
+While there are other design aspect to the codebase, that should cover all the pitfalls. Everything else can be read in the source code and understood about as efficiently as I could explain it.

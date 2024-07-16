@@ -176,6 +176,12 @@ The second scenario involved using a prototype of Ible for data submission and v
 
 To use an Ible for your own research, you can download the latest release from the [releases page](https://github.com/ible/ible/releases). [FIXME: add the link to the release page]
 
+# Future Work
+
+- Avoid the need for port-access since some system administrators don't allow opening up a port for a webserver
+- Use Couch DB on the frontend, and enable syncing it with mutliple backends as a means of merging data from multiple users
+- Enable a sharable link with an observer and syncing-url pre-filled in the URL
+
 # Citations
 
 Citations to entries in paper.bib should be in
