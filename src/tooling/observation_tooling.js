@@ -1,7 +1,6 @@
-import * as yaml from 'yaml'
 import * as utils from './pure_tools.js'
-import * as csvTools from './csv_tooling.js'
 import * as basics from './basics.bundle.js'
+import * as typedCsv from './typed_csv.js'
 import { toString, toRepresentation, toKebabCase } from './basics.bundle.js'
 
 import {
@@ -316,24 +315,20 @@ export const createDefaultObservationEntry = (currentTime)=>({
             })
             // flatten out video
             for (const [key, value] of Object.entries(each.video||{})) {
-                observations.slice(-1)[0][`=video.${key}`] = value
+                observations.slice(-1)[0][`(video.${key})`] = value
             }
             // flatten out customInfo
             for (const [key, value] of Object.entries(each.customInfo||{})) {
                 observations.slice(-1)[0][`customInfo.${key}`] = value
             }
         }
-        
-        return csvTools.convertToCsv(
-            observations, 
-            {
-                defaultHeaders: observationDownlaodHeaders,
-            }
-        )
+        const output = typedCsv.stringify(observations)
+        console.debug(`output is:`,output)
+        return output
     }
 
     export const observationsCsvToActions = async (csvString) => {
-        const observationEntries = await csvTools.parseCsv(csvString)
+        const observationEntries = typedCsv.parse(csvString)
         const headers = observationEntries.shift()
         const observationActions = []
         for (const eachRow of observationEntries) {

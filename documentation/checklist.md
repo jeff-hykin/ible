@@ -88,6 +88,7 @@ Major Chonological Changes:
 - FUTURE: ensure video ID's match a regex and dont include invalid-on-windows-filesystem characters
 - check overwrite-upload, and delete-upload
     - make setter for db
+- DONE: finish writing dev_notes.md
 - add documentation to download
     - upload actions explained
     - paraentheses explained
@@ -95,10 +96,9 @@ Major Chonological Changes:
 - upload checks:
     - fix upload action of overwrite
 - clean up code
-    - move stuff into tools
+    - DONE: move stuff into tools
     - consolidate things into event files
 
-- finish writing dev_notes.md
 - check all the TODO's again
 
 LATER:

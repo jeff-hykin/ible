@@ -1,6 +1,6 @@
 import { Path, toString } from "./basics.bundle.js"
 import { videoExtensions } from "./pure_tools.js"
-import * as csvTools from "./csv_tooling.js"
+import * as typedCsv from "./typed_csv.js"
 export const localVideoPrefix = "/videos/"
 
 export const minimumLocalIdSize = 7
@@ -176,22 +176,11 @@ export const currentFixedSizeOfYouTubeVideoId = 11
             }
         }
         
-        return csvTools.convertToCsv(
-            videoRows, 
-            {
-                defaultHeaders: [
-                    "uploadAction",
-                    "videoId",
-                    "path",
-                    "durationInSeconds",
-                    "comment",
-                ],
-            }
-        )
+        return typedCsv.stringify(videoRows, { headers: ["uploadAction", "videoId", "path", "durationInSeconds", "comment", "(latestVideoAction)", "(numberOfObservations)", "(numberOfWatchers)", "(numberOfLabelers)", "(numberOfVerifiers)", "(usersWhoFinishedWatching)", "(usersWhoFinishedLabeling)", "(usersWhoFinishedVerifying)"] })
     }
 
     export const videosCsvToActions = async (csvString) => {
-        const videoEntries = await csvTools.parseCsv(csvString)
+        const videoEntries = await typedCsv.parse(csvString)
         const headers = videoEntries.shift()
         const videoActions = []
         for (const eachRow of videoEntries) {
@@ -276,10 +265,10 @@ export const currentFixedSizeOfYouTubeVideoId = 11
             }
         }
         
-        return csvTools.convertToCsv(
+        return typedCsv.stringify(
             Object.values(videoObservers), 
             {
-                defaultHeaders: [
+                headers: [
                     "uploadAction",
                     "videoId",
                     "observer",
@@ -292,7 +281,7 @@ export const currentFixedSizeOfYouTubeVideoId = 11
     }
 
     export const videoObserverTableCsvToActions = async (csvString) => {
-        const videoObserverRows = await csvTools.parseCsv(csvString)
+        const videoObserverRows = await typedCsv.parse(csvString)
         const headers = videoObserverRows.shift()
         const videos = {}
         const videoActions = []
