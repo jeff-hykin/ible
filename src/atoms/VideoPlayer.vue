@@ -193,46 +193,24 @@ export default {
                         // plyr player
                         // 
                         } else {
-                            let player = this.$refs.vuePlyr?.player?.media
+                            // the following DOES NOT WORK because the vuePlyr changes the player object
+                            // this.player = this.$refs.vuePlyr?.player
                             
-                            // 
-                            // fix the scubber update issue
-                            // 
-                            try {
-                                
-                                Object.defineProperty(Object.getPrototypeOf(player), "currentTime", {
-                                    set(input) {
-                                        // Bail if media duration isn't available yet
-                                        if (!this.duration) { return }
-                                        // Validate input
-                                        input = input-0
-                                        if (input < 0) {
-                                            input = 0
-                                        }
-                                        const inputIsValid = (input == input) && input >= 0
-                                        if (inputIsValid) {
-                                            // Set
-                                            if (!this.media) {
-                                                this.media = {}
-                                            }
-                                            this.media.currentTime = Math.min(input, this.duration)
-                                            this.player.currentTime = this.media.currentTime
-                                        }
-                                    },
-                                    get() {
-                                        return this?.player?.currentTime || this?.media?.currentTime
-                                    }
-                                })
-                            } catch (error) {
-                                
-                            }
+                            // so we fix that with a proxy
+                            this.player = new Proxy({}, {
+                                ownKeys:(original, ...args)=>Reflect.ownKeys(this.$refs?.vuePlyr?.player||{}, ...args),
+                                getOwnPropertyDescriptor: (original, prop)=> Reflect.getOwnPropertyDescriptor(this.$refs?.vuePlyr?.player||{}, prop),
+                                get: (original, key, ...args) => Reflect.get(this.$refs?.vuePlyr?.player||{}, key, ...args),
+                                set: (original, key, ...args) => Reflect.set(this.$refs?.vuePlyr?.player||{}, key, ...args),
+                                has: (original, ...args) => Reflect.has(this.$refs?.vuePlyr?.player||{}, ...args),
+                                defineProperty: (original, ...args) => Reflect.defineProperty(this.$refs?.vuePlyr?.player||{}, ...args),
+                                getPrototypeOf: (original, ...args) => Reflect.getPrototypeOf(this.$refs?.vuePlyr?.player||{}, ...args),
+                            })
                             
-                            // plyr
-                            const container = player?.elements?.container
+                            const container = this.player?.elements?.container
                             if (container) {
                                 container.addEventListener("keydown", this.keydownControls)
                             }
-                            this.player = player
                         }
                     }
                     
@@ -244,6 +222,7 @@ export default {
                 }, 100)
         },
         keydownControls(eventObject) {
+            console.debug(`this.player is:`,this.player)
             // only when focused on the nothing or this element
             // (this is to exclude textboxes)
             if (this.player instanceof Object && ["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || get({ keyList: ["path"], from: eventObject, failValue: [] }).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {

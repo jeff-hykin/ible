@@ -1,5 +1,5 @@
 ---
-title: 'IBLE: A simple label generation, verification, and analysis tool for videos'
+title: 'IBLE: the no-nonsense timestamping tool for videos'
 tags:
   - labeling
   - machine learning
