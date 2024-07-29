@@ -25381,276 +25381,7 @@ require("keen-ui/dist/keen-ui.css");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _vue.default.use(_keenUi.default);
-},{"vue":"NtAQ","keen-ui":"R6w2","keen-ui/dist/keen-ui.css":"jJO6"}],"mVwj":[function(require,module,exports) {
-// api
-// resolvables:
-//     [resolvable].promise
-//     [resolvable].resolve()
-//     [resolvable].reject()
-//     [resolvable].done
-//     [resolvable].result
-let Vue = require("vue").default;
-
-Vue.prototype.$resolvables = {};
-const resolvablesSymbol = Symbol("resolvables");
-Vue.mixin(module.exports = {
-  beforeCreate() {
-    const newOption = this.$options.resolvables;
-
-    if (!newOption) {
-      return;
-    }
-
-    const vueStaticDestination = this.$resolvables || this;
-
-    if (vueStaticDestination instanceof Object) {
-      if (newOption instanceof Function) {
-        Object.assign(vueStaticDestination, newOption.apply(this));
-      } else if (typeof newOption === 'object') {
-        Object.assign(vueStaticDestination, newOption);
-      }
-    }
-
-    this[resolvablesSymbol] = {};
-
-    if (this.$resolvables instanceof Object) {
-      for (let [eachKey, eachValue] of Object.entries(this.$resolvables)) {
-        this[resolvablesSymbol][eachKey] = [];
-        let checkerFunction = eachValue;
-
-        if (checkerFunction.bind instanceof Function) {
-          checkerFunction = checkerFunction.bind(this);
-        } // 
-        // initial synchronous promise workaround
-        // 
-        // we can't extract the resolve/reject values outside of the promise
-        //     ex: new Promise((resolve, reject)=>{})
-        // because that function is loaded asyncly and this function is synchronous
-        // meaning the external resolve this function tries to create would
-        // fail if the user calls resolve() before the promise
-        // has had time to set itself up so this code here creates a stand-in
-        // resolve() function to handle that initial case
-
-
-        const beforeInitActionArg = Symbol();
-        const beforeInitResolveCalled = Symbol();
-        const beforeInitRejectCalled = Symbol();
-        const promiseKey = Symbol("promiseKey");
-        const resolveKey = Symbol("resolveKey");
-        const rejectKey = Symbol("rejectKey");
-        const checkerRunningKey = Symbol("checkerRunningKey");
-
-        let resetSyncCallbackData = () => {
-          this[resolvablesSymbol][eachKey][beforeInitActionArg] = undefined;
-          this[resolvablesSymbol][eachKey][beforeInitResolveCalled] = false;
-          this[resolvablesSymbol][eachKey][beforeInitRejectCalled] = false;
-          this[resolvablesSymbol][eachKey][checkerRunningKey] = false;
-        }; // 
-        // init the check
-        // 
-
-
-        resetSyncCallbackData();
-
-        checkerFunction.resolve = arg => {
-          // find and use the latest resolver if it exists
-          if (checkerFunction[promiseKey][resolveKey]) {
-            // call the low level resolver
-            checkerFunction[promiseKey][resolveKey](arg);
-
-            if (arg instanceof Array && arg.length == 12) {} // otherwise this function was called before any resolver was setup
-            // and it needs to fallback on the sync method
-            // the promise setup will look for (and cleanup) these values
-
-          } else {
-            this[resolvablesSymbol][eachKey][beforeInitResolveCalled] = true;
-            this[resolvablesSymbol][eachKey][beforeInitActionArg] = arg;
-          }
-        };
-
-        checkerFunction.reject = arg => {
-          // find and use the latest rejector if it exists
-          if (checkerFunction[promiseKey][rejectKey]) {
-            checkerFunction[promiseKey][rejectKey](arg); // otherwise this function was called before any resolver was setup
-            // and it needs to fallback on the sync method
-            // the promise setup will look for (and cleanup) these values
-          } else {
-            this[resolvablesSymbol][eachKey][beforeInitRejectCalled] = true;
-            this[resolvablesSymbol][eachKey][beforeInitActionArg] = arg;
-          }
-        };
-
-        checkerFunction.check = async () => {
-          // basically don't schedule a bunch of checks if the first one never finished
-          if (!this[resolvablesSymbol][eachKey][checkerRunningKey] && !checkerFunction.done) {
-            this[resolvablesSymbol][eachKey][checkerRunningKey] = true; // not sure if func will be async or not so wrap it inside async
-
-            let result = await (async () => checkerFunction(checkerFunction.resolve, checkerFunction.reject))();
-            this[resolvablesSymbol][eachKey][checkerRunningKey] = false;
-          }
-        }; // calling this mutliple times would
-
-
-        let synclyRefreshCheckerFunctionPromise = () => {
-          // create a new checking promise
-          let promiseData = {};
-          promiseData.id = Math.random();
-          const aPromise = new Promise((resolve, reject) => setTimeout(() => {
-            // check if it was synchronously resolved first
-            if (this[resolvablesSymbol][eachKey][beforeInitResolveCalled]) {
-              // resolve the promise
-              resolve(this[resolvablesSymbol][eachKey][beforeInitActionArg]);
-              checkerFunction.result = this[resolvablesSymbol][eachKey][beforeInitActionArg];
-              checkerFunction.done = true;
-              resetSyncCallbackData();
-              return;
-            } else if (this[resolvablesSymbol][eachKey][beforeInitRejectCalled]) {
-              reject(this[resolvablesSymbol][eachKey][beforeInitActionArg]);
-              checkerFunction.result = this[resolvablesSymbol][eachKey][beforeInitActionArg];
-              checkerFunction.done = true;
-              resetSyncCallbackData();
-              return;
-            } // then do the normal checking
-
-
-            promiseData[rejectKey] = arg => {
-              if (!checkerFunction.done) {
-                checkerFunction.result = arg;
-                checkerFunction.done = true;
-                reject(arg);
-                resetSyncCallbackData();
-              }
-            };
-
-            promiseData[resolveKey] = arg => {
-              if (!checkerFunction.done) {
-                checkerFunction.result = arg;
-                checkerFunction.done = true;
-                resolve(arg);
-                resetSyncCallbackData();
-              }
-            };
-
-            Object.assign(aPromise, promiseData); // immediately run the check
-
-            checkerFunction.check(); // check again after 1 second
-            // TODO: make this customizable
-
-            setTimeout(() => {
-              checkerFunction.check();
-            }, 1000); // if the promise isn't resolved after those checks
-            // then something else from somewhere else needs to call the resolve
-          }, 0)); // attach the new promise
-
-          checkerFunction[promiseKey] = Object.assign(aPromise, promiseData); // synchronously reset the resolved status
-
-          delete checkerFunction.result;
-          checkerFunction.done = false;
-          checkerFunction.id = promiseData.id;
-        }; // init the first promise
-
-
-        synclyRefreshCheckerFunctionPromise(); // add promise getter 
-
-        Object.defineProperty(checkerFunction, "promise", {
-          get() {
-            // if not yet resolved, check it, then return the existing promise
-            if (!checkerFunction.done) {
-              // run the check again, if the other checks are complete
-              checkerFunction.check(); // return the promise
-
-              return checkerFunction[promiseKey]; // if already resolved, then create a new promise
-              // so that the re-check can run
-            } else {
-              // this will call the check function as soon as the promise loads
-              synclyRefreshCheckerFunctionPromise();
-              return checkerFunction[promiseKey];
-            }
-          }
-
-        }); // create the property on the component
-
-        Object.defineProperty(this, eachKey, {
-          get() {
-            return checkerFunction;
-          }
-
-        });
-      }
-    }
-  }
-
-});
-},{"vue":"NtAQ"}],"T1YL":[function(require,module,exports) {
-// TODO: fix potential issue of the "this" somehow not refering to the active component (maybe hotreload/debugging issue)
-// api
-//     rootHooks
-let Vue = require("vue").default;
-
-let rootHooksSymbol = Symbol("$rootHooks");
-Object.defineProperty(Vue.prototype, "$rootHooks", {
-  get() {
-    if (this[rootHooksSymbol] == undefined) {
-      this[rootHooksSymbol] = {};
-    }
-
-    return this[rootHooksSymbol];
-  },
-
-  set(value) {
-    this[rootHooksSymbol] = value;
-  }
-
-});
-const unwatcherSymbol = Symbol("unwatchers");
-Vue.mixin(module.exports = {
-  beforeCreate() {
-    const newOption = this.$options.rootHooks;
-
-    if (!newOption) {
-      return;
-    }
-
-    const vueStaticDestination = this.$rootHooks || this;
-
-    if (vueStaticDestination instanceof Object) {
-      if (newOption instanceof Function) {
-        Object.assign(vueStaticDestination, newOption.apply(this));
-      } else if (typeof newOption === 'object') {
-        Object.assign(vueStaticDestination, newOption);
-      }
-    }
-
-    this[unwatcherSymbol] = []; // 
-    // watchers
-    // 
-
-    const thisComponent = this;
-
-    if (this.$rootHooks.watch instanceof Object) {
-      for (let [eachKey, eachValue] of Object.entries(this.$rootHooks.watch)) {
-        if (eachValue.bind instanceof Function) {
-          eachValue = this.$rootHooks.watch[eachKey] = eachValue.bind(thisComponent);
-        }
-
-        this[unwatcherSymbol].push(this.$root.$watch(eachKey, eachValue, {
-          deep: true
-        }));
-      }
-    }
-  },
-
-  beforeDestroy() {
-    // call all of the unwatchers
-    if (this[unwatcherSymbol] instanceof Array) {
-      for (let each of this[unwatcherSymbol]) {
-        each();
-      }
-    }
-  }
-
-});
-},{"vue":"NtAQ"}],"yMH8":[function(require,module,exports) {
+},{"vue":"NtAQ","keen-ui":"R6w2","keen-ui/dist/keen-ui.css":"jJO6"}],"yMH8":[function(require,module,exports) {
 
  /*! 
   * portal-vue © Thorsten Lünborg, 2019 
@@ -26278,7 +26009,276 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 let Vue = require("vue").default;
 
 Vue.use(_portalVue.default);
-},{"vue":"NtAQ","portal-vue":"yMH8"}],"iTBu":[function(require,module,exports) {
+},{"vue":"NtAQ","portal-vue":"yMH8"}],"mVwj":[function(require,module,exports) {
+// api
+// resolvables:
+//     [resolvable].promise
+//     [resolvable].resolve()
+//     [resolvable].reject()
+//     [resolvable].done
+//     [resolvable].result
+let Vue = require("vue").default;
+
+Vue.prototype.$resolvables = {};
+const resolvablesSymbol = Symbol("resolvables");
+Vue.mixin(module.exports = {
+  beforeCreate() {
+    const newOption = this.$options.resolvables;
+
+    if (!newOption) {
+      return;
+    }
+
+    const vueStaticDestination = this.$resolvables || this;
+
+    if (vueStaticDestination instanceof Object) {
+      if (newOption instanceof Function) {
+        Object.assign(vueStaticDestination, newOption.apply(this));
+      } else if (typeof newOption === 'object') {
+        Object.assign(vueStaticDestination, newOption);
+      }
+    }
+
+    this[resolvablesSymbol] = {};
+
+    if (this.$resolvables instanceof Object) {
+      for (let [eachKey, eachValue] of Object.entries(this.$resolvables)) {
+        this[resolvablesSymbol][eachKey] = [];
+        let checkerFunction = eachValue;
+
+        if (checkerFunction.bind instanceof Function) {
+          checkerFunction = checkerFunction.bind(this);
+        } // 
+        // initial synchronous promise workaround
+        // 
+        // we can't extract the resolve/reject values outside of the promise
+        //     ex: new Promise((resolve, reject)=>{})
+        // because that function is loaded asyncly and this function is synchronous
+        // meaning the external resolve this function tries to create would
+        // fail if the user calls resolve() before the promise
+        // has had time to set itself up so this code here creates a stand-in
+        // resolve() function to handle that initial case
+
+
+        const beforeInitActionArg = Symbol();
+        const beforeInitResolveCalled = Symbol();
+        const beforeInitRejectCalled = Symbol();
+        const promiseKey = Symbol("promiseKey");
+        const resolveKey = Symbol("resolveKey");
+        const rejectKey = Symbol("rejectKey");
+        const checkerRunningKey = Symbol("checkerRunningKey");
+
+        let resetSyncCallbackData = () => {
+          this[resolvablesSymbol][eachKey][beforeInitActionArg] = undefined;
+          this[resolvablesSymbol][eachKey][beforeInitResolveCalled] = false;
+          this[resolvablesSymbol][eachKey][beforeInitRejectCalled] = false;
+          this[resolvablesSymbol][eachKey][checkerRunningKey] = false;
+        }; // 
+        // init the check
+        // 
+
+
+        resetSyncCallbackData();
+
+        checkerFunction.resolve = arg => {
+          // find and use the latest resolver if it exists
+          if (checkerFunction[promiseKey][resolveKey]) {
+            // call the low level resolver
+            checkerFunction[promiseKey][resolveKey](arg);
+
+            if (arg instanceof Array && arg.length == 12) {} // otherwise this function was called before any resolver was setup
+            // and it needs to fallback on the sync method
+            // the promise setup will look for (and cleanup) these values
+
+          } else {
+            this[resolvablesSymbol][eachKey][beforeInitResolveCalled] = true;
+            this[resolvablesSymbol][eachKey][beforeInitActionArg] = arg;
+          }
+        };
+
+        checkerFunction.reject = arg => {
+          // find and use the latest rejector if it exists
+          if (checkerFunction[promiseKey][rejectKey]) {
+            checkerFunction[promiseKey][rejectKey](arg); // otherwise this function was called before any resolver was setup
+            // and it needs to fallback on the sync method
+            // the promise setup will look for (and cleanup) these values
+          } else {
+            this[resolvablesSymbol][eachKey][beforeInitRejectCalled] = true;
+            this[resolvablesSymbol][eachKey][beforeInitActionArg] = arg;
+          }
+        };
+
+        checkerFunction.check = async () => {
+          // basically don't schedule a bunch of checks if the first one never finished
+          if (!this[resolvablesSymbol][eachKey][checkerRunningKey] && !checkerFunction.done) {
+            this[resolvablesSymbol][eachKey][checkerRunningKey] = true; // not sure if func will be async or not so wrap it inside async
+
+            let result = await (async () => checkerFunction(checkerFunction.resolve, checkerFunction.reject))();
+            this[resolvablesSymbol][eachKey][checkerRunningKey] = false;
+          }
+        }; // calling this mutliple times would
+
+
+        let synclyRefreshCheckerFunctionPromise = () => {
+          // create a new checking promise
+          let promiseData = {};
+          promiseData.id = Math.random();
+          const aPromise = new Promise((resolve, reject) => setTimeout(() => {
+            // check if it was synchronously resolved first
+            if (this[resolvablesSymbol][eachKey][beforeInitResolveCalled]) {
+              // resolve the promise
+              resolve(this[resolvablesSymbol][eachKey][beforeInitActionArg]);
+              checkerFunction.result = this[resolvablesSymbol][eachKey][beforeInitActionArg];
+              checkerFunction.done = true;
+              resetSyncCallbackData();
+              return;
+            } else if (this[resolvablesSymbol][eachKey][beforeInitRejectCalled]) {
+              reject(this[resolvablesSymbol][eachKey][beforeInitActionArg]);
+              checkerFunction.result = this[resolvablesSymbol][eachKey][beforeInitActionArg];
+              checkerFunction.done = true;
+              resetSyncCallbackData();
+              return;
+            } // then do the normal checking
+
+
+            promiseData[rejectKey] = arg => {
+              if (!checkerFunction.done) {
+                checkerFunction.result = arg;
+                checkerFunction.done = true;
+                reject(arg);
+                resetSyncCallbackData();
+              }
+            };
+
+            promiseData[resolveKey] = arg => {
+              if (!checkerFunction.done) {
+                checkerFunction.result = arg;
+                checkerFunction.done = true;
+                resolve(arg);
+                resetSyncCallbackData();
+              }
+            };
+
+            Object.assign(aPromise, promiseData); // immediately run the check
+
+            checkerFunction.check(); // check again after 1 second
+            // TODO: make this customizable
+
+            setTimeout(() => {
+              checkerFunction.check();
+            }, 1000); // if the promise isn't resolved after those checks
+            // then something else from somewhere else needs to call the resolve
+          }, 0)); // attach the new promise
+
+          checkerFunction[promiseKey] = Object.assign(aPromise, promiseData); // synchronously reset the resolved status
+
+          delete checkerFunction.result;
+          checkerFunction.done = false;
+          checkerFunction.id = promiseData.id;
+        }; // init the first promise
+
+
+        synclyRefreshCheckerFunctionPromise(); // add promise getter 
+
+        Object.defineProperty(checkerFunction, "promise", {
+          get() {
+            // if not yet resolved, check it, then return the existing promise
+            if (!checkerFunction.done) {
+              // run the check again, if the other checks are complete
+              checkerFunction.check(); // return the promise
+
+              return checkerFunction[promiseKey]; // if already resolved, then create a new promise
+              // so that the re-check can run
+            } else {
+              // this will call the check function as soon as the promise loads
+              synclyRefreshCheckerFunctionPromise();
+              return checkerFunction[promiseKey];
+            }
+          }
+
+        }); // create the property on the component
+
+        Object.defineProperty(this, eachKey, {
+          get() {
+            return checkerFunction;
+          }
+
+        });
+      }
+    }
+  }
+
+});
+},{"vue":"NtAQ"}],"T1YL":[function(require,module,exports) {
+// TODO: fix potential issue of the "this" somehow not refering to the active component (maybe hotreload/debugging issue)
+// api
+//     rootHooks
+let Vue = require("vue").default;
+
+let rootHooksSymbol = Symbol("$rootHooks");
+Object.defineProperty(Vue.prototype, "$rootHooks", {
+  get() {
+    if (this[rootHooksSymbol] == undefined) {
+      this[rootHooksSymbol] = {};
+    }
+
+    return this[rootHooksSymbol];
+  },
+
+  set(value) {
+    this[rootHooksSymbol] = value;
+  }
+
+});
+const unwatcherSymbol = Symbol("unwatchers");
+Vue.mixin(module.exports = {
+  beforeCreate() {
+    const newOption = this.$options.rootHooks;
+
+    if (!newOption) {
+      return;
+    }
+
+    const vueStaticDestination = this.$rootHooks || this;
+
+    if (vueStaticDestination instanceof Object) {
+      if (newOption instanceof Function) {
+        Object.assign(vueStaticDestination, newOption.apply(this));
+      } else if (typeof newOption === 'object') {
+        Object.assign(vueStaticDestination, newOption);
+      }
+    }
+
+    this[unwatcherSymbol] = []; // 
+    // watchers
+    // 
+
+    const thisComponent = this;
+
+    if (this.$rootHooks.watch instanceof Object) {
+      for (let [eachKey, eachValue] of Object.entries(this.$rootHooks.watch)) {
+        if (eachValue.bind instanceof Function) {
+          eachValue = this.$rootHooks.watch[eachKey] = eachValue.bind(thisComponent);
+        }
+
+        this[unwatcherSymbol].push(this.$root.$watch(eachKey, eachValue, {
+          deep: true
+        }));
+      }
+    }
+  },
+
+  beforeDestroy() {
+    // call all of the unwatchers
+    if (this[unwatcherSymbol] instanceof Array) {
+      for (let each of this[unwatcherSymbol]) {
+        each();
+      }
+    }
+  }
+
+});
+},{"vue":"NtAQ"}],"iTBu":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29330,6 +29330,48 @@ Vue.mixin(module.exports = {
   }
 
 });
+},{"vue":"NtAQ"}],"aLvM":[function(require,module,exports) {
+// api
+//     this.withoutWatchers(source, callback)
+let Vue = require("vue").default; // TODO: potenial issue if a second source calls this before the first one ends (async)
+// TODO: issues with dynamically added watchers
+
+
+Vue.mixin(module.exports = {
+  methods: {
+    $withoutWatchers(source, callback) {
+      const watchers = this._watchers.map(watcher => ({
+        cb: watcher.cb,
+        sync: watcher.sync
+      })); // disable
+
+
+      for (let index in this._watchers) {
+        this._watchers[index] = Object.assign(this._watchers[index], {
+          cb: () => null,
+          sync: true
+        });
+      }
+
+      if (this.$withoutWatchers.showSource) {
+        console.group(`[${source}] suspended all watch functions`);
+      }
+
+      callback();
+
+      if (this.$withoutWatchers.showSource) {
+        console.groupEnd();
+        console.log(`[${source}] resumed all watch functions`);
+      } // enable
+
+
+      for (let index in this._watchers) {
+        this._watchers[index] = Object.assign(this._watchers[index], watchers[index]);
+      }
+    }
+
+  }
+});
 },{"vue":"NtAQ"}],"Y7uC":[function(require,module,exports) {
 // api
 //     workers
@@ -29401,48 +29443,6 @@ Vue.mixin(module.exports = {
     }
   }
 
-});
-},{"vue":"NtAQ"}],"aLvM":[function(require,module,exports) {
-// api
-//     this.withoutWatchers(source, callback)
-let Vue = require("vue").default; // TODO: potenial issue if a second source calls this before the first one ends (async)
-// TODO: issues with dynamically added watchers
-
-
-Vue.mixin(module.exports = {
-  methods: {
-    $withoutWatchers(source, callback) {
-      const watchers = this._watchers.map(watcher => ({
-        cb: watcher.cb,
-        sync: watcher.sync
-      })); // disable
-
-
-      for (let index in this._watchers) {
-        this._watchers[index] = Object.assign(this._watchers[index], {
-          cb: () => null,
-          sync: true
-        });
-      }
-
-      if (this.$withoutWatchers.showSource) {
-        console.group(`[${source}] suspended all watch functions`);
-      }
-
-      callback();
-
-      if (this.$withoutWatchers.showSource) {
-        console.groupEnd();
-        console.log(`[${source}] resumed all watch functions`);
-      } // enable
-
-
-      for (let index in this._watchers) {
-        this._watchers[index] = Object.assign(this._watchers[index], watchers[index]);
-      }
-    }
-
-  }
 });
 },{"vue":"NtAQ"}],"fgJi":[function(require,module,exports) {
 var global = arguments[3];
@@ -37450,17 +37450,17 @@ module.exports = {
   "css-baseline-plugin": require("./css-baseline-plugin.js"),
   "good-vue-plugin": require("./good-vue-plugin.js"),
   "keen-ui-plugin": require("./keen-ui-plugin.js"),
+  "portal-plugin": require("./portal-plugin.js"),
   "resolvables-plugin": require("./resolvables-plugin.js"),
   "root-hooks-plugin": require("./root-hooks-plugin.js"),
-  "portal-plugin": require("./portal-plugin.js"),
   "router-plugin": require("./router-plugin.js"),
   "vue-toasted-plugin": require("./vue-toasted-plugin.js"),
   "window-listeners-plugin": require("./window-listeners-plugin.js"),
-  "workers-plugin": require("./workers-plugin.js"),
   "without-watchers": require("./without-watchers.js"),
+  "workers-plugin": require("./workers-plugin.js"),
   "youtube-player-plugin": require("./youtube-player-plugin.js")
 };
-},{"./child.js":"HT0w","./css-baseline-plugin.js":"xmsx","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./resolvables-plugin.js":"mVwj","./root-hooks-plugin.js":"T1YL","./portal-plugin.js":"HMJZ","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./window-listeners-plugin.js":"XpWL","./workers-plugin.js":"Y7uC","./without-watchers.js":"aLvM","./youtube-player-plugin.js":"mQXc"}],"jqRt":[function(require,module,exports) {
+},{"./child.js":"HT0w","./css-baseline-plugin.js":"xmsx","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./portal-plugin.js":"HMJZ","./resolvables-plugin.js":"mVwj","./root-hooks-plugin.js":"T1YL","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./window-listeners-plugin.js":"XpWL","./without-watchers.js":"aLvM","./workers-plugin.js":"Y7uC","./youtube-player-plugin.js":"mQXc"}],"jqRt":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -68638,6 +68638,42 @@ function* iterGenerateCsv(data, {
     yield [...row].map(each => csvEscapeCell(stringifyCell(each, options))).join(delimiter) + "\n";
   }
 }
+},{}],"F5JO":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.toKebabCase = exports.wordList = void 0;
+
+const wordList = (str, {
+  keepTrailingSeparators = false,
+  allowLongSplits = false
+} = {}) => {
+  const addedSeperator = str.replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/[^a-zA-Z0-9 _.-]/, "_").toLowerCase();
+
+  if (allowLongSplits) {
+    return addedSeperator.split(/[ _.-]/g).filter(each => keepTrailingSeparators || each);
+  }
+
+  const words = addedSeperator.split(/[ _.-]+/g).filter(each => keepTrailingSeparators || each);
+  return words;
+};
+
+exports.wordList = wordList;
+
+const toKebabCase = (str, {
+  keepTrailingSeparators = false,
+  allowLongSplits = false
+} = {}) => {
+  const words = wordList(str, {
+    keepTrailingSeparators,
+    allowLongSplits
+  });
+  return words.map(each => each.toLowerCase()).join('-');
+};
+
+exports.toKebabCase = toKebabCase;
 },{}],"u92t":[function(require,module,exports) {
 "use strict";
 
@@ -69092,6 +69128,8 @@ var basics = _interopRequireWildcard(require("./basics.bundle.js"));
 
 var typedCsv = _interopRequireWildcard(require("./typed_csv.js"));
 
+var _string_helpers = require("./string_helpers.js");
+
 var _video_tooling = require("./video_tooling.js");
 
 function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
@@ -69148,7 +69186,7 @@ const createDefaultObservationEntry = currentTime => ({
 
 exports.createDefaultObservationEntry = createDefaultObservationEntry;
 
-const nameCoerce = name => (0, basics.toKebabCase)(name.toLowerCase().replace(/[^a-zA-Z0-9-.]/g, "-"), {
+const nameCoerce = name => (0, _string_helpers.toKebabCase)(name.toLowerCase().replace(/[^a-zA-Z0-9-.]/g, "-"), {
   keepTrailingSeparators: true,
   allowLongSplits: true
 });
@@ -69483,18 +69521,16 @@ const observationsCsvToActions = async csvString => {
 };
 
 exports.observationsCsvToActions = observationsCsvToActions;
-},{"./pure_tools.js":"b1NV","./basics.bundle.js":"WnUT","./typed_csv.js":"yLra","./video_tooling.js":"u92t"}],"GPZG":[function(require,module,exports) {
+},{"./pure_tools.js":"b1NV","./basics.bundle.js":"WnUT","./typed_csv.js":"yLra","./string_helpers.js":"F5JO","./video_tooling.js":"u92t"}],"GPZG":[function(require,module,exports) {
 "use strict";
 
 var _pure_tools = require("./pure_tools.js");
 
 var basics = _interopRequireWildcard(require("./basics.bundle.js"));
 
-var _observation_tooling = _interopRequireDefault(require("./observation_tooling.js"));
+var observationTooling = _interopRequireWildcard(require("./observation_tooling.js"));
 
 var _basicsBundle2 = require("../tooling/basics.bundle.js");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
 
@@ -70541,16 +70577,16 @@ const frontendDb = {
     // synchonous changes before bulk set
     // 
     if (withCoersion) {
-      observationEntries = observationEntries.map(_observation_tooling.default.coerceObservation);
+      observationEntries = observationEntries.map(observationTooling.coerceObservation);
     } // 
     // validate
     // 
 
 
-    const errorMessagesPerObservation = _observation_tooling.default.validateObservations(observationEntries);
+    const errorMessagesPerObservation = observationTooling.validateObservations(observationEntries);
 
     if (errorMessagesPerObservation.some(each => each.length > 0)) {
-      throw new _observation_tooling.default.InvalidFormatError(errorMessagesPerObservation);
+      throw new observationTooling.InvalidFormatError(errorMessagesPerObservation);
     }
 
     const entryIds = observationEntries.map(({
@@ -71823,7 +71859,7 @@ exports.default = void 0;
 
 var _vue = _interopRequireDefault(require("vue"));
 
-var observationTooling = _interopRequireWildcard(require("../tooling/observation_tooling.js"));
+var _observation_tooling = require("../tooling/observation_tooling.js");
 
 var _database = require("../tooling/database.js");
 
@@ -71832,10 +71868,6 @@ var _basicsBundle = require("../tooling/basics.bundle.js");
 var _pure_tools = require("../tooling/pure_tools.js");
 
 var _events = require("../tooling/events.js");
-
-function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -72075,12 +72107,21 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //
 //
 //
-// triggers:
+const observationTooling = {
+  coerceObservation: _observation_tooling.coerceObservation,
+  createDefaultObservationEntry: _observation_tooling.createDefaultObservationEntry,
+  quickLocalValidationCheck: _observation_tooling.quickLocalValidationCheck,
+  coerceLabel: _observation_tooling.coerceLabel,
+  coerceObserver: _observation_tooling.coerceObserver,
+  observerIsValid: _observation_tooling.observerIsValid,
+  labelIsValid: _observation_tooling.labelIsValid
+}; // triggers:
 //    globalEvents.updateObservationRequest
 //    globalEvents.addLabelRequest
 //    globalEvents.rootDeSelectObservationRequest
 //    globalEvents.rootRetriveLabelsRequest
 //    globalEvents.deleteObservationRequest
+
 var _default = {
   props: ["currentTime", "jumpSegment"],
   components: {

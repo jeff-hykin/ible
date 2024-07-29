@@ -1,7 +1,8 @@
 import * as utils from './pure_tools.js'
 import * as basics from './basics.bundle.js'
 import * as typedCsv from './typed_csv.js'
-import { toString, toRepresentation, toKebabCase } from './basics.bundle.js'
+import { toString, toRepresentation } from './basics.bundle.js'
+import { toKebabCase } from './string_helpers.js'
 
 import {
     isLocalVideo,

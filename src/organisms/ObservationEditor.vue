@@ -236,11 +236,13 @@
 
 <script>
 import Vue from "vue"
-import * as observationTooling from '../tooling/observation_tooling.js'
+import {coerceObservation,createDefaultObservationEntry,quickLocalValidationCheck,coerceLabel,coerceObserver,observerIsValid,labelIsValid} from '../tooling/observation_tooling.js'
 import { frontendDb } from '../tooling/database.js'
 import { toKebabCase, toRepresentation } from '../tooling/basics.bundle.js'
 import { getColor, isValidName, storageObject } from "../tooling/pure_tools.js"
 import { trigger, globalEvents, everyTime } from '../tooling/events.js'
+
+const observationTooling = {coerceObservation,createDefaultObservationEntry,quickLocalValidationCheck,coerceLabel,coerceObserver,observerIsValid,labelIsValid}
 
 // triggers:
 //    globalEvents.updateObservationRequest
