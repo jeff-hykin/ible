@@ -27,6 +27,7 @@ export default {
         },
         hideSearchArea(event) {
             this.showFade = false
+            this.$root.videoInterface.focusVideoPlayer() // remove focus from search input field (otherwise spacebar doesn't play the video)
         }
     },
 

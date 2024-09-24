@@ -244,6 +244,12 @@ export default RootComponent = {
                         $root.videoInterface.keySegments = keySegments
                     })
                 },
+                focusVideoPlayer() {
+                    const tabIndex = window.VideoPlayer.$el.getAttribute("tabindex")
+                    window.VideoPlayer.$el.setAttribute("tabindex", "-1")
+                    window.VideoPlayer.$el.focus()
+                    window.VideoPlayer.$el.setAttribute("tabindex", tabIndex)
+                },
                 async goToThisVideo(videoInfo) {
                     $root.videoInterface._player = null
                     $root.videoInterface._videoLoadedTemporaryCallbacks = new Set()

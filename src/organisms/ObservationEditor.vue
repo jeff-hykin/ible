@@ -88,7 +88,12 @@
                                 )
                                     | Cancel
                 transition(name="fade")    
-                    container.input-area(v-if="!noSegment()" margin-top="2rem" @keydown="preventBubbling")
+                    container.input-area(
+                        v-if="!noSegment()"
+                        margin-top="2rem"
+                        @keydown="preventBubbling"
+                        @click="handleClickToEdit"
+                    )
                         row.start-time-wrapper
                             ui-textbox(
                                 tabindex="1"
@@ -162,13 +167,12 @@
                                 v-model="observationData.labelConfidence"
                             )
                         div(tabindex="-1")
-                            ui-textbox(
+                            UiTextbox(
                                 tabindex="5"
                                 :disabled="!editing"
                                 floating-label
                                 label="Comment"
                                 v-model="observationData.comment"
-                                :onClick="()=>{ if (!editing) { this.$toasted.show(`Click edit to add a comment`) } }"
                             )
                         //- UiSwitch(:disabled="!editing" v-model="observationData.isHuman" tabindex="6")
                         //-     | Observer Is Human
@@ -262,12 +266,14 @@ export default {
     components: {
         JsonTree: require('vue-json-tree').default,
         UiSwitch: require("../atoms/UiSwitch").default,
+        UiTextbox: require("../atoms/UiTextbox").default,
     },
     data() {
         const defaultObservationData = observationTooling.coerceObservation(
             observationTooling.createDefaultObservationEntry()
         )
         return {
+            window,
             observationData: defaultObservationData,
             dataCopy: null,
             editing: false,
@@ -350,6 +356,12 @@ export default {
         }
     },
     methods: {
+        handleClickToEdit() {
+            if (!this.editing) {
+                this.$toasted.show(`Click the Edit button to make changes`).goAway(3500)
+                this.$root.videoInterface.focusVideoPlayer()
+            }
+        },
         hasConfirmed() {
             return (this.observationData.confirmedBy||[]).includes(this.$root.email)
         },
