@@ -12,6 +12,8 @@
                 )
                 span(style="background-color: rgba(0,0,0,0.45); color: white;position: absolute; bottom: 0.1rem; left: 0.1rem; padding: 0.5rem; border-radius: 0.5rem;")
                     | {{`${eachVideo.name||""}`}}
+                span(style="background-color: rgba(0,0,0,0.45); color: white;position: absolute; top: 0.1rem; left: 0.1rem; padding: 0.5rem; border-radius: 0.5rem;")
+                    | {{`${eachVideo.status||""}`}}
             
 </template>
 
@@ -91,7 +93,8 @@ export default {
             // console.debug(`[VideoLister] videos is:`,JSON.parse(JSON.stringify(videos)))
             for (const each of videos) {
                 if (each?.path) {
-                    videoByPath[each.path] = {...videoByPath[each.path], ...each }
+                    let videoObject = {...videoByPath[each.path], ...each }
+                    videoByPath[each.path] = videoObject
                     if (each.path.startsWith("https://")) {
                         videoByPath[each.path].isLocalVideo = false 
                         videoByPath[each.path].name = videoByPath[each.path].name||"[Youtube]"
@@ -99,9 +102,19 @@ export default {
                         videoByPath[each.path].isLocalVideo = true
                         videoByPath[each.path].name = videoTools.extractLocalVideoNameFromPath(each.path)
                     }
+                    
+                    let status = "Unmarked/Unwatched"
+                    if ((videoObject.usersFinishedWatchingAt||{})[this.$root.email]) {
+                        status = "Watched"
+                    }
+                    if ((videoObject.usersFinishedLabelingAt||{})[this.$root.email]) {
+                        status = "Labeled"
+                    }
+                    if ((videoObject.usersFinishedVerifyingAt||{})[this.$root.email]) {
+                        status = "Verified"
+                    }
+                    videoObject.status = status
                 }
-                // combine all information into each
-                Object.assign(each, videoByPath[each.path])
             }
             // remove duplicates
             this.videos = Object.values(videoByPath)
