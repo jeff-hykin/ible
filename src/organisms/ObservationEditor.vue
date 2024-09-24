@@ -50,18 +50,18 @@
                                     | Delete
                             row.button-row(v-if="!noSegment() && !editing" align-h="space-evenly" width="100%" margin-bottom="0.7rem" margin-top="0.5rem" :display="(!noSegment() && !editing)?'flex':'none'")
                                 ui-button.confirm-button(
-                                    :style="`opacity: ${(editing) && $root.selectedSegment?0:1}; --button-color: ${hasRejected()? 'darkgray' : 'var(--soft-green)'}; min-width: 7rem; font-size: 0.7em;` "
+                                    :style="`opacity: ${(editing) && $root.selectedSegment?0:1}; --button-color: ${hasRejected()? 'darkgray' : 'var(--soft-green)'}; min-width: 7rem; font-size: 0.7em; ${isOwner ? 'opacity: 0.3; box-shadow: 0 0 0 1px; color: gray;' : ''} `"
                                     @click="toggleConfirm"
-                                    :disabled="observationData.observer != $root.email"
+                                    :tooltip="isOwner ? `(only someone else can confirm your observation)` : `Click if you agree with this observation`"
                                     icon="check"
                                 )
                                     | {{hasConfirmed()? "Confirmed" : "Confirm"}}
                                 //- spacer
                                 container(flex-basis="10%" width="10%")
                                 ui-button.reject-button(
-                                    :style="`opacity: ${(editing) && $root.selectedSegment?0:1}; --button-color: ${hasConfirmed()? 'darkgray' : 'var(--red)'}; min-width: 7rem; font-size: 0.7em;` "
+                                    :style="`opacity: ${(editing) && $root.selectedSegment?0:1}; --button-color: ${hasConfirmed()? 'darkgray' : 'var(--red)'}; min-width: 7rem; font-size: 0.7em;${isOwner ? 'opacity: 0.3; box-shadow: 0 0 0 1px; color: gray;' : ''} `"
                                     @click="toggleReject"
-                                    :disabled="observationData.observer != $root.email"
+                                    :tooltip="isOwner ? `(only someone else can reject your observation)` : `Click if you disagree with this observation`"
                                     icon="cancel"
                                 )
                                     | {{hasRejected()? "Rejected" : "Reject"}}
@@ -168,6 +168,7 @@
                                 floating-label
                                 label="Comment"
                                 v-model="observationData.comment"
+                                :onClick="()=>{ if (!editing) { this.$toasted.show(`Click edit to add a comment`) } }"
                             )
                         //- UiSwitch(:disabled="!editing" v-model="observationData.isHuman" tabindex="6")
                         //-     | Observer Is Human
@@ -280,6 +281,9 @@ export default {
         this.$root.videoInterface.wheneverVideoIsLoaded(this.wheneverVideoChanges)
     },
     computed: {
+        isOwner() {
+            return this.$root.email == this.observationData.observer
+        },
         humanTime() {
             return (new Date(this.observationData.observationId-0)).toString()
         },
@@ -353,26 +357,30 @@ export default {
             return (this.observationData.rejectedBy||[]).includes(this.$root.email)
         },
         toggleConfirm() {
-            const shouldUnConfirm = this.hasConfirmed()
-            if (shouldUnConfirm) {
-                this.observationData.confirmedBy = this.observationData.confirmedBy.filter(each=>each!=this.$root.email)
-            } else {
-                this.observationData.confirmedBy.push(this.$root.email)
-                this.observationData.rejectedBy = this.observationData.rejectedBy.filter(each=>each!=this.$root.email)
+            if (!this.isOwner) {
+                const shouldUnConfirm = this.hasConfirmed()
+                if (shouldUnConfirm) {
+                    this.observationData.confirmedBy = this.observationData.confirmedBy.filter(each=>each!=this.$root.email)
+                } else {
+                    this.observationData.confirmedBy.push(this.$root.email)
+                    this.observationData.rejectedBy = this.observationData.rejectedBy.filter(each=>each!=this.$root.email)
+                }
+                trigger(globalEvents.updateObservationRequest, "ObservationEditor", this.observationData)
+                this.$forceUpdate()
             }
-            trigger(globalEvents.updateObservationRequest, "ObservationEditor", this.observationData)
-            this.$forceUpdate()
         },
         toggleReject() {
-            const shouldUnReject = this.hasRejected()
-            if (shouldUnReject) {
-                this.observationData.rejectedBy = this.observationData.rejectedBy.filter(each=>each!=this.$root.email)
-            } else {
-                this.observationData.rejectedBy.push(this.$root.email)
-                this.observationData.confirmedBy = this.observationData.confirmedBy.filter(each=>each!=this.$root.email)
+            if (!this.isOwner) {
+                const shouldUnReject = this.hasRejected()
+                if (shouldUnReject) {
+                    this.observationData.rejectedBy = this.observationData.rejectedBy.filter(each=>each!=this.$root.email)
+                } else {
+                    this.observationData.rejectedBy.push(this.$root.email)
+                    this.observationData.confirmedBy = this.observationData.confirmedBy.filter(each=>each!=this.$root.email)
+                }
+                trigger(globalEvents.updateObservationRequest, "ObservationEditor", this.observationData)
+                this.$forceUpdate()
             }
-            trigger(globalEvents.updateObservationRequest, "ObservationEditor", this.observationData)
-            this.$forceUpdate()
         },
         wheneverVideoChanges() {
             if (this.editing) {
