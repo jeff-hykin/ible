@@ -208,6 +208,6 @@ Options:
         }
     })
 
-    OperatingSystem.openUrl(url).catch(console.error)
+    OperatingSystem.openUrl(url).catch(()=>{})
 
 // (this comment is part of deno-guillotine, dont remove) #>
