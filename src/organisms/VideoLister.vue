@@ -48,6 +48,18 @@ export default {
                 return this.videos
             } else {
                 let filtered = this.videos.filter(each=>each.videoId!==selectedId)
+                try {
+                    if (!this.$root.noSearch) {
+                        const searchResultVideos = this.$root.searchResults.videos
+                        const videoIds = Object.keys(searchResultVideos)
+                        if (videoIds.length > 0) {
+                            return videoIds.map(eachVideoId=>({ videoId: eachVideoId }))
+                        }
+                    }
+                } catch (error) {
+                    console.error(error)
+                }
+                console.debug(`filtered is:`,filtered)
                 return filtered
             }
         },
@@ -76,28 +88,23 @@ export default {
             }
             // consolidate by path
             const videoByPath = {}
-            videos = videos
             // console.debug(`[VideoLister] videos is:`,JSON.parse(JSON.stringify(videos)))
             for (const each of videos) {
                 if (each?.path) {
-                    videoByPath[each.path] = {...videoByPath[each.path], ...each, }
-                    videoByPath[each.path].name = videoTools.extractLocalVideoNameFromPath(each.path)
+                    videoByPath[each.path] = {...videoByPath[each.path], ...each }
+                    if (each.path.startsWith("https://")) {
+                        videoByPath[each.path].isLocalVideo = false 
+                        videoByPath[each.path].name = videoByPath[each.path].name||"[Youtube]"
+                    } else {
+                        videoByPath[each.path].isLocalVideo = true
+                        videoByPath[each.path].name = videoTools.extractLocalVideoNameFromPath(each.path)
+                    }
                 }
                 // combine all information into each
                 Object.assign(each, videoByPath[each.path])
             }
             // remove duplicates
-            const pathList = []
-            const nonDuplicateVideos = []
-            for (const each of videos) {
-                if (!pathList.includes(each.path)) {
-                    pathList.push(each.path)
-                    nonDuplicateVideos.push(each)
-                    // transform the path for the thumbnail
-                    each.isLocalVideo = this.isLocalVideo(each.videoId)
-                }
-            }
-            this.videos = videos
+            this.videos = Object.values(videoByPath)
             setTimeout(() => {
                 this.$forceUpdate()
             }, 1000);

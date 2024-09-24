@@ -16,7 +16,7 @@ export default {
         selectLabel(labelName, label) {
             const currentVideoId = this.$root.videoInterface.videoId
             label.name = labelName
-            const videoIds = Object.keys(label.videos)
+            const videoIds = Object.keys(label?.videos||{})
             if (videoIds.length == 0) {
                 this.$toasted.show(`No videos found for ${labelName}`).goAway(2500)
                 return
