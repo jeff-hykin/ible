@@ -14,6 +14,9 @@
                 | Once you have videos in your HOME/Videos folder
                 span(style="height: 1rem;width: 100%;display: block;")
                 | check the Videos tab up there ↗
+                span(style="height: 1rem;width: 100%;display: block;")
+                span(style="height: 1rem;width: 100%;display: block;")
+                | Alternatively, paste a youtube link into the search bar at the top
             
         transition(name="fade")
             row.center-stage(v-show="aVideoIsSelected()" align-v="top" align-h="center" padding-top="8rem")
