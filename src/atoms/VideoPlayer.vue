@@ -214,7 +214,7 @@ export default {
                         }
                     }
                     
-                    const videoDurationIsAvailable = this.player?.duration != null
+                    const videoDurationIsAvailable = this.player?.duration != null && this.player?.duration !== 0
                     if (videoDurationIsAvailable) {
                         this.$emit("videoLoaded", this.player)
                         clearInterval(intervalId)
