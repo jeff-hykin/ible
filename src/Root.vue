@@ -131,6 +131,7 @@ export default RootComponent = {
         //       so we put it in here
         // NOTE2: none of this stuff is intended to be reactive, there's just no good way to access it when its outside of $data
             const runVideoCallbacks = async ()=>{
+                console.log(`[Root] running video-loaded callbacks`)
                 for (const eachCallback of [...this.videoInterface._videoLoadedPermanentCallbacks].concat([...this.videoInterface._videoLoadedTemporaryCallbacks])) {
                     try {
                         await eachCallback()
@@ -212,10 +213,13 @@ export default RootComponent = {
                     return $root.routeData$?.videoInfo?.path
                 },
                 tellRootTheVideoHasLoaded(player) {
+                    console.log(`[Root] video has loaded`)
                     $root.videoInterface._player = player
+                    if (player == null) {
+                        console.log(`[Root] loaded null video`)
                     // if there's no duration then wait for it to load
-                    if (!$root.videoInterface?.player?.duration) {
-                        console.warn(`[Root] tellRootTheVideoHasLoaded was called too early. It should only be called once the video player has a duration`)
+                    } else if (!$root.videoInterface?.player?.duration) {
+                        console.log(`[Root] WARNING: tellRootTheVideoHasLoaded was called too early. It should only be called once the video player has a duration`)
                         return new Promise((resolve, reject)=>{
                             setTimeout(()=>{
                                 console.log(`waiting for duration to load`)
@@ -561,6 +565,7 @@ export default RootComponent = {
                 }
             } else {
                 let label = this.$root.labels[labelName]
+                console.debug(`label.videos is:`,label.videos)
                 const videos = [...new Set([...(label.videos||[]), videoId])]
                 this.$root.labels[labelName] = {
                     color: getColor(labelName),
