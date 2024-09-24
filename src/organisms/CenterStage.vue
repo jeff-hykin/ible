@@ -39,7 +39,7 @@
                                 //- NEXT
                                 SideButton.right-side-button(right @click='wrapperForSelectNextSegment')
                             row(width="100%" padding="2rem" align-v="top")
-                                JsonTree.json-tree(v-if="videoInfo&&videoInfo.videoId" :data="videoInfo||{}")
+                                JsonTree.json-tree(v-if="videoInfo&&videoInfo.videoId" :data="videoInfo||{}" style="margin-right: 5px; overflow: auto")
                                 column(v-if="videoInfo&&videoInfo.videoId" flex-basis="40%" width="100%")
                                     UiSwitch(v-model="watchedSwitch" @click="clickedHasWatchedVideo")
                                         div(style="width: 10rem")
@@ -278,12 +278,16 @@ export default {
     .fade-enter, .fade-leave-to
         opacity: 0
 
+::v-deep .json-tree-root > .json-tree-deep
+    width: 100vw
+
 ::v-deep .json-tree
     min-width: 60%
     max-width: 100%
     background: transparent
     color: gray
     opacity: 0.7
+    
     
     .json-tree-sign
         visibility: hidden    
