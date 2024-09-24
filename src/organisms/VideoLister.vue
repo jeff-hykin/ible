@@ -1,5 +1,11 @@
 <template lang="pug">
     column.video-list-container(width="100%" padding="1rem" align-v="top")
+        ui-button(
+            v-show="(!$root.noSearch) || (videoResults.length == 0)"
+            @click="showAll"
+        )
+            | Show All
+            br
         span(v-if="videoResults.length == 0")
             | (No other videos matching this search)
         column.video-list-element(v-for="eachVideo in videoResults" @click="$root.videoInterface.goToThisVideo(eachVideo)")
@@ -64,6 +70,9 @@ export default {
         },
     },
     methods: {
+        showAll() {
+            this.$root.clearSearch()
+        },
         stringify: JSON.stringify,
         isLocalVideo,
         async getVideoExtraInfo() {

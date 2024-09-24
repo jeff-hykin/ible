@@ -534,6 +534,16 @@ export default RootComponent = {
         }
     },
     methods: {
+        clearSearch() {
+            this.$root.filterAndSort = {
+                maxlabelConfidence: null,
+                minlabelConfidence: null,
+                observer: "",
+                kindOfObserver: 'Either',
+                validation: [ 'Unchecked', 'Confirmed', 'Rejected', 'Disagreement' ],
+            }
+            this.$root.routeData$.labelName = ""
+        },
         getAValidEmail() {
             if (utils.isInvalidEmail(this.$root.email)) {
                 let prefix = ""
