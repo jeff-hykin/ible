@@ -23,7 +23,8 @@ export default {
             } else {
                 let selectedVideoId = videoIds[0]
                 // get it from the cache (auto-adds to cache if needed)
-                this.$toasted.show(`Loading clips for ${labelName}`).goAway(2500)
+                this.$toasted.show(`Check the video tab 👍`).goAway(2500)
+                
                 if (selectedVideoId != currentVideoId) {
                     this.$root.videoInterface.goToThisVideo({ videoId: selectedVideoId })
                 }
