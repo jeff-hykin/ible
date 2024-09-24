@@ -143,16 +143,19 @@
                         div(tabindex="-1")
                             ui-tooltip(v-if="editing" position="left" animation="fade" :trigger="$refs.labelElement")
                                 | all lowercase letters, numbers, dashes and periods
-                            ui-textbox(
+                            UiAutocomplete(
                                 tabindex="3"
                                 ref="labelElement"
-                                :disabled="!editing"
-                                floating-label
-                                label="Label"
+                                @select="onLabelChange"
+                                @input="onLabelChange"
+                                @paste="onLabelChange"
                                 :invalid="!isValid.label"
                                 v-model="observationData.label"
-                                @change="onLabelChange"
-                                @input="onLabelChange"
+                                :suggestions="Object.keys($root.labels)"
+                                :disabled="!editing"
+                                minChars=0
+                                floating-label
+                                label="Label"
                             )
                         div(tabindex="-1")
                             ui-tooltip(v-if="editing" position="left" animation="fade" :trigger="$refs.labelConfidenceElement")
@@ -267,6 +270,7 @@ export default {
         JsonTree: require('vue-json-tree').default,
         UiSwitch: require("../atoms/UiSwitch").default,
         UiTextbox: require("../atoms/UiTextbox").default,
+        UiAutocomplete: require("../atoms/UiAutocomplete").default,
     },
     data() {
         const defaultObservationData = observationTooling.coerceObservation(

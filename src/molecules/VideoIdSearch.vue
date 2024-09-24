@@ -7,7 +7,6 @@
         @paste="videoSelect"
         v-model="searchTerm"
         :suggestions="suggestions"
-        showDropdown=true
         minChars=0
     )
 </template>
