@@ -1,3 +1,16 @@
+Big Release Tasks:
+- Check that youtube videos still work:
+    - go to the hosted URL
+    - paste the URL
+    - add a timestamp
+    - paste another URL
+    - add a timestamp
+    - go to the video list and click the other video
+    - download the timestamps
+    - delete the timestamps
+    - reupload the timestamps
+- Download the binary from the releases page
+
 Publication options:
 - HRI: top conference for human robotics interations
     - RO-MAN 
@@ -89,6 +102,7 @@ Major Chonological Changes:
 - check overwrite-upload, and delete-upload
     - make setter for db
 - DONE: finish writing dev_notes.md
+- put a URL in each row of the CSV export, so theres a one-click link to see the clip
 - add documentation to download
     - upload actions explained
     - paraentheses explained
