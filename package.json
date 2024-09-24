@@ -17,6 +17,7 @@
     "type": "module",
     "dependencies": {
         "autosize": "^3.0.20",
+        "fuzzysearch": "^1.0.3",
         "http-server": "14.1.1",
         "minimist": "1.2.8"
     },

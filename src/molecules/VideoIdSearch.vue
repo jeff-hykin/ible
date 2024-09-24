@@ -1,22 +1,24 @@
 <template lang="pug">
     //- search for video
-    ui-autocomplete.rounded-search(
+    UiAutocomplete.rounded-search(
         placeholder="Video name or YouTube URL"
         @focus="selectSearchText"
         @select="videoSelect"
-        @input="videoSelect"
         @paste="videoSelect"
         v-model="searchTerm"
         :suggestions="suggestions"
+        showDropdown=true
         minChars=0
     )
 </template>
 
 <script>
+import { set } from '../tooling/basics.bundle.js'
 import * as videoTooling from '../tooling/video_tooling.js'
 
 export default {
     components: {
+        UiAutocomplete: require('../atoms/UiAutocomplete').default,
     },
     data: ()=>({
         searchTerm: null,
@@ -40,24 +42,27 @@ export default {
         selectSearchText(eventObject) {
             eventObject.target.select()
         },
-        videoSelect() {
-            let videoSearchTerm = this.searchTerm.trim()
-            if (videoSearchTerm.length == 0) {
-                return
-            }
-            const videoInfo = videoTooling.searchTermToVideoInfo(videoSearchTerm)
-            if (!videoInfo.isYoutubeUrl && !window.storageObject.videoPaths.includes(videoSearchTerm)) {
-                if (!confirm("This doesn't seem to be one of the available videos, do you want me to try and load it anyways?")) {
+        videoSelect(eventObject) {
+            setTimeout(()=>{
+                let videoSearchTerm = this.searchTerm.trim()
+                if (videoSearchTerm.length == 0) {
                     return
                 }
-            }
-            
-            if (!videoInfo) {
-                return
-            }
-            
-            this.$root.videoInterface.goToThisVideo(videoInfo)
-            this.$emit("submit", videoInfo) // triggers "hideSearchArea"
+                
+                const videoInfo = videoTooling.searchTermToVideoInfo(videoSearchTerm)
+                if (!videoInfo.isYoutubeUrl && !window.storageObject.videoPaths.includes(videoSearchTerm)) {
+                    if (!confirm("This doesn't seem to be one of the available videos, do you want me to try and load it anyways?")) {
+                        return
+                    }
+                }
+                
+                if (!videoInfo) {
+                    return
+                }
+                
+                this.$root.videoInterface.goToThisVideo(videoInfo)
+                this.$emit("submit", videoInfo) // triggers "hideSearchArea"
+            },0)
         },
     }
 }
