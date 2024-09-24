@@ -53,15 +53,12 @@ export default {
                 try {
                     if (!this.$root.noSearch) {
                         const searchResultVideos = this.$root.searchResults.videos
-                        const videoIds = Object.keys(searchResultVideos)
-                        if (videoIds.length > 0) {
-                            return videoIds.map(eachVideoId=>({ videoId: eachVideoId }))
-                        }
+                        const videoIds = new Set(Object.keys(searchResultVideos))
+                        filtered = filtered.filter(each=>videoIds.has(each.videoId))
                     }
                 } catch (error) {
                     console.error(error)
                 }
-                console.debug(`filtered is:`,filtered)
                 return filtered
             }
         },
