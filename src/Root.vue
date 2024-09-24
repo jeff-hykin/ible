@@ -404,7 +404,6 @@ export default RootComponent = {
             labels: {},
             videos: {},
             email: window.storageObject.email,
-            noSearch: true,
         }
     },
     mounted() {
@@ -435,13 +434,7 @@ export default RootComponent = {
         email(newValue){
             window.storageObject.email = this.$root.email
         },
-        "searchResults.filterAndSort": {
-            deep: true,
-            handler() {
-                const filterAndSort = this.$root.filterAndSort
-                this.$root.noSearch = filterAndSort.kindOfObserver == "Either" && !filterAndSort.observer && !filterAndSort.labelName && !filterAndSort.minlabelConfidence && !filterAndSort.maxlabelConfidence && (filterAndSort.validation.length == 4 || filterAndSort.validation.length == 0)
-            }
-        },
+        
         "searchResults.videos": {
             deep: true,
             handler() {
@@ -528,6 +521,17 @@ export default RootComponent = {
         }
     },
     computed: {
+        noSearch() {
+            const filterAndSort = this.$root.filterAndSort
+            return (
+                filterAndSort.kindOfObserver == "Either" 
+                && !filterAndSort.observer 
+                && !this.$root.routeData$.labelName 
+                && !filterAndSort.minlabelConfidence 
+                && !filterAndSort.maxlabelConfidence 
+                && (filterAndSort.validation.length == 4 || filterAndSort.validation.length == 0)
+            )
+        }
     },
     methods: {
         getAValidEmail() {
