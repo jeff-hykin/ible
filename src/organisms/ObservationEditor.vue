@@ -52,6 +52,7 @@
                                 ui-button.confirm-button(
                                     :style="`opacity: ${(editing) && $root.selectedSegment?0:1}; --button-color: ${hasRejected()? 'darkgray' : 'var(--soft-green)'}; min-width: 7rem; font-size: 0.7em;` "
                                     @click="toggleConfirm"
+                                    :disabled="observationData.observer != $root.email"
                                     icon="check"
                                 )
                                     | {{hasConfirmed()? "Confirmed" : "Confirm"}}
@@ -60,6 +61,7 @@
                                 ui-button.reject-button(
                                     :style="`opacity: ${(editing) && $root.selectedSegment?0:1}; --button-color: ${hasConfirmed()? 'darkgray' : 'var(--red)'}; min-width: 7rem; font-size: 0.7em;` "
                                     @click="toggleReject"
+                                    :disabled="observationData.observer != $root.email"
                                     icon="cancel"
                                 )
                                     | {{hasRejected()? "Rejected" : "Reject"}}
