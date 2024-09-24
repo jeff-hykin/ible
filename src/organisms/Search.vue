@@ -254,15 +254,16 @@ export default {
             if (this.$root.loadStart && this.$root.email) {
                 let loadDuration = ((new Date()).getTime() - this.$root.loadStart)/1000
                 this.$root.loadStart = null
-                if (loadDuration > 5) {
-                    this.$toasted.show(`Initial page loading took: ${loadDuration} sec`, {
-                        closeOnSwipe: false,
-                        action: {
-                            text:'Close',
-                            onClick: (e, toastObject)=>{toastObject.goAway(0)}
-                        },
-                    })
-                }
+                // this is commented out because it runs after the user inputs their email
+                // if (loadDuration > 5) {
+                //     this.$toasted.show(`Initial page loading took: ${loadDuration} sec`, {
+                //         closeOnSwipe: false,
+                //         action: {
+                //             text:'Close',
+                //             onClick: (e, toastObject)=>{toastObject.goAway(0)}
+                //         },
+                //     })
+                // }
             }
         },
     },
