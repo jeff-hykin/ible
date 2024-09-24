@@ -18,7 +18,7 @@
 import Vue from "vue"
 import plugins from "./plugins/*.js"
 import pages from "./pages/*.vue"
-import {getColor, deferredPromise, createVideoId} from "./tooling/pure_tools.js"
+import {getColor, deferredPromise, createVideoId, videoIdLength} from "./tooling/pure_tools.js"
 import * as utils from "./tooling/pure_tools.js"
 import * as basics from "./tooling/basics.bundle.js"
 import * as videoTools from "./tooling/video_tooling.js"
@@ -159,13 +159,45 @@ export default RootComponent = {
                         return
                     }
                     
+                    // 
+                    // auto detect videoId
+                    // 
+                    if ($root.routeData$?.videoInfo?.path && !$root.routeData$?.videoInfo?.videoId) {
+                        const existingVideoPath = $root.routeData$?.videoInfo?.path
+                        const videoBaseName = existingVideoPath.split(/\\|\//g).slice(-1)[0]
+                        const videoNameParts = videoBaseName.split('.')
+                        let message
+                        // might have an id
+                        if (videoNameParts.length > 2) {
+                            const possibleVideoId = videoNameParts.slice(-2)[0].replace(/\s/,"")
+                            if (possibleVideoId.length == videoIdLength) {
+                                $root.routeData$.videoInfo.videoId = possibleVideoId
+                            } else {
+                                let suggestedName
+                                if (possibleVideoId > videoIdLength) {
+                                    suggestedName = possibleVideoId.slice(0, videoIdLength)
+                                } else {
+                                    const missingLength = videoIdLength - possibleVideoId.length
+                                    suggestedName = possibleVideoId + createVideoId().slice(0,missingLength)
+                                }
+                                message = `<br>Hey! This video ("${utils.escapeHtml(videoBaseName)}") has video ID ("${utils.escapeHtml(possibleVideoId)}")<br>but its not the right length (${videoIdLength})<br><br>Want me to rename it and give it a new ID?`
+                            }
+                        } else {
+                            
+                        }
+                    }
+                    
+                    // 
+                    // message if videoId is (still) missing
+                    // 
                     if ($root.routeData$?.videoInfo?.path && !$root.routeData$?.videoInfo?.videoId) {
                         const exampleId = createVideoId()
                         const existingVideoPath = $root.routeData$?.videoInfo?.path
                         const videoBaseName = existingVideoPath.split(/\\|\//g).slice(-1)[0]
                         const frontPart = videoBaseName.split('.').slice(0,-1).join('.')
+                        message = message || `<br>Hey! This video ("${utils.escapeHtml(videoBaseName)}") is missing a video ID<br>I can't record observations without an ID<br>Just rename the file to "${utils.escapeHtml(frontPart)}.${exampleId}.mp4"<br>Where "${exampleId}" is the video ID<br>`
                         vueTooling.showLongMessage(
-                            `<br>Hey! This video ("${utils.escapeHtml(videoBaseName)}") is missing a video ID<br>I can't record observations without an ID<br>Just rename the file to "${utils.escapeHtml(frontPart)}.${exampleId}.mp4"<br>Where "${exampleId}" is the video ID<br>`, 
+                            message,
                             [
                                 {
                                     text : 'Rename It For Me',
