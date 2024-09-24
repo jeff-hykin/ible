@@ -5,7 +5,7 @@
             @click="showAll"
         )
             | Show All
-            br
+        br
         span(v-if="videoResults.length == 0")
             | (No other videos matching this search)
         column.video-list-element(v-for="eachVideo in videoResults" @click="$root.videoInterface.goToThisVideo(eachVideo)")
