@@ -286,7 +286,9 @@ export default {
             return !Object.values(this.isValid).some(value=>!value)
         },
         isValid() {
-            console.debug(`this.observationData.isHuman is:`,this.observationData.isHuman)
+            if (this.observationData.endTime < this.observationData.startTime) {
+                this.observationData.endTime = this.observationData.startTime
+            }
             return observationTooling.quickLocalValidationCheck({
                 observationData: this.observationData,
                 videoDuration: this.$root.videoInterface?.player?.duration,
