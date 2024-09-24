@@ -29372,78 +29372,6 @@ Vue.mixin(module.exports = {
 
   }
 });
-},{"vue":"NtAQ"}],"Y7uC":[function(require,module,exports) {
-// api
-//     workers
-// summary
-//     workers are aynsc functions that can only have
-//     one active instance
-//     calling a worker function again before the first one is finished    
-//     will simply wait for the first one to finish and return that output
-let Vue = require("vue").default;
-
-let workersSymbol = Symbol("$workers");
-Object.defineProperty(Vue.prototype, "$workers", {
-  get() {
-    if (this[workersSymbol] == undefined) {
-      this[workersSymbol] = {};
-    }
-
-    return this[workersSymbol];
-  },
-
-  set(value) {
-    this[workersSymbol] = value;
-  }
-
-});
-Vue.mixin(module.exports = {
-  beforeCreate() {
-    const newOption = this.$options.workers;
-
-    if (!newOption) {
-      return;
-    }
-
-    const vueStaticDestination = this.$workers || this;
-
-    if (vueStaticDestination instanceof Object) {
-      if (newOption instanceof Function) {
-        Object.assign(vueStaticDestination, newOption.apply(this));
-      } else if (typeof newOption === 'object') {
-        Object.assign(vueStaticDestination, newOption);
-      }
-    } // 
-    // watchers
-    // 
-
-
-    const thisComponent = this;
-
-    if (this.$workers instanceof Object) {
-      for (let [eachKey, eachValue] of Object.entries(this.$workers)) {
-        // if its a function that can be bound
-        if (eachValue instanceof Function) {
-          const functionAttachedToInstance = eachValue.bind(thisComponent);
-          let functionIsRunning = false;
-          let promiseToRunningFunction = null; // wrap the function in a checker
-
-          this.$methods[eachKey] = this.$workers[eachKey] = async (...args) => {
-            if (!functionIsRunning) {
-              functionIsRunning = true;
-              promiseToRunningFunction = functionAttachedToInstance(...args);
-            }
-
-            let result = await promiseToRunningFunction;
-            functionIsRunning = false;
-            return result;
-          };
-        }
-      }
-    }
-  }
-
-});
 },{"vue":"NtAQ"}],"fgJi":[function(require,module,exports) {
 var global = arguments[3];
 "use strict";
@@ -37444,7 +37372,79 @@ _vue.default.use(_vuePlyr.default, {
     invertTime: false
   }
 });
-},{"vue":"NtAQ","vue-plyr":"fgJi","vue-plyr/dist/vue-plyr.css":"jJO6"}],"Xeh1":[function(require,module,exports) {
+},{"vue":"NtAQ","vue-plyr":"fgJi","vue-plyr/dist/vue-plyr.css":"jJO6"}],"Y7uC":[function(require,module,exports) {
+// api
+//     workers
+// summary
+//     workers are aynsc functions that can only have
+//     one active instance
+//     calling a worker function again before the first one is finished    
+//     will simply wait for the first one to finish and return that output
+let Vue = require("vue").default;
+
+let workersSymbol = Symbol("$workers");
+Object.defineProperty(Vue.prototype, "$workers", {
+  get() {
+    if (this[workersSymbol] == undefined) {
+      this[workersSymbol] = {};
+    }
+
+    return this[workersSymbol];
+  },
+
+  set(value) {
+    this[workersSymbol] = value;
+  }
+
+});
+Vue.mixin(module.exports = {
+  beforeCreate() {
+    const newOption = this.$options.workers;
+
+    if (!newOption) {
+      return;
+    }
+
+    const vueStaticDestination = this.$workers || this;
+
+    if (vueStaticDestination instanceof Object) {
+      if (newOption instanceof Function) {
+        Object.assign(vueStaticDestination, newOption.apply(this));
+      } else if (typeof newOption === 'object') {
+        Object.assign(vueStaticDestination, newOption);
+      }
+    } // 
+    // watchers
+    // 
+
+
+    const thisComponent = this;
+
+    if (this.$workers instanceof Object) {
+      for (let [eachKey, eachValue] of Object.entries(this.$workers)) {
+        // if its a function that can be bound
+        if (eachValue instanceof Function) {
+          const functionAttachedToInstance = eachValue.bind(thisComponent);
+          let functionIsRunning = false;
+          let promiseToRunningFunction = null; // wrap the function in a checker
+
+          this.$methods[eachKey] = this.$workers[eachKey] = async (...args) => {
+            if (!functionIsRunning) {
+              functionIsRunning = true;
+              promiseToRunningFunction = functionAttachedToInstance(...args);
+            }
+
+            let result = await promiseToRunningFunction;
+            functionIsRunning = false;
+            return result;
+          };
+        }
+      }
+    }
+  }
+
+});
+},{"vue":"NtAQ"}],"Xeh1":[function(require,module,exports) {
 module.exports = {
   "child": require("./child.js"),
   "css-baseline-plugin": require("./css-baseline-plugin.js"),
@@ -37457,10 +37457,10 @@ module.exports = {
   "vue-toasted-plugin": require("./vue-toasted-plugin.js"),
   "window-listeners-plugin": require("./window-listeners-plugin.js"),
   "without-watchers": require("./without-watchers.js"),
-  "workers-plugin": require("./workers-plugin.js"),
-  "youtube-player-plugin": require("./youtube-player-plugin.js")
+  "youtube-player-plugin": require("./youtube-player-plugin.js"),
+  "workers-plugin": require("./workers-plugin.js")
 };
-},{"./child.js":"HT0w","./css-baseline-plugin.js":"xmsx","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./portal-plugin.js":"HMJZ","./resolvables-plugin.js":"mVwj","./root-hooks-plugin.js":"T1YL","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./window-listeners-plugin.js":"XpWL","./without-watchers.js":"aLvM","./workers-plugin.js":"Y7uC","./youtube-player-plugin.js":"mQXc"}],"jqRt":[function(require,module,exports) {
+},{"./child.js":"HT0w","./css-baseline-plugin.js":"xmsx","./good-vue-plugin.js":"plSt","./keen-ui-plugin.js":"FJCK","./portal-plugin.js":"HMJZ","./resolvables-plugin.js":"mVwj","./root-hooks-plugin.js":"T1YL","./router-plugin.js":"yBli","./vue-toasted-plugin.js":"Gnxb","./window-listeners-plugin.js":"XpWL","./without-watchers.js":"aLvM","./youtube-player-plugin.js":"mQXc","./workers-plugin.js":"Y7uC"}],"jqRt":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -71518,7 +71518,7 @@ var _default = {
           }
         }
 
-        const videoDurationIsAvailable = this.player?.duration != null;
+        const videoDurationIsAvailable = this.player?.duration != null && this.player?.duration !== 0;
 
         if (videoDurationIsAvailable) {
           this.$emit("videoLoaded", this.player);
@@ -72107,6 +72107,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //
 //
 //
+//
+//
+//
 const observationTooling = {
   coerceObservation: _observation_tooling.coerceObservation,
   createDefaultObservationEntry: _observation_tooling.createDefaultObservationEntry,
@@ -72148,6 +72151,10 @@ var _default = {
   },
 
   computed: {
+    isOwner() {
+      return this.$root.email == this.observationData.observer;
+    },
+
     humanTime() {
       return new Date(this.observationData.observationId - 0).toString();
     },
@@ -72158,7 +72165,10 @@ var _default = {
     },
 
     isValid() {
-      console.debug(`this.observationData.isHuman is:`, this.observationData.isHuman);
+      if (this.observationData.endTime < this.observationData.startTime) {
+        this.observationData.endTime = this.observationData.startTime;
+      }
+
       return observationTooling.quickLocalValidationCheck({
         observationData: this.observationData,
         videoDuration: this.$root.videoInterface?.player?.duration
@@ -72231,31 +72241,35 @@ var _default = {
     },
 
     toggleConfirm() {
-      const shouldUnConfirm = this.hasConfirmed();
+      if (!this.isOwner) {
+        const shouldUnConfirm = this.hasConfirmed();
 
-      if (shouldUnConfirm) {
-        this.observationData.confirmedBy = this.observationData.confirmedBy.filter(each => each != this.$root.email);
-      } else {
-        this.observationData.confirmedBy.push(this.$root.email);
-        this.observationData.rejectedBy = this.observationData.rejectedBy.filter(each => each != this.$root.email);
+        if (shouldUnConfirm) {
+          this.observationData.confirmedBy = this.observationData.confirmedBy.filter(each => each != this.$root.email);
+        } else {
+          this.observationData.confirmedBy.push(this.$root.email);
+          this.observationData.rejectedBy = this.observationData.rejectedBy.filter(each => each != this.$root.email);
+        }
+
+        (0, _events.trigger)(_events.globalEvents.updateObservationRequest, "ObservationEditor", this.observationData);
+        this.$forceUpdate();
       }
-
-      (0, _events.trigger)(_events.globalEvents.updateObservationRequest, "ObservationEditor", this.observationData);
-      this.$forceUpdate();
     },
 
     toggleReject() {
-      const shouldUnReject = this.hasRejected();
+      if (!this.isOwner) {
+        const shouldUnReject = this.hasRejected();
 
-      if (shouldUnReject) {
-        this.observationData.rejectedBy = this.observationData.rejectedBy.filter(each => each != this.$root.email);
-      } else {
-        this.observationData.rejectedBy.push(this.$root.email);
-        this.observationData.confirmedBy = this.observationData.confirmedBy.filter(each => each != this.$root.email);
+        if (shouldUnReject) {
+          this.observationData.rejectedBy = this.observationData.rejectedBy.filter(each => each != this.$root.email);
+        } else {
+          this.observationData.rejectedBy.push(this.$root.email);
+          this.observationData.confirmedBy = this.observationData.confirmedBy.filter(each => each != this.$root.email);
+        }
+
+        (0, _events.trigger)(_events.globalEvents.updateObservationRequest, "ObservationEditor", this.observationData);
+        this.$forceUpdate();
       }
-
-      (0, _events.trigger)(_events.globalEvents.updateObservationRequest, "ObservationEditor", this.observationData);
-      this.$forceUpdate();
     },
 
     wheneverVideoChanges() {
@@ -72411,7 +72425,9 @@ exports.default = _default;
     
         /* template */
         Object.assign($3acede, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"data-fjio3y598t3hi2":"data-fjio3y598t3hi2","width":"min-content","margin-bottom":"2rem","align-self":"flex-start","position":"relative","min-width":"20rem","min-height":"44vh"}},[_c('column',{staticClass:"add-container"},[_c('ui-button',{staticClass:"add-button",style:(("opacity: " + (_vm.editing?0:1))),attrs:{"icon":"add","color":"primary","raised":"raised","tooltip":"create a new observation","tooltipPosition":"right"},on:{"click":_vm.onNewObservation}},[_vm._v("New Observation")])],1),_c('container',{attrs:{"height":"20px"}}),_c('transition',{attrs:{"name":"fade"}},[_c('column',{staticClass:"observation-widget",attrs:{"min-height":"37rem","position":"relative","align-v":"top"}},[(!_vm.noSegment() && !_vm.editing)?_c('row',{staticStyle:{"position":"absolute","font-size":"1rem","color":"gray","right":"0.9rem","top":"0.7rem","cursor":"pointer","opacity":"0.5"},on:{"click":_vm.deSelectSegment}},[_vm._v("X"),_c('ui-tooltip',{attrs:{"position":"top","animation":"fade"}},[_vm._v("De-Select this segment")])],1):_vm._e(),(_vm.noSegment())?_c('row',{staticStyle:{"position":"absolute","width":"100%","height":"100%","font-size":"1.476rem","color":"gray"}},[_vm._v("No Observation Selected")]):_vm._e(),(!_vm.noSegment())?_c('column',{attrs:{"align-h":"center","width":"100%"}},[_c('transition',{attrs:{"name":"fade"}},[_c('column',{attrs:{"width":"100%"}},[(!_vm.noSegment() || _vm.editing)?_c('row',{staticClass:"button-row",attrs:{"align-h":"space-evenly","width":"100%","margin-bottom":"0.7rem","margin-top":"0.5rem","display":_vm.editing?'flex':'none'}},[_c('ui-button',{staticClass:"save-button",style:(("opacity: " + (_vm.editing?1:0))),attrs:{"icon":"save","color":"primary"},on:{"click":_vm.onSaveEdit}},[_vm._v("Save")]),_c('container',{attrs:{"flex-basis":"10%","width":"10%"}}),_c('ui-button',{staticClass:"delete-button",style:(("opacity: " + (_vm.editing?1:0))),attrs:{"icon":"delete","color":"red"},on:{"click":_vm.onDelete}},[_vm._v("Delete")])],1):_vm._e(),(!_vm.noSegment() && !_vm.editing)?_c('row',{staticClass:"button-row",attrs:{"align-h":"space-evenly","width":"100%","margin-bottom":"0.7rem","margin-top":"0.5rem","display":(!_vm.noSegment() && !_vm.editing)?'flex':'none'}},[_c('ui-button',{staticClass:"confirm-button",style:(("opacity: " + ((_vm.editing) && _vm.$root.selectedSegment?0:1) + "; --button-color: " + (_vm.hasRejected()? 'darkgray' : 'var(--soft-green)') + "; min-width: 7rem; font-size: 0.7em;")),attrs:{"icon":"check"},on:{"click":_vm.toggleConfirm}},[_vm._v(_vm._s(_vm.hasConfirmed()? "Confirmed" : "Confirm"))]),_c('container',{attrs:{"flex-basis":"10%","width":"10%"}}),_c('ui-button',{staticClass:"reject-button",style:(("opacity: " + ((_vm.editing) && _vm.$root.selectedSegment?0:1) + "; --button-color: " + (_vm.hasConfirmed()? 'darkgray' : 'var(--red)') + "; min-width: 7rem; font-size: 0.7em;")),attrs:{"icon":"cancel"},on:{"click":_vm.toggleReject}},[_vm._v(_vm._s(_vm.hasRejected()? "Rejected" : "Reject"))])],1):_vm._e()],1)],1)],1):_vm._e(),_c('container',{attrs:{"height":"10px"}}),_c('transition',{attrs:{"name":"fade"}},[(!_vm.noSegment())?_c('row',{attrs:{"align-h":"space-between","width":"100%"}},[_c('h5',{staticStyle:{"font-size":"1.35rem"}},[_vm._v("Observation")]),_c('container',{attrs:{"position":"relative"}},[_c('ui-button',{staticClass:"edit-button",style:(("opacity: " + ((!_vm.editing) && _vm.$root.selectedSegment?1:0) + "; width: 7rem;")),attrs:{"icon":"edit","color":"primary"},on:{"click":_vm.onEditObservation}},[_vm._v("Edit")]),_c('transition',{attrs:{"name":"fade"}},[_c('ui-button',{staticClass:"cancel-button",style:(("position: absolute; opacity: " + (_vm.editing?1:0) + "; pointer-events: " + (_vm.editing?'all':'none') + ";")),attrs:{"icon":"cancel","color":"accent"},on:{"click":_vm.onCancelEdit}},[_vm._v("Cancel")])],1)],1)],1):_vm._e()],1),_c('transition',{attrs:{"name":"fade"}},[(!_vm.noSegment())?_c('container',{staticClass:"input-area",attrs:{"margin-top":"2rem"},on:{"keydown":_vm.preventBubbling}},[_c('row',{staticClass:"start-time-wrapper"},[_c('ui-textbox',{attrs:{"tabindex":"1","disabled":!_vm.editing,"label":"Start Time (seconds)","placeholder":("" + (_vm.observationData.startTime)),"invalid":!_vm.isValid.startTime,"type":"number"},model:{value:(_vm.observationData.startTime),callback:function ($$v) {_vm.$set(_vm.observationData, "startTime", _vm._n($$v))},expression:"observationData.startTime"}}),(_vm.editing)?_c('ui-button',{staticClass:"set-to-current-time-button",attrs:{"tabindex":"-1","color":"primary","size":"small","tooltip":"Set start time to current video time","tooltipPosition":"top"},on:{"click":_vm.setStartToCurrentTime}},[_c('ui-icon',[_vm._v("skip_next")])],1):_vm._e()],1),_c('row',{staticClass:"end-time-wrapper"},[_c('ui-textbox',{ref:"endTimeElement",attrs:{"tabindex":"2","disabled":!_vm.editing,"label":"End Time (seconds)","placeholder":("" + (_vm.observationData.endTime)),"invalid":!_vm.isValid.endTime,"type":"number"},model:{value:(_vm.observationData.endTime),callback:function ($$v) {_vm.$set(_vm.observationData, "endTime", _vm._n($$v))},expression:"observationData.endTime"}}),(_vm.editing)?_c('ui-button',{staticClass:"set-to-current-time-button",attrs:{"tabindex":"-1","color":"primary","size":"small","tooltip":"Set end time to current video time","tooltipPosition":"top"},on:{"click":_vm.setEndToCurrentTime}},[_c('ui-icon',[_vm._v("skip_next")])],1):_vm._e(),(_vm.editing)?_c('ui-tooltip',{attrs:{"position":"left","animation":"fade","trigger":_vm.$refs.endTimeElement}},[_vm._v(_vm._s("> start, ≤ duration"))]):_vm._e()],1),_c('div',{attrs:{"tabindex":"-1"}},[(_vm.editing)?_c('ui-tooltip',{attrs:{"position":"left","animation":"fade","trigger":_vm.$refs.labelElement}},[_vm._v("all lowercase letters, numbers, dashes and periods")]):_vm._e(),_c('ui-textbox',{ref:"labelElement",attrs:{"tabindex":"3","disabled":!_vm.editing,"floating-label":"floating-label","label":"Label","invalid":!_vm.isValid.label},on:{"change":_vm.onLabelChange,"input":_vm.onLabelChange},model:{value:(_vm.observationData.label),callback:function ($$v) {_vm.$set(_vm.observationData, "label", $$v)},expression:"observationData.label"}})],1),_c('div',{attrs:{"tabindex":"-1"}},[(_vm.editing)?_c('ui-tooltip',{attrs:{"position":"left","animation":"fade","trigger":_vm.$refs.labelConfidenceElement}},[_vm._v("a value between -1 and 1")]):_vm._e(),_c('ui-textbox',{ref:"labelConfidenceElement",attrs:{"tabindex":"4","disabled":!_vm.editing,"floating-label":"floating-label","label":"Label Confidence","invalid":!_vm.isValid.labelConfidence},model:{value:(_vm.observationData.labelConfidence),callback:function ($$v) {_vm.$set(_vm.observationData, "labelConfidence", $$v)},expression:"observationData.labelConfidence"}})],1),_c('div',{attrs:{"tabindex":"-1"}},[_c('ui-textbox',{attrs:{"tabindex":"5","disabled":!_vm.editing,"floating-label":"floating-label","label":"Comment"},model:{value:(_vm.observationData.comment),callback:function ($$v) {_vm.$set(_vm.observationData, "comment", $$v)},expression:"observationData.comment"}})],1),_c('div',{staticStyle:{"min-height":"4rem"}}),(!_vm.noSegment())?_c('column',{attrs:{"align-h":"center","width":"90%","background":"whitesmoke","border-radius":"1rem","padding":"1rem","overflow":_vm.showOtherData?'auto':'hidden',"position":"absolute","bottom":"1rem","left":"5%","box-shadow":"0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3)"},on:{"mouseenter":_vm.doShowOtherData,"mouseleave":_vm.hideOtherData}},[_c('span',{staticStyle:{"width":"12rem","text-align":"center","color":"var(--gray)","padding":"0.5rem","border-radius":"1rem"}},[_vm._v("other data")]),_c('transition',{attrs:{"name":"quick-fade"}},[_c('column',{style:(("transition: all ease 0.3s; opacity: " + (_vm.showOtherData?1:0) + "; max-height: " + (_vm.showOtherData?'40rem':0) + "; height: fit-content; max-width: 100%; min-width: 100%; ")),attrs:{"align-h":"left"}},[_c('div',{staticStyle:{"margin-top":"0.5rem"}}),_c('div',[_c('ui-textbox',{ref:"observerElement",attrs:{"disabled":true,"floating-label":"floating-label","label":"Observer","invalid":!_vm.isValid.observer},on:{"change":_vm.onObserverChange,"input":_vm.onObserverChange},model:{value:(_vm.observationData.observer),callback:function ($$v) {_vm.$set(_vm.observationData, "observer", $$v)},expression:"observationData.observer"}})],1),_c('ui-textbox',{attrs:{"disabled":true,"floating-label":"floating-label","label":"Created At"},model:{value:(_vm.humanTime),callback:function ($$v) {_vm.humanTime=$$v},expression:"humanTime"}}),_c('ui-textbox',{attrs:{"disabled":true,"floating-label":"floating-label","label":"Video Id","invalid":!_vm.isValid.videoId},model:{value:(_vm.observationData.videoId),callback:function ($$v) {_vm.$set(_vm.observationData, "videoId", $$v)},expression:"observationData.videoId"}}),_c('ui-textbox',{staticStyle:{"margin-top":"-0.4rem"},attrs:{"disabled":true,"floating-label":"floating-label","label":"Observation Id","tooltip":"This is based on 'Created At'"},model:{value:(_vm.observationData.observationId),callback:function ($$v) {_vm.$set(_vm.observationData, "observationId", $$v)},expression:"observationData.observationId"}}),_c('column',{attrs:{"align-h":"left","color":"gray","width":"100%","max-width":"100%","overflow":"auto"}},[_vm._v("customInfo"),_c('JsonTree',{staticClass:"json-tree",attrs:{"data":_vm.observationData.customInfo||{}}})],1)],1)],1)],1):_vm._e()],1):_vm._e()],1)],1)],1)],1)}
+          var render = function () {
+var this$1 = this;
+var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"data-fjio3y598t3hi2":"data-fjio3y598t3hi2","width":"min-content","margin-bottom":"2rem","align-self":"flex-start","position":"relative","min-width":"20rem","min-height":"44vh"}},[_c('column',{staticClass:"add-container"},[_c('ui-button',{staticClass:"add-button",style:(("opacity: " + (_vm.editing?0:1))),attrs:{"icon":"add","color":"primary","raised":"raised","tooltip":"create a new observation","tooltipPosition":"right"},on:{"click":_vm.onNewObservation}},[_vm._v("New Observation")])],1),_c('container',{attrs:{"height":"20px"}}),_c('transition',{attrs:{"name":"fade"}},[_c('column',{staticClass:"observation-widget",attrs:{"min-height":"37rem","position":"relative","align-v":"top"}},[(!_vm.noSegment() && !_vm.editing)?_c('row',{staticStyle:{"position":"absolute","font-size":"1rem","color":"gray","right":"0.9rem","top":"0.7rem","cursor":"pointer","opacity":"0.5"},on:{"click":_vm.deSelectSegment}},[_vm._v("X"),_c('ui-tooltip',{attrs:{"position":"top","animation":"fade"}},[_vm._v("De-Select this segment")])],1):_vm._e(),(_vm.noSegment())?_c('row',{staticStyle:{"position":"absolute","width":"100%","height":"100%","font-size":"1.476rem","color":"gray"}},[_vm._v("No Observation Selected")]):_vm._e(),(!_vm.noSegment())?_c('column',{attrs:{"align-h":"center","width":"100%"}},[_c('transition',{attrs:{"name":"fade"}},[_c('column',{attrs:{"width":"100%"}},[(!_vm.noSegment() || _vm.editing)?_c('row',{staticClass:"button-row",attrs:{"align-h":"space-evenly","width":"100%","margin-bottom":"0.7rem","margin-top":"0.5rem","display":_vm.editing?'flex':'none'}},[_c('ui-button',{staticClass:"save-button",style:(("opacity: " + (_vm.editing?1:0))),attrs:{"icon":"save","color":"primary"},on:{"click":_vm.onSaveEdit}},[_vm._v("Save")]),_c('container',{attrs:{"flex-basis":"10%","width":"10%"}}),_c('ui-button',{staticClass:"delete-button",style:(("opacity: " + (_vm.editing?1:0))),attrs:{"icon":"delete","color":"red"},on:{"click":_vm.onDelete}},[_vm._v("Delete")])],1):_vm._e(),(!_vm.noSegment() && !_vm.editing)?_c('row',{staticClass:"button-row",attrs:{"align-h":"space-evenly","width":"100%","margin-bottom":"0.7rem","margin-top":"0.5rem","display":(!_vm.noSegment() && !_vm.editing)?'flex':'none'}},[_c('ui-button',{staticClass:"confirm-button",style:(("opacity: " + ((_vm.editing) && _vm.$root.selectedSegment?0:1) + "; --button-color: " + (_vm.hasRejected()? 'darkgray' : 'var(--soft-green)') + "; min-width: 7rem; font-size: 0.7em; " + (_vm.isOwner ? 'opacity: 0.3; box-shadow: 0 0 0 1px; color: gray;' : '') + " ")),attrs:{"tooltip":_vm.isOwner ? "(only someone else can confirm your observation)" : "Click if you agree with this observation","icon":"check"},on:{"click":_vm.toggleConfirm}},[_vm._v(_vm._s(_vm.hasConfirmed()? "Confirmed" : "Confirm"))]),_c('container',{attrs:{"flex-basis":"10%","width":"10%"}}),_c('ui-button',{staticClass:"reject-button",style:(("opacity: " + ((_vm.editing) && _vm.$root.selectedSegment?0:1) + "; --button-color: " + (_vm.hasConfirmed()? 'darkgray' : 'var(--red)') + "; min-width: 7rem; font-size: 0.7em;" + (_vm.isOwner ? 'opacity: 0.3; box-shadow: 0 0 0 1px; color: gray;' : '') + " ")),attrs:{"tooltip":_vm.isOwner ? "(only someone else can reject your observation)" : "Click if you disagree with this observation","icon":"cancel"},on:{"click":_vm.toggleReject}},[_vm._v(_vm._s(_vm.hasRejected()? "Rejected" : "Reject"))])],1):_vm._e()],1)],1)],1):_vm._e(),_c('container',{attrs:{"height":"10px"}}),_c('transition',{attrs:{"name":"fade"}},[(!_vm.noSegment())?_c('row',{attrs:{"align-h":"space-between","width":"100%"}},[_c('h5',{staticStyle:{"font-size":"1.35rem"}},[_vm._v("Observation")]),_c('container',{attrs:{"position":"relative"}},[_c('ui-button',{staticClass:"edit-button",style:(("opacity: " + ((!_vm.editing) && _vm.$root.selectedSegment?1:0) + "; width: 7rem;")),attrs:{"icon":"edit","color":"primary"},on:{"click":_vm.onEditObservation}},[_vm._v("Edit")]),_c('transition',{attrs:{"name":"fade"}},[_c('ui-button',{staticClass:"cancel-button",style:(("position: absolute; opacity: " + (_vm.editing?1:0) + "; pointer-events: " + (_vm.editing?'all':'none') + ";")),attrs:{"icon":"cancel","color":"accent"},on:{"click":_vm.onCancelEdit}},[_vm._v("Cancel")])],1)],1)],1):_vm._e()],1),_c('transition',{attrs:{"name":"fade"}},[(!_vm.noSegment())?_c('container',{staticClass:"input-area",attrs:{"margin-top":"2rem"},on:{"keydown":_vm.preventBubbling}},[_c('row',{staticClass:"start-time-wrapper"},[_c('ui-textbox',{attrs:{"tabindex":"1","disabled":!_vm.editing,"label":"Start Time (seconds)","placeholder":("" + (_vm.observationData.startTime)),"invalid":!_vm.isValid.startTime,"type":"number"},model:{value:(_vm.observationData.startTime),callback:function ($$v) {_vm.$set(_vm.observationData, "startTime", _vm._n($$v))},expression:"observationData.startTime"}}),(_vm.editing)?_c('ui-button',{staticClass:"set-to-current-time-button",attrs:{"tabindex":"-1","color":"primary","size":"small","tooltip":"Set start time to current video time","tooltipPosition":"top"},on:{"click":_vm.setStartToCurrentTime}},[_c('ui-icon',[_vm._v("skip_next")])],1):_vm._e()],1),_c('row',{staticClass:"end-time-wrapper"},[_c('ui-textbox',{ref:"endTimeElement",attrs:{"tabindex":"2","disabled":!_vm.editing,"label":"End Time (seconds)","placeholder":("" + (_vm.observationData.endTime)),"invalid":!_vm.isValid.endTime,"type":"number"},model:{value:(_vm.observationData.endTime),callback:function ($$v) {_vm.$set(_vm.observationData, "endTime", _vm._n($$v))},expression:"observationData.endTime"}}),(_vm.editing)?_c('ui-button',{staticClass:"set-to-current-time-button",attrs:{"tabindex":"-1","color":"primary","size":"small","tooltip":"Set end time to current video time","tooltipPosition":"top"},on:{"click":_vm.setEndToCurrentTime}},[_c('ui-icon',[_vm._v("skip_next")])],1):_vm._e(),(_vm.editing)?_c('ui-tooltip',{attrs:{"position":"left","animation":"fade","trigger":_vm.$refs.endTimeElement}},[_vm._v(_vm._s("> start, ≤ duration"))]):_vm._e()],1),_c('div',{attrs:{"tabindex":"-1"}},[(_vm.editing)?_c('ui-tooltip',{attrs:{"position":"left","animation":"fade","trigger":_vm.$refs.labelElement}},[_vm._v("all lowercase letters, numbers, dashes and periods")]):_vm._e(),_c('ui-textbox',{ref:"labelElement",attrs:{"tabindex":"3","disabled":!_vm.editing,"floating-label":"floating-label","label":"Label","invalid":!_vm.isValid.label},on:{"change":_vm.onLabelChange,"input":_vm.onLabelChange},model:{value:(_vm.observationData.label),callback:function ($$v) {_vm.$set(_vm.observationData, "label", $$v)},expression:"observationData.label"}})],1),_c('div',{attrs:{"tabindex":"-1"}},[(_vm.editing)?_c('ui-tooltip',{attrs:{"position":"left","animation":"fade","trigger":_vm.$refs.labelConfidenceElement}},[_vm._v("a value between -1 and 1")]):_vm._e(),_c('ui-textbox',{ref:"labelConfidenceElement",attrs:{"tabindex":"4","disabled":!_vm.editing,"floating-label":"floating-label","label":"Label Confidence","invalid":!_vm.isValid.labelConfidence},model:{value:(_vm.observationData.labelConfidence),callback:function ($$v) {_vm.$set(_vm.observationData, "labelConfidence", $$v)},expression:"observationData.labelConfidence"}})],1),_c('div',{attrs:{"tabindex":"-1"}},[_c('ui-textbox',{attrs:{"tabindex":"5","disabled":!_vm.editing,"floating-label":"floating-label","label":"Comment","onClick":function (){ if (!_vm.editing) { this$1.$toasted.show("Click edit to add a comment") } }},model:{value:(_vm.observationData.comment),callback:function ($$v) {_vm.$set(_vm.observationData, "comment", $$v)},expression:"observationData.comment"}})],1),_c('div',{staticStyle:{"min-height":"4rem"}}),(!_vm.noSegment())?_c('column',{attrs:{"align-h":"center","width":"90%","background":"whitesmoke","border-radius":"1rem","padding":"1rem","overflow":_vm.showOtherData?'auto':'hidden',"position":"absolute","bottom":"1rem","left":"5%","box-shadow":"0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3)"},on:{"mouseenter":_vm.doShowOtherData,"mouseleave":_vm.hideOtherData}},[_c('span',{staticStyle:{"width":"12rem","text-align":"center","color":"var(--gray)","padding":"0.5rem","border-radius":"1rem"}},[_vm._v("other data")]),_c('transition',{attrs:{"name":"quick-fade"}},[_c('column',{style:(("transition: all ease 0.3s; opacity: " + (_vm.showOtherData?1:0) + "; max-height: " + (_vm.showOtherData?'40rem':0) + "; height: fit-content; max-width: 100%; min-width: 100%; ")),attrs:{"align-h":"left"}},[_c('div',{staticStyle:{"margin-top":"0.5rem"}}),_c('div',[_c('ui-textbox',{ref:"observerElement",attrs:{"disabled":true,"floating-label":"floating-label","label":"Observer","invalid":!_vm.isValid.observer},on:{"change":_vm.onObserverChange,"input":_vm.onObserverChange},model:{value:(_vm.observationData.observer),callback:function ($$v) {_vm.$set(_vm.observationData, "observer", $$v)},expression:"observationData.observer"}})],1),_c('ui-textbox',{attrs:{"disabled":true,"floating-label":"floating-label","label":"Created At"},model:{value:(_vm.humanTime),callback:function ($$v) {_vm.humanTime=$$v},expression:"humanTime"}}),_c('ui-textbox',{attrs:{"disabled":true,"floating-label":"floating-label","label":"Video Id","invalid":!_vm.isValid.videoId},model:{value:(_vm.observationData.videoId),callback:function ($$v) {_vm.$set(_vm.observationData, "videoId", $$v)},expression:"observationData.videoId"}}),_c('ui-textbox',{staticStyle:{"margin-top":"-0.4rem"},attrs:{"disabled":true,"floating-label":"floating-label","label":"Observation Id","tooltip":"This is based on 'Created At'"},model:{value:(_vm.observationData.observationId),callback:function ($$v) {_vm.$set(_vm.observationData, "observationId", $$v)},expression:"observationData.observationId"}}),_c('column',{attrs:{"align-h":"left","color":"gray","width":"100%","max-width":"100%","overflow":"auto"}},[_vm._v("customInfo"),_c('JsonTree',{staticClass:"json-tree",attrs:{"data":_vm.observationData.customInfo||{}}})],1)],1)],1)],1):_vm._e()],1):_vm._e()],1)],1)],1)],1)}
 var staticRenderFns = []
 
           return {
@@ -105534,19 +105550,16 @@ var _default = {
 
       if (this.$root.loadStart && this.$root.email) {
         let loadDuration = (new Date().getTime() - this.$root.loadStart) / 1000;
-        this.$root.loadStart = null;
-
-        if (loadDuration > 5) {
-          this.$toasted.show(`Initial page loading took: ${loadDuration} sec`, {
-            closeOnSwipe: false,
-            action: {
-              text: 'Close',
-              onClick: (e, toastObject) => {
-                toastObject.goAway(0);
-              }
-            }
-          });
-        }
+        this.$root.loadStart = null; // this is commented out because it runs after the user inputs their email
+        // if (loadDuration > 5) {
+        //     this.$toasted.show(`Initial page loading took: ${loadDuration} sec`, {
+        //         closeOnSwipe: false,
+        //         action: {
+        //             text:'Close',
+        //             onClick: (e, toastObject)=>{toastObject.goAway(0)}
+        //         },
+        //     })
+        // }
       }
     }
 
@@ -105929,6 +105942,9 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 //
 //
 //
+//
+//
+//
 const videoInfoTracker = new utils.JsonValueChangeChecker();
 const globalEvents = (0, _events.Perspective)("CenterStage");
 var _default = {
@@ -106115,7 +106131,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($aaa267, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"width":"100%","height":"100vh","align-h":"center","align-v":"top","overflow":"auto","overflow-x":"hidden"}},[_c('WrappedTopSearch'),(!_vm.aVideoIsSelected())?_c('column',{attrs:{"width":"100%","height":"100vh","flex-shrink":"1","color":"gray"}},[_c('h5',{staticStyle:{"text-align":"center"}},[_vm._v("Once you have videos in your HOME/Videos folder"),_c('span',{staticStyle:{"height":"1rem","width":"100%","display":"block"}}),_vm._v("check the Videos tab up there ↗")])]):_vm._e(),_c('transition',{attrs:{"name":"fade"}},[_c('row',{directives:[{name:"show",rawName:"v-show",value:(_vm.aVideoIsSelected()),expression:"aVideoIsSelected()"}],staticClass:"center-stage",attrs:{"align-v":"top","align-h":"center","padding-top":"8rem"}},[_c('column',{staticClass:"main-container",attrs:{"flex-grow":"1","align-v":"top"}},[_c('row',{staticClass:"below-video-search",attrs:{"flex-basis":"100%","padding-top":"1rem","align-v":"top","opacity":_vm.aVideoIsSelected()? 1 : 0}},[_c('column',{staticClass:"video-width-sizer",attrs:{"align-v":"top"}},[_c('row',{attrs:{"width":"96%","position":"relative"}},[_c('VideoPlayer',{ref:"videoPlayer",attrs:{"videoPathOrUrl":_vm.$root.videoInterface.videoPath},on:{"videoLoaded":_vm.$root.videoInterface.tellRootTheVideoHasLoaded,"currentTimeChanged":_vm.updateCurrentTime}})],1),(_vm.$root.videoInterface.videoId)?_c('container',{staticClass:"below-video"},[_c('SideButton',{staticClass:"left-side-button",attrs:{"left":"left"},on:{"click":_vm.wrapperForSelectPreviousSegment}}),_c('SegmentDisplay',{ref:"segmentDisplay",attrs:{"currentTime":_vm.currentTime}}),_c('SideButton',{staticClass:"right-side-button",attrs:{"right":"right"},on:{"click":_vm.wrapperForSelectNextSegment}})],1):_vm._e(),_c('row',{attrs:{"width":"100%","padding":"2rem","align-v":"top"}},[(_vm.videoInfo&&_vm.videoInfo.videoId)?_c('JsonTree',{staticClass:"json-tree",attrs:{"data":_vm.videoInfo||{}}}):_vm._e(),(_vm.videoInfo&&_vm.videoInfo.videoId)?_c('column',{attrs:{"flex-basis":"40%","width":"100%"}},[_c('UiSwitch',{on:{"click":_vm.clickedHasWatchedVideo},model:{value:(_vm.watchedSwitch),callback:function ($$v) {_vm.watchedSwitch=$$v},expression:"watchedSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Watched Video")])]),_c('UiSwitch',{on:{"click":_vm.clickedHasLabeledVideo},model:{value:(_vm.labeledSwitch),callback:function ($$v) {_vm.labeledSwitch=$$v},expression:"labeledSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Labeled Video")])]),_c('UiSwitch',{on:{"click":_vm.clickedHasVerifiedVideo},model:{value:(_vm.verifiedSwitch),callback:function ($$v) {_vm.verifiedSwitch=$$v},expression:"verifiedSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Verified Labels")])])],1):_vm._e()],1)],1)],1)],1),(_vm.$root.videoInterface.videoId)?_c('column',{staticClass:"side-container",attrs:{"align-v":"top","overflow":"visible","min-height":"50rem","width":"fit-content"}},[_c('ObservationEditor',{attrs:{"jumpSegment":_vm.wrapperForJumpSegment,"currentTime":_vm.currentTime}}),_c('InfoSection',{staticClass:"info-section",attrs:{"labelName":_vm.activeData().labelName,"videoId":_vm.activeData().videoId,"currentTime":_vm.currentTime}})],1):_vm._e()],1)],1)],1)}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('column',{attrs:{"width":"100%","height":"100vh","align-h":"center","align-v":"top","overflow":"auto","overflow-x":"hidden"}},[_c('WrappedTopSearch'),(!_vm.aVideoIsSelected())?_c('column',{attrs:{"width":"100%","height":"100vh","flex-shrink":"1","color":"gray"}},[_c('h5',{staticStyle:{"text-align":"center"}},[_vm._v("Once you have videos in your HOME/Videos folder"),_c('span',{staticStyle:{"height":"1rem","width":"100%","display":"block"}}),_vm._v("check the Videos tab up there ↗"),_c('span',{staticStyle:{"height":"1rem","width":"100%","display":"block"}}),_c('span',{staticStyle:{"height":"1rem","width":"100%","display":"block"}}),_vm._v("Alternatively, paste a youtube link into the search bar at the top")])]):_vm._e(),_c('transition',{attrs:{"name":"fade"}},[_c('row',{directives:[{name:"show",rawName:"v-show",value:(_vm.aVideoIsSelected()),expression:"aVideoIsSelected()"}],staticClass:"center-stage",attrs:{"align-v":"top","align-h":"center","padding-top":"8rem"}},[_c('column',{staticClass:"main-container",attrs:{"flex-grow":"1","align-v":"top"}},[_c('row',{staticClass:"below-video-search",attrs:{"flex-basis":"100%","padding-top":"1rem","align-v":"top","opacity":_vm.aVideoIsSelected()? 1 : 0}},[_c('column',{staticClass:"video-width-sizer",attrs:{"align-v":"top"}},[_c('row',{attrs:{"width":"96%","position":"relative"}},[_c('VideoPlayer',{ref:"videoPlayer",attrs:{"videoPathOrUrl":_vm.$root.videoInterface.videoPath},on:{"videoLoaded":_vm.$root.videoInterface.tellRootTheVideoHasLoaded,"currentTimeChanged":_vm.updateCurrentTime}})],1),(_vm.$root.videoInterface.videoId)?_c('container',{staticClass:"below-video"},[_c('SideButton',{staticClass:"left-side-button",attrs:{"left":"left"},on:{"click":_vm.wrapperForSelectPreviousSegment}}),_c('SegmentDisplay',{ref:"segmentDisplay",attrs:{"currentTime":_vm.currentTime}}),_c('SideButton',{staticClass:"right-side-button",attrs:{"right":"right"},on:{"click":_vm.wrapperForSelectNextSegment}})],1):_vm._e(),_c('row',{attrs:{"width":"100%","padding":"2rem","align-v":"top"}},[(_vm.videoInfo&&_vm.videoInfo.videoId)?_c('JsonTree',{staticClass:"json-tree",attrs:{"data":_vm.videoInfo||{}}}):_vm._e(),(_vm.videoInfo&&_vm.videoInfo.videoId)?_c('column',{attrs:{"flex-basis":"40%","width":"100%"}},[_c('UiSwitch',{on:{"click":_vm.clickedHasWatchedVideo},model:{value:(_vm.watchedSwitch),callback:function ($$v) {_vm.watchedSwitch=$$v},expression:"watchedSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Watched Video")])]),_c('UiSwitch',{on:{"click":_vm.clickedHasLabeledVideo},model:{value:(_vm.labeledSwitch),callback:function ($$v) {_vm.labeledSwitch=$$v},expression:"labeledSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Labeled Video")])]),_c('UiSwitch',{on:{"click":_vm.clickedHasVerifiedVideo},model:{value:(_vm.verifiedSwitch),callback:function ($$v) {_vm.verifiedSwitch=$$v},expression:"verifiedSwitch"}},[_c('div',{staticStyle:{"width":"10rem"}},[_vm._v("Verified Labels")])])],1):_vm._e()],1)],1)],1)],1),(_vm.$root.videoInterface.videoId)?_c('column',{staticClass:"side-container",attrs:{"align-v":"top","overflow":"visible","min-height":"50rem","width":"fit-content"}},[_c('ObservationEditor',{attrs:{"jumpSegment":_vm.wrapperForJumpSegment,"currentTime":_vm.currentTime}}),_c('InfoSection',{staticClass:"info-section",attrs:{"labelName":_vm.activeData().labelName,"videoId":_vm.activeData().videoId,"currentTime":_vm.currentTime}})],1):_vm._e()],1)],1)],1)}
 var staticRenderFns = []
 
           return {
@@ -107288,6 +107304,8 @@ var _default = RootComponent = {
 
 
     const runVideoCallbacks = async () => {
+      console.log(`[Root] running video-loaded callbacks`);
+
       for (const eachCallback of [...this.videoInterface._videoLoadedPermanentCallbacks].concat([...this.videoInterface._videoLoadedTemporaryCallbacks])) {
         try {
           await eachCallback();
@@ -107391,10 +107409,13 @@ var _default = RootComponent = {
       },
 
       tellRootTheVideoHasLoaded(player) {
-        $root.videoInterface._player = player; // if there's no duration then wait for it to load
+        console.log(`[Root] video has loaded`);
+        $root.videoInterface._player = player;
 
-        if (!$root.videoInterface?.player?.duration) {
-          console.warn(`[Root] tellRootTheVideoHasLoaded was called too early. It should only be called once the video player has a duration`);
+        if (player == null) {
+          console.log(`[Root] loaded null video`); // if there's no duration then wait for it to load
+        } else if (!$root.videoInterface?.player?.duration) {
+          console.log(`[Root] WARNING: tellRootTheVideoHasLoaded was called too early. It should only be called once the video player has a duration`);
           return new Promise((resolve, reject) => {
             setTimeout(() => {
               console.log(`waiting for duration to load`);
@@ -107832,6 +107853,7 @@ var _default = RootComponent = {
         };
       } else {
         let label = this.$root.labels[labelName];
+        console.debug(`label.videos is:`, label.videos);
         const videos = [...new Set([...(label.videos || []), videoId])];
         this.$root.labels[labelName] = {
           color: (0, utils.getColor)(labelName),
