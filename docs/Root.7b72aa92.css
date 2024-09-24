@@ -5957,6 +5957,9 @@ span[data-v-2ae310] {
 .center-stage .fade-enter[data-v-aaa267], .center-stage .fade-leave-to[data-v-aaa267] {
   opacity: 0;
 }
+[data-v-aaa267] .json-tree-root > .json-tree-deep {
+  width: 100vw;
+}
 [data-v-aaa267] .json-tree {
   min-width: 60%;
   max-width: 100%;
