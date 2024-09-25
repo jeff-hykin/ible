@@ -1,17 +1,21 @@
 Big Release Tasks:
 - Rename observation to timestamp
-- Update readme
-- Check that youtube videos still work:
-    - go to the hosted URL
-    - paste the URL
-    - add a timestamp
-    - paste another URL
-    - add a timestamp
-    - go to the video list and click the other video
+- Record a video:
+    - download the executable
+    - run it
+    - put two videos in the videos folder
+    - load them in the browser
+    - load a youtube video
+    - add a timestamp with a comment
+    - toggle the watched state
+    - change the observer
+    - switch videos
     - download the timestamps
+    - show what they look like
+    - explain the headers ()'s
     - delete the timestamps
     - reupload the timestamps
-- Download the binary from the releases page
+
 
 Publication options:
 - HRI: top conference for human robotics interations
@@ -104,7 +108,7 @@ Major Chonological Changes:
 - check overwrite-upload, and delete-upload
     - make setter for db
 - DONE: finish writing dev_notes.md
-- put a URL in each row of the CSV export, so theres a one-click link to see the clip
+- FUTURE: put a URL in each row of the CSV export, so theres a one-click link to see the clip
 - add documentation to download
     - upload actions explained
     - paraentheses explained

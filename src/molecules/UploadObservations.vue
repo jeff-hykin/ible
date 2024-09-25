@@ -68,6 +68,7 @@ import * as zipTools from "../tooling/zip_tooling.js"
 import * as videoTooling from "../tooling/video_tooling.js"
 import * as vueTooling from "../tooling/vue_tooling.js"
 import { trigger, globalEvents, everyTime } from '../tooling/events.js'
+import readme from "../tooling/readme.js"
 
 // TASKS:
     // add good error handling for uploads that are problematic
@@ -131,6 +132,7 @@ export default {
             download(
                 "data.ible.zip",
                 await zipTools.createZipOfTextFiles({
+                    "Read Me.md": readme,
                     "observations.typed.csv": await observationTooling.observationsToCsv(entries),
                     "videos.typed.csv": await videoTooling.videosToCsv(videos),
                     "video_review_status.typed.csv": await videoTooling.videoObserverTableToCsv(videos),
