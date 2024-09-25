@@ -180,8 +180,7 @@ export const currentFixedSizeOfYouTubeVideoId = 11
     }
 
     export const videosCsvToActions = async (csvString) => {
-        const videoEntries = await typedCsv.parse(csvString)
-        const headers = videoEntries.shift()
+        const { headers, rows: videoEntries } = await typedCsv.parse(csvString)
         const videoActions = []
         for (const eachRow of videoEntries) {
             const { uploadAction, videoId, ...eachEntry } = Object.fromEntries(basics.zip(headers, eachRow))
@@ -281,8 +280,7 @@ export const currentFixedSizeOfYouTubeVideoId = 11
     }
 
     export const videoObserverTableCsvToActions = async (csvString) => {
-        const videoObserverRows = await typedCsv.parse(csvString)
-        const headers = videoObserverRows.shift()
+        const { headers, rows: videoObserverRows } = await typedCsv.parse(csvString)
         const videos = {}
         const videoActions = []
         for (const eachRow of videoObserverRows) {

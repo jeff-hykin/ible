@@ -66,6 +66,7 @@ import * as observationTooling from "../tooling/observation_tooling.js"
 import * as yaml from 'yaml'
 import * as zipTools from "../tooling/zip_tooling.js"
 import * as videoTooling from "../tooling/video_tooling.js"
+import * as vueTooling from "../tooling/vue_tooling.js"
 import { trigger, globalEvents, everyTime } from '../tooling/events.js'
 
 // TASKS:
@@ -189,8 +190,14 @@ export default {
                 if (files["observations.typed.csv"]) {
                     observationTooling.observationsCsvToActions(files["observations.typed.csv"]).then(frontendDb.executeObservationActions)
                 }
+                
+                this.$toasted.show(`Upload Finished`, {
+                    closeOnSwipe: false,
+                    action: { text:'Refresh Page for changes to take effect', onClick: (e, toastObject)=>{ window.location.reload() } },
+                }).goAway(8500)
+                
             } catch (error) {
-                vueTools.showLongMessage(`Sorry there was an error :/ the error was:\n\n${error.stack}`)
+                vueTooling.showLongMessage(`Sorry there was an error :/ the error was:\n\n${error.stack}`)
             }
             
             // 

@@ -329,8 +329,7 @@ export const createDefaultObservationEntry = (currentTime)=>({
     }
 
     export const observationsCsvToActions = async (csvString) => {
-        const observationEntries = typedCsv.parse(csvString)
-        const headers = observationEntries.shift()
+        const { headers, rows: observationEntries } = typedCsv.parse(csvString)
         const observationActions = []
         for (const eachRow of observationEntries) {
             const { uploadAction, observationId, ...eachEntry } = Object.fromEntries(basics.zip(headers, eachRow))

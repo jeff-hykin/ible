@@ -1,4 +1,6 @@
 Big Release Tasks:
+- Rename observation to timestamp
+- Update readme
 - Check that youtube videos still work:
     - go to the hosted URL
     - paste the URL
