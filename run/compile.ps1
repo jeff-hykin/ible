@@ -12,7 +12,7 @@ import { FileSystem, glob } from "https://deno.land/x/quickr@0.6.67/main/file_sy
 import { run, hasCommand, throwIfFails, zipInto, mergeInto, returnAsString, Timeout, Env, Cwd, Stdin, Stdout, Stderr, Out, Overwrite, AppendTo, } from "https://deno.land/x/quickr@0.6.67/main/run.js"
 import { Console, clearAnsiStylesFrom, black, white, red, green, blue, yellow, cyan, magenta, lightBlack, lightWhite, lightRed, lightGreen, lightBlue, lightYellow, lightMagenta, lightCyan, blackBackground, whiteBackground, redBackground, greenBackground, blueBackground, yellowBackground, magentaBackground, cyanBackground, lightBlackBackground, lightRedBackground, lightGreenBackground, lightYellowBackground, lightBlueBackground, lightMagentaBackground, lightCyanBackground, lightWhiteBackground, bold, reset, dim, italic, underline, inverse, strikethrough, gray, grey, lightGray, lightGrey, grayBackground, greyBackground, lightGrayBackground, lightGreyBackground, } from "https://deno.land/x/quickr@0.6.67/main/console.js"
 import { binaryify } from "https://deno.land/x/binaryify@2.4.1.0/binaryify_api.js"
-import { fill } from "https://deno.land/x/html_bundle@0.0.1.2/main/impure_api.js"
+import { fill } from "https://deno.land/x/html_bundle@0.0.1.5/main/impure_api.js"
 import { capitalize, indent, toCamelCase, digitsToEnglishArray, toPascalCase, toKebabCase, toSnakeCase, toRepresentation, toString, regex, findAll, iterativelyFindAll, escapeRegexMatch, escapeRegexReplace, extractFirst, isValidIdentifier, removeCommonPrefix } from "https://deno.land/x/good@1.7.1.1/string.js"
 
 var projectFolder = FileSystem.normalize(`${FileSystem.thisFolder}/../`)
