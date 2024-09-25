@@ -162,30 +162,35 @@ export default {
             this.$refs.helpModal.open()
         },
         async onUploadObservation(eventObject) {
-            this.uploadCanceled = false
-            let newObservations = []
-            let observationMapping = {}
-            // 
-            // check the json of each file
-            // 
-            const files = {}
-            for (const [key, eachFile] of Object.entries(eventObject)) {
-                const fileIndex = key-0
-                const fileText = await eachFile.text()
-                const fileName = eachFile.name
-                files[fileName] = fileText
-            }
-            
-            if (files["videos.typed.csv"]) {
-                videoTooling.videosCsvToActions(files["videos.typed.csv"]).then(frontendDb.executeVideoActions)
-            }
-            
-            if (files["video_review_status.typed.csv"]) {
-                videoTooling.videoObserverTableCsvToActions(files["video_review_status.typed.csv"]).then(frontendDb.executeVideoActions)
-            }
-            
-            if (files["observations.typed.csv"]) {
-                observationTooling.observationsCsvToActions(files["observations.typed.csv"]).then(frontendDb.executeObservationActions)
+            try {
+                
+                this.uploadCanceled = false
+                let newObservations = []
+                let observationMapping = {}
+                // 
+                // check the json of each file
+                // 
+                const files = {}
+                for (const [key, eachFile] of Object.entries(eventObject)) {
+                    const fileIndex = key-0
+                    const fileText = await eachFile.text()
+                    const fileName = eachFile.name
+                    files[fileName] = fileText
+                }
+                
+                if (files["videos.typed.csv"]) {
+                    videoTooling.videosCsvToActions(files["videos.typed.csv"]).then(frontendDb.executeVideoActions)
+                }
+                
+                if (files["video_review_status.typed.csv"]) {
+                    videoTooling.videoObserverTableCsvToActions(files["video_review_status.typed.csv"]).then(frontendDb.executeVideoActions)
+                }
+                
+                if (files["observations.typed.csv"]) {
+                    observationTooling.observationsCsvToActions(files["observations.typed.csv"]).then(frontendDb.executeObservationActions)
+                }
+            } catch (error) {
+                vueTools.showLongMessage(`Sorry there was an error :/ the error was:\n\n${error.stack}`)
             }
             
             // 
