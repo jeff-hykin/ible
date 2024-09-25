@@ -1,3 +1,7 @@
+async function mainLKDJALSKjdlkasdjlaksj() {
+
+
+
 var __defProp = Object.defineProperty;
 var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
   get: (a2, b) => (typeof require !== "undefined" ? require : a2)[b]
@@ -3428,7 +3432,7 @@ var NamedArray = class extends Array {
   }
 };
 
-// https://deno.land/x/deno_tree_sitter@0.2.5.1/tree_sitter.wasm.binaryified.js
+// https://deno.land/x/deno_tree_sitter@0.2.5.2/tree_sitter.wasm.binaryified.js
 function eightToSeven(eightBytes) {
   const seven = 7;
   const sevenBytes = eightBytes.slice(0, seven);
@@ -25736,7 +25740,7 @@ var {
   O_EXCL: O_EXCL3
 } = fs_constants_exports;
 
-// https://deno.land/x/deno_tree_sitter@0.2.5.1/tree_sitter.js
+// https://deno.land/x/deno_tree_sitter@0.2.5.2/tree_sitter.js
 var __Process$ = { versions: { node: "1" }, argv: [import.meta.href] };
 var Module = {};
 var moduleOverrides = Object.assign({}, Module);
@@ -26035,6 +26039,7 @@ var getMemory = (e2) => {
   if (runtimeInitialized)
     return zeroMemory(_malloc(e2), e2);
   var t = ___heap_base, _2 = t + alignMemory(e2, 16);
+  !GOT.__heap_base && GOTHandler.get(wasmImports, "__heap_base");
   return ___heap_base = _2, GOT.__heap_base.value = _2, t;
 };
 var isInternalSym = (e2) => ["__cpp_exception", "__c_longjmp", "__wasm_apply_data_relocs", "__dso_handle", "__tls_size", "__tls_align", "__set_stack_limits", "_emscripten_tls_init", "__wasm_init_tls", "__wasm_call_ctors", "__start_em_asm", "__stop_em_asm", "__start_em_js", "__stop_em_js"].includes(e2) || e2.startsWith("__em_js__");
@@ -27919,7 +27924,7 @@ Parser.Language = Language;
 Module.onRuntimeInitialized = () => Parser.init();
 var tree_sitter_default = Parser;
 
-// https://deno.land/x/deno_tree_sitter@0.2.5.1/main.js
+// https://deno.land/x/deno_tree_sitter@0.2.5.2/main.js
 await tree_sitter_default.init();
 var realParseFunction = tree_sitter_default.prototype.parse;
 tree_sitter_default.prototype.parse = function(arg1, oldTree, options) {
@@ -29160,11 +29165,18 @@ function* iterGenerateCsv(data, { headers = [], delimiter: delimiter7 = ",", ...
     yield [...row].map((each) => csvEscapeCell(stringifyCell(each, options))).join(delimiter7) + "\n";
   }
 }
-export {
-  parse9 as parse,
+
+
+
+
+return {
+  parse: parse9,
   parseCell,
   parseIter,
-  stringify2 as stringify,
+  stringify: stringify2,
   stringifyCell,
   toTypedCsv
-};
+}
+}
+
+globalThis.typedCsv = await mainLKDJALSKjdlkasdjlaksj()

@@ -18,7 +18,7 @@ const buildFolder = `${projectFolder}/docs/`
 await run(`${projectFolder}/run/clean`)
 
 console.log(`Building...`)
-if (!(await run`npx parcel build index.html --out-dir docs --no-source-maps --no-minify --public-url ./`.success)) {
+if (!(await run`npx parcel build index.html --log-level 4 --out-dir docs --no-source-maps --no-minify --public-url ./`.success)) {
     Deno.exit(1)
 }
 
@@ -28,9 +28,17 @@ if (!(await run`npx parcel build index.html --out-dir docs --no-source-maps --no
 console.log(`Patching...`)
 let jsFiles = await glob(`${buildFolder}/**/*.js`)
 for (const eachPath of jsFiles) {
-    const fileContents = await FileSystem.read(eachPath)
+    let fileContents = await FileSystem.read(eachPath)
+    // FIXME: this is a terrible hack but the proper fix requires updating the whole build pipline to support top-level await
+    // typedCsv requires the tree sitter, which requires top level await, but parcel.js 1.12.4 doesnt support top-level await AFAIK
+    // so we have to inject the typedCsv code at the top and just use the variable as a global
+    fileContents = (await FileSystem.read(`${projectFolder}/src/tooling/typed_csv.js`))+`
+        globalThis.global = globalThis // for a different hack
+        var // because parcel assumes there's no use-strict
+    `+fileContents
     // because this is a syntax error, we have to put it in an eval (its alread in a try-catch) this is for the @zip.js/zip.js library
-    const patchedFileContents = fileContents.replaceAll(/\bimport\.meta\.url\b/g, `eval("import.meta.url")`)
+    const patchedFileContents = fileContents.replaceAll(/\bimport\.meta\.url\b/g, `eval("import.meta.url")`).replaceAll(/\bglobal\.TYPED_ARRAY_SUPPORT/g, `globalThis.TYPED_ARRAY_SUPPORT`)
     await FileSystem.write({path: eachPath, data: patchedFileContents})
 }
+console.log(`Patched`)
 // (this comment is part of deno-guillotine, dont remove) #>

@@ -1,6 +1,6 @@
 import { Path, toString } from "./basics.bundle.js"
 import { videoExtensions } from "./pure_tools.js"
-import * as typedCsv from "./typed_csv.js"
+// import * as typedCsv from './typed_csv.js' // see the run/build script for why we can't just import this (and why its a global)
 export const localVideoPrefix = "/videos/"
 
 export const minimumLocalIdSize = 7

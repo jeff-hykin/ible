@@ -1,6 +1,6 @@
 import * as utils from './pure_tools.js'
 import * as basics from './basics.bundle.js'
-import * as typedCsv from './typed_csv.js'
+// import * as typedCsv from './typed_csv.js' // see the run/build script for why we can't just import this (and why its a global)
 import { toString, toRepresentation } from './basics.bundle.js'
 import { toKebabCase } from './string_helpers.js'
 
