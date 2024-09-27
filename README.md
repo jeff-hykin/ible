@@ -4,17 +4,12 @@ A tool for labeling segments of videos!
 
 # How do I use it?
 
-- Prerequisite: know how to use a terminal
-- Install nodejs/npm
-- `npm install --global ible`
-- `npx ible`
+- If you're only labeling public youtube videos, simply go [here](https://jeff-hykin.github.io/iilvd-online/) and start annotating!
+- If you're labeling private videos, [download the program](https://jeff-hykin.github.io/ilab-database/) and double click the executable
 - Put your videos in your home folder inside a videos folder (e.g. `$HOME/videos/`)
-- Open the url in your browser ([http://127.0.0.1:3000](http://127.0.0.1:3000))
-- Go to the search tab, and in the textbox type `/videos/name_of_your_video.mp4` and press enter
+- Go to the search tab, and start typing `name_of_your_video.mp4` and press enter
 - Create new annotations by clicking the "Add Observation" button!
 - See the [guide](https://github.com/jeff-hykin/iilvd-online/blob/master/iLab%20Database.pdf) for more info
-
-Note: uploading data in the 10-thousands range will cause the site to get slow.
 
 # Setup for Developers
 
