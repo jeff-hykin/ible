@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<head>
+    <title>Ible Download</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://unpkg.com/css-baseline/css/3.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
+        :root {
+            --gray-pallet-background: rgb(30, 37, 53);
+            --red-pallet-background: lightcoral;
+            --off-white: hsl(0, 0%, 87.8%);
+            --charcoal: hsl(180, 0%, 31%);
+            --charcoal-on-charcoal: hsl(0deg 0% 50%);
+            --soft-gray-gradient: linear-gradient(-110deg, whitesmoke, var(--off-white));
+            /* misc */
+            --red-pallet-font: white;
+            --decent-color-1: lightcoral;
+            --decent-color-2: salmon;
+            --decent-color-3: lightpink;
+            --decent-color-4: lightsalmon;
+            --decent-color-5: coral;
+            --decent-color-6: lightcyan;
+            --decent-color-7: lightblue;
+            --decent-color-8: lightsteelblue;
+            --decent-color-9: skyblue;
+            --decent-color-10: lightskyblue;
+            --decent-color-11: cornflowerblue;
+            --decent-color-12: dodgerblue;
+            --decent-color-13: aquamarine;
+            --decent-color-14: turquoise;
+            --decent-color-15: darkturquoise;
+            --decent-color-16: lightseagreen;
+            --decent-color-17: darkcyan;
+            --decent-color-18: teal;
+            --decent-color-19: mediumspringgreen;
+            --decent-color-20: lightgreen;
+            --decent-color-21: cadetblue;
+            --decent-color-22: darkorchid;
+            --decent-color-23: blueviolet;
+        }
+        body {
+            font-size: 0.9em;
+            font-family: Roboto;
+        }
+        .animate {
+            transition: all 0.5s ease-in-out 0s;
+        }
+        .weak-shadow {
+            transition: all 0.3s ease-in-out 0s;
+            box-shadow: 0 4px 5px 0 rgba(0,0,0,0.10),0 1px 10px 0 rgba(0,0,0,0.08),0 2px 4px -1px rgba(0,0,0,0.24);
+        }
+        .weak-shadow:hover {
+            box-shadow: 0 8px 17px 2px rgba(0,0,0,0.10),0 6px 30px 5px rgba(0,0,0,0.08),0 8px 10px -7px rgba(0,0,0,0.16);
+        }
+        button {
+            border-radius: 1em;
+            border: none;
+            background-color: cornflowerblue;
+            padding: 0.5em 1em;
+            color: white;
+        }
+        a {
+            color: lightskyblue;
+            text-decoration: underline;
+        }
+        span {
+            vertical-align: text-top;
+        }
+    </style>
+</head>
+<!--                                   -->
+<!-- Synchonous/Fast loading animation -->
+<!--                                   -->
+    <body>
+        <div style="display: flex;justify-content: center;align-items: center;height: 100vh;">
+            <div style="width: 50px;height: 50px;border: 10px solid #dddddd;border-top-color: #009579;border-radius: 50%;transform: rotate(0.16turn);" id="good-component--initial-loader">
+            </div>
+        </div>
+    </body>
+    <script>
+        // 
+        // Synchonous/Fast loading animation
+        // 
+            const animateLoader = ()=>{
+            const element = document.getElementById("good-component--initial-loader")
+                element && element.animate(
+                    [
+                        { transform: 'rotate(0turn)' },
+                        { transform: 'rotate(1turn)' },
+                    ],
+                    {
+                        duration: 1000,
+                        iterations: Infinity,
+                        easing: 'ease',
+                    },
+                )
+            }
+            document.body ? animateLoader() : document.addEventListener("DOMContentLoaded", animateLoader)
+    </script>
+
+<!--                -->
+<!-- The main code  -->
+<!--                -->
+<script type="module">//;(async () => {
+    // 
+    // 
+    // Initialize
+    // 
+    // 
+        // const ElementalLibrary = (await import("https://cdn.skypack.dev/@!!!!!/elemental@0.0.12")).default
+        // const ContainerLibrary = (await import("https://cdn.skypack.dev/@!vanilla/container@v1.0.5")).default
+        // inlined version of what is above
+        const [ ElementalLibrary1, ContainerLibrary ] = (()=>{var e = "\uE000", t = "\uE001"; function o(r2) {  var p2, a1, l, s, c = arguments, i = this, n = 0, d = [], h = 0, u = [], f = 0;  d.root = true;  var g = function(e2, o2, r3) {  o2 === void 0 && (o2 = []);  var p3 = 0;  return (e2 = r3 || e2 !== t ? e2.replace(/\ue001/g, (e3)=>u[f++]  ) : u[f++].slice(1, -1)) ? (e2.replace(/\ue000/g, (t2, r4)=>(r4 && o2.push(e2.slice(p3, r4)), p3 = r4 + 1, o2.push(c[++h]))  ), p3 < e2.length && o2.push(e2.slice(p3)), o2.length > 1 ? o2 : o2[0]) : e2;  }, m = ()=>{  [d, s, ...p2] = d, d.push(i(s, ...p2));  };  return r2.join(e).replace(/[^]*/g, "").replace(/<!\[CDATA\[[^]*\]\]>/g, "").replace(/('|")[^\1]*?\1/g, (e2)=>(u.push(e2), t)  ).replace(/\s+/g, " ").replace(/(?:^|>)([^<]*)(?:$|<)/g, (e2, t2, r3, p3)=>{  var c2, i2;  if (r3 && p3.slice(n, r3).replace(/(\S)\/$/, "$1 /").split(" ").map((e3, t3)=>{  if (e3[0] === "/") c2 = i2 || e3.slice(1) || 1;  else if (t3) {  if (e3) {  var r4 = d[2] || (d[2] = {});  e3.slice(0, 3) === "..." ? Object.assign(r4, arguments[++h]) : ([a1, l] = e3.split("="), r4[g(a1)] = !l || g(l));  }  } else {  for(i2 = g(e3); o.close[d[1] + i2];)m();  d = [  d,  i2,  null  ], o.empty[i2] && (c2 = i2);  }  }), c2) for(m(); s !== c2 && o.close[s];)m();  n = r3 + e2.length, t2 && t2 !== " " && g((s = 0, t2), d, true);  }), d.root || m(), d.length > 1 ? d : d[0]; } o.empty = {}, o.close = {}, "area base br col command embed hr img input keygen link meta param source track wbr ! !doctype ? ?xml".split(" ").map((e2)=>o.empty[e2] = o.empty[e2.toUpperCase()] = true ); var r = {  li: "",  dt: "dd",  dd: "dt",  p: "address article aside blockquote details div dl fieldset figcaption figure footer form h1 h2 h3 h4 h5 h6 header hgroup hr main menu nav ol pre section table",  rt: "rp",  rp: "rt",  optgroup: "",  option: "optgroup",  caption: "tbody thead tfoot tr colgroup",  colgroup: "thead tbody tfoot tr caption",  thead: "tbody tfoot caption",  tbody: "tfoot caption",  tfoot: "caption",  tr: "tbody tfoot",  td: "th tr",  th: "td tr tbody" }, p = function(e2) {  [  ...r[e2].split(" "),  e2  ].map((t2)=>{  o.close[e2] = o.close[e2.toUpperCase()] = o.close[e2 + t2] = o.close[e2.toUpperCase() + t2] = o.close[e2 + t2.toUpperCase()] = o.close[e2.toUpperCase() + t2.toUpperCase()] = true;  }); }; for(var a in r)p(a); const xhtm = o; class Elemental {  constructor(components = {}, options = {}){  const { middleware: middleware2 , errorComponentFactory } = options;  this.components = components || {};  this.middleware = middleware2 || {};  this.errorComponentFactory = errorComponentFactory || defaultErrorComponentFactory;  this.html = xhtm.bind((...args)=>this.createElement(...args)  );  this.css = Elemental.css;  }  createElement(...args) {  Elemental.debug && console.debug(`args is:`, args);  for (const middleware2 of (this.middleware[Elemental.allTags] || []).concat(this.middleware[args[0]] || [])){  try {  args = eachMiddleWare(args);  } catch (error) {  console.error("[elemental] one of the middleware functions failed:", eachMiddleWare, args);  }  }  let [key, properties, ...children] = args;  Elemental.debug && console.debug(`key, properties, children is:`, key, properties, children);  if (this.components[key] instanceof Function) {  key = this.components[key];  }  if (key instanceof Function) {  let output;  try {  output = isConstructor(key) ? new key({  ...properties,  children  }) : key({  ...properties,  children  });  } catch (error) {  return this.errorComponentFactory({  ...properties,  children  }, key, error);  }  if (output instanceof Promise) {  const elementPromise = output;  const placeholder = elementPromise.placeholder || document.createElement("div");  setTimeout(async ()=>placeholder.replaceWith(await elementPromise)  , 0);  return placeholder;  } else {  return output;  }  }  const isSvg = Elemental.exclusivelySvgElements.has(key);  const element = isSvg ? document.createElementNS("http://www.w3.org/2000/svg", key) : document.createElement(key);  if (properties instanceof Object) {  for (const [key2, value] of Object.entries(properties)){  try {  if (isSvg) {  const kebabCase = key2.replace(/(?<=[a-z])([A-Z])(?=[a-z])/g, (each2)=>`-${each2.toLowerCase()}`  );  element.setAttribute(kebabCase, value);  } else {  element.setAttribute(key2.toLowerCase(), value);  }  } catch (error) {}  try {  element[key2] = value;  } catch (error1) {}  }  }  return appendChildren(element, ...children);  }  extend(additionalComponents = {}, options = {}) {  const { additionalMiddleware , ...other } = options;  return new Elemental({  ...this.components,  ...additionalComponents  }, {  middleware: {  ...this.middleware,  ...middleware  },  ...other  });  } } Elemental.allTags = Symbol.for("allTags"); Elemental.exclusivelySvgElements = new Set([  "svg",  "animate",  "animateMotion",  "animateTransform",  "circle",  "clipPath",  "defs",  "desc",  "discard",  "ellipse",  "feBlend",  "feColorMatrix",  "feComponentTransfer",  "feComposite",  "feConvolveMatrix",  "feDiffuseLighting",  "feDisplacementMap",  "feDistantLight",  "feDropShadow",  "feFlood",  "feFuncA",  "feFuncB",  "feFuncG",  "feFuncR",  "feGaussianBlur",  "feImage",  "feMerge",  "feMergeNode",  "feMorphology",  "feOffset",  "fePointLight",  "feSpecularLighting",  "feSpotLight",  "feTile",  "feTurbulence",  "filter",  "foreignObject",  "g",  "hatch",  "hatchpath",  "image",  "line",  "linearGradient",  "marker",  "mask",  "mesh",  "meshgradient",  "meshpatch",  "meshrow",  "metadata",  "mpath",  "path",  "pattern",  "polygon",  "polyline",  "radialGradient",  "rect",  "set",  "stop",  "switch",  "symbol",  "text",  "textPath",  "tspan",  "unknown",  "use",  "view" ]); Elemental.css = function(...args) {  const element = document.createElement("div");  if (args.length == 1) {  if (args instanceof Object) {  Object.assign(element.style, args);  }  } else if (args.length > 1) {  const [strings, ...values] = args;  let finalString = "";  for (const each2 of strings){  finalString += each2;  if (values.length > 0) {  finalString += `${values.shift()}`;  }  }  element.style = finalString;  }  return element.style; }; function appendChildren(element, ...children) {  for (const each2 of children){  if (typeof each2 == "string") {  element.appendChild(new window.Text(each2));  } else if (each2 == null) {  element.appendChild(new window.Text(""));  } else if (!(each2 instanceof Object)) {  element.appendChild(new window.Text(`${each2}`));  } else if (each2 instanceof Node) {  element.appendChild(each2);  } else if (each2 instanceof Array) {  appendChildren(element, ...each2);  } else if (each2 instanceof Function) {  appendChildren(element, each2());  } else if (each2 instanceof Promise) {  const elementPromise = each2;  const placeholder = elementPromise.placeholder || document.createElement("div");  setTimeout(async ()=>placeholder.replaceWith(await elementPromise)  , 0);  element.appendChild(placeholder);  } else if (each2 != null && each2 instanceof Object) {  element.appendChild(each2);  }  }  return element; } function defaultErrorComponentFactory({ children , ...properties }, key, error) {  const element = document.createElement("div");  const errorDetails = document.createElement("code");  const childContainer = document.createElement("div");  element.style.all = "unset";  element.style.display = "flex";  element.style.flexDirection = "column";  element.style.padding = "1.5em";  element.style.backgroundColor = "#f5a5a8";  element.style.color = "white";  element.style.fontFamily = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif';  element.style.fontSize = "18px";  element.style.fontWeight = "400";  element.style.overflow = "auto";  element.innerHTML = `I'm sorry, there was an error when loading this part of the page \u{1F641} `;  let errorElementPart;  if (typeof key == "string") {  errorElementPart = `<${key} />`;  } else {  try {  errorElementPart = `<${key.prototype.constructor.name} />`;  } catch (error2) {  errorElementPart = `<${key} />`;  }  }  let errorJsonObject = {};  for (const [key2, value] of Object.entries(properties)){  try {  errorJsonObject[key2] = JSON.parse(JSON.stringify(value));  } catch (error2) {  errorJsonObject[key2] = `${value}`;  }  }  errorDetails.innerHTML = `tag: ${errorElementPart} properties: ${JSON.stringify(errorJsonObject)} error: ${error}`;  errorDetails.style.padding = "1em";  errorDetails.style.backgroundColor = "#161b22";  errorDetails.style.color = "#789896";  element.appendChild(errorDetails);  childContainer.style.all = "unset";  childContainer.style.display = "flex";  childContainer.style.flexDirection = "column";  childContainer.style.marginTop = "1.3em";  if (children instanceof Array) {  for (const [key2, value] of Object.entries(children)){  if (typeof each == "string") {  childContainer.appendChild(new window.Text(value));  } else if (value instanceof Node) {  childContainer.appendChild(value);  }  }  }  element.appendChild(childContainer);  return element; } function isConstructor(obj) {  return !!obj.prototype && !!obj.prototype.constructor.name; } const originalHead = document.head; Object.defineProperty(document, "head", {  set: (element)=>appendChildren(originalHead, ...element.childNodes)  ,  get: ()=>originalHead }); const html = new Elemental().html; const css = Elemental.css; const allTags = Elemental.allTags; var ElementalLibrary = {  Elemental,  html,  css,  allTags }; const htmlEventHandlers = new Set([  "onabort",  "onanimationcancel",  "onanimationend",  "onanimationiteration",  "onanimationstart",  "onauxclick",  "onblur",  "onerror",  "onfocus",  "oncancel",  "oncanplay",  "oncanplaythrough",  "onchange",  "onclick",  "onclose",  "oncontextmenu",  "oncuechange",  "ondblclick",  "ondrag",  "ondragend",  "ondragenter",  "ondragleave",  "ondragover",  "ondragstart",  "ondrop",  "ondurationchange",  "onemptied",  "onended",  "onformdata",  "ongotpointercapture",  "oninput",  "oninvalid",  "onkeydown",  "onkeypress",  "onkeyup",  "onload",  "onloadeddata",  "onloadedmetadata",  "onloadend",  "onloadstart",  "onlostpointercapture",  "onmousedown",  "onmouseenter",  "onmouseleave",  "onmousemove",  "onmouseout",  "onmouseover",  "onmouseup",  "onmousewheel",  "onwheel",  "onpause",  "onplay",  "onplaying",  "onpointerdown",  "onpointermove",  "onpointerup",  "onpointercancel",  "onpointerover",  "onpointerout",  "onpointerenter",  "onpointerleave",  "onpointerlockchange",  "onpointerlockerror",  "onprogress",  "onratechange",  "onreset",  "onresize",  "onscroll",  "onsecuritypolicyviolation",  "onseeked",  "onseeking",  "onselect",  "onselectstart",  "onselectionchange",  "onshow",  "onslotchange",  "onstalled",  "onsubmit",  "onsuspend",  "ontimeupdate",  "onvolumechange",  "ontouchcancel",  "ontouchend",  "ontouchmove",  "ontouchstart",  "ontransitioncancel",  "ontransitionend",  "ontransitionrun",  "ontransitionstart",  "onwaiting" ]); const fixedAttributes = new Set([  "accept",  "accept-charset",  "accesskey",  "action",  "align",  "allow",  "alt",  "async",  "autocapitalize",  "autocomplete",  "autofocus",  "autoplay",  "background",  "bgcolor",  "border",  "buffered",  "capture",  "challenge",  "charset",  "checked",  "cite",  "class",  "code",  "codebase",  "color",  "cols",  "colspan",  "content",  "contenteditable",  "contextmenu",  "controls",  "coords",  "crossorigin",  "csp",  "data",  "datetime",  "decoding",  "default",  "defer",  "dir",  "dirname",  "disabled",  "download",  "draggable",  "enctype",  "enterkeyhint",  "for",  "form",  "formaction",  "formenctype",  "formmethod",  "formnovalidate",  "formtarget",  "headers",  "height",  "hidden",  "high",  "href",  "hreflang",  "http-equiv",  "icon",  "id",  "importance",  "integrity",  "intrinsicsize",  "inputmode",  "ismap",  "itemprop",  "keytype",  "kind",  "label",  "lang",  "language",  "loading",  "list",  "loop",  "low",  "manifest",  "max",  "maxlength",  "minlength",  "media",  "method",  "min",  "multiple",  "muted",  "name",  "novalidate",  "open",  "optimum",  "pattern",  "ping",  "placeholder",  "poster",  "preload",  "radiogroup",  "readonly",  "referrerpolicy",  "rel",  "required",  "reversed",  "rows",  "rowspan",  "sandbox",  "scope",  "scoped",  "selected",  "shape",  "size",  "sizes",  "slot",  "span",  "spellcheck",  "src",  "srcdoc",  "srclang",  "srcset",  "start",  "step",  "style",  "summary",  "tabindex",  "target",  "title",  "translate",  "type",  "usemap",  "value",  "width",  "wrap",  ...htmlEventHandlers ]); const isAnHtmlAttribute = (string)=>{  if (fixedAttributes.has(string)) {  return true;  } else if (string.startsWith("data-")) {  return true;  }  return false; }; const cssHmtlOverlap = new Set([  "width",  "height",  "background",  "border",  "color" ]); const splitHtmlCssAttributes = (object)=>{  const htmlAttributes = {};  const cssAttributes = {};  for (const [key, value] of Object.entries(object)){  if (cssHmtlOverlap.has(key)) {  htmlAttributes[key] = value;  cssAttributes[key] = value;  } else if (isAnHtmlAttribute(key)) {  htmlAttributes[key] = value;  } else {  cssAttributes[key] = value;  }  }  return [  htmlAttributes,  cssAttributes  ]; }; const computeDirection = (row, column, reverse)=>{  const output = row ? "row" : "column";  if (!reverse) {  return output;  } else {  return `${output}-reverse`;  } }; const humanPositionToCssPosition = (humanPosition)=>{  if (humanPosition === "relativeToParent") {  return "absolute";  } else if (humanPosition === "relativeToSelf") {  return "relative";  } else if (humanPosition === "relativeToWindow") {  return "fixed";  } else if (humanPosition === "sticky") {  return "sticky";  } else if (typeof humanPosition === "string") {  console.warn(`positionSelf needs to be one of [ 'relativeToParent', 'relativeToSelf', 'relativeToWindow', 'sticky' ] but instead it was: '${humanPosition}'`);  }  return void 0; }; const humanPositionToCssFlexbox = (humanWord)=>{  if (humanWord.match(/^(top|left)$/i)) {  return "flex-start";  } else if (humanWord.match(/^(bottom|right)$/i)) {  return "flex-end";  } else {  return humanWord;  } }; const columnAlignment = (horizontalAlignment, verticalAlignment, innerAlignment, wrap)=>{  if (!wrap) {  return {  justifyContent: verticalAlignment,  alignItems: horizontalAlignment  };  } else {  return {  justifyContent: verticalAlignment,  alignItems: innerAlignment,  alignContent: horizontalAlignment  };  } }; const rowAlignment = (horizontalAlignment, verticalAlignment, innerAlignment, wrap)=>{  if (!wrap) {  return {  justifyContent: horizontalAlignment,  alignItems: verticalAlignment  };  } else {  return {  justifyContent: horizontalAlignment,  alignItems: innerAlignment,  alignContent: verticalAlignment  };  } }; const computeFlexAlignmentAttributes = (directionIsRow, horizontalAlignment, verticalAlignment, innerAlignment, wrap)=>{  horizontalAlignment = humanPositionToCssFlexbox(horizontalAlignment);  verticalAlignment = humanPositionToCssFlexbox(verticalAlignment);  if (directionIsRow) {  return rowAlignment(horizontalAlignment, verticalAlignment, innerAlignment, wrap);  } else {  return columnAlignment(horizontalAlignment, verticalAlignment, innerAlignment, wrap);  } }; const setProperties = (element, properties)=>{  for (const [key, value] of Object.entries(properties)){  try {  const kebabCase = key.replace(/(?<=[a-z])([A-Z])(?=[a-z])/g, (each)=>`-${each.toLowerCase()}`  );  element.setAttribute(kebabCase, value);  } catch (error) {}  element[key] = value;  } }; const elementSymbol = Symbol.for("element"); function appendChildren1(element, ...children) {  for (const each of children){  if (typeof each == "string") {  element.appendChild(new window.Text(each));  } else if (each == null) {  element.appendChild(new window.Text(""));  } else if (!(each instanceof Object)) {  element.appendChild(new window.Text(`${each}`));  } else if (each[elementSymbol]) {  element.appendChild(each[elementSymbol]);  } else if (each instanceof Node) {  element.appendChild(each);  } else if (each instanceof Array) {  appendChildren1(element, ...each);  } else if (each instanceof Function) {  appendChildren1(element, each());  } else if (each instanceof Promise) {  const elementPromise = each;  const placeholder = elementPromise.placeholder || document.createElement("div");  setTimeout(async ()=>placeholder.replaceWith(await elementPromise)  , 0);  element.appendChild(placeholder);  } else if (each != null && each instanceof Object) {  element.appendChild(each);  }  }  return element; } var ContainerLibrary = ({ row , column , reverse , wrap , positionSelf ="relativeToSelf" , verticalAlignment ="top" , horizontalAlignment ="left" , innerAlignment ="center" , textWrapAlignment , children , ...props })=>{  const [htmlAttributes, cssAttributes] = splitHtmlCssAttributes(props);  const element = document.createElement("div");  Object.assign(element.style, {  position: humanPositionToCssPosition(positionSelf) || "relative",  display: "flex",  flexDirection: computeDirection(row, column, reverse),  flexWrap: wrap === "reverse" ? "wrap-reverse" : wrap && "wrap",  textAlign: textWrapAlignment || horizontalAlignment,  ...computeFlexAlignmentAttributes(row, horizontalAlignment, verticalAlignment, innerAlignment, wrap),  ...cssAttributes  });  setProperties(element, {  name: "positioner",  ...htmlAttributes  });  appendChildren1(element, children);  return element; }; return [ElementalLibrary, ContainerLibrary]})()
+        const ElementalLibrary = (await import("https://cdn.skypack.dev/@!!!!!/elemental@0.5.40")).default
+        const { Elemental } = ElementalLibrary
+    
+        // 
+        // Custom elements
+        // 
+        const { html } = Elemental({
+            Container: ({children,...props}, ...args)=>ContainerLibrary({children: (children||[]).flat(Infinity),...props}, ...args),
+            DownloadButton,
+            Card,
+            OsOption,
+        })
+        
+        // 
+        // animations
+        // 
+        const [ fadeIn, fadeOut ] = [
+            [
+                [
+                    { offset: 0.0, opacity: 0, },
+                    { offset: 0.1, opacity: 0, },
+                    { offset: 1.0, opacity: 1, },
+                ], {
+                    duration: 1000,
+                    easing: 'ease-out',
+                    iterations: 1
+                }
+            ],
+            [
+                [
+                    { offset: 0.0, opacity: 1, },
+                    { offset: 0.1, opacity: 1, },
+                    { offset: 1.0, opacity: 0, },
+                ], {
+                    duration: 1000,
+                    easing: 'ease-out',
+                    iterations: 1
+                }
+            ],
+        ]
+    
+    // 
+    // 
+    // Main Code
+    // 
+    // 
+    const downloadOptions = {
+        "Linux": html`
+            <DownloadButton href="https://github.com/jeff-hykin/ible/releases/latest/download/ible_Linux_x86_64">
+                (x86_64)
+            </DownloadButton>
+            <Container row verticalAlignment="center">
+                <span color=gray max-width="10rem" display="inline-block">
+                    Note: Unless you're using a Raspberry Pi, x86 is probably what you want
+                </span>
+                <DownloadButton href="https://github.com/jeff-hykin/ible/releases/latest/download/ible_Linux_Arm">
+                    (Arm)
+                </DownloadButton>
+            </Container>
+        `,
+        "Mac OS": html`
+            <DownloadButton href="https://github.com/jeff-hykin/ible/releases/latest/download/ible_MacOS_AppleSilicon">
+                (Apple Silicon)
+            </DownloadButton>
+            <DownloadButton href="https://github.com/jeff-hykin/ible/releases/latest/download/ible_MacOS_Intel">
+                (Intel)
+            </DownloadButton>
+        `,
+        "Windows": html`
+            <DownloadButton href="https://github.com/jeff-hykin/ible/releases/latest/download/ible_Windows_x86_64.exe">
+                (x86_64)
+            </DownloadButton>
+        `,
+    }
+    
+    let mainDownloadName
+    if (navigator.userAgent.match(/Linux/)) {
+        mainDownloadName = "Linux"
+    } else if (navigator.userAgent.match(/Macintosh/)) {
+        mainDownloadName = "Mac OS"
+    } else if (navigator.userAgent.match(/Windows/)) {
+        mainDownloadName = "Windows"
+    }
+    function OsOption({downloadName, ...props}) {
+        return html`
+            <Container row verticalAlignment="center" ...${props}>
+                <h3 min-width="12rem">${downloadName}</h3>
+                <div width="1rem" />
+                ${downloadOptions[downloadName]}
+            </Container>
+        `
+    }
+    let mainSuggestion
+    if (mainDownloadName) {
+        mainSuggestion = html`
+            <OsOption downloadName=${mainDownloadName} /> 
+            <div height=5rem />
+            <h4 border-bottom="1px solid black" padding="0.5em" width="100%" color="gray" opacity=0.5>Other Downloads</h4>
+        `
+    }
+    
+    const otherDownloads = Object.keys(downloadOptions).filter(each => each !== mainDownloadName).map(
+        each => html`
+            <OsOption downloadName=${each} opacity=${mainDownloadName?0.5:1} /> 
+        `
+    )
+    
+    document.body = html`
+        <body
+            font-size=15px
+            overflow=auto
+            width=100vw
+            height=100vh
+            display="flex"
+            flex-direction="column"
+            align-items="center"
+            justify-content="center"
+            background="whitesmoke"
+            >
+                <Container column horizontalAlignment="left">
+                    ${mainSuggestion}
+                    ${otherDownloads}
+                </Container>
+        </body>
+    `
+    
+    document.body.animate(...fadeIn)
+    
+    // 
+    // 
+    // Components
+    // 
+    // 
+        function Space() {
+            const element = document.createElement("code")
+            element.style.whiteSpace = "pre"
+            element.style.minWidth = "0.3em"
+            return element
+        }
+        
+        function Title({underline, thin, size, style, children, color, ...props}) {
+            style = {
+                flexGrow: 0,
+                fontSize: size||"1.5em",
+                marginBottom: "0.7em",
+                // add underline or not
+                ...(underline ? {
+                    borderBottom: "2px solid "+(color||"gray"),
+                    fontSize: size||"1.3em",
+                }:{}),
+                ...(thin ? {
+                    fontWeight: 100,
+                }:{}),
+                ...(thin && underline ? {
+                    borderBottom: "1px solid "+(color||"gray"),
+                }:{}),
+                color,
+                ...style,
+                ...props,
+            }
+            const element = html`
+                <h4 ...${props} >
+                        ${children}
+                </h4>
+            `
+            // this next line shouldn't be necessary, I'm not sure why it is (but I know that it is)
+            Object.assign(element.style, style)
+            return element
+        }
+        
+        function LinePadding() {
+            return html`<Container class="line-padding" min-height=0.4em />`
+        }
+        
+        function Card({name, children, ...props}) {
+            return html`
+                <Container
+                    name=${name}
+                    border-radius="1em"
+                    box-shadow="0 4px 5px 0 rgba(0,0,0,0.10),0 1px 10px 0 rgba(0,0,0,0.08),0 2px 4px -1px rgba(0,0,0,0.24)"
+                    padding="1.5em 2em"
+                    background="var(--card-background, white)"
+                    ...${props}
+                    >
+                        ${children}
+                </Container>
+            `
+        }
+        
+        function Chip({name, color, children, ...props}) {
+            return html`
+                <Container
+                    name=${name}
+                    border-radius="2em"
+                    padding="0.35em 0.7em"
+                    margin="0.15em"
+                    background=${color||"rgba(255,255,255,0.25)"}
+                    backdrop-filter=${color?"":"saturate(180%) brightness(1.05)"}
+                    color="white"
+                    font-size="0.8em"
+                    display="inline-block"
+                    max-width="max-content"
+                    min-width="max-content"
+                    cursor="default"
+                    ...${props}
+                    >
+                        ${children}
+                </Container>
+            `
+        }
+        
+        function AcheivementToken({children, ...props}) {
+            return html`
+                <Container
+                    border-radius="2em"
+                    border="2px solid white"
+                    box-shadow="0 4px 5px 0 rgba(0,0,0,0.10),0 1px 10px 0 rgba(0,0,0,0.08),0 2px 4px -1px rgba(0,0,0,0.24)"
+                    margin-bottom="1em"
+                    ...${props}
+                    > 
+                        <Container
+                            border-radius="2em"
+                            border="5px solid #E5C07B"
+                            padding="0.6em 1em"
+                            font-size="1em"
+                            background-color="white"
+                            row
+                            > 
+                                ${children}
+                        </Container>
+                </Container>
+            `
+        }
+        
+        function MainCategory({title, children, ...props}) {
+            for (const each of children) {
+                each.style.width = "90%"
+                each.style.fontSize = "1em"
+                each.style.marginBottom = "1em"
+                each.style.fontWeight = "300"
+                each.style.marginRight = "2em"
+                each.style.maxWidth = "27em"
+            }
+            return html`
+                <Container>
+                    <Title color="black" underline thin>
+                        ${title}
+                    </Title>
+                    <Container max-height="${screen.width < 1000 ?  "none" : "22em"}" overflow=auto width=110% horizontalAlignment="center" padding-top="0.5em">
+                        ${children}
+                    </Container>
+                </Container>
+            `
+        }
+        function DownloadButton({ href, children, ...props}) {
+            return html`
+                <Container
+                    column
+                    horizontalAlignment="center"
+                    onclick=${()=>downloadFile(href)}
+                    background="gray"
+                    color="var(--off-white)"
+                    box-shadow="0 4px 5px 0 rgba(0,0,0,0.10),0 1px 10px 0 rgba(0,0,0,0.08),0 2px 4px -1px rgba(0,0,0,0.24)"
+                    border-radius="1em"
+                    padding="1.5em 2em"
+                    margin="1em"
+                    >
+                        <a download=ible href=${href} color="white">
+                            <h5 font-size=1.4rem>Download</h5>
+                        </a>
+                        <br>
+                        ${children}
+                </Container>
+            `
+        }
+        function downloadFile(url) {
+            const link = document.createElement('a')
+            link.href = url
+            link.download = 'ible'
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+        }
+    
+// })()
+</script>
