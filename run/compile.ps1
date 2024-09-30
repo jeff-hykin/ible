@@ -69,7 +69,7 @@ const targets = [
 await FileSystem.ensureIsFolder(binariesFolder)
 for (const eachTarget of targets) {
     console.log(`    compiling to ${binariesFolder}/${eachTarget}`)
-    const output = await run`deno compile --no-npm -A --unstable --target ${eachTarget} --output ${`${binariesFolder}/${eachTarget}`} ${tempMainJsPath} ${Out(returnAsString)}`
+    const output = await run`deno compile --no-npm -A --unstable --target ${eachTarget} --output ${`${binariesFolder}/ible-${eachTarget}`} ${tempMainJsPath} ${Out(returnAsString)}`
     console.log(indent({ string: output, by: "        " }))
 }
 console.log(`    done!`)
