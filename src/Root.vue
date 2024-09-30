@@ -624,7 +624,7 @@ export default RootComponent = {
             } else {
                 let label = this.$root.labels[labelName]
                 console.debug(`label.videos is:`,label.videos)
-                const videos = [...new Set([...(label.videos||[]), videoId])]
+                const videos = [...new Set([...Object.keys(label.videos||{}), videoId])]
                 this.$root.labels[labelName] = {
                     color: getColor(labelName),
                     segmentCount: (label.segmentCount||0)+1,

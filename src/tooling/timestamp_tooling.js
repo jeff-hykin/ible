@@ -56,7 +56,7 @@ export const createDefaultTimestampEntry = (currentTime)=>({
 // 
 // indvidual coercsion
 // 
-    const nameCoerce = name=>toKebabCase(name.toLowerCase().replace(/[^a-zA-Z0-9-.]/g, "-"), {keepTrailingSeparators:true, allowLongSplits:true})
+    const nameCoerce = name=>toKebabCase((name||"").toLowerCase().replace(/[^a-zA-Z0-9-.]/g, "-"), {keepTrailingSeparators:true, allowLongSplits:true})
     export function coerceLabel(label) {
         return nameCoerce(label)
     }
@@ -312,7 +312,7 @@ export const createDefaultTimestampEntry = (currentTime)=>({
                 "label": each.label,
                 "labelConfidence": each.labelConfidence,
                 "comment": each.comment||null,
-                "spacialInfo": Object.keys(each.spacialInfo).length > 0 ? each.spacialInfo : null,
+                "spacialInfo": Object.keys(each?.spacialInfo||{}).length > 0 ? each.spacialInfo : null,
             })
             // flatten out video
             for (const [key, value] of Object.entries(each.video||{})) {
@@ -324,7 +324,6 @@ export const createDefaultTimestampEntry = (currentTime)=>({
             }
         }
         const output = typedCsv.stringify(timestamps)
-        console.debug(`output is:`,output)
         return output
     }
 
