@@ -8,11 +8,13 @@ A tool for labeling segments of videos!
 
 # How do I use it?
 
-- If you're only labeling public youtube videos, simply go [here](https://jeff-hykin.github.io/ible/) and start annotating!
+- If you're only labeling public youtube videos
+    - Just [open this page](https://jeff-hykin.github.io/ible/) and start annotating!
     - Go to the search tab, paste a youtube video url in the search textbox, and press enter
     - Create new annotations by clicking the "Add Observation" button
     - Hover over the circle in the bottom right corner to download your annotations as a csv file
-- If you're labeling private videos, [download the program](https://jeff-hykin.github.io/ilab-database/) and double click the executable
+- If you're labeling private videos
+    - [download the program](https://jeff-hykin.github.io/ilab-database/) and double click the executable to start a local server
     - Put your videos in your home folder inside a videos folder (e.g. `$HOME/videos/`)
     - Go to the search tab, and start typing `name_of_your_video.mp4` and press enter
     - Create new annotations by clicking the "Add Observation" button!
