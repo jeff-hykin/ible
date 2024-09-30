@@ -128,7 +128,6 @@ Options:
     console.log(`Put your videos somewhere in here:\n${videoDirectory}`)
     Deno.serve({ port, hostname }, async (request) => {
         const urlPath = decodeURI((new URL(request.url)).pathname)
-        console.debug(`urlPath is:`,urlPath)
         let filePath = FileSystem.join(baseDirectory, urlPath === "/" ? "index.html" : urlPath)
         
         // 
