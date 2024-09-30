@@ -1,4 +1,6 @@
-<img src="https://github.com/user-attachments/assets/9af7cbac-4ece-4b59-82bb-694a0ef7525f" height="200">
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/9af7cbac-4ece-4b59-82bb-694a0ef7525f" height="500">
+</p>
 
 # What is this?
 
