@@ -162,11 +162,11 @@ export default RootComponent = {
                     // 
                     // auto detect videoId
                     // 
+                    let message
                     if ($root.routeData$?.videoInfo?.path && !$root.routeData$?.videoInfo?.videoId) {
                         const existingVideoPath = $root.routeData$?.videoInfo?.path
                         const videoBaseName = existingVideoPath.split(/\\|\//g).slice(-1)[0]
                         const videoNameParts = videoBaseName.split('.')
-                        let message
                         // might have an id
                         if (videoNameParts.length > 2) {
                             const possibleVideoId = videoNameParts.slice(-2)[0].replace(/\s/,"")
@@ -182,8 +182,6 @@ export default RootComponent = {
                                 }
                                 message = `<br>Hey! This video ("${utils.escapeHtml(videoBaseName)}") has video ID ("${utils.escapeHtml(possibleVideoId)}")<br>but its not the right length (${videoIdLength})<br><br>Want me to rename it and give it a new ID?`
                             }
-                        } else {
-                            
                         }
                     }
                     
