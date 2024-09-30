@@ -67,9 +67,24 @@ const targets = [
     "aarch64-apple-darwin",
 ]
 await FileSystem.ensureIsFolder(binariesFolder)
+const outputPath = `${binariesFolder}/ible`
 for (const eachTarget of targets) {
     console.log(`    compiling to ${binariesFolder}/${eachTarget}`)
-    const output = await run`deno compile --no-npm -A --unstable --target ${eachTarget} --output ${`${binariesFolder}/ible-${eachTarget}`} ${tempMainJsPath} ${Out(returnAsString)}`
+    const namedOutputPath = `${binariesFolder}/ible-${eachTarget}`
+    // clear the way
+    if (eachTarget.includes("-windows-")) {
+        await FileSystem.remove(outputPath+".exe")
+    } else {
+        await FileSystem.remove(outputPath)
+    }
+    await FileSystem.remove(`${namedOutputPath}.zip`)
+    const output = await run`deno compile --no-npm -A --unstable --target ${eachTarget} --output ${outputPath} ${tempMainJsPath} ${Out(returnAsString)}`
+    // create zip
+    if (eachTarget.includes("-windows-")) {
+        await run`zip ${`${FileSystem.basename(namedOutputPath)}.zip`} ${FileSystem.basename(outputPath)}.exe ${Cwd(FileSystem.parentPath(outputPath))}`
+    } else {
+        await run`zip ${`${FileSystem.basename(namedOutputPath)}.zip`} ${FileSystem.basename(outputPath)} ${Cwd(FileSystem.parentPath(outputPath))}`
+    }
     console.log(indent({ string: output, by: "        " }))
 }
 console.log(`    done!`)
