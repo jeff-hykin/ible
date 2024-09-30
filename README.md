@@ -4,7 +4,7 @@ A tool for labeling segments of videos!
 
 # How do I use it?
 
-- If you're only labeling public youtube videos, simply go [here](https://jeff-hykin.github.io/iilvd-online/) and start annotating!
+- If you're only labeling public youtube videos, simply go [here](https://jeff-hykin.github.io/ible/) and start annotating!
     - Go to the search tab, paste a youtube video url in the search textbox, and press enter
     - Create new annotations by clicking the "Add Observation" button
     - Hover over the circle in the bottom right corner to download your annotations as a csv file
