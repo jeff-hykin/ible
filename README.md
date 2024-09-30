@@ -14,7 +14,7 @@ A tool for labeling segments of videos!
     - Create new annotations by clicking the "Add Observation" button
     - Hover over the circle in the bottom right corner to download your annotations as a csv file
 - If you're labeling private videos
-    - [download the program](https://jeff-hykin.github.io/ilab-database/) and double click the executable to start a local server
+    - [download the program](https://jeff-hykin.github.io/ilab-database/) 
     - Put your videos in your home folder inside a videos folder (e.g. `$HOME/videos/`)
     - Go to the search tab, and start typing `name_of_your_video.mp4` and press enter
     - Create new annotations by clicking the "Add Observation" button!
