@@ -51,7 +51,7 @@
                                         div(style="width: 10rem")
                                             | Verified Labels
                 column.side-container(v-if="$root.videoInterface.videoId" align-v="top" overflow="visible" min-height="50rem" width="fit-content")
-                    ObservationEditor(
+                    TimestampEditor(
                         :jumpSegment="wrapperForJumpSegment"
                         :currentTime="currentTime"
                     )
@@ -78,7 +78,7 @@ export default {
         SideButton: require("../atoms/SideButton").default,
         VideoPlayer: require("../atoms/VideoPlayer").default,
         InfoSection: require("../molecules/InfoSection").default,
-        ObservationEditor: require("../organisms/ObservationEditor").default,
+        TimestampEditor: require("../organisms/TimestampEditor").default,
         SegmentDisplay: require("../organisms/SegmentDisplay").default,
         WrappedTopSearch: require("../organisms/WrappedTopSearch").default,
         Card: require("../molecules/Card").default,

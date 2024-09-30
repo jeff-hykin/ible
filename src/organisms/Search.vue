@@ -15,7 +15,7 @@
                 icon="delete"
                 color="black"
                 tooltipPosition="top"
-                :tooltip="`Delete all ${numberOfSearchResults||$root.searchResults.counts.total} observations`"
+                :tooltip="`Delete all ${numberOfSearchResults||$root.searchResults.counts.total} timestamps`"
             )
                 | Delete All
             VideoIdSearch(@submit='searchWasSubmitted')
@@ -24,7 +24,7 @@
                 icon="download"
                 color="primary"
                 tooltipPosition="top"
-                :tooltip="`Download all ${numberOfSearchResults||$root.searchResults.counts.total} observations as CSV's`"
+                :tooltip="`Download all ${numberOfSearchResults||$root.searchResults.counts.total} timestamps as CSV's`"
             )
                 | Download
         row.search-summary(
@@ -51,7 +51,7 @@
                 .pie-wrapper(v-if="$root.searchResults.finishedComputing")
                     PieChart(
                         showTotal
-                        :series="[$root.searchResults.counts.fromHuman, $root.searchResults.counts.rejected, $root.searchResults.uncheckedObservations.length, $root.searchResults.counts.confirmed, $root.searchResults.counts.disagreement]"
+                        :series="[$root.searchResults.counts.fromHuman, $root.searchResults.counts.rejected, $root.searchResults.uncheckedTimestamps.length, $root.searchResults.counts.confirmed, $root.searchResults.counts.disagreement]"
                         :labels="['Human','Rejected','Unchecked','Confirmed', 'Disagreement']"
                         :colors="[ colors.blue, colors.red, colors.purple, colors.green, colors.yellow, ]"
                     )
@@ -73,7 +73,7 @@
                         :labels="Object.keys($root.searchResults.labels)"
                     )
 
-            column.card.search-observation(align-h="left" min-height="fit-content")
+            column.card.search-timestamp(align-h="left" min-height="fit-content")
                 h5
                     | Search Filters
                 br
@@ -127,9 +127,9 @@ import * as csvTools from "../tooling/csv_tooling.js"
 import * as zipTools from "../tooling/zip_tooling.js"
 import * as basics from "../tooling/basics.bundle.js"
 import * as videoTooling from "../tooling/video_tooling.js"
-import * as observationTooling from "../tooling/observation_tooling.js"
+import * as timestampTooling from "../tooling/timestamp_tooling.js"
 
-let observationEntries
+let timestampEntries
 export default {
     components: {
         UiSwitch: require("../atoms/UiSwitch").default,
@@ -158,9 +158,9 @@ export default {
         },
         async download() {
             console.log(`download clicked`)
-            let entries = observationEntries
+            let entries = timestampEntries
             if (entries?.length==0) {
-                entries = await frontendDb.getObservations({where: [], returnObject: false})
+                entries = await frontendDb.getTimestamps({where: [], returnObject: false})
             }
             let videos = []
             if (this.$root.noSearch) {
@@ -173,21 +173,21 @@ export default {
             download(
                 "data.ible.zip",
                 await zipTools.createZipOfTextFiles({
-                    "observations.typed.csv": await observationTooling.observationsToCsv(entries),
+                    "timestamps.typed.csv": await timestampTooling.timestampsToCsv(entries),
                     "videos.typed.csv": await videoTooling.videosToCsv(videos),
                     "video_review_status.typed.csv": await videoTooling.videoObserverTableToCsv(videos),
                 })
             )
         },
         async showDeletePrompt() {
-            let entries = observationEntries
+            let entries = timestampEntries
             if (entries?.length == 0) {
-                for await (const [key, value] of frontendDb.iter.observations) {
-                    entries.push({ observationId: key })
-                    entries.push({ observationId: value.observationId })
+                for await (const [key, value] of frontendDb.iter.timestamps) {
+                    entries.push({ timestampId: key })
+                    entries.push({ timestampId: value.timestampId })
                 }
             }
-            if (confirm(`Are you sure?\n\n    Ok = Delete ${entries.length} observations\n    Cancel = Keep Data`)) {
+            if (confirm(`Are you sure?\n\n    Ok = Delete ${entries.length} timestamps\n    Cancel = Keep Data`)) {
                 const toastObject = this.$toasted.show(`Deleting...`, {
                     closeOnSwipe: true,
                 })
@@ -198,7 +198,7 @@ export default {
                 toastElement.innerHTML = `<div><br>${toastElement.innerHTML}<br><p>0 of ${entries.length}\n</p></div>`
                 let count = 0
                 for (const each of entries) {
-                    await frontendDb.deleteObservation({ uuidOfSelectedSegment: each.observationId })
+                    await frontendDb.deleteTimestamp({ uuidOfSelectedSegment: each.timestampId })
                     count++
                     toastElement.innerHTML = toastElement.innerHTML.replace(/<p>.+/,`<p>${count} of ${entries.length}`)
                 }
@@ -241,14 +241,14 @@ export default {
             if (!this.$root.filterAndSort.validation.includes("Confirmed")    ) { where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
             if (!this.$root.filterAndSort.validation.includes("Rejected")     ) { where.push({ valueOf: ['rejectedBySomeone'                ], isNot:                  true                          , }) }
             
-            observationEntries = await frontendDb.getObservations({where, returnObject: true})
+            timestampEntries = await frontendDb.getTimestamps({where, returnObject: true})
             
-            // ensure the observationId is the ID
-            for (const [key, value] of Object.entries(observationEntries)) {
-                value.observationId = key
+            // ensure the timestampId is the ID
+            for (const [key, value] of Object.entries(timestampEntries)) {
+                value.timestampId = key
             }
-            observationEntries = Object.values(observationEntries)
-            this.numberOfSearchResults = observationEntries.length
+            timestampEntries = Object.values(timestampEntries)
+            this.numberOfSearchResults = timestampEntries.length
             
             // show the time of the first load
             if (this.$root.loadStart && this.$root.email) {
@@ -335,7 +335,7 @@ export default {
         border-radius: 1rem
         min-width: 19rem
         
-    .search-observation
+    .search-timestamp
         min-width: 19rem
 
     .ui-textbox

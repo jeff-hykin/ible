@@ -30,7 +30,7 @@ import { Event, trigger, everyTime, once, globalEvents } from "./tooling/events.
 import * as vueTooling from "./tooling/vue_tooling.js"
 
 import "./tooling/video_storage_manager.js"
-import "./tooling/observation_storage_manager.js"
+import "./tooling/timestamp_storage_manager.js"
 
 const { get, set } = basics
 window.basics = basics // for debugging
@@ -38,7 +38,7 @@ window.basics = basics // for debugging
 // listens to:
 //     globalEvents.requestRootData
 //     globalEvents.addLabelRequest
-//     globalEvents.rootDeSelectObservationRequest
+//     globalEvents.rootDeSelectTimestampRequest
 // triggers:
 //     globalEvents.updateVideoRequest
 //     globalEvents.addedLabel
@@ -201,7 +201,7 @@ export default RootComponent = {
                         } else {
                             frontPart = parts.join('.')
                         }
-                        message = message || `<br>Hey! This video ("${utils.escapeHtml(videoBaseName)}") is missing a video ID<br>I can't record observations without an ID<br>Just rename the file to "${utils.escapeHtml(frontPart)}.${exampleId}.${extension}"<br>Where "${exampleId}" is the video ID<br>`
+                        message = message || `<br>Hey! This video ("${utils.escapeHtml(videoBaseName)}") is missing a video ID<br>I can't record timestamps without an ID<br>Just rename the file to "${utils.escapeHtml(frontPart)}.${exampleId}.${extension}"<br>Where "${exampleId}" is the video ID<br>`
                         vueTooling.showLongMessage(
                             message,
                             [
@@ -269,7 +269,7 @@ export default RootComponent = {
                 },
                 updateKeySegments() {
                     const currentVideoId = $root.videoInterface.videoId
-                    $root.videoInterface.keySegmentsPromise = frontendDb.getObservations({
+                    $root.videoInterface.keySegmentsPromise = frontendDb.getTimestamps({
                         where:[
                             { valueOf: ['videoId'], is: currentVideoId },
                         ],
@@ -395,7 +395,7 @@ export default RootComponent = {
             },
             searchResults: {
                 videos: {},
-                uncheckedObservations: [0],
+                uncheckedTimestamps: [0],
                 observers: {},
                 labels: {},
                 counts: {
@@ -431,8 +431,8 @@ export default RootComponent = {
             this.$root.addLabel(...args)
             trigger(globalEvents.addedLabel, "root")
         })
-        everyTime(globalEvents.rootDeSelectObservationRequest).then((who)=>{
-            console.log(`${name} saw [rootDeSelectObservationRequest] from ${who}`)
+        everyTime(globalEvents.rootDeSelectTimestampRequest).then((who)=>{
+            console.log(`${name} saw [rootDeSelectTimestampRequest] from ${who}`)
             this.$root.selectedSegment = null
         })
     },
@@ -555,7 +555,7 @@ export default RootComponent = {
                 let prefix = ""
                 let email = ""
                 while (true) {
-                    email = prompt(`${prefix}What email do you want to attach to your observations?`)
+                    email = prompt(`${prefix}What email do you want to attach to your timestamps?`)
                     if (utils.isInvalidEmail(email)) {
                         prefix = "Sorry that doesn't seem to be a valid email\n"
                     } else {

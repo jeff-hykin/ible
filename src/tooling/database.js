@@ -1,6 +1,6 @@
 import { deferredPromise, asyncIteratorToList, getColor, dynamicSort } from "./pure_tools.js"
 import { get, set, remove } from "./basics.bundle.js"
-import * as observationTooling from "./observation_tooling.js"
+import * as timestampTooling from "./timestamp_tooling.js"
 import * as basics from "./basics.bundle.js"
 import { toKebabCase, toSnakeCase } from "../tooling/basics.bundle.js"
  
@@ -694,29 +694,29 @@ const managers = {
                 value.count = 0
                 value.videos = new Set()
             }
-            const observationKeysToSkip = addressesToIgnore.filter(
-                    each=>each instanceof Array && each[0] == "observations"
+            const timestampKeysToSkip = addressesToIgnore.filter(
+                    each=>each instanceof Array && each[0] == "timestamps"
                 ).map(
                     each=>each[1]
                 )
-            const addEntry = (observationEntry)=>{
-                if (observationEntry.label) {
-                    const labelName = observationEntry.label
+            const addEntry = (timestampEntry)=>{
+                if (timestampEntry.label) {
+                    const labelName = timestampEntry.label
                     labels[labelName] = labels[labelName]||{}
                     labels[labelName].color = labels[labelName].color || getColor(labelName)
                     labels[labelName].count = (labels[labelName].count||0)+1
                     labels[labelName].videos = labels[labelName].videos||new Set()
-                    labels[labelName].videos.add(observationEntry.videoId)
+                    labels[labelName].videos.add(timestampEntry.videoId)
                 }
             }
             for (const each of entriesToAssume) {
                 addEntry(each)
             }
-            for await (const [ key,observationEntry ] of indexDb.iter.observations) {
-                if (observationKeysToSkip.includes(key)) {
+            for await (const [ key,timestampEntry ] of indexDb.iter.timestamps) {
+                if (timestampKeysToSkip.includes(key)) {
                     continue
                 }
-                addEntry(observationEntry)
+                addEntry(timestampEntry)
             }
             // convert sets to arrays
             for (const [key, value] of Object.entries(labels)) {
@@ -724,24 +724,24 @@ const managers = {
             }
             return labels
         },
-        async whenEditObservations({oldObservationEntries, newObservationEntries, existingValues}) {
+        async whenEditTimestamps({oldTimestampEntries, newTimestampEntries, existingValues}) {
             // NOTE: this isn't very efficient.
-                // We would need to change the data structure of the video to include the ID's of the observations
-                // in order to maintain correctness and have ~O(1) operations for editing a observation.
+                // We would need to change the data structure of the video to include the ID's of the timestamps
+                // in order to maintain correctness and have ~O(1) operations for editing a timestamp.
                 // Large bulk edits should still use this method, but for small edits we it would be better to use a
                 // the incremental approach
             return managers.labels.regenerate(
                 existingValues,
                 {
-                    addressesToIgnore:oldObservationEntries.map(each=>["observations", each.observationId]),
-                    entriesToAssume: newObservationEntries,
+                    addressesToIgnore:oldTimestampEntries.map(each=>["timestamps", each.timestampId]),
+                    entriesToAssume: newTimestampEntries,
                 },
             )
         },
         renameLabels({oldLabelName, newLabelName, existingTables}) {
             existingTables.labels[newLabelName] = existingTables.labels[oldLabelName]
             delete existingTables.labels[oldLabelName]
-            for (const [key, value] of Object.entries(existingTables.observations)) {
+            for (const [key, value] of Object.entries(existingTables.timestamps)) {
                 if (value.label == oldLabelName) {
                     value.label = newLabelName
                 }
@@ -754,22 +754,22 @@ const managers = {
             const observers = {...existingObservers}
             // reset computed values
             for (const [key, value] of Object.entries(observers)) {
-                value.observationCount = 0
+                value.timestampCount = 0
                 value.labelCounts = {}
                 value.videos = new Set()
             }
-            const observationKeysToSkip = addressesToIgnore.filter(
-                    each=>each instanceof Array && each[0] == "observations"
+            const timestampKeysToSkip = addressesToIgnore.filter(
+                    each=>each instanceof Array && each[0] == "timestamps"
                 ).map(
                     each=>each[1]
                 )
-            const addEntry = (observationEntry)=>{
-                if (observationEntry.observer) {
-                    const videoId = observationEntry.videoId
-                    const label = observationEntry.label
-                    const observer = observationEntry.observer
+            const addEntry = (timestampEntry)=>{
+                if (timestampEntry.observer) {
+                    const videoId = timestampEntry.videoId
+                    const label = timestampEntry.label
+                    const observer = timestampEntry.observer
                     observers[observer] = observers[observer]||{}
-                    observers[observer].observationCount   = (observers[observer].observationCount||0)+1
+                    observers[observer].timestampCount   = (observers[observer].timestampCount||0)+1
                     observers[observer].labelCounts        = observers[observer].labelCounts||{}
                     observers[observer].labelCounts[label] = (observers[observer].labelCounts[label]||0)+1
                     observers[observer].videos             = observers[observer].videos||new Set()
@@ -779,11 +779,11 @@ const managers = {
             for (const each of entriesToAssume) {
                 addEntry(each)
             }
-            for await (const [ key,observationEntry ] of indexDb.iter.observations) {
-                if (observationKeysToSkip.includes(key)) {
+            for await (const [ key,timestampEntry ] of indexDb.iter.timestamps) {
+                if (timestampKeysToSkip.includes(key)) {
                     continue
                 }
-                addEntry(observationEntry)
+                addEntry(timestampEntry)
             }
             // convert sets to arrays
             for (const [key, value] of Object.entries(observers)) {
@@ -791,24 +791,24 @@ const managers = {
             }
             return observers
         },
-        async whenEditObservations({oldObservationEntries, newObservationEntries, existingValues}) {
+        async whenEditTimestamps({oldTimestampEntries, newTimestampEntries, existingValues}) {
             // NOTE: this isn't very efficient.
-                // We would need to change the data structure of the video to include the ID's of the observations
-                // in order to maintain correctness and have ~O(1) operations for editing a observation.
+                // We would need to change the data structure of the video to include the ID's of the timestamps
+                // in order to maintain correctness and have ~O(1) operations for editing a timestamp.
                 // Large bulk edits should still use this method, but for small edits we it would be better to use a
                 // the incremental approach
             return managers.labels.regenerate(
                 existingValues,
                 {
-                    addressesToIgnore:oldObservationEntries.map(each=>["observations", each.observationId]),
-                    entriesToAssume: newObservationEntries,
+                    addressesToIgnore:oldTimestampEntries.map(each=>["timestamps", each.timestampId]),
+                    entriesToAssume: newTimestampEntries,
                 },
             )
         },
         renameObserver({oldObserverName, newObserverName, existingTables}) {
             existingTables.observers[newObserverName] = existingTables.observers[oldObserverName]
             delete existingTables.observers[oldObserverName]
-            for (const [key, value] of Object.entries(existingTables.observations)) {
+            for (const [key, value] of Object.entries(existingTables.timestamps)) {
                 if (value.observer == oldObserverName) {
                     value.observer = newObserverName
                 }
@@ -821,46 +821,46 @@ const managers = {
     //         const videos = {...existingVideos}
     //         // reset computed values
     //         for (const [key, value] of Object.entries(videos)) {
-    //             value.observationCount = 0
-    //             value.observationsPerLabel = {}
+    //             value.timestampCount = 0
+    //             value.timestampsPerLabel = {}
     //         }
-    //         const observationKeysToSkip = addressesToIgnore.filter(
-    //                 each=>each instanceof Array && each[0] == "observations"
+    //         const timestampKeysToSkip = addressesToIgnore.filter(
+    //                 each=>each instanceof Array && each[0] == "timestamps"
     //             ).map(
     //                 each=>each[1]
     //             )
-    //         const addEntry = (observationEntry)=>{
-    //             if (observationEntry.videoId) {
-    //                 const videoId = observationEntry.videoId
-    //                 const label = observationEntry.label
+    //         const addEntry = (timestampEntry)=>{
+    //             if (timestampEntry.videoId) {
+    //                 const videoId = timestampEntry.videoId
+    //                 const label = timestampEntry.label
     //                 videos[videoId] = videos[videoId]||{}
     //                 videos[videoId].count = (videos[videoId].count||0)+1
-    //                 videos[videoId].observationsPerLabel = videos[videoId].observationsPerLabel||{}
-    //                 videos[videoId].observationsPerLabel[label] = (videos[videoId].observationsPerLabel[label]||0)+1
+    //                 videos[videoId].timestampsPerLabel = videos[videoId].timestampsPerLabel||{}
+    //                 videos[videoId].timestampsPerLabel[label] = (videos[videoId].timestampsPerLabel[label]||0)+1
     //             }
     //         }
     //         for (const each of entriesToAssume) {
     //             addEntry(each)
     //         }
-    //         for await (const [ key,observationEntry ] of indexDb.iter.observations) {
-    //             if (observationKeysToSkip.includes(key)) {
+    //         for await (const [ key,timestampEntry ] of indexDb.iter.timestamps) {
+    //             if (timestampKeysToSkip.includes(key)) {
     //                 continue
     //             }
-    //             addEntry(observationEntry)
+    //             addEntry(timestampEntry)
     //         }
     //         return videos
     //     },
-    //     async whenEditObservations({oldObservationEntries, newObservationEntries, existingValues}) {
+    //     async whenEditTimestamps({oldTimestampEntries, newTimestampEntries, existingValues}) {
     //         // NOTE: this isn't very efficient.
-    //             // We would need to change the data structure of the video to include the ID's of the observations
-    //             // in order to maintain correctness and have ~O(1) operations for editing a observation.
+    //             // We would need to change the data structure of the video to include the ID's of the timestamps
+    //             // in order to maintain correctness and have ~O(1) operations for editing a timestamp.
     //             // Large bulk edits should still use this method, but for small edits we it would be better to use a
     //             // the incremental approach
     //         return managers.labels.regenerate(
     //             existingValues,
     //             {
-    //                 addressesToIgnore:oldObservationEntries.map(each=>["observations", each.observationId]),
-    //                 entriesToAssume: newObservationEntries,
+    //                 addressesToIgnore:oldTimestampEntries.map(each=>["timestamps", each.timestampId]),
+    //                 entriesToAssume: newTimestampEntries,
     //             },
     //         )
     //     },
@@ -868,9 +868,9 @@ const managers = {
 }
 
 const frontendDb = {
-    async setObservations(observationEntries, {withCoersion=false}={}) {
-        // observationEntries[0] = {
-        //     "observationId": "1623456789.308420294042",
+    async setTimestamps(timestampEntries, {withCoersion=false}={}) {
+        // timestampEntries[0] = {
+        //     "timestampId": "1623456789.308420294042",
         //     "type": "segment",
         //     "videoId": "FLK5-00l0r4",
         //     "startTime": 125.659,
@@ -886,52 +886,52 @@ const frontendDb = {
         // synchonous changes before bulk set
         // 
         if (withCoersion) {
-            observationEntries = observationEntries.map(observationTooling.coerceObservation)
+            timestampEntries = timestampEntries.map(timestampTooling.coerceTimestamp)
         }
         // 
         // validate
         // 
-        const errorMessagesPerObservation = observationTooling.validateObservations(observationEntries)
-        if (errorMessagesPerObservation.some(each=>each.length>0)) {
-            throw new observationTooling.InvalidFormatError(errorMessagesPerObservation)
+        const errorMessagesPerTimestamp = timestampTooling.validateTimestamps(timestampEntries)
+        if (errorMessagesPerTimestamp.some(each=>each.length>0)) {
+            throw new timestampTooling.InvalidFormatError(errorMessagesPerTimestamp)
         }
     
-        const entryIds = observationEntries.map(({observationId})=>["observations", observationId])
+        const entryIds = timestampEntries.map(({timestampId})=>["timestamps", timestampId])
         
-        const newLabels    = managers.labels.regenerate(    {},{addressesToIgnore: entryIds, entriesToAssume: observationEntries,},)
-        const newObservers = managers.observers.regenerate( {},{addressesToIgnore: entryIds, entriesToAssume: observationEntries,},)
-        // const newVideos    = managers.videos.regenerate(    {},{addressesToIgnore: entryIds, entriesToAssume: observationEntries,},)
+        const newLabels    = managers.labels.regenerate(    {},{addressesToIgnore: entryIds, entriesToAssume: timestampEntries,},)
+        const newObservers = managers.observers.regenerate( {},{addressesToIgnore: entryIds, entriesToAssume: timestampEntries,},)
+        // const newVideos    = managers.videos.regenerate(    {},{addressesToIgnore: entryIds, entriesToAssume: timestampEntries,},)
     
         // 
         // bulk set
         // 
         return indexDb.puts([
-            ...observationEntries.map(each=>[
-                ["observations", each.observationId], each,
+            ...timestampEntries.map(each=>[
+                ["timestamps", each.timestampId], each,
             ]),
             ...Object.entries(newLabels   ).map(([key, value])=>[   ["labels",    key],   value,   ]),
             ...Object.entries(newObservers).map(([key, value])=>[   ["observers", key],   value,   ]),
             // ...Object.entries(newVideos   ).map(([key, value])=>[   ["videos",    key],   value,   ]),
         ])
     },
-    setObservation(observationEntry, {withCoersion=false}={}) {
-        return frontendDb.setObservations([observationEntry],{withCoersion})
+    setTimestamp(timestampEntry, {withCoersion=false}={}) {
+        return frontendDb.setTimestamps([timestampEntry],{withCoersion})
     },
     async tableNames() {
         return indexDb.getTableNames()
     },
     async getUsernames() {
         let usernames = []
-        for await (const [ key, each ] of indexDb.iter.observations) {
+        for await (const [ key, each ] of indexDb.iter.timestamps) {
             usernames.push(each.observer)
         }
         return [...new Set(usernames)]
     },
-    async getObservations({where=[], returnObject=false}) {
-        return indexDb.select({from:"observations", where, returnObject})
+    async getTimestamps({where=[], returnObject=false}) {
+        return indexDb.select({from:"timestamps", where, returnObject})
     },
-    async deleteObservation({uuidOfSelectedSegment}) {
-        return indexDb.deletes([["observations", uuidOfSelectedSegment]])
+    async deleteTimestamp({uuidOfSelectedSegment}) {
+        return indexDb.deletes([["timestamps", uuidOfSelectedSegment]])
     },
     async getVideoById(videoId) {
         return indexDb.get(["videos", videoId, ])
@@ -988,15 +988,15 @@ const frontendDb = {
             }
         }
     },
-    async executeObservationActions(actions) {
+    async executeTimestampActions(actions) {
         for (const [ action, keyList, value ] of actions) {
             if (action == "update") {
                 await indexDb.puts([[
-                    ["observations", ...keyList], value
+                    ["timestamps", ...keyList], value
                 ]])
             } else if (action == "delete") {
                 await indexDb.deletes([[
-                    ["observations", ...keyList]
+                    ["timestamps", ...keyList]
                 ]])
             }
         }
@@ -1020,7 +1020,7 @@ const frontendDb = {
 
             let results = {
                 finishedComputing: true,
-                uncheckedObservations: [],
+                uncheckedTimestamps: [],
                 rejected: [],
                 labels: {},
                 observers: {},
@@ -1045,7 +1045,7 @@ const frontendDb = {
             let min = `${filterAndSort.minlabelConfidence}`; min = min.length>0 && isFinite(min-0) ? min-0 : -Infinity
             let max = `${filterAndSort.maxlabelConfidence}`; max = max.length>0 && isFinite(max-0) ? max-0 : Infinity
             const items = await indexDb.select({
-                from:'observations',
+                from:'timestamps',
                 where:[
                     ...where,
                 ],
@@ -1060,15 +1060,15 @@ const frontendDb = {
                 // this section is actual logic
                 // 
                 
-                // count observations for observers
+                // count timestamps for observers
                 if (!results.observers[each.observer]) { results.observers[each.observer] = 0 }
                 results.observers[each.observer] += 1
                 
-                // count observations for labels
+                // count timestamps for labels
                 if (!results.labels[each.label]) { results.labels[each.label] = 0 }
                 results.labels[each.label] += 1
                 
-                // count observations for videos
+                // count timestamps for videos
                 if (!results.videos[each.videoId]) { results.videos[each.videoId] = 0  }
                 results.videos[each.videoId] += 1
                 
@@ -1087,7 +1087,7 @@ const frontendDb = {
                         results.counts.disagreement += 1
                     }
                     if (each.rejectedBySomeone !== true && each.confirmedBySomeone !== true) {
-                        results.uncheckedObservations.push(each)
+                        results.uncheckedTimestamps.push(each)
                     }
                 }
             }
@@ -1099,17 +1099,17 @@ const frontendDb = {
             // start summarizing the data
             let results = {}
             let videosWithLabels = new Set()
-            for await (const [ key, eachObservationEntry ] of indexDb.iter.observations) {
-                videosWithLabels.add(eachObservationEntry.videoId)
+            for await (const [ key, eachTimestampEntry ] of indexDb.iter.timestamps) {
+                videosWithLabels.add(eachTimestampEntry.videoId)
                 // init
-                if (!Object.hasOwn(results, eachObservationEntry.label)) {
-                    results[eachObservationEntry.label] = {}
-                    results[eachObservationEntry.label].videos = {[eachObservationEntry.videoId]: 1}
-                    results[eachObservationEntry.label].segmentCount = 1
+                if (!Object.hasOwn(results, eachTimestampEntry.label)) {
+                    results[eachTimestampEntry.label] = {}
+                    results[eachTimestampEntry.label].videos = {[eachTimestampEntry.videoId]: 1}
+                    results[eachTimestampEntry.label].segmentCount = 1
                 // update
                 } else {
-                    results[eachObservationEntry.label].videos[eachObservationEntry.videoId] += 1
-                    results[eachObservationEntry.label].segmentCount += 1
+                    results[eachTimestampEntry.label].videos[eachTimestampEntry.videoId] += 1
+                    results[eachTimestampEntry.label].segmentCount += 1
                 }
             }
             

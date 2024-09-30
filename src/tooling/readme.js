@@ -11,7 +11,7 @@ export default `3 Things to know:
         - If all cells that are not empty are considered "new" data
         - If the cell is empty then it preserves what is already in Ible
     - "overwrite" overwrites every single cell for that row/entry, even if the cell is empty
-- if two rows have the same observationId, they both get applied top-to-bottom
+- if two rows have the same timestampId, they both get applied top-to-bottom
 - Ex: if the bottom one is "delete", then it doesn't matter what the top one is
 
 3. Weird quotes / dashes

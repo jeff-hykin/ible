@@ -15,7 +15,7 @@
         
         VideoPicker
         
-        UploadObservations.upload-button(ref="uploadObservations")
+        UploadTimestamps.upload-button(ref="uploadTimestamps")
         
 </template>
 <script>
@@ -28,13 +28,13 @@ export default {
         CenterStage: require("../organisms/CenterStage").default,
         VideoPicker: require("../organisms/VideoPicker").default,
         LabelPicker: require("../organisms/LabelPicker").default,
-        UploadObservations: require("../molecules/UploadObservations").default,
+        UploadTimestamps: require("../molecules/UploadTimestamps").default,
         Card: require("../molecules/Card").default,
     },
     mounted() {
         if (this.$root.routeData$.initWithHelp) {
             attempt(async ()=>{
-                (await this.$child("uploadObservations", "helpModal")).open()
+                (await this.$child("uploadTimestamps", "helpModal")).open()
             })
         }
     },
@@ -63,7 +63,7 @@ export default {
     right: 2rem
 
 // fix a strange bug where the buttons in the 
-// ObservationEditor are show overtop of the help model 
+// TimestampEditor are show overtop of the help model 
 ::v-deep .ui-button__content
     z-index: unset
     

@@ -3,7 +3,7 @@
     column.segments(align-h="left")
         transition(name="fade")
             h5
-                | Observations
+                | Timestamps
         transition(name="fade")
             row.segment-container(align-h="space-between" position="relative" :height="`${segmentsInfo.maxLevel*2.2}rem`" :min-height="segmentsInfo.organizedSegments.length <= 0 ? '13rem' : 0")
                 column(
@@ -18,25 +18,25 @@
                     text-align="center"
                     padding="0.7rem"
                 )
-                    | No observations with given filters
+                    | No timestamps with given filters
                     span(style="display: block; height: 1rem;")
                     span(style="display: block; height: 1rem;")
                     span(style="margin-bottom: -1rem;")
-                        | (<u>press N</u> to create an observation at the current time)
+                        | (<u>press N</u> to create an timestamp at the current time)
                     span(style="display: block; height: 1rem;")
                     span(style="margin-bottom: -1rem;")
                         | (<u>press M</u> to set the endTime)
                     span(style="display: block; height: 1rem;")
                     span(style="margin-bottom: -1rem;")
-                        | (<u>press alt+S</u> to save the observation)
+                        | (<u>press alt+S</u> to save the timestamp)
                     span(style="display: block; height: 1rem;")
                     span(style="display: block; height: 1rem;")
                     span(style="display: block; height: 1rem;")
                     span(style="margin-bottom: -1rem;")
-                        | (<u>press C</u> to confirm an observation)
+                        | (<u>press C</u> to confirm an timestamp)
                     span(style="display: block; height: 1rem;")
                     span(style="margin-bottom: -1rem;")
-                        | (<u>press X</u> to reject an observation)
+                        | (<u>press X</u> to reject an timestamp)
                     span(style="display: block; height: 1rem;")
                 row.segment(
                     v-if="segmentsInfo.organizedSegments.length > 0"
@@ -47,10 +47,10 @@
                     :isHuman="eachSegment.isHuman"
                     :confirmedBySomeone="eachSegment.confirmedBySomeone"
                     :rejectedBySomeone="eachSegment.rejectedBySomeone"
-                    :selected="eachSegment.observationId == ($root.selectedSegment&&$root.selectedSegment.observationId)"
+                    :selected="eachSegment.timestampId == ($root.selectedSegment&&$root.selectedSegment.timestampId)"
                     :background-color="theColor(eachSegment)"
                     :border-color="theColor(eachSegment)"
-                    :key="eachSegment.observationId||eachSegment.observationId"
+                    :key="eachSegment.timestampId||eachSegment.timestampId"
                     :style="`--color: ${theColor(eachSegment)}`"
                     @click="jumpSegment(eachSegment.$displayIndex)"
                 )
@@ -67,7 +67,7 @@
                                 | human?: {{ eachSegment.isHuman }}
         row(position="relative" align-h="left" align-v="top" width="100%")
             h5
-                | Filter Observations by Label
+                | Filter Timestamps by Label
             ui-button.outline-button(@click="toggleAllLabels" style="position: absolute; right: 1.5rem; top: -0.3rem; --button-color: darkgray")
                 | Toggle All
         container.labels
@@ -91,8 +91,8 @@ const generalTimeoutFrequency = 50 // ms
 
 // triggers:
 // listens to:
-//     globalEvents.observationStorageUpdatedEntries
-//     globalEvents.observationStorageDeletedEntries
+//     globalEvents.timestampStorageUpdatedEntries
+//     globalEvents.timestampStorageDeletedEntries
 //     globalEvents.addedLabel
 
 let untracked = {
@@ -121,22 +121,22 @@ export default {
         this.$root.videoInterface.onceVideoIsLoaded(()=>{untracked.caller = "initalLoad"; this.updateSegments()})
         
         const name = "SegmentDisplay"
-        everyTime(globalEvents.observationStorageUpdatedEntries).then((who, updatedObservationEntries)=>{
-            console.log(`${name} saw [observationStorageUpdatedEntries] from ${who}`)
-            const updatedObservationEntriesIds = updatedObservationEntries.map(each=>each.observationId)
-            console.debug(`updatedObservationEntries is:`,updatedObservationEntries)
+        everyTime(globalEvents.timestampStorageUpdatedEntries).then((who, updatedTimestampEntries)=>{
+            console.log(`${name} saw [timestampStorageUpdatedEntries] from ${who}`)
+            const updatedTimestampEntriesIds = updatedTimestampEntries.map(each=>each.timestampId)
+            console.debug(`updatedTimestampEntries is:`,updatedTimestampEntries)
             // this should cause the segment display to update
             this.$root.videoInterface.keySegments = [
-                ...this.$root.videoInterface.keySegments.filter(each=>!updatedObservationEntriesIds.includes(each.observationId)),
-                ...updatedObservationEntries,
+                ...this.$root.videoInterface.keySegments.filter(each=>!updatedTimestampEntriesIds.includes(each.timestampId)),
+                ...updatedTimestampEntries,
             ]
             this.updateSegments()
         })
-        everyTime(globalEvents.observationStorageDeletedEntries).then((who, deletedObservationIds)=>{
-            console.log(`${name} saw [observationStorageDeletedEntries] from ${who}`)
+        everyTime(globalEvents.timestampStorageDeletedEntries).then((who, deletedTimestampIds)=>{
+            console.log(`${name} saw [timestampStorageDeletedEntries] from ${who}`)
             // this should cause the segment display to update
             this.$root.videoInterface.keySegments = [
-                ...this.$root.videoInterface.keySegments.filter(each=>!deletedObservationIds.includes(each.observationId)),
+                ...this.$root.videoInterface.keySegments.filter(each=>!deletedTimestampIds.includes(each.timestampId)),
             ]
             this.updateSegments()
         })

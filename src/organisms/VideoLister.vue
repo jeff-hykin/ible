@@ -25,7 +25,7 @@
 
 <script>
 import { frontendDb } from '../tooling/database.js'
-import { isLocalVideo,} from '../tooling/observation_tooling.js'
+import { isLocalVideo,} from '../tooling/timestamp_tooling.js'
 import { trigger, globalEvents } from '../tooling/events.js'
 import * as videoTools from "../tooling/video_tooling.js"
 

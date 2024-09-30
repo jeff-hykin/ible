@@ -162,7 +162,7 @@ export const currentFixedSizeOfYouTubeVideoId = 11
                 "durationInSeconds": each.durationInSeconds,
                 "comment": each.comment,
                 // "(latestVideoAction)": latestVideoAction,
-                "(numberOfObservations)": each.numberOfObservations,
+                "(numberOfTimestamps)": each.numberOfTimestamps,
                 "(numberOfWatchers)": usersWhoFinishedWatching.length,
                 "(numberOfLabelers)": usersWhoFinishedLabeling.length,
                 "(numberOfVerifiers)": usersWhoFinishedVerifying.length,
@@ -176,7 +176,7 @@ export const currentFixedSizeOfYouTubeVideoId = 11
             }
         }
         
-        return typedCsv.stringify(videoRows, { headers: ["uploadAction", "videoId", "path", "durationInSeconds", "comment", "(latestVideoAction)", "(numberOfObservations)", "(numberOfWatchers)", "(numberOfLabelers)", "(numberOfVerifiers)", "(usersWhoFinishedWatching)", "(usersWhoFinishedLabeling)", "(usersWhoFinishedVerifying)"] })
+        return typedCsv.stringify(videoRows, { headers: ["uploadAction", "videoId", "path", "durationInSeconds", "comment", "(latestVideoAction)", "(numberOfTimestamps)", "(numberOfWatchers)", "(numberOfLabelers)", "(numberOfVerifiers)", "(usersWhoFinishedWatching)", "(usersWhoFinishedLabeling)", "(usersWhoFinishedVerifying)"] })
     }
 
     export const videosCsvToActions = async (csvString) => {
