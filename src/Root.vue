@@ -194,8 +194,16 @@ export default RootComponent = {
                         const exampleId = createVideoId()
                         const existingVideoPath = $root.routeData$?.videoInfo?.path
                         const videoBaseName = existingVideoPath.split(/\\|\//g).slice(-1)[0]
-                        const frontPart = videoBaseName.split('.').slice(0,-1).join('.')
-                        message = message || `<br>Hey! This video ("${utils.escapeHtml(videoBaseName)}") is missing a video ID<br>I can't record observations without an ID<br>Just rename the file to "${utils.escapeHtml(frontPart)}.${exampleId}.mp4"<br>Where "${exampleId}" is the video ID<br>`
+                        const parts = videoBaseName.split('.').slice(0,-1)
+                        let frontPart
+                        let extension = "mp4"
+                        if (parts.length > 1) {
+                            const frontPart = parts.slice(0,-1).join('.')
+                            extension = parts.slice(-1)[0]
+                        } else {
+                            frontPart = parts.join('.')
+                        }
+                        message = message || `<br>Hey! This video ("${utils.escapeHtml(videoBaseName)}") is missing a video ID<br>I can't record observations without an ID<br>Just rename the file to "${utils.escapeHtml(frontPart)}.${exampleId}.${extension}"<br>Where "${exampleId}" is the video ID<br>`
                         vueTooling.showLongMessage(
                             message,
                             [
