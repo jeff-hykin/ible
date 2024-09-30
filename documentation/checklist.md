@@ -1,5 +1,4 @@
 Big Release Tasks:
-- Rename observation to timestamp
 - Record a video:
     - download the executable
     - run it
@@ -134,7 +133,7 @@ Say in paper:
 Fixes:
 - fix allowing for periods
 - fix the help section
-- remove `video/mp4`
+- DONE: remove `video/mp4`
 
 Small changes:
 - _
