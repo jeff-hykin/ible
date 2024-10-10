@@ -374,7 +374,7 @@ export default RootComponent = {
                             window.storageObject.videoPaths = videoPaths
                         }
                     } catch (error) {
-                        console.warn(`Error getting videoPaths: ${error}`)
+                        console.warn(`Asked local server for videoPaths, but got error: ${error}`)
                     }
                 },
             }
