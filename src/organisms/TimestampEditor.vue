@@ -301,6 +301,9 @@ export default {
             // not("some of them are invalid")
             return !Object.values(this.isValid).some(value=>!value)
         },
+        invalidFields() {
+            return Object.entries(this.isValid).filter(([key, value])=>!value).map(([key, value])=>key)
+        },
         isValid() {
             if (this.timestampData.endTime < this.timestampData.startTime) {
                 this.timestampData.endTime = this.timestampData.startTime
@@ -447,7 +450,7 @@ export default {
             this.editing = true
         },
         onCancelEdit() {
-            // save a copy encase they cancel
+            // restore copy
             this.timestampData = JSON.parse(JSON.stringify(this.dataCopy))
             this.editing = false
         },
@@ -457,7 +460,7 @@ export default {
             if (timestampTooling.labelIsValid(this.timestampData.label)      ) {    storageObject.recentLabel = this.timestampData.label    }
             
             if (!this.allValid) {
-                this.$toasted.show(`Some fields are invalid`).goAway(2500)
+                this.$toasted.show(`These fields are invalid: ${this.invalidFields}`).goAway(3500)
                 return
             }
             
