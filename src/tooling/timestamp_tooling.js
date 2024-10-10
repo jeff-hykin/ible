@@ -48,7 +48,7 @@ export const createDefaultTimestampEntry = (currentTime)=>({
     confirmedBy:        [],
     rejectedBy:         [],
     label:           window.storageObject.recentLabel || "example-label",
-    labelConfidence: 0.95,
+    labelConfidence: 1.0,
     comment:         "",
     spacialInfo:     {},
 })
