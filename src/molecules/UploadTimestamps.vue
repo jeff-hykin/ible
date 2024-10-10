@@ -34,9 +34,9 @@
             ui-modal.modal(fj20485gh93oi53g ref="helpModal" title="Example Upload" transition="scale-up")
                 | If you're unsure about what to upload, try downloading the data first.
                 br
-                | The download is a a zip file with bunch of .typed.csv files that you can edit in Excel
+                | The download is a zip of csv files, including instructions about their contents
                 br
-                | To upload new data, modify those .typed.csv, and then select all of them for upload.
+                | To upload new data, modify the csv file contents (keep the names the same), and then select all of them for upload.
                 
         //- error message
         //- portal(to="modal-popups")

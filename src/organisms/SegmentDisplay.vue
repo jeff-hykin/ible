@@ -36,7 +36,7 @@
                         | (<u>press C</u> to confirm an timestamp)
                     span(style="display: block; height: 1rem;")
                     span(style="margin-bottom: -1rem;")
-                        | (<u>press X</u> to reject an timestamp)
+                        | (<u>press X</u> to reject a timestamp)
                     span(style="display: block; height: 1rem;")
                 row.segment(
                     v-if="segmentsInfo.organizedSegments.length > 0"
