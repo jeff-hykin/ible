@@ -124,8 +124,6 @@ export default {
         everyTime(globalEvents.timestampStorageUpdatedEntries).then((who, updatedTimestampEntries)=>{
             console.log(`${name} saw [timestampStorageUpdatedEntries] from ${who}`)
             const updatedTimestampEntriesIds = updatedTimestampEntries.map(each=>each.timestampId)
-            console.debug(`updatedTimestampEntries is:`,updatedTimestampEntries)
-            console.debug(`$root.videoInterface.keyTimestamps is being set inside everyTime(globalEvents.timestampStorageUpdatedEntries)`)
             // this should cause the segment display to update
             this.$root.videoInterface.keyTimestamps = [
                 ...this.$root.videoInterface.keyTimestamps.filter(each=>!updatedTimestampEntriesIds.includes(each.timestampId)),
@@ -136,7 +134,6 @@ export default {
         everyTime(globalEvents.timestampStorageDeletedEntries).then((who, deletedTimestampIds)=>{
             console.log(`${name} saw [timestampStorageDeletedEntries] from ${who}`)
             // this should cause the segment display to update
-            console.debug(`$root.videoInterface.keyTimestamps is being set inside everyTime(globalEvents.timestampStorageDeletedEntries)`)
             this.$root.videoInterface.keyTimestamps = [
                 ...this.$root.videoInterface.keyTimestamps.filter(each=>!deletedTimestampIds.includes(each.timestampId)),
             ]
@@ -232,7 +229,7 @@ export default {
                 return
             }
             // without deep copy, mutation causes an infinite loop
-            const keyTimestampsCopy =  this.$root.videoInterface.keyTimestamps.map(each=>new Timestamp(each.toJSON())),
+            const keyTimestampsCopy = this.$root.videoInterface.keyTimestamps.map(each=>new Timestamp(each.toJSON()))
             this.duration = this.$root.videoInterface?.player?.duration
             this.processedKeyTimestamps = this.processNewTimestamps({
                 duration: this.$root.videoInterface?.player?.duration,
