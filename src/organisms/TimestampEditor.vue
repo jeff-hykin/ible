@@ -286,7 +286,7 @@ export default {
         }
     },
     mounted() {
-        window.Editor = this // debugging
+        window.TimestampEditor = this // debugging
         this.resetData()
         this.$root.videoInterface.wheneverVideoIsLoaded(this.wheneverVideoChanges)
     },
