@@ -867,6 +867,7 @@ const managers = {
     // },
 }
 
+import { Timestamp } from "./timestamp_tooling.js"
 const frontendDb = {
     async setTimestamps(timestampEntries, {withCoersion=false}={}) {
         // timestampEntries[0] = {
@@ -886,7 +887,7 @@ const frontendDb = {
         // synchonous changes before bulk set
         // 
         if (withCoersion) {
-            timestampEntries = timestampEntries.map(timestampTooling.coerceTimestamp)
+            timestampEntries = timestampEntries.map(each=>(new Timestamp(each)).coerce())
         }
         // 
         // validate
@@ -928,7 +929,18 @@ const frontendDb = {
         return [...new Set(usernames)]
     },
     async getTimestamps({where=[], returnObject=false}) {
-        return indexDb.select({from:"timestamps", where, returnObject})
+        const result = await indexDb.select({from:"timestamps", where, returnObject})
+        if (returnObject) {
+            for (const [key, value] of Object.entries(result)) {
+                result[key] = new Timestamp(value)
+            }
+        } else {
+            let i = 0
+            for (const each of result) {
+                result[i++] = new Timestamp(each)
+            }
+        }
+        return result
     },
     async deleteTimestamp({uuidOfSelectedSegment}) {
         return indexDb.deletes([["timestamps", uuidOfSelectedSegment]])
@@ -1124,8 +1136,8 @@ const frontendDb = {
             // 
             // hard coded colors (probably should remove these)
             // 
-            results["uncertain"] || (results["uncertain"]={})
-            results["uncertain"].color = "gray"
+            results["comment"] || (results["comment"]={})
+            results["comment"].color = "gray"
 
             // sort results by largest segmentCount
             results = Object.fromEntries(Object.entries(results).sort(dynamicSort([1, "segmentCount"], true)))

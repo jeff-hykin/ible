@@ -246,13 +246,13 @@
 
 <script>
 import Vue from "vue"
-import {coerceTimestamp,createDefaultTimestampEntry,quickLocalValidationCheck,coerceLabel,coerceObserver,observerIsValid,labelIsValid} from '../tooling/timestamp_tooling.js'
+import {quickLocalValidationCheck,coerceLabel,coerceObserver,observerIsValid,labelIsValid, Timestamp} from '../tooling/timestamp_tooling.js'
 import { frontendDb } from '../tooling/database.js'
 import { toKebabCase, toRepresentation } from '../tooling/basics.bundle.js'
 import { getColor, isValidName, storageObject } from "../tooling/pure_tools.js"
 import { trigger, globalEvents, everyTime } from '../tooling/events.js'
 
-const timestampTooling = {coerceTimestamp,createDefaultTimestampEntry,quickLocalValidationCheck,coerceLabel,coerceObserver,observerIsValid,labelIsValid}
+const timestampTooling = {quickLocalValidationCheck,coerceLabel,coerceObserver,observerIsValid,labelIsValid}
 
 // triggers:
 //    globalEvents.updateTimestampRequest
@@ -273,12 +273,16 @@ export default {
         UiAutocomplete: require("../atoms/UiAutocomplete").default,
     },
     data() {
-        const defaultTimestampData = timestampTooling.coerceTimestamp(
-            timestampTooling.createDefaultTimestampEntry()
-        )
         return {
             window,
-            timestampData: defaultTimestampData,
+            timestampData: new Timestamp(
+                {}, 
+                {
+                    currentTime: this.currentTime,
+                    observer: window.storageObject.observer,
+                    recentLabel: window.storageObject.recentLabel,
+                }
+            ).coerce(),
             dataCopy: null,
             editing: false,
             dontShow: true,
@@ -305,6 +309,7 @@ export default {
             return Object.entries(this.isValid).filter(([key, value])=>!value).map(([key, value])=>key)
         },
         isValid() {
+            // its bad to mutate inside of a computed property, but whatever
             if (this.timestampData.endTime < this.timestampData.startTime) {
                 this.timestampData.endTime = this.timestampData.startTime
             }
@@ -321,9 +326,7 @@ export default {
                 let selectedSegment = this.$root.selectedSegment
                 console.log(`selectedSegment is:`,selectedSegment)
                 if (selectedSegment instanceof Object) {
-                    this.timestampData = timestampTooling.coerceTimestamp(
-                        selectedSegment
-                    )
+                    this.timestampData = new Timestamp(selectedSegment).coerce()
                 }
             },
             selectedVideo() {
@@ -442,16 +445,16 @@ export default {
         },
         onEditTimestamp() {
             // save a copy encase they cancel
-            this.dataCopy = JSON.parse(JSON.stringify(this.timestampData))
-            // instantly convert to kebab case if somehow it isn't already
-            this.timestampData.label = toKebabCase(`${this.timestampData.label}`.toLowerCase())
+            this.dataCopy = this.timestampData.toJSON()
+            // this is redundant but whatever
+            this.timestampData.label = timestampTooling.coerceLabel(this.timestampData.label)
             this.timestampData.videoId = this.$root.videoInterface.videoId
             this.timestampData.observer = this.$root.email
             this.editing = true
         },
         onCancelEdit() {
             // restore copy
-            this.timestampData = JSON.parse(JSON.stringify(this.dataCopy))
+            this.timestampData = new Timestamp(this.dataCopy)
             this.editing = false
         },
         async onSaveEdit() {

@@ -17,7 +17,86 @@ export {
     videoIdIsValid,
 } from './video_tooling.js'
 
-export const createUuid = ()=>new Date().getTime() + `${Math.random()}`.slice(1)
+export class Timestamp {
+    constructor(arg={},{currentTime=0, observer="", recentLabel=""}={currentTime:0, observer:"",recentLabel:""}) {
+        this.timestampId         = createUuid()
+        this.videoId             = null
+        this.startTime           = (currentTime||0).toFixed(3)-0
+        this.endTime             = (currentTime||0).toFixed(3)-0
+        this.observer            = observer||""
+        this.isHuman             = true
+        this.confirmedBy         = []
+        this.rejectedBy          = []
+        this.label               = recentLabel || "example-label"
+        this.labelConfidence     = 1.0
+        this.comment             = ""
+        this.spacialInfo         = {}
+        for (const [key, value] of Object.entries(arg||{})) {
+            try {
+                this[key] = value
+            } catch (error) {
+                
+            }
+        }
+        this.confirmedBy = this.confirmedBy||[]
+        this.rejectedBy  = this.rejectedBy||[]
+    }
+    
+    /**
+     * guarentees timestampId will be correct and tries to help label, observer, startTime, endTime 
+     */
+    coerce() {
+        // 
+        // enforce unix timestamp (e.g. id)
+        // 
+        this.timestampId = coerceTimestampId(this.timestampId)
+        
+        // 
+        // enforce simplfied names
+        // 
+        this.label = coerceLabel(this.label)
+
+        // 
+        // enforce numeric start/endTimes 
+        // 
+        this.startTime -= 0
+        this.endTime   -= 0
+        this.labelConfidence -= 0
+
+        // help customInfo show up
+        this.customInfo = this.customInfo||{}
+        
+        return this
+    }
+
+    get type() { return this.startTime !== this.endTime ? "segment" : "marker" }
+    get confirmedBySomeone() { return this.confirmedBy.length>0 }
+    get rejectedBySomeone() { return this.rejectedBy.length>0 }
+    get duration() { return this.endTime - this.startTime }
+    
+    toJSON() {
+        return {
+            timestampId:            this.timestampId,
+            "(type)":               this.type,
+            videoId:                this.videoId,
+            startTime:              this.startTime,
+            endTime:                this.endTime,
+            observer:               this.observer,
+            isHuman:                this.isHuman,
+            "(confirmedBySomeone)": this.confirmedBySomeone,
+            "(rejectedBySomeone)":  this.rejectedBySomeone,
+            confirmedBy:            [...this.confirmedBy],
+            rejectedBy:             [...this.rejectedBy],
+            label:                  this.label,
+            labelConfidence:        this.labelConfidence,
+            comment:                this.comment,
+            spacialInfo:            JSON.parse(JSON.stringify(this.spacialInfo||{})),
+            customInfo:             JSON.parse(JSON.stringify(this.customInfo||{})),
+        }
+    }
+}
+
+export const createUuid = ()=>`v${new Date().getTime()}${Math.random()}`.slice(1)
 
 const namePattern = /^[a-z0-9-.]+$/
 function isValidName(value) {
@@ -35,23 +114,6 @@ export class InvalidFormatError extends Error {
         return yaml.stringify(this.messages)
     }
 }
-export const createDefaultTimestampEntry = (currentTime)=>({
-    timestampId: createUuid(),
-    type: "marker",
-    videoId:            null,
-    startTime:          (currentTime||0).toFixed(3)-0,
-    endTime:            (currentTime||0).toFixed(3)-0,
-    observer:           window.storageObject.observer||"",
-    isHuman:            true,
-    confirmedBySomeone: false,
-    rejectedBySomeone:  false,
-    confirmedBy:        [],
-    rejectedBy:         [],
-    label:           window.storageObject.recentLabel || "example-label",
-    labelConfidence: 1.0,
-    comment:         "",
-    spacialInfo:     {},
-})
 
 // 
 // indvidual coercsion
@@ -131,52 +193,7 @@ export const createDefaultTimestampEntry = (currentTime)=>({
             videoId: videoIdIsValid(timestampData.videoId),
         }
     }
-    /**
-     * guarentees timestampId will be correct and tries to help label, observer, startTime, endTime 
-     */
-    export function coerceTimestamp(timestampEntry) {
-        // doing this prevents/removes extraneous properties
-        timestampEntry = {
-            timestampId:      timestampEntry?.timestampId,
-            type:               timestampEntry?.startTime != timestampEntry?.endTime ? "segment" : "marker",
-            videoId:            timestampEntry?.videoId,
-            startTime:          timestampEntry?.startTime,
-            endTime:            timestampEntry?.endTime,
-            observer:           timestampEntry?.observer,
-            isHuman:            timestampEntry?.isHuman,
-            confirmedBySomeone: timestampEntry?.confirmedBySomeone,
-            rejectedBySomeone:  timestampEntry?.rejectedBySomeone,
-            confirmedBy:        timestampEntry?.confirmedBy||[],
-            rejectedBy:         timestampEntry?.rejectedBy||[],
-            label:              timestampEntry?.label,
-            labelConfidence:    timestampEntry?.labelConfidence,
-            comment:            timestampEntry?.comment,
-            spacialInfo:        timestampEntry?.spacialInfo,
-            customInfo:         timestampEntry?.customInfo,
-        }
-        
-        // 
-        // enforce unix timestamp (e.g. id)
-        // 
-        timestampEntry.timestampId = coerceTimestampId(timestampEntry.timestampId)
-        
-        // 
-        // enforce simplfied names
-        // 
-        timestampEntry.label = coerceLabel(timestampEntry.label)
-
-        // 
-        // enforce numeric start/endTimes 
-        // 
-        timestampEntry.startTime -= 0
-        timestampEntry.endTime   -= 0
-        timestampEntry.labelConfidence -= 0
-
-        // help customInfo show up
-        timestampEntry.customInfo = timestampEntry.customInfo||{}
-        
-        return timestampEntry
-    }
+    
     export function validateTimestamps(timestamps) {
         const errorMessagesPerTimestamp = []
         for (const timestampEntry of timestamps) {
@@ -266,58 +283,16 @@ export const createDefaultTimestampEntry = (currentTime)=>({
 // 
 // CSV
 // 
-    const timestampDownlaodHeaders = [
-        "uploadAction",
-        "timestampId",
-        "(type)",
-        "videoId",
-        "startTime",
-        "endTime",
-        "observer",
-        "isHuman",
-        "(confirmedBySomeone)",
-        "(rejectedBySomeone)",
-        "confirmedBy",
-        "rejectedBy",
-        "label",
-        "labelConfidence",
-        "comment",
-        "spacialInfo",
-    ]
     export function timestampsToCsv(entries) {
         const timestamps = []
         for (const each of entries) {
-            // TODO: do coersion of correctness on download
-            let confirmedBy = (each?.confirmedBy||[])
-            if (!confirmedBy||(confirmedBy instanceof Array&&confirmedBy.length==0)) {
-                confirmedBy = null
-            }
-            let rejectedBy = (each?.rejectedBy||[])
-            if (!rejectedBy||(rejectedBy instanceof Array&&rejectedBy.length==0)) {
-                rejectedBy = null
-            }
-            timestamps.push({
-                "uploadAction": "update",
-                "timestampId": each.timestampId,
-                "(type)": each.startTime != each.endTime ? "segment" : "marker",
-                "videoId": each.videoId,
-                "startTime": each.startTime,
-                "endTime": each.endTime,
-                "observer": each.observer,
-                "isHuman": each.isHuman,
-                "(confirmedBySomeone)": each.confirmedBy instanceof Array && each.confirmedBy.length > 0,
-                "(rejectedBySomeone)": each.rejectedBy instanceof Array && each.rejectedBy.length > 0,
-                confirmedBy,
-                rejectedBy,
-                "label": each.label,
-                "labelConfidence": each.labelConfidence,
-                "comment": each.comment||null,
-                "spacialInfo": Object.keys(each?.spacialInfo||{}).length > 0 ? each.spacialInfo : null,
-            })
-            // flatten out video
-            for (const [key, value] of Object.entries(each.video||{})) {
-                timestamps.slice(-1)[0][`(video.${key})`] = value
-            }
+            const outputTimestamp = (new Timestamp(each)).toJSON()
+            timestamps.push(outputTimestamp)
+            // NOTE: there is no video key
+            // // flatten out video
+            // for (const [key, value] of Object.entries(each.video||{})) {
+            //     timestamps.slice(-1)[0][`(video.${key})`] = value
+            // }
             // flatten out customInfo
             for (const [key, value] of Object.entries(each.customInfo||{})) {
                 timestamps.slice(-1)[0][`customInfo.${key}`] = value
@@ -326,7 +301,8 @@ export const createDefaultTimestampEntry = (currentTime)=>({
         const output = typedCsv.stringify(timestamps)
         return output
     }
-
+    
+    const autoProcessKeys = Object.keys(new Timestamp()).filter(key=>key!="customInfo")
     export const timestampsCsvToActions = async (csvString) => {
         const { headers, rows: timestampEntries } = typedCsv.parse(csvString)
         const timestampActions = []
@@ -350,18 +326,7 @@ export const createDefaultTimestampEntry = (currentTime)=>({
                 }
             }
             
-            const detectedKeys = [
-                "videoId",
-                "startTime",
-                "endTime",
-                "observer",
-                "isHuman",
-                "label",
-                "labelConfidence",
-                "comment",
-                "spacialInfo",
-            ]
-            for (const detectedKey of detectedKeys) {
+            for (const detectedKey of autoProcessKeys) {
                 if (uploadAction=="update") {
                     if (eachEntry[detectedKey] != null) {
                         timestampObject[detectedKey] = eachEntry[detectedKey]
@@ -370,8 +335,6 @@ export const createDefaultTimestampEntry = (currentTime)=>({
                     timestampObject[detectedKey] = eachEntry[detectedKey]
                 }
             }
-            eachEntry.confirmedBy = `${eachEntry.confirmedBy}`.split(",")
-            eachEntry.rejectedBy  = `${eachEntry.rejectedBy}`.split(",")
             
             timestampActions.push([ uploadAction, [timestampId], timestampObject ])
         }

@@ -173,6 +173,7 @@ export default {
     },
     windowListeners: {
         keydown(eventObject) {
+            // this mess of an if statement is to prevent triggering these while typing in a text box (or a makeshift text box thats not actually an <input>)
             if (["DIV", "BUTTON", "BODY"].includes(eventObject.target.tagName) || (eventObject?.path||[]).includes(this.$el) || `${eventObject.target.id}`.startsWith("plyr-")) {
                 // 
                 // key controls
@@ -267,7 +268,11 @@ export default {
                     leftPercent: `${(effectiveStart/duration)*100}%`,
                 }
                 return eachSegment
-            }).sort(dynamicSort(["$renderData","effectiveStart"])).map((each, index)=>((each.$displayIndex = index),each))
+            }).sort(
+                dynamicSort(["$renderData","effectiveStart"])
+            ).map(
+                (each, index)=>((each.$displayIndex = index),each)
+            )
             
             return keySegments
         },
