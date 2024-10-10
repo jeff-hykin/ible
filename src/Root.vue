@@ -257,7 +257,9 @@ export default RootComponent = {
                         console.log(`[Root] loaded null video`)
                     // if there's no duration then wait for it to load
                     } else if (!$root.videoInterface?.player?.duration) {
-                        console.log(`[Root] WARNING: tellRootTheVideoHasLoaded was called too early. It should only be called once the video player has a duration`)
+                        if ($root.videoInterface?.player) {
+                            console.log(`[Root] WARNING: tellRootTheVideoHasLoaded was called too early. It should only be called once the video player has a duration`)
+                        }
                         return new Promise((resolve, reject)=>{
                             setTimeout(()=>{
                                 console.log(`waiting for duration to load`)
