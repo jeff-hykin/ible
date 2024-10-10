@@ -384,6 +384,7 @@ export default {
             if (!this.isOwner) {
                 const shouldUnConfirm = this.hasConfirmed()
                 if (shouldUnConfirm) {
+                    this.timestampData.rejectedBy = this.timestampData.rejectedBy.filter(each=>each!=this.$root.email)
                     this.timestampData.confirmedBy = this.timestampData.confirmedBy.filter(each=>each!=this.$root.email)
                 } else {
                     this.timestampData.confirmedBy.push(this.$root.email)
@@ -397,6 +398,7 @@ export default {
             if (!this.isOwner) {
                 const shouldUnReject = this.hasRejected()
                 if (shouldUnReject) {
+                    this.timestampData.confirmedBy = this.timestampData.rejectedBy.filter(each=>each!=this.$root.email)
                     this.timestampData.rejectedBy = this.timestampData.rejectedBy.filter(each=>each!=this.$root.email)
                 } else {
                     this.timestampData.rejectedBy.push(this.$root.email)
