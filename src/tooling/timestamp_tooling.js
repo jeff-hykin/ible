@@ -25,8 +25,8 @@ export class Timestamp {
         this.endTime             = (currentTime||0).toFixed(3)-0
         this.observer            = observer||""
         this.isHuman             = true
-        this.confirmedBy         = []
-        this.rejectedBy          = []
+        this.confirmedBy         = {}
+        this.rejectedBy          = {}
         this.label               = recentLabel || "example-label"
         this.labelConfidence     = 1.0
         this.comment             = ""
@@ -38,8 +38,8 @@ export class Timestamp {
                 
             }
         }
-        this.confirmedBy = this.confirmedBy||[]
-        this.rejectedBy  = this.rejectedBy||[]
+        this.confirmedBy = this.confirmedBy||{}
+        this.rejectedBy  = this.rejectedBy||{}
     }
     
     /**
@@ -70,8 +70,8 @@ export class Timestamp {
     }
 
     get type() { return this.startTime !== this.endTime ? "segment" : "marker" }
-    get confirmedBySomeone() { return this.confirmedBy.length>0 }
-    get rejectedBySomeone() { return this.rejectedBy.length>0 }
+    get confirmedBySomeone() { return Object.entries(this.confirmedBy).filter(([observer,value])=>value).length>0 }
+    get rejectedBySomeone() { return Object.entries(this.rejectedBy).filter(([observer,value])=>value).length>0 }
     get duration() { return this.endTime - this.startTime }
     
     toJSON() {
@@ -85,8 +85,8 @@ export class Timestamp {
             isHuman:                this.isHuman,
             "(confirmedBySomeone)": this.confirmedBySomeone,
             "(rejectedBySomeone)":  this.rejectedBySomeone,
-            confirmedBy:            [...this.confirmedBy],
-            rejectedBy:             [...this.rejectedBy],
+            confirmedBy:            {...this.confirmedBy},
+            rejectedBy:             {...this.rejectedBy},
             label:                  this.label,
             labelConfidence:        this.labelConfidence,
             comment:                this.comment,
@@ -269,11 +269,11 @@ export class InvalidFormatError extends Error {
                 if (timestampEntry.rejectedBySomeone != null && timestampEntry.rejectedBySomeone !== true && timestampEntry.rejectedBySomeone !== false) {
                     errorMessages.push(`timestampEntry.rejectedBySomeone: ${toRepresentation(timestampEntry.rejectedBySomeone)}\nAn timestampEntry needs to be a boolean or null`)
                 }
-                if (timestampEntry.confirmedBy != null && !(timestampEntry.confirmedBy instanceof Array)) {
-                    errorMessages.push(`timestampEntry.confirmedBy: ${toRepresentation(timestampEntry.confirmedBy)}\nAn timestampEntry "confirmedBy" property needs to be an array of strings`)
+                if (timestampEntry.confirmedBy != null && !(timestampEntry.confirmedBy instanceof Object)) {
+                    errorMessages.push(`timestampEntry.confirmedBy: ${toRepresentation(timestampEntry.confirmedBy)}\nAn timestampEntry "confirmedBy" property needs to be an object`)
                 }
-                if (timestampEntry.rejectedBy != null && !(timestampEntry.rejectedBy instanceof Array)) {
-                    errorMessages.push(`timestampEntry.rejectedBy: ${toRepresentation(timestampEntry.rejectedBy)}\nAn timestampEntry "rejectedBy" property needs to be an array of strings`)
+                if (timestampEntry.rejectedBy != null && !(timestampEntry.rejectedBy instanceof Object)) {
+                    errorMessages.push(`timestampEntry.rejectedBy: ${toRepresentation(timestampEntry.rejectedBy)}\nAn timestampEntry "rejectedBy" property needs to be an object`)
                 }
             }
             errorMessagesPerTimestamp.push(errorMessages)

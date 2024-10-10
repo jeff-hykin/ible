@@ -45,8 +45,8 @@
                     :width="eachTimestamp.$renderData.widthPercent"
                     :top="eachTimestamp.$renderData.topAmount"
                     :createdByCurrentObserver="eachTimestamp.observer == $root.email"
-                    :confirmedByUs="eachTimestamp.confirmedBy.includes($root.email)"
-                    :rejectedByUs="eachTimestamp.rejectedBy.includes($root.email)"
+                    :confirmedByUs="eachTimestamp.confirmedBy[$root.email]"
+                    :rejectedByUs="eachTimestamp.rejectedBy[$root.email]"
                     :selected="eachTimestamp.timestampId == ($root.selectedTimestamp&&$root.selectedTimestamp.timestampId)"
                     :background-color="theColor(eachTimestamp)"
                     :border-color="theColor(eachTimestamp)"
@@ -54,7 +54,7 @@
                     :style="`--color: ${theColor(eachTimestamp)}`"
                     @click="jumpToTimestampByIndex(eachTimestamp.$displayIndex)"
                 )
-                    | {{computeSymbol(eachTimestamp.confirmedBy.includes($root.email), eachTimestamp.rejectedBy.includes($root.email))}}
+                    | {{computeSymbol(eachTimestamp.confirmedBy[$root.email], eachTimestamp.rejectedBy[$root.email])}}
                     ui-tooltip(position="left" animation="fade")
                         column(align-h="left")
                             span

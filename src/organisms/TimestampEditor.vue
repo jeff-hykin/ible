@@ -375,36 +375,36 @@ export default {
             }
         },
         hasConfirmed() {
-            return (this.timestampData.confirmedBy||[]).includes(this.$root.email)
+            return (this.timestampData.confirmedBy||{})[this.$root.email]
         },
         hasRejected() {
-            return (this.timestampData.rejectedBy||[]).includes(this.$root.email)
+            return (this.timestampData.rejectedBy||{})[this.$root.email]
         },
-        toggleConfirm() {
+        async toggleConfirm() {
             if (!this.isOwner) {
                 const shouldUnConfirm = this.hasConfirmed()
                 if (shouldUnConfirm) {
-                    this.timestampData.rejectedBy = this.timestampData.rejectedBy.filter(each=>each!=this.$root.email)
-                    this.timestampData.confirmedBy = this.timestampData.confirmedBy.filter(each=>each!=this.$root.email)
+                    this.timestampData.rejectedBy[this.$root.email] = false
+                    this.timestampData.confirmedBy[this.$root.email] = false
                 } else {
-                    this.timestampData.confirmedBy.push(this.$root.email)
-                    this.timestampData.rejectedBy = this.timestampData.rejectedBy.filter(each=>each!=this.$root.email)
+                    this.timestampData.rejectedBy[this.$root.email] = false
+                    this.timestampData.confirmedBy[this.$root.email] = true
                 }
-                trigger(globalEvents.updateTimestampRequest, "TimestampEditor", this.timestampData)
+                const { success, errorMessage } = (await trigger(globalEvents.updateTimestampRequest, "TimestampEditor", this.timestampData))[0]
                 this.$forceUpdate()
             }
         },
-        toggleReject() {
+        async toggleReject() {
             if (!this.isOwner) {
                 const shouldUnReject = this.hasRejected()
                 if (shouldUnReject) {
-                    this.timestampData.confirmedBy = this.timestampData.rejectedBy.filter(each=>each!=this.$root.email)
-                    this.timestampData.rejectedBy = this.timestampData.rejectedBy.filter(each=>each!=this.$root.email)
+                    this.timestampData.rejectedBy[this.$root.email] = false
+                    this.timestampData.confirmedBy[this.$root.email] = false
                 } else {
-                    this.timestampData.rejectedBy.push(this.$root.email)
-                    this.timestampData.confirmedBy = this.timestampData.confirmedBy.filter(each=>each!=this.$root.email)
+                    this.timestampData.rejectedBy[this.$root.email] = true
+                    this.timestampData.confirmedBy[this.$root.email] = false
                 }
-                trigger(globalEvents.updateTimestampRequest, "TimestampEditor", this.timestampData)
+                const { success, errorMessage } = (await trigger(globalEvents.updateTimestampRequest, "TimestampEditor", this.timestampData))[0]
                 this.$forceUpdate()
             }
         },
