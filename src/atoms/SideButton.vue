@@ -1,8 +1,8 @@
 <template lang="pug">
     div.side-button(v-on="this.$listeners" :class="{left: $attrs.left, right: $attrs.right}")
         ui-tooltip(position="top" animation="fade")
-            | {{ $attrs.left  && "go to previous timestamp" }}
-            | {{ $attrs.right  && "go to next timestamp" }}
+            | {{ $attrs.left  && "go to previous timestamp (ctrl+left arrow)" }}
+            | {{ $attrs.right  && "go to next timestamp (ctrl+right arrow)" }}
         span
             | {{ $attrs.left  && "←" }}
             | {{ $attrs.right && "→" }}
