@@ -84,6 +84,7 @@ import { wrapIndex, checkIf, deferredPromise, dynamicSort } from "../tooling/pur
 import { frontendDb } from '../tooling/database.js'
 import { Event, trigger, everyTime, once, globalEvents } from "../tooling/events.js"
 import * as basics from "../tooling/basics.bundle.js"
+import { Timestamp } from "../tooling/timestamp_tooling.js"
 const { get, set } = basics
 
 const generalTimeoutFrequency = 50 // ms
@@ -124,20 +125,22 @@ export default {
             console.log(`${name} saw [timestampStorageUpdatedEntries] from ${who}`)
             const updatedTimestampEntriesIds = updatedTimestampEntries.map(each=>each.timestampId)
             console.debug(`updatedTimestampEntries is:`,updatedTimestampEntries)
+            console.debug(`$root.videoInterface.keyTimestamps is being set inside everyTime(globalEvents.timestampStorageUpdatedEntries)`)
             // this should cause the segment display to update
             this.$root.videoInterface.keyTimestamps = [
                 ...this.$root.videoInterface.keyTimestamps.filter(each=>!updatedTimestampEntriesIds.includes(each.timestampId)),
                 ...updatedTimestampEntries,
             ]
-            this.updateTimeline()
+            // this.updateTimeline()
         })
         everyTime(globalEvents.timestampStorageDeletedEntries).then((who, deletedTimestampIds)=>{
             console.log(`${name} saw [timestampStorageDeletedEntries] from ${who}`)
             // this should cause the segment display to update
+            console.debug(`$root.videoInterface.keyTimestamps is being set inside everyTime(globalEvents.timestampStorageDeletedEntries)`)
             this.$root.videoInterface.keyTimestamps = [
                 ...this.$root.videoInterface.keyTimestamps.filter(each=>!deletedTimestampIds.includes(each.timestampId)),
             ]
-            this.updateTimeline()
+            // this.updateTimeline()
         })
         everyTime(globalEvents.addedLabel).then((who)=>{
             console.log(`${name} saw [addedLabel] from ${who}`)
@@ -166,7 +169,14 @@ export default {
                 }
             },
             "videoInterface.keyTimestamps": function() {
-                this.$root.videoInterface.onceVideoIsLoaded(()=>{untracked.caller = "videoInterface.keyTimestamps"; this.updateTimeline()})
+                if (this.$root.videoInterface?.player?.duration) {
+                    this.updateTimeline()
+                } else {
+                    this.$root.videoInterface.onceVideoIsLoaded(()=>{
+                        untracked.caller = "videoInterface.keyTimestamps"
+                        this.updateTimeline()
+                    })
+                }
             },
         }
     },
@@ -221,9 +231,12 @@ export default {
                 console.debug(`[TimelineDisplay] updateTimeline caller is:`,untracked.caller)
                 return
             }
+            // without deep copy, mutation causes an infinite loop
+            const keyTimestampsCopy =  this.$root.videoInterface.keyTimestamps.map(each=>new Timestamp(each.toJSON())),
+            this.duration = this.$root.videoInterface?.player?.duration
             this.processedKeyTimestamps = this.processNewTimestamps({
                 duration: this.$root.videoInterface?.player?.duration,
-                keyTimestamps: this.$root.videoInterface.keyTimestamps,
+                keyTimestamps: keyTimestampsCopy,
             })
             this.timestampsInfo = this.organizeVisualTimestamps({
                 namesOfSelectedLabels: this.$root.getNamesOfSelectedLabels(),
