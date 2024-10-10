@@ -44,9 +44,9 @@
                     :left="eachTimestamp.$renderData.leftPercent"
                     :width="eachTimestamp.$renderData.widthPercent"
                     :top="eachTimestamp.$renderData.topAmount"
-                    :isHuman="eachTimestamp.isHuman"
-                    :confirmedBySomeone="eachTimestamp.confirmedBySomeone"
-                    :rejectedBySomeone="eachTimestamp.rejectedBySomeone"
+                    :createdByCurrentObserver="eachTimestamp.observer == $root.email"
+                    :confirmedByUs="eachTimestamp.confirmedBy.includes($root.email)"
+                    :rejectedByUs="eachTimestamp.rejectedBy.includes($root.email)"
                     :selected="eachTimestamp.timestampId == ($root.selectedTimestamp&&$root.selectedTimestamp.timestampId)"
                     :background-color="theColor(eachTimestamp)"
                     :border-color="theColor(eachTimestamp)"
@@ -54,7 +54,7 @@
                     :style="`--color: ${theColor(eachTimestamp)}`"
                     @click="jumpToTimestampByIndex(eachTimestamp.$displayIndex)"
                 )
-                    | {{computeSymbol(eachTimestamp.confirmedBySomeone, eachTimestamp.rejectedBySomeone)}}
+                    | {{computeSymbol(eachTimestamp.confirmedBy.includes($root.email), eachTimestamp.rejectedBy.includes($root.email))}}
                     ui-tooltip(position="left" animation="fade")
                         column(align-h="left")
                             span
@@ -636,7 +636,7 @@ export default {
             &[selected]
                 animation-name: pulse-fade
                 
-            &:not([isHuman])
+            &:not([createdByCurrentObserver])
                 background-color: transparent
                 --border-width: 8px // this is used later 
                 border-width: var(--border-width)
@@ -645,7 +645,7 @@ export default {
                 overflow: hidden
                 background-color: transparent !important
             
-                &:not([rejectedBySomeone]):not([confirmedBySomeone]):not([selected])
+                &:not([rejectedByUs]):not([confirmedByUs]):not([selected])
                     border-width: 0
                     --border-gap: 10px
                     --border-width: 2px
