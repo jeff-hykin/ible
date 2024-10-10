@@ -612,7 +612,7 @@ export default RootComponent = {
             const noneAreSelected = Object.values(this.$root.labels).every(each=>!each.selected)
             if (!this.$root.labels[labelName]) {
                 // if the label doesnt exist
-                this.$toasted.show(`Note: Thats a new label name`).goAway(3500)
+                this.$toasted.show(`Note: Thats a new label name`).goAway(7500)
                 // then add it
                 this.$root.labels[labelName] = {
                     color: getColor(labelName),
