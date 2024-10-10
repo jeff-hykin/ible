@@ -95,7 +95,7 @@
                         @click="handleClickToEdit"
                     )
                         row.start-time-wrapper
-                            ui-textbox(
+                            UiTextbox(
                                 tabindex="1"
                                 :disabled="!editing"
                                 label="Start Time (seconds)"
@@ -116,7 +116,7 @@
                                 ui-icon
                                     | skip_next
                         row.end-time-wrapper
-                            ui-textbox(
+                            UiTextbox(
                                 tabindex="2"
                                 :disabled="!editing"
                                 ref="endTimeElement"
@@ -160,7 +160,7 @@
                         div(tabindex="-1")
                             ui-tooltip(v-if="editing" position="left" animation="fade" :trigger="$refs.labelConfidenceElement")
                                 | a value between -1 and 1
-                            ui-textbox(
+                            UiTextbox(
                                 tabindex="4"
                                 ref="labelConfidenceElement"
                                 :disabled="!editing"
@@ -168,6 +168,8 @@
                                 label="Label Confidence"
                                 :invalid="!isValid.labelConfidence"
                                 v-model="timestampData.labelConfidence"
+                                step="0.01"
+                                type="number"
                             )
                         div(tabindex="-1")
                             UiTextbox(
