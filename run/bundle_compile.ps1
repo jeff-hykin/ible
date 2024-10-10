@@ -136,7 +136,7 @@ for (const eachTarget of targets) {
     const targetPath = `${binariesFolder}/${eachTarget}`
     FileSystem.sync.remove(targetPath)
     console.log(`    compiling to ${FileSystem.makeRelativePath({from: projectFolder, to: targetPath})}`)
-    const output = await run`deno compile --no-npm -A --unstable --target ${eachTarget} --output ${targetPath} ${mainJsEvalWrapperPath} ${Out(returnAsString)}`
+    const output = await run`deno compile --no-npm -A --target ${eachTarget} --output ${targetPath} ${mainJsEvalWrapperPath} ${Out(returnAsString)}`
     console.log(indent({ string: output, by: "        " }))
 }
 console.log(`    done!`)

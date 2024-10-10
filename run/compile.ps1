@@ -72,16 +72,16 @@ for (const eachTarget of targets) {
     console.log(`    compiling to ${binariesFolder}/${eachTarget}`)
     const namedOutputPath = `${binariesFolder}/ible-${eachTarget}`
     // clear the way
-    if (eachTarget.includes("-windows-")) {
+    if (eachTarget.includes("windows")) {
         await FileSystem.remove(outputPath+".exe")
     } else {
         await FileSystem.remove(outputPath)
     }
     await FileSystem.remove(`${namedOutputPath}.zip`)
-    const output = await run`deno compile --no-npm -A --unstable --target ${eachTarget} --output ${outputPath} ${tempMainJsPath} ${Out(returnAsString)}`
+    const output = await run`deno compile --no-npm -A --target ${eachTarget} --output ${outputPath} ${tempMainJsPath} ${Out(returnAsString)}`
     // create zip
-    if (eachTarget.includes("-windows-")) {
-        await run`zip ${`${FileSystem.basename(namedOutputPath)}.zip`} ${FileSystem.basename(outputPath)}.exe ${Cwd(FileSystem.parentPath(outputPath))}`
+    if (eachTarget.includes("windows")) {
+        await run`zip ${`${FileSystem.basename(namedOutputPath)}.zip`} ${`${FileSystem.basename(outputPath)}.exe`} ${Cwd(FileSystem.parentPath(outputPath))}`
     } else {
         await run`zip ${`${FileSystem.basename(namedOutputPath)}.zip`} ${FileSystem.basename(outputPath)} ${Cwd(FileSystem.parentPath(outputPath))}`
     }
