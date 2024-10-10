@@ -35,7 +35,7 @@
                                 //- BACK
                                 SideButton.left-side-button(left @click='wrapperForSelectPreviousSegment')
                                 //- segments
-                                SegmentDisplay(ref="segmentDisplay" :currentTime="currentTime")
+                                TimelineDisplay(ref="timelineDisplay" :currentTime="currentTime")
                                 //- NEXT
                                 SideButton.right-side-button(right @click='wrapperForSelectNextSegment')
                             row(width="100%" padding="2rem" align-v="top")
@@ -52,7 +52,7 @@
                                             | Verified Labels
                 column.side-container(v-if="$root.videoInterface.videoId" align-v="top" overflow="visible" min-height="50rem" width="fit-content")
                     TimestampEditor(
-                        :jumpSegment="wrapperForJumpSegment"
+                        :jumpToTimestampByIndex="wrapperForjumpToTimestampByIndex"
                         :currentTime="currentTime"
                     )
                     InfoSection.info-section(
@@ -79,7 +79,7 @@ export default {
         VideoPlayer: require("../atoms/VideoPlayer").default,
         InfoSection: require("../molecules/InfoSection").default,
         TimestampEditor: require("../organisms/TimestampEditor").default,
-        SegmentDisplay: require("../organisms/SegmentDisplay").default,
+        TimelineDisplay: require("../organisms/TimelineDisplay").default,
         WrappedTopSearch: require("../organisms/WrappedTopSearch").default,
         Card: require("../molecules/Card").default,
         VideoLister: require("../organisms/VideoLister").default,
@@ -209,14 +209,14 @@ export default {
         updateCurrentTime(value) {
             this.currentTime = value
         },
-        wrapperForJumpSegment(...args) {
-            this.$refs.segmentDisplay.jumpSegment(...args)
+        wrapperForjumpToTimestampByIndex(...args) {
+            this.$refs.timelineDisplay.jumpToTimestampByIndex(...args)
         },
         wrapperForSelectNextSegment() {
-            return this.$refs.segmentDisplay.selectNextSegment()
+            return this.$refs.timelineDisplay.selectNextTimestamp()
         },
         wrapperForSelectPreviousSegment() {
-            return this.$refs.segmentDisplay.selectPreviousSegment()
+            return this.$refs.timelineDisplay.selectPreviousTimestamp()
         },
     }
 }

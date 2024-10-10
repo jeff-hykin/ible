@@ -151,8 +151,8 @@ export default RootComponent = {
                 _videoLoadedPermanentCallbacks: new Set(),
                 _videoLoadedTemporaryCallbacks: new Set(),
                 _player: null,
-                keySegments: [],
-                keySegmentsPromise: Promise.resolve([]),
+                keyTimestamps: [],
+                keyTimestampsPromise: Promise.resolve([]),
                 // this gets triggered first/immediately
                 async _videoInRouteHasChanged() {
                     if (!videoInfoChangeChecker.changedSinceLastCheck($root.routeData$?.videoInfo)) {
@@ -236,7 +236,7 @@ export default RootComponent = {
                     $root.videoInterface._videoLoadedTemporaryCallbacks = new Set()
                     const currentVideoId = $root.videoInterface.videoId
                     // get the segments for the current video
-                    $root.videoInterface.updateKeySegments()
+                    $root.videoInterface.updateKeyTimestamps()
                 },
                 get aVideoIsSelected() {
                     return !!$root.routeData$?.videoInfo?.path
@@ -267,19 +267,19 @@ export default RootComponent = {
                     }
                     return $root.videoInterface._videoLoadedPromise.resolve($root.videoInterface._player)
                 },
-                updateKeySegments() {
+                updateKeyTimestamps() {
                     const currentVideoId = $root.videoInterface.videoId
-                    $root.videoInterface.keySegmentsPromise = frontendDb.getTimestamps({
+                    $root.videoInterface.keyTimestampsPromise = frontendDb.getTimestamps({
                         where:[
                             { valueOf: ['videoId'], is: currentVideoId },
                         ],
                         returnObject: false,
-                    }).then(keySegments=>{
+                    }).then(keyTimestamps=>{
                         const videoIdChanged = currentVideoId != $root.videoInterface.videoId
                         if (videoIdChanged) {
                             return
                         }
-                        $root.videoInterface.keySegments = keySegments
+                        $root.videoInterface.keyTimestamps = keyTimestamps
                     })
                 },
                 focusVideoPlayer() {
@@ -406,7 +406,7 @@ export default RootComponent = {
                     disagreement: 0,
                 },
             },
-            selectedSegment: null,
+            selectedTimestamp: null,
             labels: {},
             videos: {},
             email: window.storageObject.email,
@@ -433,7 +433,7 @@ export default RootComponent = {
         })
         everyTime(globalEvents.rootDeSelectTimestampRequest).then((who)=>{
             console.log(`${name} saw [rootDeSelectTimestampRequest] from ${who}`)
-            this.$root.selectedSegment = null
+            this.$root.selectedTimestamp = null
         })
     },
     watch: {

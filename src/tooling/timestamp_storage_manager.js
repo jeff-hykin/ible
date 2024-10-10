@@ -52,6 +52,6 @@ everyTime(globalEvents.updateTimestampRequest).then(async (who, newTimestampData
 })
 
 everyTime(globalEvents.deleteTimestampRequest).then(async (who, timestampId)=>{
-    await frontendDb.deleteTimestamp({uuidOfSelectedSegment: timestampId })
+    await frontendDb.deleteTimestamp({uuidOfSelectedTimestamp: timestampId })
     trigger(globalEvents.timestampStorageDeletedEntries, name, [timestampId])
 })

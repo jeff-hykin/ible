@@ -50,7 +50,7 @@
                                     | Delete
                             row.button-row(v-if="!noSegment() && !editing" align-h="space-evenly" width="100%" margin-bottom="0.7rem" margin-top="0.5rem" :display="(!noSegment() && !editing)?'flex':'none'")
                                 ui-button.confirm-button(
-                                    :style="`opacity: ${(editing) && $root.selectedSegment?0:1}; --button-color: ${hasRejected()? 'darkgray' : 'var(--soft-green)'}; min-width: 7rem; font-size: 0.7em; ${isOwner ? 'opacity: 0.3; box-shadow: 0 0 0 1px; color: gray;' : ''} `"
+                                    :style="`opacity: ${(editing) && $root.selectedTimestamp?0:1}; --button-color: ${hasRejected()? 'darkgray' : 'var(--soft-green)'}; min-width: 7rem; font-size: 0.7em; ${isOwner ? 'opacity: 0.3; box-shadow: 0 0 0 1px; color: gray;' : ''} `"
                                     @click="toggleConfirm"
                                     :tooltip="isOwner ? `(only someone else can confirm your timestamp)` : `Click if you agree with this timestamp`"
                                     icon="check"
@@ -59,7 +59,7 @@
                                 //- spacer
                                 container(flex-basis="10%" width="10%")
                                 ui-button.reject-button(
-                                    :style="`opacity: ${(editing) && $root.selectedSegment?0:1}; --button-color: ${hasConfirmed()? 'darkgray' : 'var(--red)'}; min-width: 7rem; font-size: 0.7em;${isOwner ? 'opacity: 0.3; box-shadow: 0 0 0 1px; color: gray;' : ''} `"
+                                    :style="`opacity: ${(editing) && $root.selectedTimestamp?0:1}; --button-color: ${hasConfirmed()? 'darkgray' : 'var(--red)'}; min-width: 7rem; font-size: 0.7em;${isOwner ? 'opacity: 0.3; box-shadow: 0 0 0 1px; color: gray;' : ''} `"
                                     @click="toggleReject"
                                     :tooltip="isOwner ? `(only someone else can reject your timestamp)` : `Click if you disagree with this timestamp`"
                                     icon="cancel"
@@ -73,7 +73,7 @@
                             | Timestamp
                         container(position="relative")
                             ui-button.edit-button(
-                                :style="`opacity: ${(!editing) && $root.selectedSegment?1:0}; width: 7rem;`"
+                                :style="`opacity: ${(!editing) && $root.selectedTimestamp?1:0}; width: 7rem;`"
                                 @click="onEditTimestamp"
                                 icon="edit"
                                 color="primary"
@@ -264,7 +264,7 @@ const timestampTooling = {quickLocalValidationCheck,coerceLabel,coerceObserver,o
 export default {
     props: [
         "currentTime",
-        "jumpSegment",
+        "jumpToTimestampByIndex",
     ],
     components: {
         JsonTree: require('vue-json-tree').default,
@@ -322,11 +322,11 @@ export default {
     rootHooks: {
         watch: {
             // when the selected segment changes
-            selectedSegment() {
-                let selectedSegment = this.$root.selectedSegment
-                console.log(`selectedSegment is:`,selectedSegment)
-                if (selectedSegment instanceof Object) {
-                    this.timestampData = new Timestamp(selectedSegment).coerce()
+            selectedTimestamp() {
+                let selectedTimestamp = this.$root.selectedTimestamp
+                console.log(`selectedTimestamp is:`,selectedTimestamp)
+                if (selectedTimestamp instanceof Object) {
+                    this.timestampData = new Timestamp(selectedTimestamp).coerce()
                 }
             },
             selectedVideo() {
@@ -432,10 +432,10 @@ export default {
             eventObject.stopPropagation()
         },
         noSegment() {
-            return !(this.$root.selectedSegment instanceof Object) && !this.editing
+            return !(this.$root.selectedTimestamp instanceof Object) && !this.editing
         },
         deSelectSegment() {
-            this.$root.selectedSegment = null
+            this.$root.selectedTimestamp = null
         },
         async onNewTimestamp() {
             if (!this.editing) {
@@ -490,22 +490,30 @@ export default {
         async onDelete() {
             console.log(`onDelete called`)
             this.editing = false
-            let index = this.$root.selectedSegment.$displayIndex
+            let index = this.$root.selectedTimestamp.$displayIndex
             const timestampId = this.timestampData.timestampId
             if (timestampId) {
                 await trigger(globalEvents.deleteTimestampRequest, "TimestampEditor", timestampId)
                 this.resetData()
                 this.$toasted.show(`Data has been deleted`).goAway(2500)
             }
-            this.$root.selectedSegment = {}
+            this.$root.selectedTimestamp = {}
             // go to next segment
-            this.jumpSegment(index+1)
+            this.jumpToTimestampByIndex(index+1)
         },
         resetData() {
             this.editing = false
             this.dataCopy = {}
-            this.timestampData = timestampTooling.createDefaultTimestampEntry(this.currentTime)
-            this.timestampData.videoId = this.$root.videoInterface.videoId
+            this.timestampData = new Timestamp(
+                {
+                    videoId: this.$root.videoInterface.videoId,
+                },
+                {
+                    currentTime: this.currentTime,
+                    observer: window.storageObject.observer,
+                    recentLabel: window.storageObject.recentLabel,
+                }
+            ).coerce()
         },
         setStartToCurrentTime() {
             this.timestampData.startTime = (this.currentTime||0).toFixed(3)

@@ -280,7 +280,7 @@ export default {
             //             return
             //         }
             //     }
-            //     this.$root.videoInterface.updateKeySegments()
+            //     this.$root.videoInterface.updateKeyTimestamps()
             //     this.$toasted.show(`Upload Finished`, {
             //         closeOnSwipe: false,
             //         action: { text:'Close', onClick: (e, toastObject)=>{toastObject.goAway(0)} },

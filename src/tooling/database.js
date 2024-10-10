@@ -942,8 +942,8 @@ const frontendDb = {
         }
         return result
     },
-    async deleteTimestamp({uuidOfSelectedSegment}) {
-        return indexDb.deletes([["timestamps", uuidOfSelectedSegment]])
+    async deleteTimestamp({uuidOfSelectedTimestamp}) {
+        return indexDb.deletes([["timestamps", uuidOfSelectedTimestamp]])
     },
     async getVideoById(videoId) {
         return indexDb.get(["videos", videoId, ])

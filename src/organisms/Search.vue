@@ -198,7 +198,7 @@ export default {
                 toastElement.innerHTML = `<div><br>${toastElement.innerHTML}<br><p>0 of ${entries.length}\n</p></div>`
                 let count = 0
                 for (const each of entries) {
-                    await frontendDb.deleteTimestamp({ uuidOfSelectedSegment: each.timestampId })
+                    await frontendDb.deleteTimestamp({ uuidOfSelectedTimestamp: each.timestampId })
                     count++
                     toastElement.innerHTML = toastElement.innerHTML.replace(/<p>.+/,`<p>${count} of ${entries.length}`)
                 }
@@ -207,7 +207,7 @@ export default {
                     this.$root.selectAllLabels()
                     this.$root.push({...this.$root.routeData$, labelName: null})
                 }
-                this.$root.videoInterface.updateKeySegments()
+                this.$root.videoInterface.updateKeyTimestamps()
             }
         },
         falsePositiveRatio() {

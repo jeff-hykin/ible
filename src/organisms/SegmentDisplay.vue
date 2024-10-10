@@ -5,9 +5,9 @@
             h5
                 | Timestamps
         transition(name="fade")
-            row.segment-container(align-h="space-between" position="relative" :height="`${segmentsInfo.maxLevel*2.2}rem`" :min-height="segmentsInfo.organizedSegments.length <= 0 ? '13rem' : 0")
+            row.timeline-container(align-h="space-between" position="relative" :height="`${timestampsInfo.maxLevel*2.2}rem`" :min-height="timestampsInfo.organizedTimestamps.length <= 0 ? '13rem' : 0")
                 column(
-                    v-if="segmentsInfo.organizedSegments.length <= 0"
+                    v-if="timestampsInfo.organizedTimestamps.length <= 0"
                     font-size="14pt"
                     font-weight="lighter"
                     color="gray"
@@ -39,32 +39,32 @@
                         | (<u>press X</u> to reject a timestamp)
                     span(style="display: block; height: 1rem;")
                 row.segment(
-                    v-if="segmentsInfo.organizedSegments.length > 0"
-                    v-for="(eachSegment, index) in segmentsInfo.organizedSegments"
-                    :left="eachSegment.$renderData.leftPercent"
-                    :width="eachSegment.$renderData.widthPercent"
-                    :top="eachSegment.$renderData.topAmount"
-                    :isHuman="eachSegment.isHuman"
-                    :confirmedBySomeone="eachSegment.confirmedBySomeone"
-                    :rejectedBySomeone="eachSegment.rejectedBySomeone"
-                    :selected="eachSegment.timestampId == ($root.selectedSegment&&$root.selectedSegment.timestampId)"
-                    :background-color="theColor(eachSegment)"
-                    :border-color="theColor(eachSegment)"
-                    :key="eachSegment.timestampId||eachSegment.timestampId"
-                    :style="`--color: ${theColor(eachSegment)}`"
-                    @click="jumpSegment(eachSegment.$displayIndex)"
+                    v-if="timestampsInfo.organizedTimestamps.length > 0"
+                    v-for="(eachTimestamp, index) in timestampsInfo.organizedTimestamps"
+                    :left="eachTimestamp.$renderData.leftPercent"
+                    :width="eachTimestamp.$renderData.widthPercent"
+                    :top="eachTimestamp.$renderData.topAmount"
+                    :isHuman="eachTimestamp.isHuman"
+                    :confirmedBySomeone="eachTimestamp.confirmedBySomeone"
+                    :rejectedBySomeone="eachTimestamp.rejectedBySomeone"
+                    :selected="eachTimestamp.timestampId == ($root.selectedTimestamp&&$root.selectedTimestamp.timestampId)"
+                    :background-color="theColor(eachTimestamp)"
+                    :border-color="theColor(eachTimestamp)"
+                    :key="eachTimestamp.timestampId||eachTimestamp.timestampId"
+                    :style="`--color: ${theColor(eachTimestamp)}`"
+                    @click="jumpToTimestampByIndex(eachTimestamp.$displayIndex)"
                 )
-                    | {{computeSymbol(eachSegment.confirmedBySomeone, eachSegment.rejectedBySomeone)}}
+                    | {{computeSymbol(eachTimestamp.confirmedBySomeone, eachTimestamp.rejectedBySomeone)}}
                     ui-tooltip(position="left" animation="fade")
                         column(align-h="left")
                             span
-                                | label: {{ eachSegment.label }}
+                                | label: {{ eachTimestamp.label }}
                             span
-                                | length: {{  (eachSegment.endTime - eachSegment.startTime).toFixed(2) }} sec
+                                | length: {{  (eachTimestamp.endTime - eachTimestamp.startTime).toFixed(2) }} sec
                             span
-                                | start: {{ eachSegment.startTime.toFixed(3) }} sec
+                                | start: {{ eachTimestamp.startTime.toFixed(3) }} sec
                             span
-                                | human?: {{ eachSegment.isHuman }}
+                                | human?: {{ eachTimestamp.isHuman }}
         row(position="relative" align-h="left" align-v="top" width="100%")
             h5
                 | Filter Timestamps by Label
@@ -72,7 +72,6 @@
                 | Toggle All
         container.labels
             container.label-toggle(
-                v-if="eachLabelName != '(no segments)'"
                 v-for="(eachLevel, eachLabelName) in $root.labels"
                 :style="`--label-color: ${$root.labels[eachLabelName].selected ? $root.labels[eachLabelName].color : 'gray'};`"
             )
@@ -109,40 +108,40 @@ export default {
     },
     data: ()=>({
         allLabelsOn: false,
-        segmentsInfo: {
+        timestampsInfo: {
             maxLevel: 1,
-            organizedSegments: [],
+            organizedTimestamps: [],
         },
-        processedKeySegments: [],
+        processedKeyTimestamps: [],
     }),
     mounted() {
-        window.SegmentDisplay = this
-        this.$root.videoInterface.wheneverVideoIsLoaded(this.resetSelectedSegment)
-        this.$root.videoInterface.onceVideoIsLoaded(()=>{untracked.caller = "initalLoad"; this.updateSegments()})
+        window.TimelineDisplay = this
+        this.$root.videoInterface.wheneverVideoIsLoaded(this.resetselectedTimestamp)
+        this.$root.videoInterface.onceVideoIsLoaded(()=>{untracked.caller = "initalLoad"; this.updateTimeline()})
         
-        const name = "SegmentDisplay"
+        const name = "TimelineDisplay"
         everyTime(globalEvents.timestampStorageUpdatedEntries).then((who, updatedTimestampEntries)=>{
             console.log(`${name} saw [timestampStorageUpdatedEntries] from ${who}`)
             const updatedTimestampEntriesIds = updatedTimestampEntries.map(each=>each.timestampId)
             console.debug(`updatedTimestampEntries is:`,updatedTimestampEntries)
             // this should cause the segment display to update
-            this.$root.videoInterface.keySegments = [
-                ...this.$root.videoInterface.keySegments.filter(each=>!updatedTimestampEntriesIds.includes(each.timestampId)),
+            this.$root.videoInterface.keyTimestamps = [
+                ...this.$root.videoInterface.keyTimestamps.filter(each=>!updatedTimestampEntriesIds.includes(each.timestampId)),
                 ...updatedTimestampEntries,
             ]
-            this.updateSegments()
+            this.updateTimeline()
         })
         everyTime(globalEvents.timestampStorageDeletedEntries).then((who, deletedTimestampIds)=>{
             console.log(`${name} saw [timestampStorageDeletedEntries] from ${who}`)
             // this should cause the segment display to update
-            this.$root.videoInterface.keySegments = [
-                ...this.$root.videoInterface.keySegments.filter(each=>!deletedTimestampIds.includes(each.timestampId)),
+            this.$root.videoInterface.keyTimestamps = [
+                ...this.$root.videoInterface.keyTimestamps.filter(each=>!deletedTimestampIds.includes(each.timestampId)),
             ]
-            this.updateSegments()
+            this.updateTimeline()
         })
         everyTime(globalEvents.addedLabel).then((who)=>{
             console.log(`${name} saw [addedLabel] from ${who}`)
-            this.updateSegments()
+            this.updateTimeline()
         })
     },
     watch: {
@@ -150,24 +149,24 @@ export default {
     rootHooks: {
         watch: {
             labels() {
-                console.log(`[SegmentDisplay] labels changed`)
+                console.log(`[TimelineDisplay] labels changed`)
                 // make sure the label is still valid
-                let label = this.$root?.selectedSegment?.label
+                let label = this.$root?.selectedTimestamp?.label
                 if (label) {
                     // if no longer selected
                     if (!((this.$root?.labels||{})[label]?.selected)) {
                         // reset the selected segment
-                        this.$root.selectedSegment = null
+                        this.$root.selectedTimestamp = null
                     }
                 }
                 if (this.$root.videoInterface?.player?.duration) {
-                    console.log(`[SegmentDisplay] labels changed, updating segments`)
+                    console.log(`[TimelineDisplay] labels changed, updating segments`)
                     untracked.caller = "labels"
-                    this.updateSegments()
+                    this.updateTimeline()
                 }
             },
-            "videoInterface.keySegments": function() {
-                this.$root.videoInterface.onceVideoIsLoaded(()=>{untracked.caller = "videoInterface.keySegments"; this.updateSegments()})
+            "videoInterface.keyTimestamps": function() {
+                this.$root.videoInterface.onceVideoIsLoaded(()=>{untracked.caller = "videoInterface.keyTimestamps"; this.updateTimeline()})
             },
         }
     },
@@ -183,14 +182,14 @@ export default {
                         if (eventObject.ctrlKey) {
                             console.log(`going to next clip`)
                             eventObject.preventDefault()
-                            this.selectNextSegment()
+                            this.selectNextTimestamp()
                         }
                         break
                     case "ArrowLeft":
                         if (eventObject.ctrlKey) {
                             console.log(`going to previous clip`)
                             eventObject.preventDefault()
-                            this.selectPreviousSegment()
+                            this.selectPreviousTimestamp()
                         }
                         break
                     // case "ArrowUp":
@@ -210,47 +209,47 @@ export default {
         }
     },
     methods: {
-        resetSelectedSegment() {
-            this.$root.selectedSegment = null
+        resetselectedTimestamp() {
+            this.$root.selectedTimestamp = null
         },
-        theColor(eachSegment) {
-            return this.$root.labels[eachSegment.label]?.color
+        theColor(eachTimestamp) {
+            return this.$root.labels[eachTimestamp.label]?.color
         },
-        updateSegments() {
+        updateTimeline() {
             if (!this.$root.videoInterface?.player?.duration) {
-                console.warn(`[SegmentDisplay] updateSegments was called too early. This shouldn't happen so check where it is being called from`)
-                console.debug(`[SegmentDisplay] updateSegments caller is:`,untracked.caller)
+                console.warn(`[TimelineDisplay] updateTimeline was called too early. This shouldn't happen so check where it is being called from`)
+                console.debug(`[TimelineDisplay] updateTimeline caller is:`,untracked.caller)
                 return
             }
-            this.processedKeySegments = this.processNewSegments({
+            this.processedKeyTimestamps = this.processNewTimestamps({
                 duration: this.$root.videoInterface?.player?.duration,
-                keySegments: this.$root.videoInterface.keySegments,
+                keyTimestamps: this.$root.videoInterface.keyTimestamps,
             })
-            this.segmentsInfo = this.organizeVisualSegments({
+            this.timestampsInfo = this.organizeVisualTimestamps({
                 namesOfSelectedLabels: this.$root.getNamesOfSelectedLabels(),
-                processedKeySegments: this.processedKeySegments,
+                processedKeyTimestamps: this.processedKeyTimestamps,
             })
-            // ^output looks like: this.segmentsInfo = {
+            // ^output looks like: this.timestampsInfo = {
             //     maxLevel: 1,
-            //     organizedSegments: []
+            //     organizedTimestamps: []
             // }
         },
-        processNewSegments({duration, keySegments}) {
+        processNewTimestamps({duration, keyTimestamps}) {
             if (!duration) {
-                console.warn(`[processNewSegments] processNewSegments was called with no duration (find where its being called from to fix)`)
-                return keySegments
+                console.warn(`[processNewTimestamps] processNewTimestamps was called with no duration (find where its being called from to fix)`)
+                return keyTimestamps
             }
             // element needs to be shown as at least __ % of the video width
             const minWidthPercent = 3
             let minWidthInSeconds = duration / (100 / minWidthPercent)
-            keySegments = keySegments.map(eachSegment=>{
+            keyTimestamps = keyTimestamps.map(eachTimestamp=>{
                 // 
                 // add render info
                 // 
                 // create the display info for each segment
-                let effectiveStart  = eachSegment.startTime
-                let effectiveEnd    = eachSegment.endTime
-                let segmentDuration = eachSegment.endTime - eachSegment.startTime
+                let effectiveStart  = eachTimestamp.startTime
+                let effectiveEnd    = eachTimestamp.endTime
+                let segmentDuration = eachTimestamp.endTime - eachTimestamp.startTime
                 // if segment is too small artificially make it bigger
                 if (segmentDuration < minWidthInSeconds) {
                     let additionalAmountForEachSide = (minWidthInSeconds - segmentDuration)/2
@@ -259,7 +258,7 @@ export default {
                     effectiveStart -= additionalAmountForEachSide
                     effectiveEnd += additionalAmountForEachSide
                 }
-                eachSegment.$renderData = {
+                eachTimestamp.$renderData = {
                     effectiveEnd,
                     effectiveStart,
                     // how wide the element should be
@@ -267,24 +266,24 @@ export default {
                     // how close to the left the element should be
                     leftPercent: `${(effectiveStart/duration)*100}%`,
                 }
-                return eachSegment
+                return eachTimestamp
             }).sort(
                 dynamicSort(["$renderData","effectiveStart"])
             ).map(
                 (each, index)=>((each.$displayIndex = index),each)
             )
             
-            return keySegments
+            return keyTimestamps
         },
-        organizeVisualSegments({ processedKeySegments, namesOfSelectedLabels }) {
+        organizeVisualTimestamps({ processedKeyTimestamps, namesOfSelectedLabels }) {
             // only return segments that match the selected labels
-            let displaySegments = (processedKeySegments||[]).filter(
-                eachSegment=>(eachSegment.$shouldDisplay = namesOfSelectedLabels.includes(eachSegment.label) || namesOfSelectedLabels.length == 0)
+            let displaySegments = (processedKeyTimestamps||[]).filter(
+                eachTimestamp=>(eachTimestamp.$shouldDisplay = namesOfSelectedLabels.includes(eachTimestamp.label) || namesOfSelectedLabels.length == 0)
             )
         
             // 2 percent of the width of the video
             let levels = []
-            for (let eachSegment of displaySegments) {
+            for (let eachTimestamp of displaySegments) {
                 // find the smallest viable level
                 let level = 0
                 while (1) {
@@ -294,25 +293,25 @@ export default {
                     }
                     let indexOfLastElementOnThisLevel = levels[level].length-1
                     let lastElementOnThisLevel = levels[level][indexOfLastElementOnThisLevel]
-                    if (eachSegment.$renderData.effectiveStart > lastElementOnThisLevel.$renderData.effectiveEnd) {
+                    if (eachTimestamp.$renderData.effectiveStart > lastElementOnThisLevel.$renderData.effectiveEnd) {
                         break
                     }
                     ++level
                 }
                 // create level if it didn't exist
                 if (levels[level] == undefined) {
-                    levels[level] = [ eachSegment ]
+                    levels[level] = [ eachTimestamp ]
                 // otherwise add it to the end of the level
                 } else {
-                    levels[level].push(eachSegment)
+                    levels[level].push(eachTimestamp)
                 }
                 const heightOfSegment = 2.2 // rem
-                eachSegment.$renderData.level = level 
-                eachSegment.$renderData.topAmount = `${level*heightOfSegment}rem`
+                eachTimestamp.$renderData.level = level 
+                eachTimestamp.$renderData.topAmount = `${level*heightOfSegment}rem`
             }
             return {
                 maxLevel: levels.length,
-                organizedSegments: levels.flat(),
+                organizedTimestamps: levels.flat(),
             }
         },
         computeSymbol(confirmed, rejected) {
@@ -336,17 +335,17 @@ export default {
                 }
             }
         },
-        async seekToSegmentStart() {
+        async seekToTimestampStart() {
             // if no segment is selected
-            if (!this.$root.selectedSegment) {
+            if (!this.$root.selectedTimestamp) {
                 // the go to the first displayable segment
-                // console.debug(`[seekToSegmentStart] there is no selected segment`)
-                // console.debug(`[seekToSegmentStart] calling jumpSegment(0) and returning`)
-                return this.jumpSegment(0)
+                // console.debug(`[seekToTimestampStart] there is no selected segment`)
+                // console.debug(`[seekToTimestampStart] calling jumpToTimestampByIndex(0) and returning`)
+                return this.jumpToTimestampByIndex(0)
             }
             // make sure the selected segment has a start time
-            if (!checkIf({value: this.$root.selectedSegment.startTime, is: Number })) {
-                console.error(`[seekToSegmentStart] this.$root.selectedSegment.startTime isn't a number: ${JSON.stringify(this.$root.selectedSegment.startTime)}`)
+            if (!checkIf({value: this.$root.selectedTimestamp.startTime, is: Number })) {
+                console.error(`[seekToTimestampStart] this.$root.selectedTimestamp.startTime isn't a number: ${JSON.stringify(this.$root.selectedTimestamp.startTime)}`)
                 return
             }
             
@@ -361,8 +360,8 @@ export default {
             
             const seekAction = (player)=>{
                 try  {
-                    const startTime = this.$root.selectedSegment.startTime
-                    // console.debug(`[seekToSegmentStart] seeking to ${startTime}`)
+                    const startTime = this.$root.selectedTimestamp.startTime
+                    // console.debug(`[seekToTimestampStart] seeking to ${startTime}`)
                     player.currentTime = startTime
                     // there is a render issue and this is a hack to fix it
                     try {
@@ -377,8 +376,8 @@ export default {
                     }
                 // sometimes an error is caused by switching videos, and all thats needed is a restart
                 } catch (err) {
-                    // console.debug(`[seekToSegmentStart] seeking to segment start (will retry):`,err)
-                    return this.seekToSegmentStart()
+                    // console.debug(`[seekToTimestampStart] seeking to segment start (will retry):`,err)
+                    return this.seekToTimestampStart()
                 }
             }
             
@@ -401,14 +400,14 @@ export default {
                                         await untracked.singleActionAfterVideoLoaded[videoId](player)
                                     } catch (error) {
                                         console.error(error.stack)
-                                        console.error(`[seekToSegmentStart] error with untracked.singleActionAfterVideoLoaded[videoId]():`)
+                                        console.error(`[seekToTimestampStart] error with untracked.singleActionAfterVideoLoaded[videoId]():`)
                                         console.error(error)
                                     }
                                 }
                                 untracked.singleActionAfterVideoLoaded[videoId] = null
                             } catch (error) {
                                 console.error(error.stack)
-                                console.error(`[seekToSegmentStart] error with untracked.singleActionAfterVideoLoaded[videoId]():`)
+                                console.error(`[seekToTimestampStart] error with untracked.singleActionAfterVideoLoaded[videoId]():`)
                                 console.error(error)
                             }
                             // then resolve after the singular action is done
@@ -421,21 +420,21 @@ export default {
                 return untracked.lastSeekFinished
             }
         },
-        closestSegment({time, forward=true}) {
-            if (this.segmentsInfo.organizedSegments.length == 0) {
+        closestTimestamp({time, forward=true}) {
+            if (this.timestampsInfo.organizedTimestamps.length == 0) {
                 return null
             } else {
                 let segment = null
                 if (forward) {
                     let runningIndex = -1
-                    for (const each of this.segmentsInfo.organizedSegments) {
+                    for (const each of this.timestampsInfo.organizedTimestamps) {
                         if (each.startTime > time) {
                             segment = each
                             break
                         }
                     }
                 } else {
-                    const segmentsBackwards = [...this.segmentsInfo.organizedSegments]
+                    const segmentsBackwards = [...this.timestampsInfo.organizedTimestamps]
                     // first one is largest number of seconds
                     segmentsBackwards.sort((a,b)=>a.endTime-b.endTime).sort((a,b)=>b.startTime-a.startTime)
                     for (const each of segmentsBackwards) {
@@ -448,47 +447,47 @@ export default {
                 return segment
             }
         },
-        selectNextSegment() {
-            let segment = this.$root.selectedSegment
+        selectNextTimestamp() {
+            let segment = this.$root.selectedTimestamp
             if (segment) {
-                this.jumpSegment(segment.$displayIndex+1)
+                this.jumpToTimestampByIndex(segment.$displayIndex+1)
             } else {
-                window.SegmentDisplay = this
-                segment = this.closestSegment({time: this.currentTime, forward: true})
+                window.TimelineDisplay = this
+                segment = this.closestTimestamp({time: this.currentTime, forward: true})
                 if (segment) {
-                    this.jumpSegment(segment.$displayIndex)
+                    this.jumpToTimestampByIndex(segment.$displayIndex)
                 }
             }
         },
-        selectPreviousSegment() {
-            let segment = this.$root.selectedSegment
+        selectPreviousTimestamp() {
+            let segment = this.$root.selectedTimestamp
             if (segment) {
-                this.jumpSegment(segment.$displayIndex-1)
+                this.jumpToTimestampByIndex(segment.$displayIndex-1)
             } else {
-                window.SegmentDisplay = this
-                segment = this.closestSegment({time: this.currentTime, forward: false})
+                window.TimelineDisplay = this
+                segment = this.closestTimestamp({time: this.currentTime, forward: false})
                 if (segment) {
-                    this.jumpSegment(segment.$displayIndex)
+                    this.jumpToTimestampByIndex(segment.$displayIndex)
                 }
             }
         },
-        async jumpSegment(newIndex) {
+        async jumpToTimestampByIndex(newIndex) {
             const functionCallId = Math.random().toFixed(6)
-            let debug = (message, ...args)=>1||console.debug(`[jumpSegment: ${functionCallId}] ${message}`, ...args)
+            let debug = (message, ...args)=>1||console.debug(`[jumpToTimestampByIndex: ${functionCallId}] ${message}`, ...args)
             
             // basic saftey check
-            if (!(this.processedKeySegments instanceof Array) || this.processedKeySegments.length == 0) {
+            if (!(this.processedKeyTimestamps instanceof Array) || this.processedKeyTimestamps.length == 0) {
                 return debug("segments don't exist, returning")
             }
             // get the previous segment or the first one in the list
-            let segment = this.$root.selectedSegment || this.processedKeySegments[0]
-            const startingPoint = wrapIndex(newIndex, this.processedKeySegments)
+            let segment = this.$root.selectedTimestamp || this.processedKeyTimestamps[0]
+            const startingPoint = wrapIndex(newIndex, this.processedKeyTimestamps)
             let indexOfPreviousSegment = (!segment) ? 0 : segment.$displayIndex
             if (newIndex != indexOfPreviousSegment || !segment.$shouldDisplay) {
                 let direction = indexOfPreviousSegment > newIndex ? -1 : 1
                 debug(`jump direction is: ${direction}`)
                 while (1) {
-                    let newSegment = this.processedKeySegments[ wrapIndex(newIndex, this.processedKeySegments) ]
+                    let newSegment = this.processedKeyTimestamps[ wrapIndex(newIndex, this.processedKeyTimestamps) ]
                     // if its a displayable segment then good, were done
                     if (newSegment.$shouldDisplay) {
                         segment = newSegment
@@ -498,7 +497,7 @@ export default {
                     // cycle the index
                     newIndex += direction
                     // if somehow ended back at the start then fail
-                    if (wrapIndex(newIndex, this.processedKeySegments) == startingPoint) {
+                    if (wrapIndex(newIndex, this.processedKeyTimestamps) == startingPoint) {
                         debug("couldn't find a displayable segment")
                         break
                     }
@@ -506,14 +505,14 @@ export default {
             }
             if (!segment || !segment.$shouldDisplay) {
                 debug(`!segment || !segment.$shouldDisplay is: ${!segment || !segment.$shouldDisplay}`)
-                this.$root.selectedSegment = null
+                this.$root.selectedTimestamp = null
             } else {
-                this.$root.selectedSegment = segment
+                this.$root.selectedTimestamp = segment
             }
-            debug(`this.$root.selectedSegment is:`, this.$root.selectedSegment)
-            if (this.$root.selectedSegment instanceof Object) {
+            debug(`this.$root.selectedTimestamp is:`, this.$root.selectedTimestamp)
+            if (this.$root.selectedTimestamp instanceof Object) {
                 debug("seeking to segment start since a new index was found")
-                await this.seekToSegmentStart()
+                await this.seekToTimestampStart()
             }
         },
         toggleLabel(labelName) {
@@ -530,7 +529,7 @@ export default {
             }, generalTimeoutFrequency)
             
             // this is a hack to force the segment display to update
-            this.$root.videoInterface.updateKeySegments()
+            this.$root.videoInterface.updateKeyTimestamps()
         },
     }
 }
@@ -613,7 +612,7 @@ export default {
         .ui-checkbox
             margin: 0
         
-    .segment-container
+    .timeline-container
         margin-bottom: 0.7rem
         width: 95%
         align-self: center

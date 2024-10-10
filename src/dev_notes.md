@@ -60,7 +60,7 @@ Once you're ready to make a release, execute `run/compile` and it will generate 
         - This also, unforunately means there is NOT a strict data flow, like "UI edit => update the database, database response => updates $root"
         - Instead it is more like, UI changes `$root`, we detect watch changes to `$root`, onChange we update the database. 
         - Or another example: we ask backend for info, update database, then update `$root`. Etc
-        - It'd be great to clean this up, but $root data is reactive and watched and edited by all different parts of the UI because everything is (necessarily) very inter-connected. Ex: editing the search field will change what videos show up in the video list component, and editing an observation will change the elements in the SegmentDisplay component.
+        - It'd be great to clean this up, but $root data is reactive and watched and edited by all different parts of the UI because everything is (necessarily) very inter-connected. Ex: editing the search field will change what videos show up in the video list component, and editing an observation will change the elements in the TimelineDisplay component.
     - When downloading data:
         - it comes from
                - either `$root.searchResults`
