@@ -5640,52 +5640,52 @@ if (Deno2?.[Deno2.internal]?.core) {
   DenoCore = {};
 }
 var core2 = {
-  runMicrotasks: DenoCore.runMicrotasks ?? function() {
-    throw new Error(
-      "Deno.core.runMicrotasks() is not supported in this environment"
-    );
+  runMicrotasks: DenoCore?.runMicrotasks ?? function() {
+    // throw new Error(
+    //   "Deno.core.runMicrotasks() is not supported in this environment"
+    // );
   },
-  setHasTickScheduled: DenoCore.setHasTickScheduled ?? function() {
-    throw new Error(
-      "Deno.core.setHasTickScheduled() is not supported in this environment"
-    );
+  setHasTickScheduled: DenoCore?.setHasTickScheduled ?? function() {
+    // throw new Error(
+    //   "Deno.core.setHasTickScheduled() is not supported in this environment"
+    // );
   },
-  hasTickScheduled: DenoCore.hasTickScheduled ?? function() {
-    throw new Error(
-      "Deno.core.hasTickScheduled() is not supported in this environment"
-    );
+  hasTickScheduled: DenoCore?.hasTickScheduled ?? function() {
+    // throw new Error(
+    //   "Deno.core.hasTickScheduled() is not supported in this environment"
+    // );
   },
-  setNextTickCallback: DenoCore.setNextTickCallback ?? void 0,
-  setMacrotaskCallback: DenoCore.setMacrotaskCallback ?? function() {
-    throw new Error(
-      "Deno.core.setNextTickCallback() is not supported in this environment"
-    );
+  setNextTickCallback: DenoCore?.setNextTickCallback ?? void 0,
+  setMacrotaskCallback: DenoCore?.setMacrotaskCallback ?? function() {
+    // throw new Error(
+    //   "Deno.core.setNextTickCallback() is not supported in this environment"
+    // );
   },
-  evalContext: DenoCore.evalContext ?? function(_code, _filename) {
-    throw new Error(
-      "Deno.core.evalContext is not supported in this environment"
-    );
+  evalContext: DenoCore?.evalContext ?? function(_code, _filename) {
+    // throw new Error(
+    //   "Deno.core.evalContext is not supported in this environment"
+    // );
   },
-  encode: DenoCore.encode ?? function(chunk) {
+  encode: DenoCore?.encode ?? function(chunk) {
     return new TextEncoder().encode(chunk);
   },
-  eventLoopHasMoreWork: DenoCore.eventLoopHasMoreWork ?? function() {
+  eventLoopHasMoreWork: DenoCore?.eventLoopHasMoreWork ?? function() {
     return false;
   },
-  isProxy: DenoCore.isProxy ?? function() {
+  isProxy: DenoCore?.isProxy ?? function() {
     return false;
   },
-  getPromiseDetails: DenoCore.getPromiseDetails ?? function(_promise) {
+  getPromiseDetails: DenoCore?.getPromiseDetails ?? function(_promise) {
     throw new Error(
       "Deno.core.getPromiseDetails is not supported in this environment"
     );
   },
-  setPromiseHooks: DenoCore.setPromiseHooks ?? function() {
+  setPromiseHooks: DenoCore?.setPromiseHooks ?? function() {
     throw new Error(
       "Deno.core.setPromiseHooks is not supported in this environment"
     );
   },
-  ops: DenoCore.ops ?? {
+  ops: DenoCore?.ops ?? {
     op_napi_open(_filename) {
       throw new Error(
         "Node API is not supported in this environment"
