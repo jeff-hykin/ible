@@ -26,13 +26,16 @@
                     :required="required"
                     :step="stepValue"
                     :tabindex="tabindex"
+                    
+                    
                     :type="type"
                     :value="value"
 
                     @blur="onBlur"
                     @change="onChange"
                     @focus="onFocus"
-                    @input="updateValue($event.target.value)"
+                    @beforeinput="beforeInput($event)"
+                    @input="updateValue($event.target.value, $event)"
                     @keydown.enter="onKeydownEnter"
                     @keydown="onKeydown"
 
@@ -60,7 +63,7 @@
                     @blur="onBlur"
                     @change="onChange"
                     @focus="onFocus"
-                    @input="updateValue($event.target.value)"
+                    @input="updateValue($event.target.value, $event)"
                     @keydown.enter="onKeydownEnter"
                     @keydown="onKeydown"
 
@@ -283,8 +286,16 @@ export default {
     },
 
     methods: {
-        updateValue(value) {
-            this.$emit('input', value);
+        beforeInput(event) {
+            if (this.type === 'number') {
+                if (event.data && !`${event.data}`.match(/^[0-9\.\-]*$/)) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+            }
+        },
+        updateValue(value, event) {
+            this.$emit('input', value, event);
         },
 
         onChange(e) {
