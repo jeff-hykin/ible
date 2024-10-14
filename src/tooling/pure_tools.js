@@ -139,15 +139,22 @@ colors.purple = "#9575cd"
 colors.red    = "#e57373"
 colors.yellow = "#fec355"
 let colorCopy = [...colors]
-export function getColor(name) {
-    if (typeof name == "string") {
-        let total = name.length
-        for(let each in name) {
-            total += name.charCodeAt(each) * name.length
-        }
-        return colors[total % colors.length]
+const wrapAroundGet = (number, list) => list[((number % list.length) + list.length) % list.length]
+function simpleHash(str) {
+    let hash = 0;
+    for (let i = 0, len = str.length; i < len; i++) {
+        let chr = str.charCodeAt(i);
+        hash = (hash << 5) - hash + chr;
+        hash |= 0; // Convert to 32bit integer
     }
-    return colorCopy.shift()||(colorCopy=[...colors],colorCopy.shift())
+    return hash;
+}
+export function getColor(name) {
+    if (name == "comment") {
+        return "#6a737d"
+    } else {
+        return wrapAroundGet(simpleHash(name), colors)
+    }
 }
 
 export const valueKey = Symbol("value")
