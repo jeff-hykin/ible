@@ -151,7 +151,7 @@ function simpleHash(str) {
 }
 export function getColor(name) {
     if (name == "comment") {
-        return "#6a737d"
+        return "gray"
     } else {
         return wrapAroundGet(simpleHash(name), colors)
     }
