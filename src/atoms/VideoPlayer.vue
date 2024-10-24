@@ -60,7 +60,7 @@ export default {
         this.internalLoadVideo()
         
         if (window.chrome) {
-            vueTooling.showLongMessage(`<br><br>Warning: Looks like you're using Chrome-based Browser<br><br>(as of 2024) Chrome's native video player has a lot of bugs, to the point that its considered broken<br>You can try and use it anyways, but its recommended to use Firefox or Safari so the video player will work well<br><br>`)
+            vueTooling.showLongMessage(`<br><br>Warning: Looks like you're using Chrome-based Browser (Chrome, Edge, Opera, Brave)<br><br>(as of 2024) Chrome's native video player has a lot of bugs, to the point that it is considered broken<br>You can try and use it anyways, but its recommended to use Firefox or Safari so the video player will work well<br><br>`)
         }
     },
     // allow things to dynamically hook into the updated event
