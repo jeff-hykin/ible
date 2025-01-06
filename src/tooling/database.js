@@ -898,6 +898,18 @@ const frontendDb = {
         }
     
         const entryIds = timestampEntries.map(({timestampId})=>["timestamps", timestampId])
+        for (let each of timestampEntries) {
+            try {
+                each.rejectedBySomeone = Object.values(each.rejectedBy||{}).length>0
+            } catch (error) {
+                
+            }
+            try {
+                each.confirmedBySomeone = Object.values(each.confirmedBy||{}).length>0
+            } catch (error) {
+                
+            }
+        }
         
         const newLabels    = managers.labels.regenerate(    {},{addressesToIgnore: entryIds, entriesToAssume: timestampEntries,},)
         const newObservers = managers.observers.regenerate( {},{addressesToIgnore: entryIds, entriesToAssume: timestampEntries,},)
@@ -1025,11 +1037,7 @@ const frontendDb = {
             if (Number.isFinite(filterAndSort.maxlabelConfidence)  ) { where.push({ valueOf: ['labelConfidence'                  ], isLessThanOrEqualTo:    filterAndSort.maxlabelConfidence, }) }
             if (Number.isFinite(filterAndSort.minlabelConfidence)  ) { where.push({ valueOf: ['labelConfidence'                  ], isGreaterThanOrEqualTo: filterAndSort.minlabelConfidence, }) }
             if (filterAndSort.observer                             ) { where.push({ valueOf: ['observer'                         ], is:                     filterAndSort.observer          , }) }
-            if (filterAndSort.kindOfObserver == "Only Humans"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     true                          , }) }
-            if (filterAndSort.kindOfObserver == "Only Robots"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     false                         , }) }
-            if (!filterAndSort.validation.includes("Confirmed")    ) { where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
-            if (!filterAndSort.validation.includes("Rejected")     ) { where.push({ valueOf: ['rejectedBySomeone'                ], isNot:                  true                          , }) }
-
+            
             let results = {
                 finishedComputing: true,
                 uncheckedTimestamps: [],
@@ -1063,7 +1071,15 @@ const frontendDb = {
                 ],
             })
             for (const each of items) {
+                // this is (hopefully) redundant, as the data in the database should already be valid
+                each.confirmedBySomeone = Object.values(each.confirmedBy||{}).length>0
+                each.rejectedBySomeone = Object.values(each.rejectedBy||{}).length>0
+
                 // filters 
+                if (filterAndSort.kindOfObserver == "Only Humans" && !each.isHuman) { continue }
+                if (filterAndSort.kindOfObserver == "Only Robots" && each.isHuman) { continue }
+                if (!filterAndSort.validation.includes("Confirmed") && !each.confirmedBySomeone) { continue }
+                if (!filterAndSort.validation.includes("Rejected") && !each.rejectedBySomeone) { continue }
                 if ((each.labelConfidence < min) || (each.labelConfidence > max)) { continue }
                 if (hideUnchecked && (!each.confirmedBySomeone && !each.rejectedBySomeone)) { continue }
                 if (hideDisagreement && (each.confirmedBySomeone && each.rejectedBySomeone)) { continue }

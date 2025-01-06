@@ -45,7 +45,7 @@
                     h5
                         | Total Videos: {{Object.keys($root.searchResults.videos).length}}
                     h5
-                        | False Positive Ratio: {{falsePositiveRatio()}}
+                        | False Positive Ratio: {{falsePositiveRatio()||0}}
                 br
                 br
                 .pie-wrapper(v-if="$root.searchResults.finishedComputing")
