@@ -67,9 +67,10 @@ const targets = [
     "aarch64-apple-darwin",
 ]
 await FileSystem.ensureIsFolder(binariesFolder)
-const outputPath = `${binariesFolder}/ible`
+binariesFolder = FileSystem.makeRelativePath({from: FileSystem.pwd, to: binariesFolder})
+const outputPath = FileSystem.makeRelativePath({from: FileSystem.pwd, to: `${binariesFolder}/ible`})
 for (const eachTarget of targets) {
-    console.log(`    compiling to ${binariesFolder}/${eachTarget}`)
+    console.log(`    compiling to ${cyan(binariesFolder)}/${cyan(eachTarget)}`)
     const namedOutputPath = `${binariesFolder}/ible-${eachTarget}`
     // clear the way
     if (eachTarget.includes("windows")) {
