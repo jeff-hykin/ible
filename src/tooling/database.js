@@ -403,7 +403,6 @@ const indexDb = {
                             )
                         } else {
                             const value = get({ keyList: subAddress, from: request.result?.v, failValue: undefined })
-                            console.debug(`request.result is:`,request.result)
                             requestPromise.resolve(
                                 [ address, value ],
                             )
@@ -452,7 +451,6 @@ const indexDb = {
                 // 
                 if (subAddress.length == 0) {
                     const request = objectStore.delete(id)
-                    console.debug(`delete request is:`,request)
                     const requestPromise = deferredPromise()
                     Object.assign(request, {
                         onsuccess: (...args)=>requestPromise.resolve(request, args),
@@ -900,12 +898,12 @@ const frontendDb = {
         const entryIds = timestampEntries.map(({timestampId})=>["timestamps", timestampId])
         for (let each of timestampEntries) {
             try {
-                each.rejectedBySomeone = Object.values(each.rejectedBy||{}).length>0
+                each.rejectedBySomeone= Object.values(each.rejectedBy||{}).length>0
             } catch (error) {
                 
             }
             try {
-                each.confirmedBySomeone = Object.values(each.confirmedBy||{}).length>0
+                each.confirmedBySomeone= Object.values(each.confirmedBy||{}).length>0
             } catch (error) {
                 
             }
@@ -1071,9 +1069,16 @@ const frontendDb = {
                 ],
             })
             for (const each of items) {
+                
                 // this is (hopefully) redundant, as the data in the database should already be valid
-                each.confirmedBySomeone = Object.values(each.confirmedBy||{}).length>0
-                each.rejectedBySomeone = Object.values(each.rejectedBy||{}).length>0
+                try {
+                    each.confirmedBy= each.confirmedBy||{}
+                    each.rejectedBy= each.rejectedBy||{}
+                    each.confirmedBySomeone= Object.values(each.confirmedBy||{}).length>0
+                    each.rejectedBySomeone= Object.values(each.rejectedBy||{}).length>0
+                } catch (error) {
+                    
+                }
 
                 // filters 
                 if (filterAndSort.kindOfObserver == "Only Humans" && !each.isHuman) { continue }
@@ -1081,8 +1086,8 @@ const frontendDb = {
                 if (!filterAndSort.validation.includes("Confirmed") && !each.confirmedBySomeone) { continue }
                 if (!filterAndSort.validation.includes("Rejected") && !each.rejectedBySomeone) { continue }
                 if ((each.labelConfidence < min) || (each.labelConfidence > max)) { continue }
-                if (hideUnchecked && (!each.confirmedBySomeone && !each.rejectedBySomeone)) { continue }
-                if (hideDisagreement && (each.confirmedBySomeone && each.rejectedBySomeone)) { continue }
+                if (hideUnchecked && (!each.confirmedBySomeone&& !each.rejectedBySomeone)) { continue }
+                if (hideDisagreement && (each.confirmedBySomeone&& each.rejectedBySomeone)) { continue }
                 
                 // 
                 // this section is actual logic
@@ -1103,20 +1108,19 @@ const frontendDb = {
                 results.counts.total += 1
                 if (each.isHuman) {
                     results.counts.fromHuman += 1 
-                } else {
-                    if (each.confirmedBySomeone == true) {
-                        results.counts.confirmed += 1
-                    }
-                    if (each.rejectedBySomeone == true) {
-                        results.counts.rejected  += 1 
-                        results.rejected.push(each)
-                    }
-                    if (each.rejectedBySomeone && each.confirmedBySomeone) {
-                        results.counts.disagreement += 1
-                    }
-                    if (each.rejectedBySomeone !== true && each.confirmedBySomeone !== true) {
-                        results.uncheckedTimestamps.push(each)
-                    }
+                }
+                if (each.confirmedBySomeone== true) {
+                    results.counts.confirmed += 1
+                }
+                if (each.rejectedBySomeone== true) {
+                    results.counts.rejected  += 1 
+                    results.rejected.push(each)
+                }
+                if (each.rejectedBySomeone&& each.confirmedBySomeone) {
+                    results.counts.disagreement += 1
+                }
+                if (each.rejectedBySomeone!== true && each.confirmedBySomeone!== true) {
+                    results.uncheckedTimestamps.push(each)
                 }
             }
             
