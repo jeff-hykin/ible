@@ -4,7 +4,10 @@
 
 # What is this?
 
-A tool for labeling segments of videos!
+A tool for adding timestamp annotations for videos, especially for small teams of researchers who care about label validation of confidential video.
+
+<img width="1422" alt="Screen Shot 2025-01-06 at 3 38 02 PM" src="https://github.com/user-attachments/assets/5d1c0d65-eb99-4150-9487-706b923a3159" />
+
 
 # How do I use it?
 
