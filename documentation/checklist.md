@@ -31,6 +31,9 @@ Publication options:
     - public help thrust
     - hosted CMU
 
+Small Enhancements:
+- add URL link for video to open up
+- if there is no "Videos" folder check for "videos" and movies, notify on frontend
 
 Major Chonological Changes:
 - DONE: publish as npm package
