@@ -45,7 +45,7 @@
                     h5
                         | Total Videos: {{Object.keys($root.searchResults.videos).length}}
                     h5
-                        | False Positive Ratio: {{falsePositiveRatio()||0}}
+                        | False Positive Ratio: {{falsePositiveRatio()}}
                 br
                 br
                 .pie-wrapper(v-if="$root.searchResults.finishedComputing")
@@ -213,11 +213,15 @@ export default {
         falsePositiveRatio() {
             try {
                 let answer = this.$root.searchResults.counts.rejected/this.$root.searchResults.counts.confirmed
-                return answer.toFixed(2)
+                if (answer == answer) {
+                    return answer.toFixed(2)
+                } else {
+                    return 0
+                }
             } catch (error) {
                 
             }
-            return NaN
+            return 0
         },
         async submitSearch() {
             const filterAndSort = {
@@ -236,18 +240,25 @@ export default {
             if (Number.isFinite(this.$root.filterAndSort.maxlabelConfidence)  ) { where.push({ valueOf: ['labelConfidence'                  ], isLessThanOrEqualTo:    this.$root.filterAndSort.maxlabelConfidence, }) }
             if (Number.isFinite(this.$root.filterAndSort.minlabelConfidence)  ) { where.push({ valueOf: ['labelConfidence'                  ], isGreaterThanOrEqualTo: this.$root.filterAndSort.minlabelConfidence, }) }
             if (this.$root.filterAndSort.observer                             ) { where.push({ valueOf: ['observer'                         ], is:                     this.$root.filterAndSort.observer          , }) }
-            if (this.$root.filterAndSort.kindOfObserver == "Only Humans"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     true                          , }) }
-            if (this.$root.filterAndSort.kindOfObserver == "Only Robots"      ) { where.push({ valueOf: ['isHuman'                          ], is:                     false                         , }) }
-            if (!this.$root.filterAndSort.validation.includes("Confirmed")    ) { where.push({ valueOf: ['confirmedBySomeone'               ], isNot:                  true                          , }) }
-            if (!this.$root.filterAndSort.validation.includes("Rejected")     ) { where.push({ valueOf: ['rejectedBySomeone'                ], isNot:                  true                          , }) }
             
-            timestampEntries = await frontendDb.getTimestamps({where, returnObject: true})
-            
+            let timestampEntriesResponse = await frontendDb.getTimestamps({where, returnObject: true})
+            timestampEntries = []
             // ensure the timestampId is the ID
-            for (const [key, value] of Object.entries(timestampEntries)) {
+            for (const [key, value] of Object.entries(timestampEntriesResponse)) {
+                try {
+                    value.confirmedBySomeone= Object.values(value.confirmedBy||{}).length>0
+                    value.rejectedBySomeone= Object.values(value.rejectedBy||{}).length>0
+                } catch (error) {
+                    
+                }
+                
+                if (this.$root.filterAndSort.kindOfObserver == "Only Humans"   && !value.isHuman) { continue }
+                if (this.$root.filterAndSort.kindOfObserver == "Only Robots"   && value.isHuman) { continue }
+                if (!this.$root.filterAndSort.validation.includes("Confirmed") && !value.confirmedBySomeone   ) { continue }
+                if (!this.$root.filterAndSort.validation.includes("Rejected")  && !value.rejectedBySomeone    ) { continue }
                 value.timestampId = key
+                timestampEntries.push(value)
             }
-            timestampEntries = Object.values(timestampEntries)
             this.numberOfSearchResults = timestampEntries.length
             
             // show the time of the first load
