@@ -452,7 +452,7 @@ export default RootComponent = {
                     return
                 }
                 // then let the video be set each time new search results roll in
-                if (!this.$root.videoInterface.aVideoIsSelected && this.searchResults instanceof Array && this.searchResults.length > 0) {
+                if (!this.$root.videoInterface.aVideoIsSelected && this.$root.searchResults instanceof Array && this.$root.searchResults.length > 0) {
                     const videoIdOfFirstResult = Object.keys(this.$root.searchResults.videos)[0]
                     this.$root.videoInterface.goToThisVideo({videoId: videoIdOfFirstResult})
                 }
@@ -568,7 +568,7 @@ export default RootComponent = {
             }
         },
         getUsernameList() {
-            untrackedData.usernameList = [... new Set(untrackedData.usernameList.concat(Object.keys(this.searchResults.observers)))].filter(each=>each)
+            untrackedData.usernameList = [... new Set(untrackedData.usernameList.concat(Object.keys(this.$root.searchResults.observers)))].filter(each=>each)
             return untrackedData.usernameList
         },
         push(data) {
