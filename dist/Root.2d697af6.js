@@ -71565,11 +71565,11 @@ function validateObservations(observations) {
         errorMessages.push(`observationEntry.isHuman: ${(0, _string.toRepresentation)(observationEntry.isHuman)}\nAn observationEntry must have a "isHuman" property\n- it needs to be a boolean\n${JSON.stringify(observationEntry)}`);
       }
 
-      if (observationEntry.confirmedBySomeone != null && observationEntry.confirmedBySomeone !== true && observationEntry.confirmedBySomeone !== false) {
+      if (observationEntry.confirmedBySomeone!= null && observationEntry.confirmedBySomeone!== true && observationEntry.confirmedBySomeone!== false) {
         errorMessages.push(`observationEntry.confirmedBySomeone: ${(0, _string.toRepresentation)(observationEntry.confirmedBySomeone)}\nThe "confirmedBySomeone" property\n- needs to be a boolean or null`);
       }
 
-      if (observationEntry.rejectedBySomeone != null && observationEntry.rejectedBySomeone !== true && observationEntry.rejectedBySomeone !== false) {
+      if (observationEntry.rejectedBySomeone!= null && observationEntry.rejectedBySomeone!== true && observationEntry.rejectedBySomeone!== false) {
         errorMessages.push(`observationEntry.rejectedBySomeone: ${(0, _string.toRepresentation)(observationEntry.rejectedBySomeone)}\nAn observationEntry needs to be a boolean or null`);
       }
     }
@@ -73203,11 +73203,11 @@ const frontendDb = {
           continue;
         }
 
-        if (hideUnchecked && !each.confirmedBySomeone && !each.rejectedBySomeone) {
+        if (hideUnchecked && !each.confirmedBySomeone&& !each.rejectedBySomeone) {
           continue;
         }
 
-        if (hideDisagreement && each.confirmedBySomeone && each.rejectedBySomeone) {
+        if (hideDisagreement && each.confirmedBySomeone&& each.rejectedBySomeone) {
           continue;
         } // 
         // this section is actual logic
@@ -73237,20 +73237,20 @@ const frontendDb = {
         if (each.isHuman) {
           results.counts.fromHuman += 1;
         } else {
-          if (each.confirmedBySomeone == true) {
+          if (each.confirmedBySomeone== true) {
             results.counts.confirmed += 1;
           }
 
-          if (each.rejectedBySomeone == true) {
+          if (each.rejectedBySomeone== true) {
             results.counts.rejected += 1;
             results.rejected.push(each);
           }
 
-          if (each.rejectedBySomeone && each.confirmedBySomeone) {
+          if (each.rejectedBySomeone&& each.confirmedBySomeone) {
             results.counts.disagreement += 1;
           }
 
-          if (each.rejectedBySomeone !== true && each.confirmedBySomeone !== true) {
+          if (each.rejectedBySomeone!== true && each.confirmedBySomeone!== true) {
             results.uncheckedObservations.push(each);
           }
         }
