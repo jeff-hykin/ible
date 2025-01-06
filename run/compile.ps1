@@ -78,7 +78,7 @@ for (const eachTarget of targets) {
         await FileSystem.remove(outputPath)
     }
     await FileSystem.remove(`${namedOutputPath}.zip`)
-    const output = await run`deno compile --no-npm -A --target ${eachTarget} --output ${outputPath} ${tempMainJsPath} ${Out(returnAsString)}`
+    const output = await run`deno compile --no-npm --no-lock -A --target ${eachTarget} --output ${outputPath} ${tempMainJsPath} ${Out(returnAsString)}`
     // create zip
     if (eachTarget.includes("windows")) {
         await run`zip ${`${FileSystem.basename(namedOutputPath)}.zip`} ${`${FileSystem.basename(outputPath)}.exe`} ${Cwd(FileSystem.parentPath(outputPath))}`

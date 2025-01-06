@@ -14,5 +14,5 @@ import { Console, clearAnsiStylesFrom, black, white, red, green, blue, yellow, c
 const projectFolder = `${FileSystem.thisFolder}/../`
 const buildFolder = `${projectFolder}/docs/`
 
-await run(`deno`,`run`,`-A`,`./main.js`, Cwd(projectFolder), ...Deno.args)
+await run(`deno`,`run`, `--no-lock`, `-A`,`./main.js`, Cwd(projectFolder), ...Deno.args)
 // (this comment is part of deno-guillotine, dont remove) #>
