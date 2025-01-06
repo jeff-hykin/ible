@@ -70,8 +70,14 @@ export class Timestamp {
     }
 
     get type() { return this.startTime !== this.endTime ? "segment" : "marker" }
-    get confirmedBySomeone() { return Object.entries(this.confirmedBy).filter(([observer,value])=>value).length>0 }
-    get rejectedBySomeone() { return Object.entries(this.rejectedBy).filter(([observer,value])=>value).length>0 }
+    get confirmedBySomeone() {
+        let output = Object.entries(this.confirmedBy||{}).filter(([observer,value])=>value).length>0
+        return output
+    }
+    get rejectedBySomeone() {
+        let output = Object.entries(this.rejectedBy||{}).filter(([observer,value])=>value).length>0
+        return output
+    }
     get duration() { return this.endTime - this.startTime }
     
     toJSON() {
@@ -263,10 +269,10 @@ export class InvalidFormatError extends Error {
                 if (timestampEntry.isHuman !== true && timestampEntry.isHuman !== false) {
                     errorMessages.push(`timestampEntry.isHuman: ${toRepresentation(timestampEntry.isHuman)}\nAn timestampEntry must have a "isHuman" property\n- it needs to be a boolean\n${JSON.stringify(timestampEntry)}`)
                 }
-                if (timestampEntry.confirmedBySomeone != null && timestampEntry.confirmedBySomeone !== true && timestampEntry.confirmedBySomeone !== false) {
+                if (timestampEntry.confirmedBySomeone != null && timestampEntry.confirmedBySomeone!== true && timestampEntry.confirmedBySomeone!== false) {
                     errorMessages.push(`timestampEntry.confirmedBySomeone: ${toRepresentation(timestampEntry.confirmedBySomeone)}\nThe "confirmedBySomeone" property\n- needs to be a boolean or null`)
                 }
-                if (timestampEntry.rejectedBySomeone != null && timestampEntry.rejectedBySomeone !== true && timestampEntry.rejectedBySomeone !== false) {
+                if (timestampEntry.rejectedBySomeone != null && timestampEntry.rejectedBySomeone!== true && timestampEntry.rejectedBySomeone!== false) {
                     errorMessages.push(`timestampEntry.rejectedBySomeone: ${toRepresentation(timestampEntry.rejectedBySomeone)}\nAn timestampEntry needs to be a boolean or null`)
                 }
                 if (timestampEntry.confirmedBy != null && !(timestampEntry.confirmedBy instanceof Object)) {
