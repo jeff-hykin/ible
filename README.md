@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://github.com/user-attachments/assets/9af7cbac-4ece-4b59-82bb-694a0ef7525f">
+    <img width="1268" alt="ible_logo" src="https://github.com/user-attachments/assets/36db4731-f465-4530-940f-d6e0d4017d9a" />
 </p>
 
 # What is this?
