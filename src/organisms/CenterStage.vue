@@ -4,7 +4,7 @@
         height="100vh"
         align-h="center"
         align-v="top"
-        overflow="auto"
+        overflow-y="auto"
         overflow-x="hidden"
     )
         WrappedTopSearch
