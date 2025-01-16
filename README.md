@@ -8,6 +8,8 @@ A tool for adding timestamp annotations for videos, especially for small teams o
 
 <img width="1422" alt="Screen Shot 2025-01-06 at 3 38 02 PM" src="https://github.com/user-attachments/assets/5d1c0d65-eb99-4150-9487-706b923a3159" />
 
+![Screen Shot 2025-01-06 at 5 44 47 PM](https://github.com/user-attachments/assets/d9c99a73-716e-4172-be30-e543686b050b)
+
 
 # How do I use it?
 
