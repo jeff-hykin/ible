@@ -292,7 +292,7 @@ export class InvalidFormatError extends Error {
     export function timestampsToCsv(entries) {
         const timestamps = []
         for (const each of entries) {
-            const outputTimestamp = (new Timestamp(each)).toJSON()
+            const outputTimestamp = {uploadAction: "update", ...(new Timestamp(each)).toJSON()}
             timestamps.push(outputTimestamp)
             // NOTE: there is no video key
             // // flatten out video
