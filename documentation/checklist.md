@@ -31,9 +31,26 @@ Publication options:
     - public help thrust
     - hosted CMU
 
+
+// changes to Ible
+export to excel instead of typed csv (and/or typed excel)
+arguments for: its just too nice to upload/download one file, they're going to open it in excel anyways to do plots and make modifications, and its extra time/overhead to need to export each sheet back to csv
+
+change icon of upload to download; it will be the more common task
+video href link in spreadsheet
+make renaming the video opt-out "let me rename it" instead of opt-in
+be able to search for videos with a specific status
+be able to search for videos based on folder, or even set a subfolder
+pop up for marking video as watched if duration is >85%, with clicking being to cancel
+delete a video and all associated timestamp data
+upload needs a way to delete a specific column
+add a youtube video despite no timestamp data for it
+better errors when uploading; prevent merging of data if data is bad
+
 Small Enhancements:
 - add URL link for video to open up
 - if there is no "Videos" folder check for "videos" and movies, notify on frontend
+- stream videos from the backend
 
 Major Chonological Changes:
 - DONE: publish as npm package
